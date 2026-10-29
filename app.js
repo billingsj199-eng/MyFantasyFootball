@@ -28253,6 +28253,12 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   // score, any position, with the score shown. Session-only; a cheat game is
   // a "custom" game (own local high score, never posts to the leaderboard).
   let fgCheat = false;
+  // DRAFT DAY (survey G9, 2026-10-28): everyone drafts the SAME sequence of
+  // teams for the Eastern-time date; the full block sits at the end of this
+  // IIFE (setFgDaily / _fgDraftDayFinish). These two are read by the
+  // init-time painters above it, so they are declared here.
+  let fgDaily = false;
+  let _fgDailyKey = null; // ET date (YYYY-MM-DD) whose team order is being drafted
   function _fgSyncType() {
     fgType = (!fgCheat && fgEra === 'all' && fgYear === 'best' && fgWeekFilter === 'best') ? 'regular' : 'custom';
     document.getElementById('fgModeSeason').textContent = fgYear !== 'best' ? 'SEASON' : 'BEST SEASON';
@@ -28287,7 +28293,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     const el = document.getElementById('fgSettingsSummary');
     if (!el) return;
     const modeLbl = fgMode === 'week' ? (fgWeekFilter !== 'best' ? 'WEEK ' + fgWeekFilter : 'BEST WEEK') : (fgYear !== 'best' ? 'SEASON' : 'BEST SEASON');
-    el.textContent = [fgLeague === 'college' ? 'COLLEGE' : 'NFL', modeLbl, fgScoring === 'half' ? 'HALF PPR' : 'PPR', _fgFilterLabel()].concat(fgCheat ? ['CHEAT'] : []).join(' · ');
+    el.textContent = (fgDaily ? ['DRAFT DAY #' + _fgDailyNumber(_fgDailyKey)] : []).concat([fgLeague === 'college' ? 'COLLEGE' : 'NFL', modeLbl, fgScoring === 'half' ? 'HALF PPR' : 'PPR', _fgFilterLabel()]).concat(fgCheat ? ['CHEAT'] : []).join(' · ');
   }
   function _fgSetSettingsOpen(open) {
     if (!fgSettingsPanel || !fgSettingsToggle) return;
@@ -28475,6 +28481,13 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
   function updateFgSubtitle() {
     _fgUpdateSettingsSummary();
+    if (fgDaily) {
+      const n = _fgDailyNumber(_fgDailyKey), archive = _fgDailyKey !== _fgEtToday();
+      fgSubtitle.textContent = 'DRAFT DAY #' + n + (archive ? ' (' + _fgDailyKey + ' archive \u2014 practice only)' : '') +
+        ' \u2014 everyone gets the same NFL teams in the same order today. Best career fantasy season, PPR, all-time rosters. ' +
+        (archive ? 'Archive games never count.' : 'Your first finished draft is your score for the day; replays are practice.');
+      return;
+    }
     const lbl = _fgFilterLabel();
     const windowed = fgYear !== 'best' || fgEra !== 'all';
     const yearPicked = fgYear !== 'best';
@@ -28882,6 +28895,14 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   }
 
   function renderHighScore() {
+    if (fgDaily) {
+      const st = _fgDdLoad(), rec = st.days[_fgDailyKey];
+      const parts = [];
+      if (rec && rec.score > 0) parts.push('TODAY: ' + rec.score.toFixed(1));
+      if (st.best && st.best.score > 0) parts.push('DRAFT DAY BEST: ' + st.best.score.toFixed(1) + ' (#' + _fgDailyNumber(st.best.day) + ')');
+      highScoreEl.textContent = parts.join(' \u00b7 ');
+      return;
+    }
     if (fgType === 'custom') {
       const fhs = parseFloat(localStorage.getItem(_fgLocalHsKey())) || 0;
       highScoreEl.textContent = fhs > 0 ? 'HIGH SCORE (' + _fgFilterTag() + '): ' + fhs.toFixed(1) : '';
@@ -28897,6 +28918,9 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   }
 
   function getRandomTeam() {
+    // DRAFT DAY: the k-th team drawn (skips included) is the k-th of the day's
+    // seeded order, so every player sees the same teams in the same order.
+    if (fgDaily) return _fgDailyOrder(_fgDailyKey)[usedTeams.length % NFL_TEAMS.length];
     if (fgLeague === 'college') {
       const available = COLLEGE_CONFS.filter(c => !usedTeams.includes(c));
       if (!available.length) return COLLEGE_CONFS[Math.floor(Math.random()*COLLEGE_CONFS.length)];
@@ -29134,6 +29158,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   const fgCheatBtn = document.getElementById('fgCheatBtn');
   if (fgCheatBtn) {
     fgCheatBtn.addEventListener('click', () => {
+      if (fgDaily) return; // DRAFT DAY has no cheat (hidden; belt and braces)
       fgCheat = !fgCheat;
       fgCheatBtn.classList.toggle('active', fgCheat);
       _fgSyncType();
@@ -29220,6 +29245,18 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     const total = Object.values(roster).reduce((s,r) => s + _fgScore(r.bestSeason), 0);
     finalScoreEl.textContent = total.toFixed(1) + ' PTS';
 
+    if (fgDaily) {
+      // DRAFT DAY: its own day bucket (leaderboard/{uid}.draftDay) and result
+      // card; never the all-time Fantasy Game board (the order is shared and
+      // replays are allowed, so it could be farmed).
+      _fgDraftDayFinish(total);
+      renderRoster();
+      return;
+    }
+    const ddCard = document.getElementById('fgDraftDayCard');
+    if (ddCard) ddCard.style.display = 'none';
+    const goTitle = gameOverEl.querySelector('.fg-go-title');
+    if (goTitle) goTitle.textContent = 'ROSTER COMPLETE!';
     if (fgType === 'custom') {
       // Filtered game (era / year / week): its own local high score per
       // filter; never saved to the leaderboard.
@@ -29343,6 +29380,229 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     });
   }
   playAgainBtn.addEventListener('click', resetGame);
+
+  // =============================================
+  // DRAFT DAY (survey G9, 2026-10-28)
+  // =============================================
+  // Once a day everyone drafts the SAME sequence of NFL teams: the order is a
+  // pure function of the Eastern-time date (each team hashed with the date,
+  // sorted — rendezvous hashing like _mffDailyPick), so scores are comparable
+  // and leaderboard/{uid}.draftDay ranks the day. Fixed settings: NFL · BEST
+  // SEASON · PPR · ALL-TIME, no cheat, no filters. The first finished game of
+  // the day is the one that counts (localStorage fg_draftday + Firestore);
+  // replays are "practice". ?draftday=YYYY-MM-DD#games replays a past day's
+  // order as an archive that never counts.
+  const _FG_DRAFTDAY_EPOCH = '2026-10-28'; // DRAFT DAY #1 (change to renumber; _lbRenderDraftDayInline mirrors it)
+  const _FG_DD_LS = 'fg_draftday';
+  function _fgEtToday() {
+    try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+    catch (_) { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  }
+  function _fgDayUtc(key) { return Date.UTC(+key.slice(0, 4), +key.slice(5, 7) - 1, +key.slice(8, 10)); }
+  function _fgDailyNumber(key) { return key ? Math.round((_fgDayUtc(key) - _fgDayUtc(_FG_DRAFTDAY_EPOCH)) / 86400000) + 1 : 0; }
+  function _fgDailyOrder(key) {
+    const h = t => window._mffDailyHash('draftday|' + key + '|' + t);
+    return NFL_TEAMS.slice().sort((a, b) => (h(a) - h(b)) || a.localeCompare(b));
+  }
+  window._fgDraftDayOrder = _fgDailyOrder; // debug / tests
+  function _fgDdLoad() {
+    try { const s = JSON.parse(localStorage.getItem(_FG_DD_LS) || 'null'); if (s && s.days) return s; } catch (_) {}
+    return { v: 1, days: {} };
+  }
+  function _fgDdSave(st) {
+    // Keep the last 60 days only.
+    const keys = Object.keys(st.days).sort();
+    while (keys.length > 60) delete st.days[keys.shift()];
+    try { localStorage.setItem(_FG_DD_LS, JSON.stringify(st)); } catch (_) {}
+  }
+  function _fgPaintScoring() {
+    const h = document.getElementById('fgScoringHalf'), p = document.getElementById('fgScoringPpr');
+    if (h) h.classList.toggle('active', fgScoring === 'half');
+    if (p) p.classList.toggle('active', fgScoring === 'ppr');
+  }
+  const fgDailyOffBtn = document.getElementById('fgDailyOff');
+  const fgDailyOnBtn = document.getElementById('fgDailyOn');
+  function _fgPaintDaily() {
+    if (fgDailyOffBtn) fgDailyOffBtn.classList.toggle('active', !fgDaily);
+    if (fgDailyOnBtn) {
+      fgDailyOnBtn.classList.toggle('active', fgDaily);
+      fgDailyOnBtn.textContent = 'DRAFT DAY #' + _fgDailyNumber(fgDaily ? _fgDailyKey : _fgEtToday());
+    }
+    const free = document.getElementById('fgFreeSettings');
+    if (free) free.classList.toggle('fg-locked', fgDaily);
+    const note = document.getElementById('fgDailyNote');
+    if (note) note.style.display = fgDaily ? '' : 'none';
+    if (fgCheatBtn) fgCheatBtn.style.display = fgDaily ? 'none' : '';
+    if (fgDraftEmptyText && fgLeague === 'nfl') fgDraftEmptyText.textContent = fgDaily ? 'Press START \u2014 DRAFT DAY #' + _fgDailyNumber(_fgDailyKey) + ' teams come in the same order for everyone' : 'Press START to get a random NFL team';
+  }
+  // on = true/false; key = ET date to draft (today unless a permalink asks for
+  // an archive day). Returns false when a draft is in progress.
+  function setFgDaily(on, key) {
+    if (Object.keys(roster).length > 0 && !gameOver) return false;
+    key = on ? (key || _fgEtToday()) : null;
+    if (fgDaily === !!on && _fgDailyKey === key) return true;
+    fgDaily = !!on;
+    _fgDailyKey = key;
+    if (fgDaily) {
+      // Force the fixed settings and paint the controls to match. Nothing is
+      // persisted: fg_scoring keeps the player's own PPR / Half pick.
+      if (fgLeague !== 'nfl') {
+        fgLeague = 'nfl';
+        fgLeagueNFL.classList.add('active'); fgLeagueCollege.classList.remove('active');
+        if (fgEraRow) fgEraRow.querySelectorAll('.fg-era-nfl').forEach(b => { b.style.display = ''; });
+      }
+      fgMode = 'season';
+      fgModeSeason.classList.add('active'); fgModeWeek.classList.remove('active');
+      document.getElementById('fgWeekSelect').style.display = 'none';
+      fgScoring = 'ppr'; _fgPaintScoring();
+      fgEra = 'all'; fgYear = 'best'; fgWeekFilter = 'best';
+      document.getElementById('fgYearSelect').value = 'best';
+      document.getElementById('fgWeekSelect').value = 'best';
+      _fgPaintEra();
+      fgCheat = false; if (fgCheatBtn) fgCheatBtn.classList.remove('active');
+    } else {
+      fgScoring = localStorage.getItem('fg_scoring') || 'ppr'; _fgPaintScoring();
+    }
+    _fgSyncType();
+    _fgPaintDaily();
+    updateFgSubtitle();
+    resetGame();
+    return true;
+  }
+  window._fgSetDraftDay = setFgDaily;
+  if (fgDailyOffBtn) fgDailyOffBtn.addEventListener('click', () => { if (fgDaily) setFgDaily(false); });
+  if (fgDailyOnBtn) fgDailyOnBtn.addEventListener('click', () => { if (!fgDaily) setFgDaily(true); });
+
+  // Wordle-style row: one square per roster slot by the points it scored
+  // (best seasons: 300+ PPR is a star year, 200-299 a solid one), white = empty.
+  function _fgDdSquares() {
+    return SLOTS.map(sl => {
+      const r = roster[sl.id];
+      if (!r) return '\u2b1c';
+      const p = _fgScore(r.bestSeason);
+      return p >= 300 ? '\ud83d\udfe9' : p >= 200 ? '\ud83d\udfe8' : '\ud83d\udfe5';
+    }).join('');
+  }
+  function _fgFmtPts(n) { return (Math.round(n * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+  function _fgDdPermalink(key) { return location.origin + location.pathname + '?draftday=' + key + '#games'; }
+  let _fgDdShareText = '';
+  window._fgDraftDayShareText = () => _fgDdShareText; // debug / tests
+  function _fgDraftDayFinish(total) {
+    total = Math.round(total * 10) / 10;
+    const key = _fgDailyKey, today = _fgEtToday();
+    const st = _fgDdLoad();
+    const isArchive = key !== today;
+    const prev = st.days[key];
+    const official = !isArchive && !(prev && prev.score > 0); // first finished game of the day counts
+    const squares = _fgDdSquares();
+    const n = _fgDailyNumber(key);
+    if (official) {
+      st.days[key] = { score: total, squares: squares, plays: 1, ts: Date.now() };
+      if (!st.best || total > st.best.score) st.best = { score: total, day: key };
+      st.played = (st.played || 0) + 1;
+    } else if (prev && !isArchive) {
+      prev.plays = (prev.plays || 1) + 1;
+      if (total > (prev.practiceBest || 0)) prev.practiceBest = total;
+    }
+    _fgDdSave(st);
+
+    // Result card
+    const goTitle = gameOverEl.querySelector('.fg-go-title');
+    if (goTitle) goTitle.textContent = 'DRAFT DAY #' + n;
+    const card = document.getElementById('fgDraftDayCard');
+    const head = document.getElementById('fgDdHead'), line = document.getElementById('fgDdLine'), sq = document.getElementById('fgDdSquares'), state = document.getElementById('fgDdState');
+    const tag = isArchive ? ' (archive)' : official ? '' : ' (practice)';
+    if (head) head.textContent = 'DRAFT DAY #' + n + ' \u00b7 ' + key + tag;
+    if (sq) sq.textContent = squares;
+    if (line) line.textContent = _fgFmtPts(total) + ' pts' + tag;
+    if (state) {
+      state.textContent = isArchive ? 'Archive day \u2014 practice only, nothing posts.'
+        : official ? 'Counts as today\u2019s score' + (getUserSafe() ? ' \u2014 posted to today\u2019s DRAFT DAY leaderboard.' : '. Sign in to post it to today\u2019s leaderboard.')
+        : 'Practice \u2014 today\u2019s score is ' + _fgFmtPts(prev.score) + ' (your first draft of the day).';
+    }
+    if (card) card.style.display = '';
+    goSubEl.textContent = '';
+    _fgDdShareText = '\ud83c\udfc8 DRAFT DAY #' + n + ' \u00b7 ' + _fgFmtPts(total) + ' pts' + tag + '\n' + squares + '\n' + _fgDdPermalink(key);
+
+    if (official && typeof window._lbUpdateDraftDay === 'function') window._lbUpdateDraftDay(total, key, st.best.score, st.played);
+    // "beats X% today" + today's board, from the public leaderboard docs.
+    const lbWrap = document.getElementById('fgLeaderboard');
+    if (lbWrap) lbWrap.innerHTML = '';
+    if (typeof window._lbRenderDraftDayInline === 'function') {
+      // Give the official save a moment to land so the player sees themselves.
+      setTimeout(() => {
+        window._lbRenderDraftDayInline(key, total, official).then(res => {
+          if (!res || res.others < 1) return;
+          const beats = ' \u00b7 beats ' + res.beats + '% ' + (isArchive ? 'that day' : 'today');
+          if (line) line.textContent = _fgFmtPts(total) + ' pts' + tag + beats;
+          _fgDdShareText = '\ud83c\udfc8 DRAFT DAY #' + n + ' \u00b7 ' + _fgFmtPts(total) + ' pts' + tag + beats + '\n' + squares + '\n' + _fgDdPermalink(key);
+        }).catch(() => {});
+      }, official ? 900 : 0);
+    }
+    if (typeof window._fgDraftDayCardRefresh === 'function') window._fgDraftDayCardRefresh();
+  }
+  function getUserSafe() {
+    if (window._authCurrentUser) return window._authCurrentUser;
+    try { return (window.firebase && firebase.auth) ? firebase.auth().currentUser : null; } catch (_) { return null; }
+  }
+  const fgDdShareBtn = document.getElementById('fgDdShareBtn');
+  if (fgDdShareBtn) fgDdShareBtn.addEventListener('click', () => {
+    const text = _fgDdShareText;
+    if (!text) return;
+    const confirmEl = document.getElementById('fgDdShareConfirm');
+    const setOk = (msg) => { if (confirmEl) { confirmEl.textContent = msg; setTimeout(() => { if (confirmEl.textContent === msg) confirmEl.textContent = ''; }, 2500); } };
+    const copy = () => {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => setOk('Copied to clipboard')).catch(() => setOk('Copy failed \u2014 long-press to copy'));
+      else setOk('Clipboard not available');
+    };
+    if (navigator.share) navigator.share({ text: text }).then(() => setOk('Shared!')).catch(err => { if (!err || err.name !== 'AbortError') copy(); });
+    else copy();
+  });
+  const fgDdLbBtn = document.getElementById('fgDdLbBtn');
+  if (fgDdLbBtn) fgDdLbBtn.addEventListener('click', () => {
+    const tab = document.querySelector('.games-tab[data-games-tab="leaderboard"]');
+    if (tab) tab.click();
+    const daily = document.getElementById('lbTabDaily');
+    if (daily) daily.click();
+    const sec = document.getElementById('lbDailyDraftDayList');
+    if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  // Games → DAILY → DRAFT DAY card (state from localStorage), and the entry
+  // point the card / hub use: open the Fantasy Game with DRAFT DAY on.
+  window._fgOpenDraftDay = function(key) {
+    const tab = document.querySelector('.games-tab[data-games-tab="fantasygame"]');
+    if (tab) tab.click();
+    if (!setFgDaily(true, key)) { if (typeof toast === 'function') toast('Finish or reset the current draft first'); return; }
+    const wrap = document.querySelector('.fg-wrapper');
+    if (wrap && wrap.scrollIntoView) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  window._fgDraftDayCardRefresh = function() {
+    const num = document.getElementById('dcDdNum'), today = document.getElementById('dcDdToday'), best = document.getElementById('dcDdBest'), btn = document.getElementById('dcDdPlayBtn'), sub = document.getElementById('dcDdSub');
+    if (!num || !today || !best) return;
+    const key = _fgEtToday(), st = _fgDdLoad(), rec = st.days[key];
+    num.textContent = '#' + _fgDailyNumber(key);
+    today.textContent = rec && rec.score > 0 ? _fgFmtPts(rec.score) : '\u2014';
+    best.textContent = st.best && st.best.score > 0 ? _fgFmtPts(st.best.score) : '\u2014';
+    if (btn) btn.textContent = rec && rec.score > 0 ? 'PRACTICE AGAIN' : 'PLAY TODAY';
+    if (sub) sub.textContent = rec && rec.score > 0
+      ? (rec.squares || '') + ' \u00b7 ' + (rec.plays || 1) + (rec.plays === 1 ? ' draft' : ' drafts') + ' today'
+      : 'Same teams, same order, for everyone \u00b7 best season \u00b7 PPR \u00b7 all-time';
+  };
+  window._fgDraftDayCardRefresh();
+  _fgPaintDaily();
+
+  // Shared permalink (?draftday=YYYY-MM-DD#games): open the Fantasy Game with
+  // that day's order. Today = a real DRAFT DAY; a past date = archive practice.
+  (function _fgDraftDayPermalink() {
+    const m = (location.search || '').match(/[?&]draftday=(\d{4}-\d{2}-\d{2})/);
+    if (!m) return;
+    const key = m[1] <= _fgEtToday() && m[1] >= _FG_DRAFTDAY_EPOCH ? m[1] : _fgEtToday();
+    setTimeout(() => {
+      if (typeof switchPage === 'function') switchPage('games');
+      window._fgOpenDraftDay(key);
+    }, 0);
+  })();
 
   // Init
   renderRoster();
@@ -44219,6 +44479,32 @@ window.fmtHeight = fmtHeight;
     }).catch(e => console.warn('[LB] trivia read error:', e));
   };
   window._lbUpdateFantasyGame = function(score) { _lbSaveScore('fantasygame', score); };
+  // DRAFT DAY (survey G9): one score per ET day — the first finished draft.
+  // draftDay = { dayKey, score (that day), best (all-time), bestDay, date (last
+  // write), played (days played) }. A second write for the same dayKey is a
+  // no-op so a practice replay can never overwrite the day's score.
+  window._lbUpdateDraftDay = function(score, dayKey, best, played) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db || !(score > 0) || !dayKey) return;
+    const name = user.displayName || user.email.split('@')[0];
+    const docRef = db.collection('leaderboard').doc(user.uid);
+    docRef.get().then(doc => {
+      const old = (doc.exists && doc.data().draftDay) || {};
+      if (old.dayKey === dayKey && old.score > 0) return;
+      const m = {
+        dayKey: dayKey, score: score, date: todayKey(),
+        best: Math.max(old.best || 0, best || 0, score),
+        bestDay: score >= (old.best || 0) ? dayKey : (old.bestDay || ''),
+        played: Math.max(old.played || 0, played || 0, (old.played || 0) + 1)
+      };
+      docRef.set({ name: name, email: _lbNoEmail(), ...getLbBadge(), draftDay: m, updatedAt: new Date().toISOString() }, { merge: true })
+        .catch(e => console.warn('[LB] draftDay save error:', e));
+    }).catch(e => console.warn('[LB] draftDay read error:', e));
+  };
+  function _lbDraftDayBoard(all, dayKey) {
+    return all.filter(u => u.draftDay && u.draftDay.dayKey === dayKey && u.draftDay.score > 0)
+      .sort((a, b) => b.draftDay.score - a.draftDay.score);
+  }
   window._lbUpdateFantasyGameWeek = function(score) { _lbSaveScore('fantasygameWeek', score); };
   window._lbUpdateCollegeSeason = function(score) { _lbSaveScore('collegeSeason', score); };
   window._lbUpdateCollegeWeek = function(score) { _lbSaveScore('collegeWeek', score); };
@@ -44647,11 +44933,50 @@ window.fmtHeight = fmtHeight;
       // Daily Guess Who (daily)
       renderStreakSection('lbDailyGuesswhoList', 'lbDailyGuesswhoLoading', 'lbDailyGuesswhoEmpty', 'daily');
 
+      // DRAFT DAY — today (draftDay.dayKey === today), all-time best as the sub stat
+      (function() {
+        const list = document.getElementById('lbDailyDraftDayList'), loading = document.getElementById('lbDailyDraftDayLoading'), empty = document.getElementById('lbDailyDraftDayEmpty');
+        if (loading) loading.style.display = 'none';
+        if (!list) return;
+        if (empty) empty.style.display = 'none';
+        const players = _lbDraftDayBoard(all, today);
+        list.innerHTML = players.length
+          ? renderTop3(players, uid, u => u.draftDay.score.toFixed(1) + ' PTS' + (u.draftDay.best > u.draftDay.score ? '<span class="lb-sub" style="margin-left:6px">best ' + u.draftDay.best.toFixed(1) + '</span>' : ''))
+          : '<div style="text-align:center;color:var(--text2);font-size:.8rem;padding:8px 0">No drafts finished yet today</div>';
+      })();
+
     }).catch(e => {
       console.warn('[LB] daily load error:', e);
       document.querySelectorAll('#lbPanelDaily .lb-loading').forEach(el => el.style.display = 'none');
     });
   }
+
+  // DRAFT DAY result card: today's top 10 + "beats X%" (share of the OTHER
+  // players who finished today with a lower score). Resolves {others, beats}.
+  window._lbRenderDraftDayInline = function(dayKey, myScore, official) {
+    const db = getDb();
+    const wrap = document.getElementById('fgLeaderboard');
+    if (!wrap || !db) return Promise.resolve(null);
+    const user = getUser();
+    const uid = user ? user.uid : null;
+    wrap.innerHTML = '<div class="lb-loading">Loading today\'s board...</div>';
+    return db.collection('leaderboard').get().then(snap => {
+      const all = [];
+      snap.forEach(doc => { all.push({ id: doc.id, ...doc.data() }); });
+      const players = _lbDraftDayBoard(all, dayKey);
+      const others = players.filter(u => u.id !== uid);
+      const beats = others.length ? Math.round(100 * others.filter(u => u.draftDay.score < myScore).length / others.length) : null;
+      const n = Math.round((Date.UTC(+dayKey.slice(0, 4), +dayKey.slice(5, 7) - 1, +dayKey.slice(8, 10)) - Date.UTC(2026, 9, 28)) / 86400000) + 1;
+      if (!players.length) {
+        wrap.innerHTML = '<div class="lb-empty">' + (official ? 'Nobody else has finished DRAFT DAY #' + n + ' yet \u2014 you\'re first!' : 'No scores yet for DRAFT DAY #' + n + '.') + '</div>';
+      } else {
+        const rows = players.slice(0, 10).map((u, i) => renderRow(i + 1, u.name, u.draftDay.score.toFixed(1) + ' PTS', u.id === uid, u.activeBadgeIcon)).join('');
+        wrap.innerHTML = '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent);text-align:center;margin-bottom:8px">DRAFT DAY #' + n + ' \u00b7 ' + players.length + (players.length === 1 ? ' PLAYER' : ' PLAYERS') + '</div>' +
+          '<div class="lb-list" style="max-height:280px;overflow-y:auto">' + rows + '</div>';
+      }
+      return { others: others.length, beats: beats, players: players.length };
+    }).catch(() => { wrap.innerHTML = ''; return null; });
+  };
 
   window._lbRenderFgInline = function(myScore, isWeek) {
     const db = getDb();
@@ -44735,6 +45060,7 @@ window.fmtHeight = fmtHeight;
       const pane = document.querySelector('.dc-pane[data-dc="' + key + '"]');
       if (pane) pane.classList.add('active');
       if (key === 'trivia') window._mffTriviaCardRefresh();
+      if (key === 'draftday' && typeof window._fgDraftDayCardRefresh === 'function') window._fgDraftDayCardRefresh();
     });
   });
   // Games → DAILY → TRIVIA card. The board plays on the Trivia page (it needs

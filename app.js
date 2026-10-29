@@ -60289,6 +60289,23 @@ window.fmtHeight = fmtHeight;
     });
   };
 
+  // PFR abbreviations are ambiguous across eras: STL was the Cardinals until
+  // 1987 and the Rams from 1995, BAL the Colts until 1983, HOU the Oilers
+  // until 1996. Resolve by the row's year so the square shows the right
+  // franchise logo (Jim Otis 1975 showed the Rams — 10-28).
+  function _triviaEraTeam(abbr, yr) {
+    const t = String(abbr || '').toUpperCase();
+    if (!t || !yr) return abbr;
+    if (t === 'STL' && yr < 1988) return 'ARI';
+    if (t === 'BAL' && yr < 1984) return 'IND';
+    if (t === 'HOU' && yr < 1997) return 'TEN';
+    if (t === 'CLE' && yr < 1996 && yr >= 1950) return 'CLE';
+    if ((t === 'LA' || t === 'RAM') ) return 'LAR';
+    if (t === 'PHO') return 'ARI';
+    if (t === 'BOS') return 'NE';
+    if (t === 'SD' || t === 'SDG') return 'LAC';
+    return abbr;
+  }
   window._triviaGenerate = async function() {
     // season_leaders.js is lazy-loaded; the structured season-filter path reads SEASON_LEADERS.
     if (typeof window._ensureSeasonLeaders === 'function') await window._ensureSeasonLeaders();
@@ -60539,7 +60556,7 @@ window.fmtHeight = fmtHeight;
           const pickLabel = s.pick === 999 ? 'UDFA' : 'Pick #' + s.pick;
           return {
             answer: s.name,
-            team: s.team,
+            team: _triviaEraTeam(s.team, s.yr),
             category: pickLabel,
             hint: (s.school ? s.school : '') + (s.pos ? ' · ' + s.pos : '')
           };
@@ -61107,7 +61124,7 @@ window.fmtHeight = fmtHeight;
           : (s.yr || null);
         return {
           answer: answerText,
-          team: s.team,
+          team: _triviaEraTeam(s.team, _itemYr),
           category: '#' + (i + 1),
           hint: hint,
           yr: _itemYr

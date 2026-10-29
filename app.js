@@ -15439,14 +15439,18 @@ function bestPpg(d) {
 // Checks: _2025_TEAM_FIX → ACTIVE_TEAM_HISTORY → PLAYER_TEAM_HISTORY → WEEKLY_STATS → D array
 function _getTeamForPlayerYear(playerName, yr) {
   if (!playerName || !yr) return null;
-  // 1. Hardcoded 2025 overrides
-  if (yr === 2025 && _2025_TEAM_FIX[playerName]) return _2025_TEAM_FIX[playerName];
-  // 2. ACTIVE_TEAM_HISTORY (full team names → convert to abbr)
+  // 1. ACTIVE_TEAM_HISTORY (curated y1..y2 ranges, full team names → abbr). Checked
+  // FIRST (10-28): it is the only table that still holds LAST season's team after
+  // an offseason move — the 2025 override map, PLAYER_TEAM_HISTORY, the active
+  // weekly tm and career tm were all re-stamped with 2026 teams, which put 2025
+  // boards on new-team logos (Etienne/NO, Dowdle/PIT, Walker/KC).
   if (typeof ACTIVE_TEAM_HISTORY !== 'undefined' && ACTIVE_TEAM_HISTORY[playerName]) {
     for (const h of ACTIVE_TEAM_HISTORY[playerName]) {
       if (yr >= h.y1 && yr <= h.y2) return TEAM_ABBR_MAP[h.t] || h.t;
     }
   }
+  // 2. Hardcoded 2025 overrides (players the history table doesn't cover)
+  if (yr === 2025 && _2025_TEAM_FIX[playerName]) return _2025_TEAM_FIX[playerName];
   // 3. PLAYER_TEAM_HISTORY (abbreviations)
   if (typeof PLAYER_TEAM_HISTORY !== 'undefined' && PLAYER_TEAM_HISTORY[playerName]) {
     for (const h of PLAYER_TEAM_HISTORY[playerName]) {
@@ -56496,6 +56500,15 @@ window.fmtHeight = fmtHeight;
       if (bt && bt.url) return { url: bt.url, credit: bt.credit || lh.credit || 'Wikimedia Commons', page: lh.page || '' };
       return { url: lh.url, credit: lh.credit || 'Wikimedia Commons', page: lh.page || '' };
     };
+
+    // Active players first: D carries the roster headshot (_slImg, ESPN NFL). The
+    // Commons table can hold a college-era photo for a current player (Travis
+    // Etienne at Clemson on an NFL board, Jack 10-28), so an active player never
+    // falls through to it — no roster photo yet means initials.
+    const _dAct = (typeof D !== 'undefined') ? D.find(p => nameVariants.indexOf(p.n) !== -1) : null;
+    if (_dAct && !_dAct._retired && _dAct.t !== 'Retired') {
+      return _dAct._slImg ? { url: _fix(_dAct._slImg), credit: '', page: '' } : none;
+    }
 
     // 0. preferCommons — the name's ESPN id failed the builder's audit (namesake such as
     // the Marcus Allen LB, wrong position, too young: scripts/_suspect_espn_ids.json), so

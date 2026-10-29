@@ -29633,9 +29633,11 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     const n = runOver ? lastRun : streak;
     const text = 'MFF Higher/Lower · streak ' + n + (best > n ? ' · best ' + best : '') + ' · ' + PERMALINK;
     const ok = m => { if (typeof toast === 'function') toast(m); };
+    // prompt() is the last resort (embedded browsers block it and the clipboard).
+    const manual = () => { try { window.prompt('Copy your result:', text); } catch (_) { ok("Couldn't copy here — " + text); } };
     const copy = () => {
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => ok('Copied — paste it anywhere')).catch(() => { window.prompt('Copy your result:', text); });
-      else window.prompt('Copy your result:', text);
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => ok('Copied — paste it anywhere')).catch(manual);
+      else manual();
     };
     if (navigator.share) navigator.share({ text: text }).catch(err => { if (!err || err.name !== 'AbortError') copy(); });
     else copy();

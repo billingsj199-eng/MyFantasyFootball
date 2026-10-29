@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-29-games" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-29-hlchain" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-29-lib2" as="script">
+<link rel="preload" href="app.js?v=2026-10-29-hlchain" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-29" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-29" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-29-games">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-29-hlchain">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -2585,15 +2585,19 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="elite-pull-card">
 <div class="elite-pull-header">
 <div class="elite-pull-title">HIGHER / LOWER</div>
-<div class="elite-pull-subtitle">Who scored more fantasy points? &middot; PPR &middot; one miss ends the run</div>
+<div class="elite-pull-subtitle">Did the new player score higher or lower? &middot; PPR &middot; one miss ends the run</div>
 <div id="hlStats" class="ep-streak-display" style="margin-top:6px"></div>
 </div>
 <div class="hl-body">
-<div class="hl-q"><span class="hl-season" id="hlSeason">&mdash;</span><span class="hl-q-text" id="hlPrompt">Who scored more fantasy points?</span></div>
+<div class="hl-q"><span class="hl-season" id="hlSeason">&mdash;</span><span class="hl-q-text" id="hlPrompt">Higher or lower?</span></div>
 <div class="hl-duel" id="hlDuel">
 <button type="button" class="hl-player" id="hlA" aria-label="Player A" disabled></button>
 <div class="hl-vs" aria-hidden="true">VS</div>
 <button type="button" class="hl-player" id="hlB" aria-label="Player B" disabled></button>
+</div>
+<div class="hl-choice" id="hlChoice" style="display:none">
+<button type="button" id="hlHigherBtn" class="hl-btn hl-choice-btn" aria-label="Higher" aria-keyshortcuts="ArrowUp">&#9650; HIGHER</button>
+<button type="button" id="hlLowerBtn" class="hl-btn hl-choice-btn" aria-label="Lower" aria-keyshortcuts="ArrowDown">&#9660; LOWER</button>
 </div>
 <div id="hlResult" class="hl-result" style="display:none"></div>
 <div class="hl-actions">
@@ -6963,7 +6967,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-29-lib2"></script>
+<script defer src="app.js?v=2026-10-29-hlchain"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

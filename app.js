@@ -29618,7 +29618,8 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 })();
 
 // === HIGHER / LOWER (2026-10-29, trivia-site survey G6) ===
-// Two players, same season + position: tap the one with more PPR points. One miss ends
+// Two players, same season + position: the left one's PPR points show, call HIGHER or
+// LOWER on the right one, who then becomes the left card (classic chain). One miss ends
 // the run; the best streak posts to leaderboard/{uid}.higherLower (Guess Who's "unlimited"
 // shape: played / correct / streak / bestStreak — window._lbUpdateHigherLower in core).
 // Pairs: ALL_PLAYERS_DB season rows (1999+; fpts stored half-PPR → +0.5/rec), both inside
@@ -29631,9 +29632,10 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 (function _mffHigherLower() {
   const $ = id => document.getElementById(id);
   const pane = $('gamesHigherlower'), elA = $('hlA'), elB = $('hlB');
-  if (!pane || !elA || !elB) return;
+  if (!pane || !elA || !elB || !$('hlChoice')) return;
   const elSeason = $('hlSeason'), elPrompt = $('hlPrompt'), elResult = $('hlResult'), elStats = $('hlStats');
   const elNext = $('hlNextBtn'), elShare = $('hlShareBtn'), elLoading = $('hlLoading');
+  const elChoice = $('hlChoice'), elHigher = $('hlHigherBtn'), elLower = $('hlLowerBtn');
   const LS = { played: 'hl_played', correct: 'hl_correct', streak: 'hl_streak', best: 'hl_best_streak' };
   const lsNum = k => { try { return parseInt(localStorage.getItem(k) || '0', 10) || 0; } catch (_) { return 0; } };
   let played = lsNum(LS.played), correct = lsNum(LS.correct), streak = lsNum(LS.streak), best = lsNum(LS.best);
@@ -29716,20 +29718,20 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     }
     return null;
   }
-  // Winner stays on (Jack 10-29): the player who just won keeps the left card and
-  // a new challenger of the same season + position comes in; when that group runs
-  // dry the chain restarts with a fresh pair.
-  function challengerFor(keep, lo, hi) {
-    const g = byYear[keep.yr], rows = g && g[keep.pos] ? g[keep.pos].filter(r => r.name !== keep.name && !used.has(r.name)) : [];
-    // Only challengers inside the difficulty band: a runaway #1 with nobody
-    // close leaves the chair instead of winning for free.
-    const cands = rows.filter(r => Math.abs(r.pts - keep.pts) >= lo && Math.abs(r.pts - keep.pts) <= hi);
-    return cands.length ? cands[rnd(cands.length)] : null;
+  // Classic chain (Jack 10-29, replaces winner stays on): the left card is the last
+  // round's new player with his points showing, the right card is a fresh player of
+  // the same season + position, and you call HIGHER or LOWER. Every round the new
+  // player slides left and the old one leaves, so a big scorer can't hold the chair
+  // and win for free. When that group runs dry the chain restarts with a fresh pair.
+  function challengerFor(prev, lo, hi) {
+    const g = byYear[prev.yr], rows = g && g[prev.pos] ? g[prev.pos].filter(r => r.name !== prev.name && !used.has(r.name) && r.pts !== prev.pts) : [];
+    const cands = rows.filter(r => Math.abs(r.pts - prev.pts) >= lo && Math.abs(r.pts - prev.pts) <= hi);
+    return cands.length ? cands[rnd(cands.length)] : (rows.length ? rows[rnd(rows.length)] : null);
   }
-  function pickPair(keep) {
+  function pickPair(prev) {
     if (!byYear) return null;
     const band = gapBand(streak), lo = Math.max(1, band[0]);
-    if (keep) { const b = challengerFor(keep, lo, band[1]); if (b) return [keep, b]; }
+    if (prev) { const b = challengerFor(prev, lo, band[1]); if (b) return [prev, b]; }
     let pair = tryPair(lo, band[1], 80) || tryPair(1, 1e9, 80);
     if (!pair) { used.clear(); pair = tryPair(lo, band[1], 80) || tryPair(1, 1e9, 80); }
     return pair;
@@ -29843,54 +29845,57 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   }
   const link = r => typeof _epCardLink === 'function' ? _epCardLink(r.name, 'color:var(--accent)') : esc(r.name);
 
-  let winner = null;                           // winner stays on: the row that keeps the left card
+  let prev = null;                             // chain: the last new player, shown on the left next round
+  const lastName = r => { const w = showName(r.name).split(/\s+/); return w.length > 1 && /^(Jr\.?|Sr\.?|II|III|IV|V)$/.test(w[w.length - 1]) ? w[w.length - 2] : w[w.length - 1]; };
   function newRound() {
-    const pair = pickPair(winner);
+    const pair = pickPair(prev);
     if (!pair) { elLoading.hidden = false; elLoading.textContent = 'No seasons loaded — try again in a moment'; return; }
-    const stays = !!(winner && pair[0] === winner);
     cur = { a: pair[0], b: pair[1] }; locked = false; runOver = false;
     used.add(pair[0].name); used.add(pair[1].name);
     elSeason.textContent = pair[0].yr;
-    elPrompt.textContent = stays ? 'Winner stays on — who scored more?' : 'Who scored more fantasy points?';
+    elPrompt.textContent = 'Did ' + lastName(cur.b) + ' score higher or lower?';
     [[elA, cur.a], [elB, cur.b]].forEach(([el, r]) => {
-      el.className = 'hl-player' + (stays && el === elA ? ' hl-stays' : ''); el.disabled = false; el.innerHTML = cardHtml(r);
-      el.setAttribute('aria-label', showName(r.name) + ', ' + r.pos + (r.tm ? ', ' + teamLabel(r.tm) : ''));
+      el.className = 'hl-player' + (el === elA ? ' hl-known' : ' hl-new'); el.disabled = true; el.innerHTML = cardHtml(r);
+      el.setAttribute('aria-label', showName(r.name) + ', ' + r.pos + (r.tm ? ', ' + teamLabel(r.tm) : '') + (el === elA ? ', ' + r.pts.toFixed(1) + ' PPR points' : ''));
       paintPhoto(el, r);
     });
+    // The left card is known: its points show from the start.
+    elA.querySelector('.hl-pts-num').textContent = cur.a.pts.toFixed(1);
+    elA.querySelector('.hl-pts-lbl').textContent = cur.a.pos + cur.a.rank + ' · PPR';
+    [elHigher, elLower].forEach(b => { b.disabled = false; b.classList.remove('hl-chosen', 'hl-right', 'hl-wrong'); });
+    elChoice.style.display = '';
     elResult.style.display = 'none'; elResult.innerHTML = '';
     elNext.style.display = 'none';
     renderStats();
   }
-  function answer(side) {
+  function answer(dir) {
     if (!cur || locked) return;
     locked = true;
-    const pick = side === 'a' ? cur.a : cur.b, other = side === 'a' ? cur.b : cur.a;
-    const won = pick.pts > other.pts;
-    const pickedEl = side === 'a' ? elA : elB, winEl = cur.a.pts > cur.b.pts ? elA : elB, loseEl = winEl === elA ? elB : elA;
-    elA.disabled = true; elB.disabled = true;
-    pickedEl.classList.add('hl-picked');
-    pickedEl.querySelector('.hl-pick-mark').textContent = won ? '✓' : '✗';
-    winEl.classList.add('hl-win'); loseEl.classList.add('hl-lose');
-    [[elA, cur.a], [elB, cur.b]].forEach(([el, r]) => {
-      el.querySelector('.hl-pts-lbl').textContent = r.pos + r.rank + ' · PPR';
-      countUp(el.querySelector('.hl-pts-num'), r.pts);
-    });
+    const a = cur.a, b = cur.b;
+    const won = dir === 'higher' ? b.pts > a.pts : b.pts < a.pts;
+    const btn = dir === 'higher' ? elHigher : elLower;
+    elHigher.disabled = true; elLower.disabled = true;
+    btn.classList.add('hl-chosen', won ? 'hl-right' : 'hl-wrong');
+    elB.classList.add('hl-picked', won ? 'hl-win' : 'hl-lose');
+    elB.querySelector('.hl-pick-mark').textContent = won ? '✓' : '✗';
+    elB.querySelector('.hl-pts-lbl').textContent = b.pos + b.rank + ' · PPR';
+    countUp(elB.querySelector('.hl-pts-num'), b.pts);
     played++;
-    if (won) { streak++; correct++; if (streak > best) best = streak; lastRun = streak; winner = pick; }
-    else { lastRun = streak; streak = 0; runOver = true; winner = null; }
+    if (won) { streak++; correct++; if (streak > best) best = streak; lastRun = streak; prev = b; }
+    else { lastRun = streak; streak = 0; runOver = true; prev = null; }
     persist();
     if (typeof window._lbUpdateHigherLower === 'function') window._lbUpdateHigherLower(played, correct, streak, best);
     renderStats();
-    const diff = Math.abs(cur.a.pts - cur.b.pts).toFixed(1);
+    const diff = Math.abs(a.pts - b.pts).toFixed(1), rel = b.pts > a.pts ? 'more' : 'fewer';
     elPrompt.textContent = won ? 'Correct!' : 'Not this time';
     elResult.style.display = 'block';
     if (won) {
       elResult.innerHTML = '<div class="hl-result-text win">CORRECT</div>' +
-        '<div class="hl-result-sub">' + link(pick) + ' by ' + diff + ' in ' + cur.a.yr + '</div>';
+        '<div class="hl-result-sub">' + link(b) + ' had ' + diff + ' ' + rel + ' than ' + esc(lastName(a)) + ' in ' + a.yr + '</div>';
       elNext.textContent = 'NEXT';
     } else {
       elResult.innerHTML = '<div class="hl-result-text lose">GAME OVER</div>' +
-        '<div class="hl-result-sub">' + link(other) + ' had ' + diff + ' more in ' + cur.a.yr + '</div>' +
+        '<div class="hl-result-sub">' + link(b) + ' had ' + diff + ' ' + rel + ' than ' + esc(lastName(a)) + ' in ' + a.yr + '</div>' +
         '<div class="hl-stat-row">' +
           '<div class="hl-stat"><b style="color:var(--accent)">' + lastRun + '</b><span>Streak</span></div>' +
           '<div class="hl-stat"><b>' + best + '</b><span>Best</span></div>' +
@@ -29904,7 +29909,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   }
   function next() {
     if (cur && !locked) return;               // mid-question: no skipping
-    if (runOver) { used.clear(); winner = null; }   // a new run may reuse players
+    if (runOver) { used.clear(); prev = null; }     // a new run may reuse players
     newRound();
   }
   function share() {
@@ -29931,17 +29936,17 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     });
   }
   window._hlStart = start;
-  elA.addEventListener('click', () => answer('a'));
-  elB.addEventListener('click', () => answer('b'));
+  elHigher.addEventListener('click', () => answer('higher'));
+  elLower.addEventListener('click', () => answer('lower'));
   elNext.addEventListener('click', next);
   elShare.addEventListener('click', share);
-  // Keyboard: ← / → pick, Enter moves on.
+  // Keyboard: ↑ higher / ↓ lower, Enter moves on.
   document.addEventListener('keydown', e => {
     if (!cur || !pane.classList.contains('active') || !document.getElementById('pageGames').classList.contains('active')) return;
     const tag = (e.target && e.target.tagName) || '';
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.altKey || e.ctrlKey || e.metaKey) return;
-    if (e.key === 'ArrowLeft') { e.preventDefault(); answer('a'); }
-    else if (e.key === 'ArrowRight') { e.preventDefault(); answer('b'); }
+    if (e.key === 'ArrowUp' && !locked) { e.preventDefault(); answer('higher'); }
+    else if (e.key === 'ArrowDown' && !locked) { e.preventDefault(); answer('lower'); }
     else if (e.key === 'Enter' && locked && e.target !== elNext && e.target !== elShare) { e.preventDefault(); next(); }
   });
   const tabBtn = document.querySelector('.games-tab[data-games-tab="higherlower"]');

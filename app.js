@@ -58971,9 +58971,13 @@ window.fmtHeight = fmtHeight;
       addSpan(d.n, yrs);
     });
     if (typeof WEEKLY_STATS !== 'undefined') for (const k in WEEKLY_STATS) {
-      exact.add(_triviaCollapseName(k));
       const ws = WEEKLY_STATS[k];
-      addSpan(k, Object.keys((ws && ws.seasons) || {}).map(Number).filter(Boolean));
+      // Seasons from 1999 on only: a record made of merged 1970-98 game logs alone
+      // (_mergeWeeklyStatsLegacy) is not a modern player the pool already carries.
+      const yrs = Object.keys((ws && ws.seasons) || {}).map(Number).filter(y => y >= 1999);
+      if (!yrs.length) continue;
+      exact.add(_triviaCollapseName(k));
+      addSpan(k, yrs);
     }
     const legendSpan = {};
     const legendByKey = {};
@@ -59044,7 +59048,8 @@ window.fmtHeight = fmtHeight;
     if (typeof D !== 'undefined') D.forEach(d => { if (d && d.n) add(d.n, d.s, (d.career || []).map(s => s && s.yr), true); });
     if (typeof WEEKLY_STATS !== 'undefined') for (const k in WEEKLY_STATS) {
       const ws = WEEKLY_STATS[k];
-      add(k, ws && ws.pos, Object.keys((ws && ws.seasons) || {}).map(Number), false);
+      // 1999+ seasons only: the merged 1970-98 game logs are not a source these boards read.
+      add(k, ws && ws.pos, Object.keys((ws && ws.seasons) || {}).map(Number).filter(y => y >= 1999), false);
     }
     for (const n in legends) add(n, '', (legends[n] || []).map(s => s && s.yr), false);
     const rows = [];
@@ -59056,7 +59061,7 @@ window.fmtHeight = fmtHeight;
         const have = new Set();
         same.forEach(e => e.yrs.forEach(y => have.add(y)));
         const lead = same.find(e => e.d) || same[0];
-        const pos = (same.find(e => e.d && e.pos) || same.find(e => e.pos) || {}).pos || rec.pos;
+        const pos = (same.find(e => e.d && e.pos) || {}).pos || rec.pos; // D's label wins; else PFR's
         rec.seasons.forEach(s => { if (!have.has(s.yr)) rows.push({ id: pid, name: lead.name, pos, key: lead.name, s, team: _triviaFranchise(s.tm, s.yr) }); });
         return;
       }
@@ -60358,6 +60363,10 @@ window.fmtHeight = fmtHeight;
               if (!weeks || !weeks.length) return;
               const _sznYr = parseInt(szn);
               if (_eraActive && !_eraOk(_sznYr)) return;
+              // 1970-98 seasons never come from the game logs (data/weekly_stats_1970s-90s,
+              // a running backfill that also carries playoff games): LEGEND_CAREERS via D
+              // and SEASON_TOTALS_7098 hold the complete regular-season lines.
+              if (_sznYr < 1999) return;
               // Season-level team — the fallback when w.tm is missing (older
               // seasons and the blank-tm active logs); resolved only if needed.
               let _sznTeam = null;
@@ -60552,6 +60561,7 @@ window.fmtHeight = fmtHeight;
             Object.keys(ws.seasons).forEach(szn => {
               const yr = parseInt(szn);
               if (!_yrOk(yr)) return;
+              if (yr < 1999) return; // 1970-98: LEGEND_CAREERS / SEASON_TOTALS_7098, not the game logs (see career mode)
               const weeks = ws.seasons[szn];
               if (!weeks || !weeks.length) return;
 

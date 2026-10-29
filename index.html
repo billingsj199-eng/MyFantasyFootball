@@ -6686,7 +6686,7 @@ window._loadRetiredData = function(opts) {
 // initials until it lands, then upgrades the cell. Regenerate: scripts/build_legend_headshots.py.
 window._loadLegendHeadshots = function(opts) {
   if (window._legendHeadshotsPromise) return window._legendHeadshotsPromise;
-  window._legendHeadshotsPromise = _injectScripts(['data/legend_headshots.js?v=2026-10-28-legends2', 'data/player_cutouts.js?v=2026-10-28-cutouts'], 'LegendHeadshots', opts);
+  window._legendHeadshotsPromise = _injectScripts(['data/legend_hs_local.js?v=2026-10-28-1756', 'data/legend_headshots.js?v=2026-10-28-legends2', 'data/player_cutouts.js?v=2026-10-28-cutouts'], 'LegendHeadshots', opts);
   return window._legendHeadshotsPromise;
 };
 

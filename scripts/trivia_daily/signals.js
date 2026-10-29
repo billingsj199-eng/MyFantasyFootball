@@ -229,7 +229,7 @@ async function collectSignals(opts) {
   if (!opts.offline) {
     try { history = await loadLockHistory(30); } catch (e) { history = []; opts.log && opts.log('history unavailable: ' + e.message); }
   }
-  return { date, repoDir, players, calendar, news: { source: news.source, updated: news.updated, recent: recentNews }, bigGames, mostTraded, nfl, history };
+  return { date, repoDir, log: opts.log, players, calendar, news: { source: news.source, updated: news.updated, recent: recentNews }, bigGames, mostTraded, nfl, history };
 }
 
 module.exports = { collectSignals, loadPlayers, loadNews, loadBigGames, loadMostTraded, loadLockHistory, evalDataFile, BIG_GAME_RULES, LIVE_BASE };

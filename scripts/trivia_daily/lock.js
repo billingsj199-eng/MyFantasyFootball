@@ -26,4 +26,13 @@ async function postLock(doc) {
   return { status: r.status, body };
 }
 
-module.exports = { postLock, LOCK_URL, KEY_FILE };
+// Remove an AUTO lock for a date (a hand lock is refused with 409).
+async function postUnlock(date) {
+  const key = readKey();
+  const r = await fetch(LOCK_URL, { method: 'POST', headers: { 'content-type': 'application/json', 'x-export-key': key }, body: JSON.stringify({ op: 'unlock', date }) });
+  let body = null;
+  try { body = await r.json(); } catch (_) { body = { error: 'non-JSON response', status: r.status }; }
+  return { status: r.status, body };
+}
+
+module.exports = { postLock, postUnlock, LOCK_URL, KEY_FILE };

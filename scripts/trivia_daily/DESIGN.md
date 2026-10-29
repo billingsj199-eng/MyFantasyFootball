@@ -100,6 +100,23 @@ Browser: Playwright from `tests/node_modules`; the bundled Chromium is invisible
 Scheduler, so it falls back to installed Edge / Chrome (same as `sim_lab/export_notes.js`).
 A full build takes ~10 s.
 
+### Franchise boards are NOT the site's team filter (fixed 2026-10-28 evening)
+
+The first auto lock ("Dolphins All-Time Rushing Yards") was wrong, as Jack saw: the site
+generator's team filter keeps players whose *primary* team is X but ranks them by
+*full-career* totals (Ricky Williams's 9,978 includes New Orleans), and it only ranks
+players present in its main table, so Mercury Morris, Jim Kiick, Tony Nathan and the other
+pre-1999 Dolphins never appear even though LEGEND_CAREERS has them. `teamboards.js` now
+builds franchise boards in Node from **with-team totals** (ALL_PLAYERS_DB = every nflverse
+skill player 1999+, d.js for rookies, this season from WEEKLY_STATS_ACTIVE), titled
+**"… Leaders · Since 1999"** with the subtitle saying so — the era the data covers
+completely; we don't claim all-time. A **floor** rejects a thin tail (16th place below
+1,000 yards / 3,000 pass yards / 300 fpts), which is what the Dolphins RB board fails;
+the fallback is the team's all-positions fantasy-points board, else the theme is dropped.
+Counting stats are cross-checked against LEGEND_CAREERS with-team sums (top 10, 2%);
+fantasy points are not (the two sources use different INT scoring).
+`run.js unlock --date` drops an auto lock (Cloud Function `op:'unlock'`, hand locks refused).
+
 ## 3. Firestore write (`lock.js` + Cloud Function `lockTriviaDaily`)
 
 `trivia_daily` writes are `isJack()`-only, so the job cannot use the client SDK. Chosen

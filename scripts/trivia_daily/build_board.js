@@ -199,7 +199,7 @@ function judge(variant, r, mustInclude) {
     const top = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
     if (top && counts[top] > r.items.length / 4) return { ok: false, why: top + ' holds ' + counts[top] + ' of ' + r.items.length + ' cells' };
   }
-  if (variant.kind === 'list') return { ok: true, status: 'list' };
+  if (variant.kind === 'list') return { ok: true, status: variant.status || 'list' };
   if (r.bannerStatus === 'flagged' && variant.kind !== 'team') return { ok: false, why: 'verifier flagged: ' + r.bannerText.slice(0, 200) };
   if (variant.kind === 'team') {
     if (!r.alt) return { ok: false, why: 'team cross-check did not run' };
@@ -264,7 +264,7 @@ async function buildFirstPassing(themes, opts) {
           let b = null;
           try { b = await variant.lazy(); } catch (e) { log('  ' + variant.key + ' failed: ' + (e && e.message)); }
           if (!b) { log('skip ' + variant.key + ': no board (too few rows or source unavailable)'); tried.push({ theme: theme.kind, variant: variant.key, ok: false, why: 'no board', items: 0 }); continue; }
-          Object.assign(variant, { key: b.key || variant.key, title: b.title, desc: b.desc, items: b.items, repeatRule: !!b.repeatRule });
+          Object.assign(variant, { key: b.key || variant.key, title: b.title, desc: b.desc, items: b.items, repeatRule: !!b.repeatRule, status: b.status || 'list' });
         }
         if (variant.kind === 'list') {
           // Built in Node from nflverse data; no site generator involved.

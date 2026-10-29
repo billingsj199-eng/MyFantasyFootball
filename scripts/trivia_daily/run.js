@@ -7,6 +7,8 @@
 //       plan + build the winning board headlessly, save the lock doc as JSON
 //   node scripts/trivia_daily/run.js lock  [--date YYYY-MM-DD] [--theme KEY]
 //       plan + build + write trivia_daily/{date} (the scheduled job's command)
+//   node scripts/trivia_daily/run.js unlock --date YYYY-MM-DD
+//       remove that date's AUTO lock (hand locks are refused)
 //
 // Dates are US Eastern. Default date = tomorrow. The job never overwrites a
 // board Jack locked by hand (the Cloud Function refuses with 409); it does
@@ -19,7 +21,7 @@ const cal = require('./calendar');
 const { collectSignals } = require('./signals');
 const { pickThemes } = require('./themes');
 const { buildFirstPassing } = require('./build_board');
-const { postLock, LOCK_URL } = require('./lock');
+const { postLock, postUnlock, LOCK_URL } = require('./lock');
 
 const VERSION = '2026-10-28';
 const REPO_DIR = path.resolve(__dirname, '..', '..');
@@ -59,6 +61,14 @@ async function main() {
   const offline = !!arg('offline', false);
   const themeKey = arg('theme', null);
   log('trivia daily v' + VERSION + ' · ' + cmd + ' · repo ' + REPO_DIR);
+  if (cmd === 'unlock') {
+    // node run.js unlock --date YYYY-MM-DD → drops an auto lock so the
+    // template cycle serves that date; hand locks are never touched.
+    const res = await postUnlock(date);
+    if (res.status === 200 && res.body && res.body.ok) log(res.body.removed ? 'UNLOCKED ' + date : 'nothing locked for ' + date);
+    else throw new Error('unlock failed: HTTP ' + res.status + ' ' + JSON.stringify(res.body));
+    return;
+  }
 
   const sig = await collectSignals({ repoDir: REPO_DIR, date, offline, log });
   let themes = pickThemes(sig);
@@ -84,7 +94,9 @@ async function main() {
   const doc = {
     date,
     title: result.title || variant.title,
-    desc: (variant.kind === 'list' && theme.kind !== 'trade' && variant.desc) ? variant.desc : (theme.desc || ''),
+    // News themes keep the news hook as the subtitle; calendar / list themes
+    // use the board's own description.
+    desc: theme.hook ? (theme.desc || variant.desc || '') : (variant.desc || theme.desc || ''),
     items: result.items,
     itemCount: result.items.length,
     colorway: theme.colorway || 'purple',

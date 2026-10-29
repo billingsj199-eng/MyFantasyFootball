@@ -38,14 +38,29 @@ function short(s, n) {
 }
 
 // --- board variants: each returns {title, filters, kind} ---
+// Franchise boards are built in Node from WITH-TEAM totals since 1999
+// (scripts/trivia_daily/teamboards.js) — the site's team filter ranks
+// primary-team players by full-career totals and misses legends outside
+// its main table (the 2026-10-28 Dolphins board). Lazy: built on demand.
+let _teamRepo = null;
+function setTeamRepo(repoDir, log) { _teamRepo = { repoDir, log }; }
 function teamBoard(abbr, full, pos, stat) {
   const nick = nickname(full) || abbr;
-  const positions = pos ? POS_GROUP[pos] : ALL_POS;
+  const positions = pos ? POS_GROUP[pos] : null;
   const s = stat || (pos ? POS_YARDS[pos] : 'fpts');
+  const key = 'team|' + abbr + '|' + s + '|' + (positions || []).join('');
   return {
-    kind: 'team', key: 'team|' + abbr + '|' + s + '|' + positions.join(''),
-    title: nick + ' All-Time ' + STAT_LABEL[s] + ' Leaders' + (pos ? ' · ' + POS_LABEL[pos] : ''),
-    filters: Object.assign({}, BASE, { type: 'career', stat: s, team: abbr, positions }),
+    kind: 'list', key,
+    title: nick + ' ' + STAT_LABEL[s] + ' Leaders · Since 1999' + (pos ? ' · ' + POS_LABEL[pos] : ''),
+    lazy: () => {
+      const T = require('./teamboards');
+      const ctx = T.context(_teamRepo.repoDir, _teamRepo.log);
+      const b = T.teamLeaders(ctx, abbr, nick, s, positions, 20);
+      if (!b) return null;
+      if (b.thin) { _teamRepo.log && _teamRepo.log('  ' + key + ': thin tail (#16 ' + b.sixteenth.name + ' ' + b.sixteenth.v + ' < floor) — skipped'); return null; }
+      if (b.disagreements.length) { _teamRepo.log && _teamRepo.log('  ' + key + ': legends cross-check mismatch — ' + b.disagreements.join('; ')); return null; }
+      return b;
+    },
   };
 }
 function careerBoard(pos, stat) {
@@ -197,6 +212,7 @@ function pickThemes(sig) {
   const seenKeys = new Set();
   const push = (t) => { if (t && !seenKeys.has(t.key)) { seenKeys.add(t.key); out.push(t); } };
   const rot = (arr) => arr[((c.dayIndex % arr.length) + arr.length) % arr.length];
+  setTeamRepo(sig.repoDir, sig.log);
   // College context is loaded only when a college variant is actually built.
   let _cfbCtx = null;
   const cfb = () => (_cfbCtx = _cfbCtx || require('./college').context(sig.repoDir, sig.log));

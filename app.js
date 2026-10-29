@@ -56159,7 +56159,10 @@ window.fmtHeight = fmtHeight;
           html += `<span style="font-size:1.2rem;opacity:.3">${_esc(it.team || '?')}</span>`;
         }
         html += `</div>`;
-        html += `<div class="trivia-cell-hint">${_esc(it.hint || '')}</div>`;
+        // Bottom line never repeats the strip (survey R10): rank when the strip
+        // shows the stat, the stat when it shows the category.
+        const bottomText = cellHeaderMode === 'stat' ? (it.category || '') : (it.hint || '');
+        html += `<div class="trivia-cell-hint">${_esc(bottomText)}</div>`;
         html += `<div class="trivia-cell-answer">${_esc(it.answer || '')}</div>`;
         if (mode === 'guess' && !freeBar) {
           html += `<input type="text" class="trivia-guess-input" data-idx="${i}" placeholder="guess..." autocomplete="off" oninput="window._triviaOnInput(${i},this)" onfocus="window._triviaOnInput(${i},this)" onblur="setTimeout(window._triviaHideAC,150)" onkeydown="if(event.key==='Enter'){event.preventDefault();window._triviaGuess(${i})}">`;
@@ -56977,7 +56980,11 @@ window.fmtHeight = fmtHeight;
       const posBadge = p.pos ? `<span style="font-size:.6875rem;font-weight:700;padding:1px 4px;border-radius:3px;background:rgba(168,85,247,.15);color:var(--te)">${p.pos}</span>` : '';
       // No team label: it showed the CURRENT team (Kenneth Walker as a Chief on
       // a 2025 board) and the board's logos are the hint anyway (Jack 10-28).
-      opt.innerHTML = `${posBadge}<span>${p.name}</span>`;
+      // Career span disambiguates namesakes before the guess lands (survey R9:
+      // "Calvin Johnson 2007–2015"); active players read "2021–pres".
+      const _cur = new Date().getFullYear();
+      const yrsLbl = (p.y1 && p.y2) ? (p.y1 + '–' + (p.y2 >= _cur ? 'pres' : p.y2)) : '';
+      opt.innerHTML = `${posBadge}<span>${p.name}</span>${yrsLbl ? `<small style="margin-left:auto;color:var(--text2);font-size:.66rem">${yrsLbl}</small>` : ''}`;
       opt.addEventListener('mousedown', (e) => {
         e.preventDefault(); // don't blur the input
         inputEl.value = p.name;
@@ -57394,6 +57401,25 @@ window.fmtHeight = fmtHeight;
     _triviaFreeNote('Out of misses · overtime: hits still reveal, misses are free · Give Up shows the answers', 'var(--accent)');
     _triviaUpdateScore();
   }
+  // Why a miss missed (survey R7): a real player's position and years held
+  // against the board's filter, so a wrong guess still teaches something —
+  // "RB · 1989–1998 — the board is 2010s" instead of a bare "not on the board".
+  function _triviaMissReason(guess) {
+    const strip = s => String(s || '').toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
+    const g = strip(guess), gs = g.replace(/\s+(jr|sr|ii|iii|iv|v)$/, '');
+    const p = _triviaBuildPlayerList().find(x => { const n = strip(x.name); return n === g || n.replace(/\s+(jr|sr|ii|iii|iv|v)$/, '') === gs; });
+    if (!p) return 'not a player we know';
+    const f = (_triviaData && _triviaData._filter) || null;
+    const cur = new Date().getFullYear();
+    const yrs = (p.y1 && p.y2) ? p.y1 + '–' + (p.y2 >= cur ? 'pres' : p.y2) : '';
+    const who = [p.pos, yrs].filter(Boolean).join(' · ') || 'on file';
+    const win = _triviaBoardYears();
+    const winLbl = win ? (win[0] === win[1] ? String(win[0]) : (win[1] >= 9999 ? 'since ' + win[0] : win[0] + '–' + win[1])) : '';
+    if (f && f.positions && f.positions.length < 4 && p.pos && !f.positions.includes(p.pos)) return who + ' — this board is ' + f.positions.join('/') + ' only';
+    if (win && p.y1 && p.y2 && (p.y2 < win[0] || p.y1 > win[1])) return who + ' — the board is ' + winLbl;
+    if (f && f.team && f.team !== 'all') return who + ' — not in the top ' + (f.count || _triviaScore.total) + ' for the ' + _libTeamName(f.team);
+    return who + ' — not in the top ' + ((f && f.count) || _triviaScore.total) + (winLbl ? ' for ' + winLbl : '');
+  }
   function _triviaFreeGuess() {
     _triviaHideAutocomplete();
     const input = _triviaFreeInput();
@@ -57427,13 +57453,14 @@ window.fmtHeight = fmtHeight;
       void input.offsetWidth;
       input.classList.add('shake');
       _triviaPlayIncorrect();
+      const why = _triviaMissReason(guess);
       if (_triviaGame.overtime) {
-        _triviaFreeNote('✗ ' + guess + ' — not on the board (overtime, free)', '#ef4444');
+        _triviaFreeNote('✗ ' + guess + ' — ' + why + ' (overtime, free)', '#ef4444');
       } else {
         _triviaScore.misses = (_triviaScore.misses || 0) + 1;
         const budget = _triviaBudgetActive() ? _triviaMissBudget(_triviaScore.total) : 0;
         const left = budget ? budget - _triviaScore.misses : 0;
-        _triviaFreeNote('✗ ' + guess + ' — not on the board' + (budget ? (left > 0 ? ' · ' + left + ' miss' + (left === 1 ? '' : 'es') + ' left' : '') : ''), '#ef4444');
+        _triviaFreeNote('✗ ' + guess + ' — ' + why + (budget ? (left > 0 ? ' · ' + left + ' miss' + (left === 1 ? '' : 'es') + ' left' : '') : ''), '#ef4444');
         _triviaUpdateScore();
         if (budget && _triviaScore.misses >= budget) { _triviaMissBudgetOut(); return; }
       }

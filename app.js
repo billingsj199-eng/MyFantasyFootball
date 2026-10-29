@@ -29721,9 +29721,10 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   // dry the chain restarts with a fresh pair.
   function challengerFor(keep, lo, hi) {
     const g = byYear[keep.yr], rows = g && g[keep.pos] ? g[keep.pos].filter(r => r.name !== keep.name && !used.has(r.name)) : [];
+    // Only challengers inside the difficulty band: a runaway #1 with nobody
+    // close leaves the chair instead of winning for free.
     const cands = rows.filter(r => Math.abs(r.pts - keep.pts) >= lo && Math.abs(r.pts - keep.pts) <= hi);
-    const pool = cands.length ? cands : rows;
-    return pool.length ? pool[rnd(pool.length)] : null;
+    return cands.length ? cands[rnd(cands.length)] : null;
   }
   function pickPair(keep) {
     if (!byYear) return null;

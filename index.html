@@ -86,7 +86,7 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-29-draftday" as="style">
+<link rel="preload" href="styles/main.css?v=2026-10-29-games" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-10-28-allen" as="script">
 <link rel="preload" href="data/d.js?v=2026-10-28" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-29-draftday">
+<link rel="stylesheet" href="styles/main.css?v=2026-10-29-games">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -2394,6 +2394,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <button class="games-tab active" data-games-tab="daily">DAILY</button>
 <button class="games-tab" data-games-tab="guesswho">ELITE PULL</button>
 <button class="games-tab" data-games-tab="elitepull">GUESS WHO</button>
+<button class="games-tab" data-games-tab="higherlower">HIGHER / LOWER</button>
 <button class="games-tab" data-games-tab="fantasygame">Fantasy Game</button>
 <button class="games-tab" data-games-tab="leaderboard">LEADERBOARD</button>
 </div>
@@ -2576,6 +2577,35 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 </div>
 </div>
 
+<!-- HIGHER / LOWER (2026-10-29, trivia-site survey G6): two same-season, same-position
+     players; tap the higher PPR total. One miss ends the run; best streak posts to
+     leaderboard/{uid}.higherLower. Logic: app.js games chunk (_mffHigherLower). -->
+<div class="games-subpage" id="gamesHigherlower">
+<div class="elite-pull-section hl-section" style="margin:0 auto;max-width:560px">
+<div class="elite-pull-card">
+<div class="elite-pull-header">
+<div class="elite-pull-title">HIGHER / LOWER</div>
+<div class="elite-pull-subtitle">Who scored more fantasy points? &middot; PPR &middot; one miss ends the run</div>
+<div id="hlStats" class="ep-streak-display" style="margin-top:6px"></div>
+</div>
+<div class="hl-body">
+<div class="hl-q"><span class="hl-season" id="hlSeason">&mdash;</span><span class="hl-q-text" id="hlPrompt">Who scored more fantasy points?</span></div>
+<div class="hl-duel" id="hlDuel">
+<button type="button" class="hl-player" id="hlA" aria-label="Player A" disabled></button>
+<div class="hl-vs" aria-hidden="true">VS</div>
+<button type="button" class="hl-player" id="hlB" aria-label="Player B" disabled></button>
+</div>
+<div id="hlResult" class="hl-result" style="display:none"></div>
+<div class="hl-actions">
+<button type="button" id="hlNextBtn" class="hl-btn hl-btn-primary" style="display:none">NEXT</button>
+<button type="button" id="hlShareBtn" class="hl-btn">SHARE</button>
+</div>
+<div id="hlLoading" class="hl-loading">Loading seasons&hellip;</div>
+</div>
+</div>
+</div>
+</div>
+
 <!-- ELITE PULL Sub-page (clue-grid) — ID "gamesGuesswho" is legacy from pre-swap naming -->
 <div class="games-subpage" id="gamesGuesswho">
 <div class="gw-section" style="margin:0 auto;max-width:520px;padding:0 4px;box-sizing:border-box">
@@ -2691,6 +2721,12 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="lb-list" id="lbAlltimeList"></div>
 <div class="lb-loading" id="lbAlltimeLoading">Loading...</div>
 <div class="lb-empty" id="lbAlltimeEmpty" style="display:none">No data yet</div>
+<div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+
+<div class="lb-section-title">Higher / Lower &mdash; best streak</div>
+<div class="lb-list" id="lbHigherLowerList"></div>
+<div class="lb-loading" id="lbHigherLowerLoading">Loading...</div>
+<div class="lb-empty" id="lbHigherLowerEmpty" style="display:none">No data yet</div>
 
 </div><!-- end lbPanelGames -->
 

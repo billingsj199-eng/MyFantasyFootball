@@ -3713,3 +3713,49 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
 @media (max-width:480px){.fg-dd-card{padding:12px}.fg-dd-line{font-size:1.3rem}.fg-dd-actions .fg-btn{flex:1;min-width:0;padding:10px 8px;font-size:.85rem}}
 /* Phones: the 7-button ERA row (517px) pushed the whole Fantasy Game header past 375px, cutting the subtitle off both sides. */
 @media (max-width:540px){#fgEraRow{flex-wrap:wrap;max-width:100%}#fgEraRow .fg-mode-btn{flex:1 1 auto}}
+
+/* HIGHER / LOWER (Games tab, 2026-10-29): two tap cards side by side, phone first. */
+.hl-body{padding:1rem 1rem 1.1rem}
+.hl-q{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.hl-season{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:2px;color:var(--accent);line-height:1}
+.hl-q-text{font-size:.9rem;color:var(--text);font-weight:600}
+.hl-duel{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch}
+.hl-vs{align-self:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;color:var(--text3);padding:0 2px}
+.hl-player{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px 10px;min-height:44px;background:var(--surface2);border:2px solid var(--border);border-radius:12px;color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;transition:border-color .15s,transform .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
+.hl-player:hover:not(:disabled){border-color:var(--accent);transform:translateY(-1px)}
+.hl-player:disabled{cursor:default}
+.hl-player:empty{min-height:220px}
+.hl-player.hl-win{border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+.hl-player.hl-lose{border-color:var(--red);box-shadow:0 0 0 3px rgba(239,68,68,.15)}
+.hl-photo{position:relative;width:104px;height:104px;border-radius:50%;background:var(--surface);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.hl-photo img{width:100%;height:100%;object-fit:cover;object-position:top}
+.hl-photo img.hl-cutout{object-fit:contain;object-position:bottom;padding-top:6px;box-sizing:border-box}
+.hl-initials{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:2px;color:var(--text2)}
+.hl-pick-mark{display:none;position:absolute;right:4px;bottom:4px;width:26px;height:26px;border-radius:50%;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;color:#fff;background:var(--text3);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.hl-picked .hl-pick-mark{display:flex}
+.hl-win .hl-pick-mark{background:var(--green)}
+.hl-lose .hl-pick-mark{background:var(--red)}
+.hl-name{font-weight:700;font-size:.92rem;line-height:1.15}
+.hl-meta{font-size:.7rem;color:var(--text2);letter-spacing:.5px;text-transform:uppercase}
+.hl-pts{margin-top:4px;display:flex;flex-direction:column;align-items:center;line-height:1}
+.hl-pts-num{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:1px;color:var(--text3);min-height:1.9rem;font-variant-numeric:tabular-nums}
+.hl-win .hl-pts-num{color:var(--green)}
+.hl-lose .hl-pts-num{color:var(--red)}
+.hl-pts-lbl{font-size:.62rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+.hl-result{text-align:center;padding:.75rem 0 0}
+.hl-result-text{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px}
+.hl-result-text.win{color:var(--green)}
+.hl-result-text.lose{color:var(--red)}
+.hl-result-sub{font-size:.78rem;color:var(--text2);margin-top:4px}
+.hl-stat-row{display:flex;gap:10px;justify-content:center;margin:12px 0 4px;flex-wrap:wrap}
+.hl-stat{text-align:center;padding:8px 14px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);min-width:60px}
+.hl-stat b{display:block;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:1px;font-weight:400;color:var(--text)}
+.hl-stat span{font-size:.6875rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.hl-actions{display:flex;gap:8px;margin-top:14px}
+.hl-btn{flex:1;min-height:44px;padding:10px 16px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;cursor:pointer;transition:filter .15s;border:1px solid var(--border);background:var(--surface2);color:var(--text)}
+.hl-btn-primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.hl-btn:hover{filter:brightness(1.1)}
+.hl-loading{text-align:center;color:var(--text2);font-size:.8rem;padding:10px 0 0}
+.hl-loading[hidden]{display:none}
+@media(max-width:400px){.hl-photo{width:86px;height:86px}.hl-player{padding:10px 6px 8px}.hl-name{font-size:.84rem}.hl-pts-num{font-size:1.6rem}}
+@media(prefers-reduced-motion:reduce){.hl-player{transition:none}}

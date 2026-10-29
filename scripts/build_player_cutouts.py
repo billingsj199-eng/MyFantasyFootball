@@ -642,7 +642,7 @@ def write_index(players, state):
         default = prim if prim in by else max(by, key=lambda t: sum(1 for s in players[name]['stints'] if s['tm'] == t))
         table[name] = {'byTeam': by, 'default': default}
         # sidecar credits next to the images
-        with open(os.path.join(IMG_DIR, lt.slug(name), 'credits.json'), 'w', encoding='utf-8') as f:
+        with open(os.path.join(IMG_DIR, lt.slug(name), 'credits.json'), 'w', encoding='utf-8', newline='\n') as f:
             json.dump({t: {'file': b['file'], 'credit': b['credit'], 'yr': b['yr'],
                            'page': (cuts[t].get('page') or '')} for t, b in by.items()}, f, ensure_ascii=False, indent=1)
     lines = ['/* PLAYER_CUTOUTS — era-correct transparent player cutouts for the Trivia reveal',

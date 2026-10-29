@@ -56698,28 +56698,62 @@ window.fmtHeight = fmtHeight;
     // daily challenge. Combines: active players (D), historical players
     // (ALL_PLAYERS_DB), and the current trivia board's answers (in case any
     // are missing from the other two sources).
-    const out = [];
-    const seen = new Set();
-    const _push = (name, pos, team) => {
-      if (!name) return;
-      const k = name.toLowerCase();
-      if (seen.has(k)) return;
-      seen.add(k);
-      out.push({ name, pos: pos || '', team: team || '' });
-    };
-    if (typeof D !== 'undefined' && Array.isArray(D)) {
-      D.forEach(d => _push(d.n, d.s, d.t));
+    // Each entry carries the player's first/last season (y1/y2) so the
+    // dropdown can hide names outside the board's year window (Jack 10-28:
+    // no Jerry Rice on a 2025 board). Unknown years keep the player.
+    if (!_triviaPlayerListCache) {
+      const out = [];
+      const seen = new Set();
+      const _yrs = (career) => {
+        let y1 = null, y2 = null;
+        (career || []).forEach(s => { const y = +s.yr; if (!y) return; if (y1 == null || y < y1) y1 = y; if (y2 == null || y > y2) y2 = y; });
+        return [y1, y2];
+      };
+      const _push = (name, pos, team, y1, y2) => {
+        if (!name) return;
+        const k = name.toLowerCase();
+        if (seen.has(k)) return;
+        seen.add(k);
+        out.push({ name, pos: pos || '', team: team || '', y1: y1 || null, y2: y2 || null });
+      };
+      const _lc = (typeof LEGEND_CAREERS !== 'undefined') ? LEGEND_CAREERS : {};
+      if (typeof D !== 'undefined' && Array.isArray(D)) {
+        D.forEach(d => {
+          const yr = _yrs(d.career && d.career.length ? d.career : _lc[d.n]);
+          // Active players count through the current season even before a
+          // career row for it exists.
+          _push(d.n, d.s, d.t, yr[0], d._retired ? yr[1] : Math.max(yr[1] || 0, new Date().getFullYear()));
+        });
+      }
+      if (typeof ALL_PLAYERS_DB !== 'undefined' && Array.isArray(ALL_PLAYERS_DB)) {
+        ALL_PLAYERS_DB.forEach(p => { const yr = _yrs(p.career); _push(p.name, p.pos, '', +p.debut || yr[0], +p.last || yr[1]); });
+      }
+      Object.keys(_lc).forEach(n => { const yr = _yrs(_lc[n]); _push(n, '', '', yr[0], yr[1]); });
+      _triviaPlayerListCache = out;
     }
-    if (typeof ALL_PLAYERS_DB !== 'undefined' && Array.isArray(ALL_PLAYERS_DB)) {
-      ALL_PLAYERS_DB.forEach(p => _push(p.name, p.pos, ''));
-    }
+    const out = _triviaPlayerListCache.slice();
     if (_triviaData && _triviaData.items) {
+      const seen = new Set(out.map(p => p.name.toLowerCase()));
       _triviaData.items.forEach(it => {
-        const n = (it.answer || '').split(/[\(\,]/)[0].trim();
-        _push(n, '', it.team || '');
+        const n = (it.answer || '').split(/\s*[\(,]|\s[-–—]\s/)[0].trim();
+        if (n && !seen.has(n.toLowerCase())) { seen.add(n.toLowerCase()); out.push({ name: n, pos: '', team: it.team || '', y1: null, y2: null }); }
       });
     }
     return out;
+  }
+  let _triviaPlayerListCache = null;
+  // The board's year window from its filter: [y1, y2] or null (locked
+  // snapshots and AI boards carry no filter → no restriction).
+  function _triviaBoardYears() {
+    const f = _triviaData && _triviaData._filter;
+    if (!f) return null;
+    if (f.year && f.year !== 'all') return [+f.year, +f.year];
+    const e = f.era || 'all';
+    if (e.indexOf('since-') === 0) return [+e.slice(6), 9999];
+    const m = /^(\d{4})-(\d{4})$/.exec(e);
+    if (m) return [+m[1], +m[2]];
+    if (f.type === 'game') return [1999, 9999];
+    return null;
   }
 
   function _triviaShowAutocomplete(inputEl, idx) {
@@ -56739,11 +56773,14 @@ window.fmtHeight = fmtHeight;
 
     const matches = [];
     const seen = new Set();
+    const win = _triviaBoardYears();
     allNames.forEach(p => {
       const name = p && p.name ? p.name : '';
       if (!name) return;
       const nameLow = name.toLowerCase();
       if (seen.has(nameLow)) return;
+      // Only players who played inside the board's year window.
+      if (win && p.y1 && p.y2 && (p.y2 < win[0] || p.y1 > win[1])) return;
       // Match anywhere in name
       if (nameLow.includes(query) && !answeredNames.has(name)) {
         seen.add(nameLow);
@@ -56773,8 +56810,9 @@ window.fmtHeight = fmtHeight;
       const opt = document.createElement('div');
       opt.style.cssText = 'padding:6px 10px;font-size:.78rem;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px';
       const posBadge = p.pos ? `<span style="font-size:.6875rem;font-weight:700;padding:1px 4px;border-radius:3px;background:rgba(168,85,247,.15);color:var(--te)">${p.pos}</span>` : '';
-      const teamLbl = p.team ? `<span style="color:var(--text2);font-size:.6875rem;margin-left:auto">${p.team}</span>` : '';
-      opt.innerHTML = `${posBadge}<span>${p.name}</span>${teamLbl}`;
+      // No team label: it showed the CURRENT team (Kenneth Walker as a Chief on
+      // a 2025 board) and the board's logos are the hint anyway (Jack 10-28).
+      opt.innerHTML = `${posBadge}<span>${p.name}</span>`;
       opt.addEventListener('mousedown', (e) => {
         e.preventDefault(); // don't blur the input
         inputEl.value = p.name;

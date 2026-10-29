@@ -3801,6 +3801,13 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button type="button" class="trivia-library-play" id="libPlayBtn" onclick="window._triviaLibraryPlay()">BUILD &amp; PLAY</button>
 </div>
 <div class="trivia-library-note" id="libNote"></div>
+<!-- Board index: walk every library combination in order (admin review) -->
+<div class="trivia-library-index">
+<button type="button" id="libPrevBtn" onclick="window._triviaLibraryGo(-1,true)">&#9664; PREV</button>
+<select id="libIndexSel" onchange="window._triviaLibraryGo(+this.value)"><option value="-1">Board index — jump to any board…</option></select>
+<button type="button" id="libNextBtn" onclick="window._triviaLibraryGo(1,true)">NEXT &#9654;</button>
+<span id="libIndexPos"></span>
+</div>
 </div>
 
 <!-- Quick-start Templates -->

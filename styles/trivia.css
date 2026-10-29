@@ -90,6 +90,10 @@ body:not(.mff-admin) #navTriviaBtn{display:none!important}
 .trivia-library-play{padding:9px 20px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;cursor:pointer;font-weight:700}
 .trivia-library-play:disabled{opacity:.6;cursor:default}
 .trivia-library-note{min-height:14px;margin-top:6px;font-size:.72rem;color:var(--text2)}
+.trivia-library-index{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.trivia-library-index button{padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer}
+.trivia-library-index select{flex:1;min-width:180px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem}
+.trivia-library-index span{font-size:.72rem;color:var(--text2);white-space:nowrap}
 .trivia-score-bar{display:flex;align-items:center;justify-content:center;gap:16px;padding:10px;margin-bottom:8px;border-radius:8px;background:var(--surface2);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1px;color:var(--text)}
 /* Inside the #triviaScoreBar wrapper (which already draws the box) the bar is just a row. */
 #triviaScoreBar .trivia-score-bar{margin-bottom:0;padding:2px 0;background:transparent;border-radius:0}

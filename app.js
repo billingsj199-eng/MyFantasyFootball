@@ -56874,6 +56874,9 @@ window.fmtHeight = fmtHeight;
   // `yr` (the board's season / career midpoint) picks the era when the team can't.
   // Order (Jack 10-28): cutout for that team+era → cutout for that team → ESPN headshot
   // (active / retired id) → cutout nearest the era (retired only) → Commons lead photo → initials.
+  // Only in-uniform photos on the board (Jack 10-28): cutouts, hand-picked PNGs
+  // and ESPN headshots always are; Commons photos only when jersey-matched.
+  const _TRIVIA_UNIFORM_ONLY = true;
   function _triviaGetHeadshotInfo(answerText, team, yr) {
     const none = { url: '', credit: '', page: '' };
     // Strip "(1991–1999)" / ", 2004" / " - Wk 4" suffixes. A dash counts only
@@ -56891,10 +56894,24 @@ window.fmtHeight = fmtHeight;
     // route through _fixHeadshotUrl (forces width-only &w=350, ratio-safe).
     const _fix = (typeof window._fixHeadshotUrl === 'function') ? window._fixHeadshotUrl : (u => u);
 
+    // Cell team → canonical site abbreviation (legacy spellings aliased).
+    const _tUp = String(team || '').toUpperCase();
+    const _tCanon = (typeof _TEAM_ABBR_ALIASES !== 'undefined' && _TEAM_ABBR_ALIASES[_tUp]) || _tUp;
+
     // LEGEND_HEADSHOTS record → reveal info, preferring the cell team's jersey photo.
+    // Uniform only (Jack 10-28): a Commons photo counts only when the builder matched
+    // it to a team jersey (byTeam); the generic lead photo is usually post-career
+    // (suits, banners), so it is skipped and the square shows initials instead.
+    // Flip _TRIVIA_UNIFORM_ONLY to false to allow lead photos again.
     const _fromLegend = (lh) => {
       const bt = _tCanon && lh.byTeam && lh.byTeam[_tCanon];
       if (bt && bt.url) return { url: bt.url, credit: bt.credit || lh.credit || 'Wikimedia Commons', page: lh.page || '' };
+      if (_TRIVIA_UNIFORM_ONLY) {
+        // Any jersey photo beats no photo: take the first team's cut if the cell's
+        // team has none (still in uniform, just a different stint).
+        const anyTeam = lh.byTeam && Object.values(lh.byTeam).find(b => b && b.url);
+        return anyTeam ? { url: anyTeam.url, credit: anyTeam.credit || lh.credit || 'Wikimedia Commons', page: lh.page || '' } : null;
+      }
       return { url: lh.url, credit: lh.credit || 'Wikimedia Commons', page: lh.page || '' };
     };
 
@@ -56933,7 +56950,7 @@ window.fmtHeight = fmtHeight;
     if (window.LEGEND_HEADSHOTS) {
       for (const v of nameVariants) {
         const lh = window.LEGEND_HEADSHOTS[v];
-        if (lh && lh.url && lh.preferCommons) return _fromLegend(lh);
+        if (lh && lh.url && lh.preferCommons) { const r = _fromLegend(lh); if (r) return r; }
       }
     }
 
@@ -56968,7 +56985,7 @@ window.fmtHeight = fmtHeight;
     if (window.LEGEND_HEADSHOTS) {
       for (const v of nameVariants) {
         const lh = window.LEGEND_HEADSHOTS[v];
-        if (lh && lh.url) return _fromLegend(lh);
+        if (lh && lh.url) { const r = _fromLegend(lh); if (r) return r; }
       }
     }
 
@@ -58098,6 +58115,19 @@ window.fmtHeight = fmtHeight;
         if (!document.querySelector('#libPos button.on')) b.classList.add('on');
       });
     });
+    // Board index jump list, grouped by type · stat.
+    const sel = document.getElementById('libIndexSel');
+    if (sel && sel.options.length <= 1) {
+      let grp = null, grpKey = '';
+      _libCombos().forEach((c, i) => {
+        const key = _LIB_TYPE_LBL[c.type] + ' · ' + _LIB_STAT_LBL[c.stat];
+        if (key !== grpKey) { grp = document.createElement('optgroup'); grp.label = key; sel.appendChild(grp); grpKey = key; }
+        const o = document.createElement('option');
+        o.value = String(i); o.textContent = _LIB_ERA_LBL[c.era] + ' · ' + (c.pos.length === 4 ? 'All pos' : c.pos.join('/'));
+        grp.appendChild(o);
+      });
+      _libIndexSync();
+    }
   }
   // Push a filter set into the builder and run it. Returns the item count.
   async function _libBuild(f) {
@@ -58148,6 +58178,46 @@ window.fmtHeight = fmtHeight;
     }
     if (btn) { btn.disabled = false; btn.textContent = 'BUILD & PLAY'; }
   };
+  // Every library combination in a fixed order — the board index Jack walks
+  // with PREV / NEXT (or the jump list) and the audit's work list.
+  const _LIB_STAT_LBL = { fpts: 'Fantasy Pts', ppg: 'Fantasy PPG', rcy: 'Rec Yds', rec: 'Receptions', rctd: 'Rec TDs', ry: 'Rush Yds', rtd: 'Rush TDs', py: 'Pass Yds', ptd: 'Pass TDs', totalTd: 'Total TDs' };
+  const _LIB_ERA_LBL = { all: 'All-Time', '2020-2029': '2020s', '2010-2019': '2010s', '2000-2009': '2000s', '1990-1999': '1990s', '1980-1989': '1980s', '1970-1979': '1970s' };
+  const _LIB_TYPE_LBL = { season: 'Season', career: 'Career', game: 'Single Game' };
+  // Which single positions a stat makes sense for (a "QB Rec Yds" board is all
+  // zeros); the all-positions set always stays.
+  const _LIB_STAT_POS = { rcy: ['RB', 'WR', 'TE'], rec: ['RB', 'WR', 'TE'], rctd: ['RB', 'WR', 'TE'], ry: ['QB', 'RB', 'WR'], rtd: ['QB', 'RB', 'WR'], py: ['QB'], ptd: ['QB'] };
+  let _libComboCache = null, _libIdx = -1;
+  function _libCombos() {
+    if (_libComboCache) return _libComboCache;
+    const combos = [];
+    ['season', 'career', 'game'].forEach(type => _LIB_STATS.forEach(stat => _LIB_ERAS.forEach(era => _LIB_POS_SETS.forEach(pos => {
+      if (_libGameTooOld(type, 'all', era)) return;
+      if (type === 'career' && stat === 'ppg') return;
+      if (pos.length === 1 && _LIB_STAT_POS[stat] && !_LIB_STAT_POS[stat].includes(pos[0])) return;
+      combos.push({ type, stat, era, pos, count: 25,
+        label: _LIB_TYPE_LBL[type] + ' · ' + _LIB_STAT_LBL[stat] + ' · ' + _LIB_ERA_LBL[era] + ' · ' + (pos.length === 4 ? 'All pos' : pos.join('/')) });
+    }))));
+    _libComboCache = combos;
+    return combos;
+  }
+  function _libIndexSync() {
+    const combos = _libCombos();
+    const sel = document.getElementById('libIndexSel'), pos = document.getElementById('libIndexPos');
+    if (sel) sel.value = String(_libIdx);
+    if (pos) pos.textContent = _libIdx >= 0 ? (_libIdx + 1) + ' / ' + combos.length : combos.length + ' boards';
+  }
+  // Open board #i of the index (rel = step from the current one).
+  window._triviaLibraryGo = async function(i, rel) {
+    const combos = _libCombos();
+    let idx = rel ? (_libIdx < 0 ? (i > 0 ? 0 : combos.length - 1) : _libIdx + i) : i;
+    if (idx < 0) idx = combos.length - 1;
+    if (idx >= combos.length) idx = 0;
+    if (!combos[idx]) return;
+    _libIdx = idx;
+    _libIndexSync();
+    await window._triviaLibraryPlay(combos[idx]);
+  };
+
   // Admin, one-time: build every library combination for closed seasons and
   // download a report — thin boards (<16), players with no photo, squares
   // with no team. Re-run only when the data pipelines change.
@@ -58155,12 +58225,7 @@ window.fmtHeight = fmtHeight;
     if (!(typeof window.isAdmin === 'function' && window.isAdmin())) return;
     const st = document.getElementById('libAuditStatus');
     const say = m => { if (st) st.textContent = m; };
-    const combos = [];
-    ['season', 'career', 'game'].forEach(type => _LIB_STATS.forEach(stat => _LIB_ERAS.forEach(era => _LIB_POS_SETS.forEach(pos => {
-      if (_libGameTooOld(type, 'all', era)) return;
-      if (type === 'career' && stat === 'ppg') return;
-      combos.push({ type, stat, era, pos, count: 25 });
-    }))));
+    const combos = _libCombos();
     const rows = [], noPhoto = {}, noTeam = {};
     let done = 0;
     for (const f of combos) {

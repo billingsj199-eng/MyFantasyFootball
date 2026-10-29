@@ -33,3 +33,6 @@ scripts/_bbm_*.json
 tests/node_modules/
 tests/test-results/
 tests/playwright-report/
+
+# PFR season-page HTML cache (scripts/pull_pfr_season_totals.py)
+scripts/_cache/

@@ -56274,9 +56274,14 @@ window.fmtHeight = fmtHeight;
       if (s.teams <= 1) {
         bar.style.display = '';
         // The board-wide search bar counts misses (names not on the board)
-        // instead of per-square strikes.
-        const missHtml = _triviaFreeInput() ? `<span class="wrong">✗ ${_triviaScore.misses || 0} missed</span>` : `<span class="wrong">✗ ${_triviaScore.wrong}</span>`;
-        bar.innerHTML = `<div class="trivia-score-bar"><span class="correct">✓ ${_triviaScore.correct}</span>${missHtml}<span class="remaining">${remaining} remaining</span></div>`;
+        // instead of per-square strikes. Daily runs show the miss budget as
+        // dots (Connections-style); overtime shows the frozen score.
+        const budget = _triviaBudgetActive() ? _triviaMissBudget(_triviaScore.total) : 0;
+        const missHtml = _triviaFreeInput()
+          ? (budget ? _triviaMissDotsHtml(Math.min(_triviaScore.misses || 0, budget), budget) : `<span class="wrong">✗ ${_triviaScore.misses || 0} missed</span>`)
+          : `<span class="wrong">✗ ${_triviaScore.wrong}</span>`;
+        const otHtml = _triviaGame.overtime ? '<span class="trivia-overtime-tag" title="Out of misses — the result is locked; keep guessing for fun">OVERTIME</span>' : '';
+        bar.innerHTML = `<div class="trivia-score-bar">${otHtml}<span class="correct">✓ ${_triviaScore.correct}</span>${_triviaGame.overtime ? '' : missHtml}<span class="remaining">${remaining} remaining</span></div>`;
       } else {
         bar.style.display = 'none';
       }
@@ -56443,6 +56448,7 @@ window.fmtHeight = fmtHeight;
     // THEN activate the game
     _triviaGame.active = true;
     _triviaGame.gameOver = false;
+    _triviaGame.overtime = false;
     _triviaGame.teams = s.teams;
     document.getElementById('triviaGiveUpBtn').style.display = (s.mode === 'guess') ? '' : 'none';
     _triviaGame.currentTeam = 0;
@@ -57143,10 +57149,52 @@ window.fmtHeight = fmtHeight;
     n.textContent = msg || '';
     n.style.color = color || 'var(--text2)';
   }
+  // ===== MISS BUDGET + OVERTIME (2026-10-28 survey, R6) =====
+  // Daily boards end after a fixed number of misses (names not on the board),
+  // the way every daily puzzle in the survey uses a guess budget. The budget
+  // scales with the board: 3 misses on a 9-12 square board, 5 on a 20, 7 on
+  // 25+. Only the live daily run is budgeted — admin boards stay unlimited.
+  // Running out finalizes the daily (streak, share grid, modal) and then
+  // opens OVERTIME: the bar keeps taking names, hits still reveal, misses no
+  // longer count and nothing changes the recorded result. Give Up still
+  // reveals the rest.
+  function _triviaMissBudget(total) {
+    if (!total) return 0;
+    if (total <= 12) return 3;
+    if (total <= 20) return 5;
+    return 7;
+  }
+  function _triviaBudgetActive() {
+    return !!(_triviaDailyRun && _triviaFreeInput() && _triviaGame.teams <= 1);
+  }
+  function _triviaMissDotsHtml(misses, budget) {
+    let dots = '';
+    for (let i = 0; i < budget; i++) dots += '<i class="trivia-miss-dot' + (i < misses ? ' used' : '') + '"></i>';
+    return '<span class="wrong trivia-miss-dots" title="Misses used · the board ends when they run out">✗ ' + dots + '<b>' + misses + '/' + budget + '</b></span>';
+  }
+  function _triviaMissBudgetOut() {
+    if (!_triviaData || _triviaGame.gameOver) return;
+    _triviaClearTimer();
+    _triviaGame.active = false;
+    _triviaGame.gameOver = true;
+    _triviaGame.overtime = true;
+    if (typeof window._triviaFinalizeDaily === 'function') {
+      try { window._triviaFinalizeDaily(); } catch(_){}
+    }
+    // Overtime bar: enabled, free misses, Give Up stays for the reveal.
+    const input = _triviaFreeInput();
+    if (input) {
+      input.disabled = false;
+      input.value = '';
+      input.placeholder = 'Overtime — keep guessing, nothing counts now';
+    }
+    _triviaFreeNote('Out of misses · overtime: hits still reveal, misses are free · Give Up shows the answers', 'var(--accent)');
+    _triviaUpdateScore();
+  }
   function _triviaFreeGuess() {
     _triviaHideAutocomplete();
     const input = _triviaFreeInput();
-    if (!input || input.disabled || !_triviaData || _triviaGame.gameOver) return;
+    if (!input || input.disabled || !_triviaData || (_triviaGame.gameOver && !_triviaGame.overtime)) return;
     const guess = input.value.trim();
     if (!guess) return;
     const items = _triviaData.items;
@@ -57176,11 +57224,18 @@ window.fmtHeight = fmtHeight;
       void input.offsetWidth;
       input.classList.add('shake');
       _triviaPlayIncorrect();
-      _triviaScore.misses = (_triviaScore.misses || 0) + 1;
-      _triviaFreeNote('✗ ' + guess + ' — not on the board', '#ef4444');
-      _triviaUpdateScore();
+      if (_triviaGame.overtime) {
+        _triviaFreeNote('✗ ' + guess + ' — not on the board (overtime, free)', '#ef4444');
+      } else {
+        _triviaScore.misses = (_triviaScore.misses || 0) + 1;
+        const budget = _triviaBudgetActive() ? _triviaMissBudget(_triviaScore.total) : 0;
+        const left = budget ? budget - _triviaScore.misses : 0;
+        _triviaFreeNote('✗ ' + guess + ' — not on the board' + (budget ? (left > 0 ? ' · ' + left + ' miss' + (left === 1 ? '' : 'es') + ' left' : '') : ''), '#ef4444');
+        _triviaUpdateScore();
+        if (budget && _triviaScore.misses >= budget) { _triviaMissBudgetOut(); return; }
+      }
     }
-    if (!_triviaGame.gameOver) input.focus();
+    if (!_triviaGame.gameOver || _triviaGame.overtime) input.focus();
   }
   // Game over / give up: the bar stays put but stops taking guesses.
   function _triviaFreeBarFinish(msg) {
@@ -57361,6 +57416,15 @@ window.fmtHeight = fmtHeight;
     if (!_triviaData) return;
     const total = _triviaData.items.length;
     if (_triviaScore.correct + _triviaScore.wrong >= total) {
+      // Overtime run cleared the board: the daily is already finalized, so
+      // just close the bar — no second modal, no bar rewrite.
+      if (_triviaGame.overtime) {
+        _triviaGame.overtime = false;
+        document.getElementById('triviaGiveUpBtn').style.display = 'none';
+        _triviaFreeBarFinish('Board cleared in overtime!');
+        _triviaUpdateScore();
+        return;
+      }
       _triviaClearTimer();
       _triviaGame.active = false;
       _triviaGame.gameOver = true;
@@ -57559,10 +57623,11 @@ window.fmtHeight = fmtHeight;
   };
 
   window._triviaGiveUp = function() {
-    if (!_triviaData || _triviaGame.gameOver) return;
+    if (!_triviaData || (_triviaGame.gameOver && !_triviaGame.overtime)) return;
     _triviaClearTimer();
     _triviaGame.active = false;
     _triviaGame.gameOver = true;
+    _triviaGame.overtime = false;
     document.getElementById('triviaGiveUpBtn').style.display = 'none';
     _triviaFreeBarFinish('Gave up — tap a square to see the answer');
 
@@ -57957,6 +58022,52 @@ window.fmtHeight = fmtHeight;
     return Math.floor(Date.UTC(p[0], p[1] - 1, p[2]) / 86400000);
   }
 
+  // ===== BOARD NUMBER + NEXT-BOARD CLOCK (2026-10-28 survey, R2) =====
+  // Every daily carries a running number ("BOARD #14") like Wordle 1,592 or
+  // Immaculate Grid #1197, so a shared result names one specific board.
+  // Board #1 = the public Daily Trivia launch day. Numbers before the epoch
+  // (archive permalinks) go negative-safe to 0.
+  const _TRIVIA_BOARD_EPOCH = '2026-10-28';
+  function _triviaBoardNumber(dateStr) {
+    return Math.max(0, _triviaDayNumber(dateStr) - _triviaDayNumber(_TRIVIA_BOARD_EPOCH) + 1);
+  }
+  // Milliseconds until the next board (midnight US Eastern — the same
+  // boundary _triviaTodayStr uses). Read the ET clock, count what is left of
+  // the day; DST-change days are off by an hour, which the 30 s tick absorbs.
+  function _triviaMsToNextBoard() {
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(new Date());
+      const get = t => parseInt((parts.find(p => p.type === t) || {}).value, 10) || 0;
+      const h = get('hour') % 24, m = get('minute'), s = get('second');
+      return Math.max(0, 86400000 - ((h * 3600 + m * 60 + s) * 1000));
+    } catch (_) {
+      const d = new Date(); const n = new Date(d); n.setHours(24, 0, 0, 0);
+      return Math.max(0, n - d);
+    }
+  }
+  function _triviaFmtCountdown(ms) {
+    const totalMin = Math.ceil(ms / 60000);
+    const h = Math.floor(totalMin / 60), m = totalMin % 60;
+    return h > 0 ? h + 'h ' + String(m).padStart(2, '0') + 'm' : m + 'm';
+  }
+  // Every element tagged data-trivia-countdown shows "Next board in 6h 12m".
+  // When the ET day rolls over while the page is open, the panel re-reads
+  // the new date so the card, number and PLAY button flip without a reload.
+  let _triviaCountdownDate = null;
+  function _triviaTickCountdown() {
+    const els = document.querySelectorAll('[data-trivia-countdown]');
+    if (els.length) {
+      const txt = 'Next board in ' + _triviaFmtCountdown(_triviaMsToNextBoard());
+      els.forEach(el => { el.textContent = txt; });
+    }
+    const today = _triviaTodayStr();
+    if (_triviaCountdownDate && _triviaCountdownDate !== today && !_triviaPreviewDate) {
+      try { _triviaUpdateDailyPanel(); } catch (_) {}
+    }
+    _triviaCountdownDate = today;
+  }
+  setInterval(_triviaTickCountdown, 30000);
+
   // Mulberry32 PRNG — small, fast, decent distribution. Seeded by the
   // cycle number so all visitors compute the SAME permutation per cycle.
   function _triviaRng(seed) {
@@ -58028,7 +58139,8 @@ window.fmtHeight = fmtHeight;
     const bestEl = document.getElementById('triviaDailyBest');
     const playBtn = document.getElementById('triviaDailyPlayBtn');
     if (!titleEl) return;
-    if (dateLabelEl) dateLabelEl.textContent = '· ' + dateStr;
+    if (dateLabelEl) dateLabelEl.textContent = '#' + _triviaBoardNumber(dateStr) + ' · ' + dateStr;
+    _triviaTickCountdown();
     titleEl.textContent = tpl.title;
     metaEl.textContent = tpl.desc;
     // A board locked for this date replaces the template, so show its title.
@@ -58452,28 +58564,37 @@ window.fmtHeight = fmtHeight;
     const state = _triviaLoadDailyState();
     let lbNote = '';
 
+    const isToday = run.date === _triviaTodayStr();
     if (!isPreview) {
       const alreadyDone = !!state.completed[run.date];
-      if (!alreadyDone && run.date === _triviaTodayStr()) {
+      if (!alreadyDone && isToday) {
         const _signedIn = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
         lbNote = _signedIn ? 'Posted to the Daily Trivia leaderboard' : 'Sign in to post your streak to the leaderboard';
       }
-      // Streak rule: only update if this is the user's first completion for
-      // this date. Replays don't bump streak (and don't reset it either).
-      if (!alreadyDone) {
+      // Streak rule: only the first completion of TODAY's board touches the
+      // streak. Replays don't bump it (and don't reset it either), and an
+      // archive permalink (?daily=<past date>) never counts — Poeltl's
+      // Flashback / NYT archive rule, so catching up on an old board can't
+      // wipe a live streak (it used to reset it to 1).
+      if (!alreadyDone && isToday) {
         if (state.lastPlayedDate === _triviaPrevDay(run.date)) state.streak = (state.streak || 0) + 1;
         else if (state.lastPlayedDate === run.date) { /* same day re-entry, no-op */ }
         else state.streak = 1;
         state.lastPlayedDate = run.date;
+        state.maxStreak = Math.max(state.maxStreak || 0, state.streak || 0);
       }
-      // Always store the LATEST completion (replay overwrites prior). Best-
-      // score logic can layer on later if we want "personal best" semantics.
-      state.completed[run.date] = {
-        score: score,
-        total: total,
-        timeMs: elapsedMs,
-        results: run.results.slice()
-      };
+      // Store the completion. A replay only overwrites a prior result when it
+      // scores at least as well, so PLAY AGAIN can't erase a better run.
+      const prior = state.completed[run.date];
+      if (!prior || score >= (prior.score || 0)) {
+        state.completed[run.date] = {
+          score: score,
+          total: total,
+          timeMs: elapsedMs,
+          misses: _triviaScore ? (_triviaScore.misses || 0) : 0,
+          results: run.results.slice()
+        };
+      }
       _triviaSaveDailyState(state);
       // Leaderboard: first completion of TODAY's board only (replays and
       // archive permalinks don't post).
@@ -58482,7 +58603,7 @@ window.fmtHeight = fmtHeight;
       }
     }
     _triviaUpdateDailyPanel();
-    _triviaShowDailyResult(run.date, score, total, elapsedMs, run.results, state.streak, isPreview, lbNote);
+    _triviaShowDailyResult(run.date, score, total, elapsedMs, run.results, state.streak, isPreview, lbNote, !isToday);
     _triviaDailyRun = null;
   };
 
@@ -58511,12 +58632,14 @@ window.fmtHeight = fmtHeight;
   // board columns so the grid visually mirrors what the player saw. The
   // isPreview flag tags admin QA runs visually + omits the share text so
   // a preview result can't be accidentally shared as an "official" run.
-  function _triviaShowDailyResult(date, score, total, ms, results, streak, isPreview, lbNote) {
+  function _triviaShowDailyResult(date, score, total, ms, results, streak, isPreview, lbNote, isArchive) {
     const modal = document.getElementById('triviaDailyModal');
     const gridEl = document.getElementById('triviaDailyModalGrid');
     const dateEl = document.getElementById('triviaDailyModalDate');
     const statsEl = document.getElementById('triviaDailyModalStats');
+    const nextEl = document.getElementById('triviaDailyModalNext');
     if (!modal || !gridEl) return;
+    const boardNum = _triviaBoardNumber(date);
 
     let cols = 5;
     try {
@@ -58547,11 +58670,12 @@ window.fmtHeight = fmtHeight;
     const _locked = _triviaDailyArchiveCache[date];
     const boardTitle = (_locked && _locked.title) || tpl.title;
 
+    // Share text (survey R12): the board number up top like Wordle / Framed,
+    // then the grid, then the permalink. Archive runs say so.
     const shareText =
-      'MFF Daily · ' + date + '\n' +
+      'MFF Daily #' + boardNum + ' · ' + score + '/' + total + ' · ' + timeStr + (isArchive ? ' (archive)' : '') + '\n' +
       boardTitle + '\n' +
       lines.join('\n') + '\n' +
-      score + '/' + total + ' · ' + timeStr + '\n' +
       location.origin + location.pathname + '?daily=' + date + '&v=' + contentHash + '#trivia';
 
     // Stash on the modal so the share button can grab it without rebuild.
@@ -58561,8 +58685,25 @@ window.fmtHeight = fmtHeight;
       ? '(admin preview · not for sharing)\n' + shareText
       : shareText;
     modal.dataset.isPreview = isPreview ? '1' : '';
-    dateEl.textContent = (isPreview ? '🔒 PREVIEW · ' : '') + date + ' · ' + boardTitle;
+    dateEl.textContent = (isPreview ? '🔒 PREVIEW · ' : '') + 'BOARD #' + boardNum + ' · ' + date + ' · ' + boardTitle + (isArchive ? ' · archive (no streak)' : '');
     gridEl.textContent = lines.join('\n');
+    // Play-next row (survey R11): never leave the player with only Share /
+    // Close. Yesterday's board is an archive permalink (streak-safe); the
+    // other games live on the Games page.
+    if (nextEl) {
+      const prev = _triviaPrevDay(date);
+      const prevNum = _triviaBoardNumber(prev);
+      const prevLink = location.origin + location.pathname + '?daily=' + prev + '#trivia';
+      nextEl.innerHTML =
+        '<div class="trivia-next-row">' +
+          '<span class="trivia-next-lbl">UP NEXT</span>' +
+          (prevNum >= 1 ? '<a class="trivia-next-link" href="' + prevLink + '">Board #' + prevNum + ' (yesterday) ▸</a>' : '') +
+          '<a class="trivia-next-link" href="#games" onclick="document.getElementById(\'triviaDailyModal\').style.display=\'none\'">Daily Elite Pull ▸</a>' +
+          '<a class="trivia-next-link" href="#games" onclick="document.getElementById(\'triviaDailyModal\').style.display=\'none\'">Fantasy Game ▸</a>' +
+        '</div>' +
+        '<div class="trivia-next-clock" data-trivia-countdown></div>';
+      _triviaTickCountdown();
+    }
     statsEl.innerHTML =
       '<div style="text-align:center"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1">' + score + '/' + total + '</div><div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">SCORE · ' + accuracy + '%</div></div>' +
       '<div style="text-align:center"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1">' + timeStr + '</div><div style="font-size:.6875rem;color:var(--text2);letter-spacing:1px">TIME</div></div>' +
@@ -59355,31 +59496,107 @@ window.fmtHeight = fmtHeight;
   // so cold visitors don't bounce. Dismissed forever via localStorage;
   // skipped on permalink visits since those visitors already know why
   // they're here.
+  // 2026-10-28 (survey R3): the inline tip became a HOW TO PLAY modal — the
+  // rules, the miss budget and the midnight-ET reset in one place, shown
+  // once on first visit and any time from the ? link on the daily panel.
   function _triviaShowFirstVisitTooltip() {
     try {
       if (localStorage.getItem('mff_triviaSeenIntro') === '1') return;
       if (/[?&]daily=\d{4}-\d{2}-\d{2}/.test(location.search || '')) return;
     } catch(_){}
-    const panel = document.getElementById('triviaDailyPanel');
-    if (!panel || !panel.parentNode) return;
-    if (document.getElementById('triviaIntroTip')) return;
-    const tip = document.createElement('div');
-    tip.id = 'triviaIntroTip';
-    tip.style.cssText = 'position:relative;margin-bottom:12px;padding:14px 18px;border-radius:10px;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.45);color:var(--text);font-size:.8rem;line-height:1.5;display:flex;align-items:flex-start;gap:12px';
-    tip.innerHTML =
-      '<div style="font-size:1.4rem;line-height:1;flex-shrink:0;margin-top:1px">👋</div>' +
-      '<div style="flex:1">' +
-        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:1.5px;color:var(--accent-blue);margin-bottom:4px">HOW IT WORKS</div>' +
-        '<div style="margin-bottom:6px">A new fantasy-football trivia board drops every day — same one for everyone. Hit <strong style="color:#ffd166">PLAY TODAY</strong>, type any player you think is on the board — a hit lands on its square — and share your result grid when you finish.</div>' +
-        '<div class="trivia-admin-only" style="font-size:.72rem;color:var(--text2)">Want variety? Try<strong style="color:var(--accent-purple)">🎲 Surprise Me</strong> for an AI-generated random board, or pick a quick-start template below.</div>' +
-      '</div>' +
-      '<button onclick="window._triviaDismissIntro()" title="Dismiss" style="background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer;line-height:1;padding:0;flex-shrink:0">✕</button>';
-    panel.parentNode.insertBefore(tip, panel);
+    if (!document.getElementById('triviaDailyPanel')) return;
+    window._triviaShowHowTo(true);
   }
   window._triviaDismissIntro = function() {
     try { localStorage.setItem('mff_triviaSeenIntro', '1'); } catch(_){}
     const tip = document.getElementById('triviaIntroTip');
     if (tip && tip.remove) tip.remove();
+    const m = document.getElementById('triviaHowToModal');
+    if (m) m.style.display = 'none';
+  };
+  // Shared overlay for the trivia side-modals (how-to, stats). One node per
+  // id; the body is rebuilt on every open. They live on <body>, so a page
+  // switch (hash navigation, no reload) must close them explicitly.
+  window.addEventListener('hashchange', () => {
+    document.querySelectorAll('.trivia-side-modal').forEach(m => { m.style.display = 'none'; });
+    const dm = document.getElementById('triviaDailyModal');
+    if (dm) dm.style.display = 'none';
+  });
+  function _triviaSideModal(id, titleText, bodyHtml, footHtml) {
+    let m = document.getElementById(id);
+    if (!m) {
+      m = document.createElement('div');
+      m.id = id;
+      m.className = 'trivia-side-modal';
+      m.addEventListener('click', e => { if (e.target === m) m.style.display = 'none'; });
+      document.body.appendChild(m);
+    }
+    m.innerHTML =
+      '<div class="trivia-side-card">' +
+        '<div class="trivia-side-head"><div class="trivia-side-title">' + titleText + '</div>' +
+          '<button class="trivia-side-x" onclick="document.getElementById(\'' + id + '\').style.display=\'none\'" title="Close">✕</button></div>' +
+        '<div class="trivia-side-body">' + bodyHtml + '</div>' +
+        (footHtml ? '<div class="trivia-side-foot">' + footHtml + '</div>' : '') +
+      '</div>';
+    m.style.display = 'flex';
+    return m;
+  }
+  window._triviaShowHowTo = function(firstVisit) {
+    const budget20 = _triviaMissBudget(20), budgetSmall = _triviaMissBudget(12), budgetBig = _triviaMissBudget(25);
+    const body =
+      '<ol class="trivia-howto">' +
+        '<li><b>One board a day, the same for everyone.</b> A new board drops at midnight ET. <span data-trivia-countdown></span></li>' +
+        '<li><b>Type any player you think is on the board.</b> A hit lands on its square, wherever it sits — no order, no clicking squares.</li>' +
+        '<li><b>You get ' + budget20 + ' misses</b> (a name that is not on the board). ' + budgetSmall + ' on small boards, ' + budgetBig + ' on big ones. Run out and the board ends — you can keep guessing in overtime, but it no longer counts.</li>' +
+        '<li><b>Give up any time</b> to see every answer.</li>' +
+        '<li><b>Finish to get your result grid</b>, keep your streak alive and share it — no spoilers in the share.</li>' +
+      '</ol>';
+    const foot = '<button class="trivia-side-btn" onclick="window._triviaDismissIntro()">' + (firstVisit ? 'LET\'S GO' : 'GOT IT') + '</button>';
+    _triviaSideModal('triviaHowToModal', (firstVisit ? '👋 ' : '') + 'HOW TO PLAY', body, foot);
+    _triviaTickCountdown();
+  };
+
+  // ===== STATS MODAL (survey R4) =====
+  // Played / average / perfect boards / streaks and a score histogram with
+  // today's bucket lit — the Wordle statistics panel, from the local daily
+  // history (completed[date] = {score,total,timeMs}).
+  window._triviaShowStats = function() {
+    const state = _triviaLoadDailyState();
+    const dates = Object.keys(state.completed || {}).sort();
+    const rows = dates.map(d => state.completed[d]).filter(r => r && r.total);
+    const played = rows.length;
+    const pct = r => Math.round((r.score / r.total) * 100);
+    const avg = played ? Math.round(rows.reduce((s, r) => s + pct(r), 0) / played) : 0;
+    const perfect = rows.filter(r => r.score >= r.total).length;
+    const cleared = rows.filter(r => pct(r) >= 50).length;
+    // Max streak: stored going forward; for older history, the longest run
+    // of consecutive dates in the completed map.
+    let maxRun = 0, run = 0, prev = null;
+    dates.forEach(d => { run = (prev && _triviaPrevDay(d) === prev) ? run + 1 : 1; if (run > maxRun) maxRun = run; prev = d; });
+    const maxStreak = Math.max(state.maxStreak || 0, state.streak || 0, maxRun);
+    const todayStr = _triviaTodayStr();
+    const todayRow = state.completed[todayStr];
+    const todayBucket = todayRow && todayRow.total ? Math.min(4, Math.floor(pct(todayRow) / 25)) : -1;
+    const buckets = [0, 0, 0, 0, 0];
+    rows.forEach(r => { buckets[Math.min(4, Math.floor(pct(r) / 25))]++; });
+    const labels = ['0-24%', '25-49%', '50-74%', '75-99%', '100%'];
+    const maxB = Math.max(1, ...buckets);
+    const tile = (v, l) => '<div class="trivia-stat"><div class="trivia-stat-v">' + v + '</div><div class="trivia-stat-l">' + l + '</div></div>';
+    const body =
+      '<div class="trivia-stat-row">' +
+        tile(played, 'PLAYED') + tile(avg + '%', 'AVG SCORE') + tile(played ? Math.round(cleared / played * 100) + '%' : '—', 'HALF OR BETTER') +
+        tile(perfect, 'PERFECT') + tile((state.streak || 0) + '🔥', 'STREAK') + tile(maxStreak, 'BEST STREAK') +
+      '</div>' +
+      '<div class="trivia-hist-title">SCORE DISTRIBUTION' + (played ? '' : ' · play today\'s board to start one') + '</div>' +
+      '<div class="trivia-hist">' +
+        buckets.map((n, i) =>
+          '<div class="trivia-hist-row' + (i === todayBucket ? ' today' : '') + '"><span class="trivia-hist-l">' + labels[i] + '</span>' +
+          '<span class="trivia-hist-bar"><i style="width:' + Math.max(n ? 8 : 0, Math.round(n / maxB * 100)) + '%"></i></span><span class="trivia-hist-n">' + n + '</span></div>'
+        ).join('') +
+      '</div>' +
+      '<div class="trivia-next-clock" data-trivia-countdown></div>';
+    _triviaSideModal('triviaStatsModal', '📊 YOUR DAILY STATS', body, '');
+    _triviaTickCountdown();
   };
   _triviaShowFirstVisitTooltip();
   // Shared permalink (?daily=YYYY-MM-DD#trivia): start that board right away

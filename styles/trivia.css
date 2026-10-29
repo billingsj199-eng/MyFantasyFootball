@@ -210,3 +210,44 @@ body.mff-admin .trivia-player-only{display:none!important}
   .trivia-tierboard .trivia-cell-reveal img{max-width:none!important}
   .trivia-tierboard .trivia-cell-reveal .reveal-name{font-size:16px!important}
 }
+
+/* ===== Daily panel footer, miss budget, side modals (2026-10-28 survey sprint 1) ===== */
+.trivia-daily-foot{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,209,102,.18);font-size:.72rem;color:var(--text2);letter-spacing:.5px}
+.trivia-daily-clock{font-variant-numeric:tabular-nums;margin-right:auto}
+.trivia-daily-clock:empty{display:none}
+.trivia-daily-foot-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--text2);font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.2px;padding:4px 10px;cursor:pointer;min-height:28px}
+.trivia-daily-foot-btn:hover{color:var(--text);border-color:#ffd166}
+.trivia-miss-dots{display:inline-flex;align-items:center;gap:4px}
+.trivia-miss-dots b{font-weight:400;margin-left:4px;font-size:.85em;opacity:.85}
+.trivia-miss-dot{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid #ef4444;background:transparent;box-sizing:border-box}
+.trivia-miss-dot.used{background:#ef4444}
+.trivia-overtime-tag{font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:#1a1a2e;background:#ffd166;border-radius:4px;padding:1px 7px}
+.trivia-next-row{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:.78rem}
+.trivia-next-lbl{font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:var(--text2)}
+.trivia-next-link{color:#ffd166;text-decoration:none;white-space:nowrap}
+.trivia-next-link:hover{text-decoration:underline}
+.trivia-next-clock{margin-top:8px;font-size:.72rem;color:var(--text2);text-align:center;letter-spacing:.5px;font-variant-numeric:tabular-nums}
+.trivia-next-clock:empty{display:none}
+.trivia-side-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.trivia-side-card{background:var(--surface2);border:1px solid rgba(255,209,102,.4);border-radius:14px;padding:20px 22px;max-width:400px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.6);font-family:'DM Sans',sans-serif;color:var(--text);max-height:calc(100vh - 40px);overflow:auto}
+.trivia-side-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.trivia-side-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:#ffd166}
+.trivia-side-x{background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;line-height:1;padding:4px}
+.trivia-side-body{font-size:.84rem;line-height:1.5}
+.trivia-side-foot{margin-top:14px;display:flex;justify-content:flex-end}
+.trivia-side-btn{padding:10px 22px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;cursor:pointer;font-weight:700;min-height:40px}
+.trivia-howto{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.trivia-howto b{color:var(--text)}
+.trivia-howto [data-trivia-countdown]{color:#ffd166;white-space:nowrap}
+.trivia-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.trivia-stat{text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 4px}
+.trivia-stat-v{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:#ffd166;line-height:1}
+.trivia-stat-l{font-size:.6rem;color:var(--text2);letter-spacing:1px;margin-top:3px}
+.trivia-hist-title{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px}
+.trivia-hist{display:flex;flex-direction:column;gap:4px}
+.trivia-hist-row{display:grid;grid-template-columns:52px 1fr 24px;align-items:center;gap:8px;font-size:.72rem;color:var(--text2);font-variant-numeric:tabular-nums}
+.trivia-hist-bar{display:block;height:14px;background:var(--bg);border-radius:3px;overflow:hidden}
+.trivia-hist-bar i{display:block;height:100%;background:var(--text2);opacity:.55;border-radius:3px}
+.trivia-hist-row.today .trivia-hist-bar i{background:#ffd166;opacity:1}
+.trivia-hist-row.today{color:var(--text)}
+.trivia-hist-n{text-align:right}

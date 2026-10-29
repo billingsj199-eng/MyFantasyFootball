@@ -24324,7 +24324,9 @@ function switchPage(page) {
   // Update URL hash so the tab is shareable / bookmarkable. Skip the rankings
   // landing page (default — keeps URLs clean for new visitors).
   try {
-    const targetHash = page && page !== 'rankings' ? '#' + page : '';
+    let targetHash = page && page !== 'rankings' ? '#' + page : '';
+    // #games-<tab> deep links keep their tab suffix (the Games tab router owns it).
+    if (page === 'games' && /^#games-[a-z0-9]+$/i.test(location.hash || '')) targetHash = location.hash;
     if (location.hash !== targetHash) {
       // pushState (2026-10-13 mobile pass): the phone back button / back swipe
       // returns to the previous page instead of leaving the site. Router-driven
@@ -24438,6 +24440,11 @@ window.switchPage = switchPage;
     window._mffRouterNav = true;
     try {
       if (h && pageMap[h]) switchPage(h);
+      else if (/^games-[a-z0-9]+$/.test(h)) {
+        // #games-<tab> (2026-10-29): open that Games tab — higherlower, fantasygame, leaderboard …
+        switchPage('games');
+        if (typeof window._gamesShowTab === 'function') window._gamesShowTab(h.slice(6), { keepHash: true });
+      }
       else if (h) switchPage('rankings'); // unknown hash (e.g. #mock) → fall back to rankings landing + clean the URL
       // Back to the bare URL (Rankings has no hash) — only when another page is showing
       else if (!document.getElementById(pageMap.rankings)?.classList.contains('active')) switchPage('rankings');
@@ -29346,6 +29353,317 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 
   // Init
   renderRoster();
+})();
+
+// === HIGHER / LOWER (2026-10-29, trivia-site survey G6) ===
+// Two players, same season + position: tap the one with more PPR points. One miss ends
+// the run; the best streak posts to leaderboard/{uid}.higherLower (Guess Who's "unlimited"
+// shape: played / correct / streak / bestStreak — window._lbUpdateHigherLower in core).
+// Pairs: ALL_PLAYERS_DB season rows (1999+; fpts stored half-PPR → +0.5/rec), both inside
+// the position's fantasy depth that year (RB/WR top 60, QB/TE top 32 — past that QBs/TEs
+// are 10-point backups; 60+ pts, 4+ games), the season still being played skipped, no
+// player twice in a run, never a tie. The gap narrows with the streak: 80+ points for the
+// first three, inside 15 past a 15 streak. Photo: era cutout (PLAYER_CUTOUTS) → roster
+// headshot → ESPN id tables → nearest-era cutout → Commons jersey photo → initials.
+// Permalink #games-higherlower (core _gamesShowTab / hash router).
+(function _mffHigherLower() {
+  const $ = id => document.getElementById(id);
+  const pane = $('gamesHigherlower'), elA = $('hlA'), elB = $('hlB');
+  if (!pane || !elA || !elB) return;
+  const elSeason = $('hlSeason'), elPrompt = $('hlPrompt'), elResult = $('hlResult'), elStats = $('hlStats');
+  const elNext = $('hlNextBtn'), elShare = $('hlShareBtn'), elLoading = $('hlLoading');
+  const LS = { played: 'hl_played', correct: 'hl_correct', streak: 'hl_streak', best: 'hl_best_streak' };
+  const lsNum = k => { try { return parseInt(localStorage.getItem(k) || '0', 10) || 0; } catch (_) { return 0; } };
+  let played = lsNum(LS.played), correct = lsNum(LS.correct), streak = lsNum(LS.streak), best = lsNum(LS.best);
+  if (streak > best) best = streak;
+  const DEPTH = { QB: 32, RB: 60, WR: 60, TE: 32 };
+  const POS_PICK = ['QB', 'QB', 'RB', 'RB', 'RB', 'WR', 'WR', 'WR', 'TE', 'TE'];
+  const MIN_PTS = 60, MIN_GP = 4, MIN_GROUP = 8;
+  const PERMALINK = 'https://myfantasyfootball.co/#games-higherlower';
+  // Season-row team codes → the site's / cutout index's current abbreviations.
+  const TM_ALIAS = { LA: 'LAR', STL: 'LAR', SD: 'LAC', OAK: 'LV', WSH: 'WAS', JAC: 'JAX' };
+  let byYear = null, years = [], poolPromise = null, started = false;
+  let cur = null, locked = false, runOver = false, lastRun = 0;
+  const used = new Set();
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const rnd = n => Math.floor(Math.random() * n);
+
+  // The season in progress (Sep–Dec, and January while it finishes) has moving totals.
+  function _liveSeason() {
+    const d = new Date(), m = d.getMonth(), y = d.getFullYear();
+    return m >= 8 ? y : (m === 0 ? y - 1 : 0);
+  }
+  function _ppr(s) { return Math.round(((s.fpts || 0) + 0.5 * (s.rc || 0)) * 10) / 10; }
+  function buildPool() {
+    if (typeof ALL_PLAYERS_DB === 'undefined' || !Array.isArray(ALL_PLAYERS_DB)) return false;
+    const skip = _liveSeason(), by = {};
+    ALL_PLAYERS_DB.forEach(p => {
+      if (!p || !p.name || !DEPTH[p.pos] || !Array.isArray(p.career)) return;
+      p.career.forEach(s => {
+        if (!s || !(s.yr >= 1999) || s.yr === skip || (s.gp || 0) < MIN_GP) return;
+        const pts = _ppr(s);
+        if (pts < MIN_PTS) return;
+        const y = by[s.yr] || (by[s.yr] = {});
+        (y[p.pos] || (y[p.pos] = [])).push({ name: p.name, pos: p.pos, yr: s.yr, tm: s.tm || '', pts: pts, rank: 0, debut: p.debut || 0, last: p.last || 0 });
+      });
+    });
+    Object.keys(by).forEach(yr => Object.keys(by[yr]).forEach(pos => {
+      const rows = by[yr][pos].sort((a, b) => b.pts - a.pts).slice(0, DEPTH[pos]);
+      rows.forEach((r, i) => { r.rank = i + 1; });
+      if (rows.length < MIN_GROUP) delete by[yr][pos]; else by[yr][pos] = rows;
+    }));
+    byYear = by;
+    years = Object.keys(by).filter(y => Object.keys(by[y]).length).map(Number).sort((a, b) => a - b);
+    return years.length > 0;
+  }
+  // all_players.js (lazy retired bundle) + the cutout / Commons photo index (small) — one wait.
+  function ensurePool() {
+    if (poolPromise) return poolPromise;
+    const loads = [];
+    if (typeof window._loadRetiredData === 'function') loads.push(window._loadRetiredData());
+    if (typeof window._loadLegendHeadshots === 'function') loads.push(window._loadLegendHeadshots().catch(() => {}));
+    poolPromise = Promise.all(loads).catch(() => {}).then(() => buildPool());
+    return poolPromise;
+  }
+
+  // Difficulty ramp: [min, max] point gap allowed at this streak.
+  function gapBand(s) {
+    if (s < 3) return [80, 1e9];
+    if (s < 6) return [40, 120];
+    if (s < 10) return [20, 60];
+    if (s < 15) return [8, 25];
+    return [1, 15];
+  }
+  function pickYear() {
+    // Seasons from 2010 on twice as often — more faces people know.
+    let w = 0; years.forEach(y => { w += y >= 2010 ? 2 : 1; });
+    let r = Math.random() * w;
+    for (const y of years) { r -= y >= 2010 ? 2 : 1; if (r < 0) return y; }
+    return years[years.length - 1];
+  }
+  function tryPair(lo, hi, tries) {
+    for (let t = 0; t < tries; t++) {
+      const g = byYear[pickYear()], pos = POS_PICK[rnd(POS_PICK.length)];
+      const rows = g && g[pos] ? g[pos].filter(r => !used.has(r.name)) : [];
+      if (rows.length < 2) continue;
+      const a = rows[rnd(rows.length)];
+      const cands = rows.filter(r => r !== a && Math.abs(r.pts - a.pts) >= lo && Math.abs(r.pts - a.pts) <= hi);
+      if (!cands.length) continue;
+      const b = cands[rnd(cands.length)];
+      return Math.random() < 0.5 ? [a, b] : [b, a];
+    }
+    return null;
+  }
+  function pickPair() {
+    if (!byYear) return null;
+    const band = gapBand(streak), lo = Math.max(1, band[0]);
+    let pair = tryPair(lo, band[1], 80) || tryPair(1, 1e9, 80);
+    if (!pair) { used.clear(); pair = tryPair(lo, band[1], 80) || tryPair(1, 1e9, 80); }
+    return pair;
+  }
+
+  // ---- photos ----
+  function canonTm(t) { t = String(t || '').toUpperCase(); return TM_ALIAS[t] || t; }
+  function fixUrl(u) { return typeof window._fixHeadshotUrl === 'function' ? window._fixHeadshotUrl(u) : u; }
+  function espnUrl(id) { return fixUrl('https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + id + '.png&w=350'); }
+  // A dated cutout must fall inside the player's career (debut-1 … last+1): the index is
+  // keyed by name, so a namesake's jersey (the 2020 Browns CB for the 2000 Browns WR
+  // Kevin Johnson) matches the team but not the era. Undated cutouts pass.
+  function cutoutFor(r, any) {
+    const ent = window.PLAYER_CUTOUTS && window.PLAYER_CUTOUTS[r.name];
+    if (!ent || !ent.byTeam) return null;
+    const by = {}, mk = b => ({ url: b.src || b.url, cutout: true, credit: b.credit || '' });
+    Object.keys(ent.byTeam).forEach(k => {
+      const b = ent.byTeam[k];
+      if (b && (!b.yr || !r.debut || !r.last || (b.yr >= r.debut - 1 && b.yr <= r.last + 1))) by[k] = b;
+    });
+    const t = canonTm(r.tm);
+    if (t && by[t]) return mk(by[t]);
+    const t2 = typeof _getTeamForPlayerYear === 'function' ? canonTm(_getTeamForPlayerYear(r.name, r.yr)) : '';
+    if (t2 && by[t2]) return mk(by[t2]);
+    if (!any) return null;
+    let bt = null, bd = Infinity;
+    Object.keys(by).forEach(k => { const d = by[k].yr ? Math.abs(by[k].yr - r.yr) : 60; if (d < bd) { bd = d; bt = k; } });
+    return bt ? mk(by[bt]) : null;
+  }
+  // Roster headshot / active-id tables are keyed by name, so they only count for a row whose
+  // player is still recent (last season within two years) at the same position: the 2000
+  // Rams RB Justin Watson must not wear the current WR's headshot.
+  function photoFor(r) {
+    const recent = r.last >= new Date().getFullYear() - 2;
+    const d = (typeof D !== 'undefined') ? D.find(p => p.n === r.name) : null;
+    const active = !!(d && recent && d.s === r.pos && !d._retired && d.t !== 'Retired');
+    const c = cutoutFor(r, false);
+    if (c) return c;
+    if (active && d._slImg) return { url: fixUrl(d._slImg) };
+    // ESPN id tables, unless the legend-photo audit flagged this name's id as a namesake /
+    // wrong player (preferCommons — the trivia reveal applies the same flag).
+    const lh = window.LEGEND_HEADSHOTS && window.LEGEND_HEADSHOTS[r.name];
+    if (!(lh && lh.preferCommons)) {
+      const fb = recent && window.FALLBACK_IDS && window.FALLBACK_IDS[r.name];
+      if (fb) return { url: espnUrl(fb) };
+      const rid = window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[r.name];
+      if (rid) return { url: espnUrl(rid) };
+    }
+    if (!active) { const c2 = cutoutFor(r, true); if (c2) return c2; }
+    if (lh && lh.byTeam) {
+      const b = lh.byTeam[canonTm(r.tm)] || Object.values(lh.byTeam).find(x => x && x.url);
+      if (b && b.url) return { url: b.url, credit: b.credit || lh.credit || '' };
+    }
+    return null;
+  }
+  function initials(name) { return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase(); }
+  function paintPhoto(el, r) {
+    const box = el.querySelector('.hl-photo');
+    if (!box) return;
+    const mark = box.querySelector('.hl-pick-mark');
+    const old = box.querySelector('img, .hl-initials');
+    if (old) old.remove();
+    const fallback = () => { const dv = document.createElement('div'); dv.className = 'hl-initials'; dv.textContent = initials(r.name); return dv; };
+    const info = photoFor(r);
+    if (!info || !info.url) { box.insertBefore(fallback(), mark); return; }
+    const img = document.createElement('img');
+    img.alt = ''; img.decoding = 'async';
+    if (info.cutout) img.className = 'hl-cutout';
+    if (info.credit) img.title = 'Photo: ' + info.credit + ' (via Wikimedia Commons)';
+    img.onerror = () => { if (img.parentNode) img.replaceWith(fallback()); };
+    img.src = info.url;
+    box.insertBefore(img, mark);
+  }
+  const teamLabel = t => { const c = canonTm(t); return (c && typeof window._displayTeamForReveal === 'function') ? window._displayTeamForReveal(c) : c; };
+
+  const showName = n => String(n).replace(/\s\((?:QB|RB|WR|TE)\)$/, '');
+  function cardHtml(r) {
+    return '<div class="hl-photo"><span class="hl-pick-mark" aria-hidden="true"></span></div>' +
+      '<div class="hl-name">' + esc(showName(r.name)) + '</div>' +
+      '<div class="hl-meta">' + esc([teamLabel(r.tm), r.pos].filter(Boolean).join(' · ')) + '</div>' +
+      '<div class="hl-pts"><span class="hl-pts-num">?</span><span class="hl-pts-lbl">PPR pts</span></div>';
+  }
+  function renderStats() {
+    const parts = [];
+    if (streak > 0) parts.push('🔥 ' + streak + ' STREAK');
+    parts.push('⭐ ' + best + ' BEST');
+    elStats.textContent = parts.join('  ·  ');
+  }
+  function persist() {
+    try {
+      localStorage.setItem(LS.played, played); localStorage.setItem(LS.correct, correct);
+      localStorage.setItem(LS.streak, streak); localStorage.setItem(LS.best, best);
+    } catch (_) {}
+  }
+  function countUp(el, to) {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || typeof requestAnimationFrame !== 'function') { el.textContent = to.toFixed(1); return; }
+    const t0 = performance.now(), dur = 750;
+    const step = t => {
+      const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      el.textContent = (to * e).toFixed(1);
+      if (p < 1) requestAnimationFrame(step); else el.textContent = to.toFixed(1);
+    };
+    requestAnimationFrame(step);
+  }
+  const link = r => typeof _epCardLink === 'function' ? _epCardLink(r.name, 'color:var(--accent)') : esc(r.name);
+
+  function newRound() {
+    const pair = pickPair();
+    if (!pair) { elLoading.hidden = false; elLoading.textContent = 'No seasons loaded — try again in a moment'; return; }
+    cur = { a: pair[0], b: pair[1] }; locked = false; runOver = false;
+    used.add(pair[0].name); used.add(pair[1].name);
+    elSeason.textContent = pair[0].yr;
+    elPrompt.textContent = 'Who scored more fantasy points?';
+    [[elA, cur.a], [elB, cur.b]].forEach(([el, r]) => {
+      el.className = 'hl-player'; el.disabled = false; el.innerHTML = cardHtml(r);
+      el.setAttribute('aria-label', showName(r.name) + ', ' + r.pos + (r.tm ? ', ' + teamLabel(r.tm) : ''));
+      paintPhoto(el, r);
+    });
+    elResult.style.display = 'none'; elResult.innerHTML = '';
+    elNext.style.display = 'none';
+    renderStats();
+  }
+  function answer(side) {
+    if (!cur || locked) return;
+    locked = true;
+    const pick = side === 'a' ? cur.a : cur.b, other = side === 'a' ? cur.b : cur.a;
+    const won = pick.pts > other.pts;
+    const pickedEl = side === 'a' ? elA : elB, winEl = cur.a.pts > cur.b.pts ? elA : elB, loseEl = winEl === elA ? elB : elA;
+    elA.disabled = true; elB.disabled = true;
+    pickedEl.classList.add('hl-picked');
+    pickedEl.querySelector('.hl-pick-mark').textContent = won ? '✓' : '✗';
+    winEl.classList.add('hl-win'); loseEl.classList.add('hl-lose');
+    [[elA, cur.a], [elB, cur.b]].forEach(([el, r]) => {
+      el.querySelector('.hl-pts-lbl').textContent = r.pos + r.rank + ' · PPR';
+      countUp(el.querySelector('.hl-pts-num'), r.pts);
+    });
+    played++;
+    if (won) { streak++; correct++; if (streak > best) best = streak; lastRun = streak; }
+    else { lastRun = streak; streak = 0; runOver = true; }
+    persist();
+    if (typeof window._lbUpdateHigherLower === 'function') window._lbUpdateHigherLower(played, correct, streak, best);
+    renderStats();
+    const diff = Math.abs(cur.a.pts - cur.b.pts).toFixed(1);
+    elPrompt.textContent = won ? 'Correct!' : 'Not this time';
+    elResult.style.display = 'block';
+    if (won) {
+      elResult.innerHTML = '<div class="hl-result-text win">CORRECT</div>' +
+        '<div class="hl-result-sub">' + link(pick) + ' by ' + diff + ' in ' + cur.a.yr + '</div>';
+      elNext.textContent = 'NEXT';
+    } else {
+      elResult.innerHTML = '<div class="hl-result-text lose">GAME OVER</div>' +
+        '<div class="hl-result-sub">' + link(other) + ' had ' + diff + ' more in ' + cur.a.yr + '</div>' +
+        '<div class="hl-stat-row">' +
+          '<div class="hl-stat"><b style="color:var(--accent)">' + lastRun + '</b><span>Streak</span></div>' +
+          '<div class="hl-stat"><b>' + best + '</b><span>Best</span></div>' +
+          '<div class="hl-stat"><b style="color:var(--green)">' + correct + '</b><span>Correct</span></div>' +
+          '<div class="hl-stat"><b>' + played + '</b><span>Played</span></div>' +
+        '</div>';
+      elNext.textContent = 'PLAY AGAIN';
+    }
+    elNext.style.display = '';
+    setTimeout(() => { try { elNext.focus({ preventScroll: true }); } catch (_) {} }, 50);
+  }
+  function next() {
+    if (cur && !locked) return;               // mid-question: no skipping
+    if (runOver) used.clear();                // a new run may reuse players
+    newRound();
+  }
+  function share() {
+    const n = runOver ? lastRun : streak;
+    const text = 'MFF Higher/Lower · streak ' + n + (best > n ? ' · best ' + best : '') + ' · ' + PERMALINK;
+    const ok = m => { if (typeof toast === 'function') toast(m); };
+    const copy = () => {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => ok('Copied — paste it anywhere')).catch(() => { window.prompt('Copy your result:', text); });
+      else window.prompt('Copy your result:', text);
+    };
+    if (navigator.share) navigator.share({ text: text }).catch(err => { if (!err || err.name !== 'AbortError') copy(); });
+    else copy();
+  }
+  function start() {
+    if (started) return;
+    started = true;
+    elLoading.hidden = false;
+    ensurePool().then(ok => {
+      if (!ok) { elLoading.textContent = 'Season data didn\'t load — reload to try again'; started = false; poolPromise = null; return; }
+      elLoading.hidden = true;
+      newRound();
+    });
+  }
+  window._hlStart = start;
+  elA.addEventListener('click', () => answer('a'));
+  elB.addEventListener('click', () => answer('b'));
+  elNext.addEventListener('click', next);
+  elShare.addEventListener('click', share);
+  // Keyboard: ← / → pick, Enter moves on.
+  document.addEventListener('keydown', e => {
+    if (!cur || !pane.classList.contains('active') || !document.getElementById('pageGames').classList.contains('active')) return;
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); answer('a'); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); answer('b'); }
+    else if (e.key === 'Enter' && locked && e.target !== elNext && e.target !== elShare) { e.preventDefault(); next(); }
+  });
+  const tabBtn = document.querySelector('.games-tab[data-games-tab="higherlower"]');
+  if (tabBtn) tabBtn.addEventListener('click', start);
+  if (pane.classList.contains('active')) start();   // deep link / chunk landed after the tab opened
 })();
 //#endchunk games
 
@@ -44177,6 +44495,24 @@ window.fmtHeight = fmtHeight;
     }).catch(e => console.warn('[LB] unlimited read error:', e));
   };
 
+  // Higher / Lower (2026-10-29): same shape as unlimited under the higherLower key.
+  // localBest = the device's best, so a best set while signed out posts on the next save.
+  window._lbUpdateHigherLower = function(played, correct, streak, localBest) {
+    const user = getUser(); const db = getDb();
+    if (!user || !db) return;
+    const name = user.displayName || user.email.split('@')[0];
+    const ref = db.collection('leaderboard').doc(user.uid);
+    ref.get().then(doc => {
+      const existing = doc.exists && doc.data().higherLower ? (doc.data().higherLower.bestStreak || 0) : 0;
+      const bestStreak = Math.max(existing, streak || 0, localBest || 0);
+      ref.set({
+        name: name, email: _lbNoEmail(), ...getLbBadge(),
+        higherLower: { played: played || 0, correct: correct || 0, streak: streak || 0, bestStreak: bestStreak },
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(e => console.warn('[LB] higherLower save error:', e));
+    }).catch(e => console.warn('[LB] higherLower read error:', e));
+  };
+
   // Score games keep the all-time best (highScore + date) plus the best of the
   // current day / week / month (dayKey+dayBest, wkKey+wkBest, moKey+moBest), so
   // the TODAY / WEEK / MONTH filters rank real period bests. Before, they only
@@ -44540,6 +44876,20 @@ window.fmtHeight = fmtHeight;
         }
       }
 
+      // --- HIGHER / LOWER (2026-10-29) — Firestore field "higherLower", best streak ---
+      const hlPlayers = all.filter(u => u.higherLower && (u.higherLower.bestStreak > 0 || u.higherLower.streak > 0) && isWithinTimeFilter(u.updatedAt ? u.updatedAt.slice(0,10) : '', tf))
+        .map(u => ({ ...u, _bestStreak: Math.max(u.higherLower.bestStreak || 0, u.higherLower.streak || 0), _currentStreak: u.higherLower.streak || 0 }))
+        .sort((a, b) => (b._bestStreak - a._bestStreak) || (b._currentStreak - a._currentStreak));
+      const hlLoading = document.getElementById('lbHigherLowerLoading'), hlEmpty = document.getElementById('lbHigherLowerEmpty'), hlList = document.getElementById('lbHigherLowerList');
+      if (hlLoading) hlLoading.style.display = 'none';
+      if (hlList) {
+        if (!hlPlayers.length) { if (hlEmpty) hlEmpty.style.display = 'block'; hlList.innerHTML = ''; }
+        else {
+          if (hlEmpty) hlEmpty.style.display = 'none';
+          hlList.innerHTML = renderTop3(hlPlayers, uid, u => '🔥 ' + u._bestStreak + ' best' + (u._currentStreak > 0 ? '<span class="lb-sub" style="color:var(--green);margin-left:6px">(' + u._currentStreak + ' active)</span>' : ''));
+        }
+      }
+
       // --- GW STREAK DATA (rendering moved to Daily tab, kept for badge detection) ---
       const gwCurrentPlayers = all.filter(u => u.gwDaily && (u.gwDaily.bestStreak > 0 || u.gwDaily.streak > 0))
         .map(u => ({ ...u, _bestStreak: Math.max(u.gwDaily.bestStreak || 0, u.gwDaily.streak || 0) }))
@@ -44557,6 +44907,7 @@ window.fmtHeight = fmtHeight;
         if (fgWeekPlayers.length && fgWeekPlayers[0].id === uid) isFirst = true;
         if (dailyPlayers2.length && dailyPlayers2[0].id === uid) isFirst = true;
         if (unlimitedPlayers.length && unlimitedPlayers[0].id === uid) isFirst = true;
+        if (hlPlayers.length && hlPlayers[0].id === uid) isFirst = true;
         if (gwCurrentPlayers.length && gwCurrentPlayers[0].id === uid) isFirst = true;
         if (gwATPlayers.length && gwATPlayers[0].id === uid) isFirst = true;
         // Weekly: check if #1 with a recent date (within 7 days)
@@ -44708,20 +45059,32 @@ window.fmtHeight = fmtHeight;
     });
   });
 
-  // Games page sub-tab switching
+  // Games page sub-tab switching. window._gamesShowTab(key) is the programmatic form
+  // (#games-<key> deep links from the hash router, home cards); the hash follows the open
+  // tab so a game is bookmarkable / shareable (2026-10-29, Higher / Lower share permalink).
+  window._gamesShowTab = function(key, opts) {
+    const tab = document.querySelector('.games-tab[data-games-tab="' + key + '"]');
+    if (!tab) return false;
+    document.querySelectorAll('.games-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.games-subpage').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const target = document.getElementById('games' + key.charAt(0).toUpperCase() + key.slice(1));
+    if (target) target.classList.add('active');
+    // Opening LEADERBOARD shows fresh scores (it used to load once at startup).
+    if (key === 'leaderboard' && Date.now() - _lbLastLoad > 15000) {
+      loadLeaderboards();
+      if (lbActiveTab === 'daily') loadDailyLeaderboards();
+    }
+    try {
+      const h = key === 'daily' ? '#games' : '#games-' + key;
+      const pg = document.getElementById('pageGames');
+      if (!(opts && opts.keepHash) && pg && pg.classList.contains('active') && location.hash !== h) history.replaceState(history.state, '', location.pathname + location.search + h);
+    } catch (_) {}
+    if (key === 'higherlower' && typeof window._hlStart === 'function') window._hlStart();
+    return true;
+  };
   document.querySelectorAll('.games-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.games-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.games-subpage').forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      const target = document.getElementById('games' + tab.dataset.gamesTab.charAt(0).toUpperCase() + tab.dataset.gamesTab.slice(1));
-      if (target) target.classList.add('active');
-      // Opening LEADERBOARD shows fresh scores (it used to load once at startup).
-      if (tab.dataset.gamesTab === 'leaderboard' && Date.now() - _lbLastLoad > 15000) {
-        loadLeaderboards();
-        if (lbActiveTab === 'daily') loadDailyLeaderboards();
-      }
-    });
+    tab.addEventListener('click', () => window._gamesShowTab(tab.dataset.gamesTab));
   });
   // Daily Challenge sub-tab switching (CURRENT / 2000s / 2010s / PHOTO).
   // The .dc-tab buttons and .dc-pane containers were moved from the home page

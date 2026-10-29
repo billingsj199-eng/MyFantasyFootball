@@ -27952,7 +27952,11 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   // (setFgLeague). Before that, COLLEGE mode drafted from an empty pool.
   function _fgBuildCollegePool() {
     if (CFG_POOL.length || typeof COLLEGE_STATS === 'undefined') return;
-    const _getPos = (name) => {
+    // NFL/combine position tables say what a player became, not what he
+    // played in college (Tebow drafted at TE, Malik Cunningham / Greg Ward
+    // Jr. at WR — Jack 10-28). The college stat line decides first: a
+    // passer is a QB, a carrier an RB; a receiver keeps the table's WR/TE.
+    const _tablePos = (name) => {
       if (typeof COMBINE_DATA !== 'undefined' && COMBINE_DATA[name] && COMBINE_DATA[name].pos) return COMBINE_DATA[name].pos;
       const dp = D.find(p => p.n === name);
       if (dp && dp.s) return dp.s;
@@ -27960,6 +27964,16 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       if (typeof HP !== 'undefined') { const hp = HP.find(p => p.n === name); if (hp && hp.s) return hp.s; }
       if (typeof LDB !== 'undefined') { const lb = LDB.find(p => p.n === name); if (lb && lb.s) return lb.s; }
       return null;
+    };
+    const _getPos = (name) => {
+      const seasons = COLLEGE_STATS[name] || [];
+      let pa = 0, ra = 0, rec = 0;
+      seasons.forEach(s => { pa += s.pa || 0; ra += s.ra || 0; rec += s.rec || 0; });
+      const tp = _tablePos(name);
+      if (pa >= 100 && pa >= ra && pa >= rec) return 'QB';
+      if (ra >= 100 && ra > rec * 2) return 'RB';
+      if (rec >= 20 && rec > ra) return (tp === 'TE') ? 'TE' : 'WR';
+      return tp;
     };
     const _cfpts = (s) => { return Math.round(((s.py||0)/25 + (s.ptd||0)*4 + (s.int||0)*(-2) + (s.ry||0)/10 + (s.rtd||0)*6 + (s.rec||0)*0.5 + (s.rcy||0)/10 + (s.rctd||0)*6 - (s.fl||0)*2)*10)/10; };
     Object.entries(COLLEGE_STATS).forEach(([name, seasons]) => {
@@ -56451,7 +56465,9 @@ window.fmtHeight = fmtHeight;
 
     // Check if guess matches just the player name (answer might be "Player Name (Year)")
     // Split answer on common separators
-    const answerParts = answer.split(/[\(\,\-–—]/);
+    // (a dash splits only with spaces around it — "Amon-Ra" is one name, and
+    // "Amon" alone must not count as a hit)
+    const answerParts = answer.split(/\s*[\(,]|\s[-–—]\s/);
     for (const part of answerParts) {
       if (norm(part) === g) return true;
     }
@@ -56474,14 +56490,18 @@ window.fmtHeight = fmtHeight;
       if (gFirst === aFirst && gLast === aLast) return true;
     }
 
-    // Levenshtein distance for typo tolerance (only for longer names)
-    if (g.length >= 5 && a.length >= 5) {
-      const dist = _levenshtein(g, a);
-      if (dist <= 2) return true;
+    // Typo tolerance, word by word: every word of the guess must be within
+    // an edit or two of the matching word (short words get none). A whole-
+    // string distance let "St. Brown" hit "A.J. Brown" (2 edits apart).
+    const _tol = (w) => w.length >= 8 ? 2 : w.length >= 5 ? 1 : 0;
+    const _closeWords = (gw, aw) => gw.length === aw.length && gw.length > 0
+      && gw.every((w, i) => w === aw[i] || _levenshtein(w, aw[i]) <= _tol(aw[i]));
+    if (g.length >= 5) {
+      if (_closeWords(gWords, aWords)) return true;
       // Also check against just the name part
       for (const part of answerParts) {
         const np = norm(part);
-        if (np.length >= 5 && _levenshtein(g, np) <= 2) return true;
+        if (np.length >= 5 && _closeWords(gWords, np.split(' '))) return true;
       }
     }
 
@@ -56734,7 +56754,10 @@ window.fmtHeight = fmtHeight;
   // Marcus Allen as a Raider on a Raiders cell); ESPN headshots ignore it (latest team).
   function _triviaGetHeadshotInfo(answerText, team) {
     const none = { url: '', credit: '', page: '' };
-    const name = (answerText || '').split(/[\(\,\-–—]/)[0].trim();
+    // Strip "(1991–1999)" / ", 2004" / " - Wk 4" suffixes. A dash counts only
+    // with spaces around it: "Amon-Ra St. Brown" must not become "Amon"
+    // (hyphenated names had no photo — Jack 10-28).
+    const name = (answerText || '').split(/\s*[\(,]|\s[-–—]\s/)[0].trim();
     if (!name) return none;
     // Try name plus common suffix variants
     const nameVariants = [name, name + ' Jr.', name + ' III', name + ' II', name + ' Sr.',

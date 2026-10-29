@@ -59258,6 +59258,8 @@ window.fmtHeight = fmtHeight;
   window._triviaEntryShow = function() {
     _triviaEntryMode('entry');
     setTimeout(_triviaEntryFill, 600); // after the daily panel has filled
+    // First-visit HOW TO PLAY opens here (on the trivia page), never elsewhere.
+    setTimeout(() => { try { _triviaShowFirstVisitTooltip(); } catch (_) {} }, 300);
     const entry = document.getElementById('triviaEntry');
     if (entry) entry.scrollIntoView({ block: 'start' });
   };
@@ -60969,6 +60971,10 @@ window.fmtHeight = fmtHeight;
       if (/[?&]daily=\d{4}-\d{2}-\d{2}/.test(location.search || '')) return;
     } catch(_){}
     if (!document.getElementById('triviaDailyPanel')) return;
+    // Only on the trivia page itself: the chunk can load while the visitor
+    // is on Games (the DAILY card refresh), and the modal popped there.
+    const pg = document.getElementById('pageTrivia');
+    if (!pg || getComputedStyle(pg).display === 'none') return;
     window._triviaShowHowTo(true);
   }
   window._triviaDismissIntro = function() {

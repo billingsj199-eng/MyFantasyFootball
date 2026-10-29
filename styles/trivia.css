@@ -70,6 +70,26 @@
 .trivia-freebar-note{min-height:16px;margin-top:4px;font-size:.72rem;letter-spacing:.5px;text-align:center;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .trivia-cell.hit{animation:triviaHit .9s ease}
 @keyframes triviaHit{0%{box-shadow:0 0 0 0 rgba(34,197,94,.9)}100%{box-shadow:0 0 0 14px rgba(34,197,94,0)}}
+/* Trivia is admin-only until the Board Library audit is done (Jack 10-28): nav button, Games
+   card and leaderboard section hide for everyone else. */
+body:not(.mff-admin) #navTriviaBtn{display:none!important}
+/* Board Library panel */
+.trivia-library{margin-bottom:12px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)}
+.trivia-library-title{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;color:var(--text);line-height:1}
+.trivia-library-sub{margin-top:3px;font-size:.72rem;color:var(--text2)}
+.trivia-library-presets{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px}
+.trivia-library-chip{padding:5px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.72rem;cursor:pointer;white-space:nowrap}
+.trivia-library-chip:hover{border-color:#ffd166;color:#ffd166}
+.trivia-library-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.trivia-library-grid label{display:flex;flex-direction:column;gap:3px;font-size:.72rem;color:var(--text2)}
+.trivia-library-grid select{padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.8rem}
+.trivia-library-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px}
+.trivia-library-pos{display:flex;gap:4px}
+.trivia-library-pos button{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:.75rem;font-weight:700;cursor:pointer}
+.trivia-library-pos button.on{background:var(--accent);border-color:var(--accent);color:#000}
+.trivia-library-play{padding:9px 20px;background:#ffd166;color:#1a1a2e;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;cursor:pointer;font-weight:700}
+.trivia-library-play:disabled{opacity:.6;cursor:default}
+.trivia-library-note{min-height:14px;margin-top:6px;font-size:.72rem;color:var(--text2)}
 .trivia-score-bar{display:flex;align-items:center;justify-content:center;gap:16px;padding:10px;margin-bottom:8px;border-radius:8px;background:var(--surface2);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1px;color:var(--text)}
 /* Inside the #triviaScoreBar wrapper (which already draws the box) the bar is just a row. */
 #triviaScoreBar .trivia-score-bar{margin-bottom:0;padding:2px 0;background:transparent;border-radius:0}

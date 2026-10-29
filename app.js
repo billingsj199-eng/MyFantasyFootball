@@ -24299,7 +24299,10 @@ function switchPage(page) {
   // Admin-only pages — silently redirect non-admins to home. Trivia is public
   // since 2026-10-28: players get the daily board, the builder controls carry
   // class trivia-admin-only and hide unless body.mff-admin is set.
-  const ADMIN_ONLY_PAGES = ['backtest', 'research'];
+  // trivia: back behind admin until the Board Library audit is done and the
+  // boards are built (Jack 10-28); the nav button, Games card and leaderboard
+  // section hide via CSS (trivia.css, body:not(.mff-admin)).
+  const ADMIN_ONLY_PAGES = ['backtest', 'research', 'trivia'];
   if (ADMIN_ONLY_PAGES.includes(page)) {
     const admin = typeof window.isAdmin === 'function' && window.isAdmin();
     if (!admin) { page = 'rankings'; } // 'home' isn't in pageMap — it renders a blank page
@@ -57890,6 +57893,155 @@ window.fmtHeight = fmtHeight;
   // 4×4 grid is the smallest layout we render, so 16 items is the floor.
   // Templates yielding fewer items get bypassed via the chain.
   const _TRIVIA_DAILY_MIN_ITEMS = 16;
+
+  // ===== BOARD LIBRARY =====
+  // Every category board, built live from the current data files (the weekly
+  // pulls refresh them, so a "2026 Top 20 WR" board grows with the season).
+  // Nothing is stored: the panel's controls drive the builder's own filter
+  // pipeline (_triviaGenerate). Jack 10-28: viewers sort through it
+  // themselves; a one-time audit (below) flags thin boards and missing photos.
+  const _LIB_PRESETS = [
+    { t: 'All-Time Rushers',      f: { type: 'career', stat: 'ry',   era: 'all',       pos: ['RB'] } },
+    { t: 'All-Time Receivers',    f: { type: 'career', stat: 'rcy',  era: 'all',       pos: ['WR', 'TE'] } },
+    { t: 'All-Time Passers',      f: { type: 'career', stat: 'py',   era: 'all',       pos: ['QB'] } },
+    { t: '2025 Fantasy Pts',      f: { type: 'season', stat: 'fpts', year: '2025',     pos: ['QB', 'RB', 'WR', 'TE'] } },
+    { t: '2010s WR Rec Yds',      f: { type: 'season', stat: 'rcy',  era: '2010-2019', pos: ['WR'] } },
+    { t: '1990s QB Pass TDs',     f: { type: 'season', stat: 'ptd',  era: '1990-1999', pos: ['QB'] } },
+    { t: 'Best Rushing Games',    f: { type: 'game',   stat: 'ry',   era: 'all',       pos: ['RB'] } },
+    { t: 'Best Fantasy Games',    f: { type: 'game',   stat: 'fpts', era: 'all',       pos: ['QB', 'RB', 'WR', 'TE'] } }
+  ];
+  const _LIB_ERAS = ['all', '2020-2029', '2010-2019', '2000-2009', '1990-1999', '1980-1989', '1970-1979'];
+  const _LIB_STATS = ['fpts', 'ppg', 'rcy', 'rec', 'rctd', 'ry', 'rtd', 'py', 'ptd', 'totalTd'];
+  const _LIB_POS_SETS = [['QB'], ['RB'], ['WR'], ['TE'], ['QB', 'RB', 'WR', 'TE']];
+  function _libNote(msg, color) {
+    const n = document.getElementById('libNote');
+    if (n) { n.textContent = msg || ''; n.style.color = color || 'var(--text2)'; }
+  }
+  // Single-game logs start in 1999; anything earlier can't build a game board.
+  function _libGameTooOld(type, year, era) {
+    if (type !== 'game') return false;
+    if (year && year !== 'all') return +year < 1999;
+    const m = /^(\d{4})-(\d{4})$/.exec(era || '');
+    return !!(m && +m[2] < 1999);
+  }
+  function _triviaLibInit() {
+    const ySel = document.getElementById('libYear');
+    if (ySel && ySel.options.length <= 1) {
+      const last = (typeof _TRIVIA_LAST_SEASON !== 'undefined' && _TRIVIA_LAST_SEASON) || 2025;
+      for (let y = last + 1; y >= 1970; y--) { const o = document.createElement('option'); o.value = String(y); o.textContent = String(y); ySel.appendChild(o); }
+    }
+    const pre = document.getElementById('libPresets');
+    if (pre && !pre.children.length) {
+      _LIB_PRESETS.forEach(p => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'trivia-library-chip'; b.textContent = p.t;
+        b.addEventListener('click', () => window._triviaLibraryPlay(p.f));
+        pre.appendChild(b);
+      });
+    }
+    document.querySelectorAll('#libPos button').forEach(b => {
+      b.addEventListener('click', () => {
+        b.classList.toggle('on');
+        if (!document.querySelector('#libPos button.on')) b.classList.add('on');
+      });
+    });
+  }
+  // Push a filter set into the builder and run it. Returns the item count.
+  async function _libBuild(f) {
+    const q = id => document.getElementById(id);
+    const type = f.type || 'season';
+    const year = type === 'career' ? 'all' : (f.year || 'all');
+    const era = f.era || 'all';
+    q('triviaCustomPromptToggle').checked = false;
+    q('triviaFilterType').value = type;
+    q('triviaFilterType').dispatchEvent(new Event('change', { bubbles: true }));
+    q('triviaFilterSeasonType').value = 'reg';
+    q('triviaFilterStat').value = f.stat || 'fpts';
+    q('triviaFilterYear').value = year;
+    q('triviaFilterEra').value = year !== 'all' ? 'all' : era;
+    q('triviaFilterCount').value = String(f.count || 20);
+    q('triviaFilterConf').value = 'all';
+    q('triviaFilterTeam').value = 'all';
+    if (q('triviaFilterWeek')) q('triviaFilterWeek').value = 'all';
+    const pos = f.pos && f.pos.length ? f.pos : ['QB', 'RB', 'WR', 'TE'];
+    document.querySelectorAll('#triviaFilterPos input[type="checkbox"]').forEach(cb => { cb.checked = pos.includes(cb.value); });
+    _triviaDailyRun = null; // a library board is never a daily
+    await window._triviaGenerate();
+    return (window._triviaData && window._triviaData.items) ? window._triviaData.items.length : 0;
+  }
+  window._triviaLibraryPlay = async function(preset) {
+    const q = id => document.getElementById(id);
+    const f = preset || {
+      type: q('libType').value, stat: q('libStat').value, era: q('libEra').value,
+      year: q('libYear').value, count: +q('libCount').value,
+      pos: [...document.querySelectorAll('#libPos button.on')].map(b => b.dataset.pos)
+    };
+    if (_libGameTooOld(f.type, f.year, f.era)) { _libNote('Single-game boards start in 1999.', '#ef4444'); return; }
+    const btn = q('libPlayBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'BUILDING…'; }
+    _libNote('');
+    try {
+      const n = await _libBuild(f);
+      if (n) {
+        if (typeof window._triviaStartGame === 'function') window._triviaStartGame();
+        const area = q('triviaBoardArea');
+        if (area) area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        _libNote('No board for that combination — try a wider era or more positions.', '#ef4444');
+      }
+    } catch (e) {
+      console.warn('[Trivia] library build failed:', e);
+      _libNote('That board could not be built.', '#ef4444');
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'BUILD & PLAY'; }
+  };
+  // Admin, one-time: build every library combination for closed seasons and
+  // download a report — thin boards (<16), players with no photo, squares
+  // with no team. Re-run only when the data pipelines change.
+  window._triviaLibraryAudit = async function() {
+    if (!(typeof window.isAdmin === 'function' && window.isAdmin())) return;
+    const st = document.getElementById('libAuditStatus');
+    const say = m => { if (st) st.textContent = m; };
+    const combos = [];
+    ['season', 'career', 'game'].forEach(type => _LIB_STATS.forEach(stat => _LIB_ERAS.forEach(era => _LIB_POS_SETS.forEach(pos => {
+      if (_libGameTooOld(type, 'all', era)) return;
+      if (type === 'career' && stat === 'ppg') return;
+      combos.push({ type, stat, era, pos, count: 25 });
+    }))));
+    const rows = [], noPhoto = {}, noTeam = {};
+    let done = 0;
+    for (const f of combos) {
+      let n = 0;
+      try { n = await _libBuild(f); } catch (_) {}
+      const items = (window._triviaData && window._triviaData.items) || [];
+      const label = [f.type, f.stat, f.era, f.pos.join('/')].join(' · ');
+      const missing = [], teamless = [];
+      items.forEach(it => {
+        const nm = (it.answer || '').split(/\s*[\(,]|\s[-–—]\s/)[0].trim();
+        if (!it.team) { teamless.push(nm); noTeam[nm] = (noTeam[nm] || 0) + 1; }
+        if (!_triviaGetHeadshotInfo(it.answer, it.team).url) { missing.push(nm); noPhoto[nm] = (noPhoto[nm] || 0) + 1; }
+      });
+      rows.push({ board: label, items: n, thin: n < 16, noPhoto: missing, noTeam: teamless });
+      done++;
+      if (done % 10 === 0) { say('Auditing ' + done + '/' + combos.length + '…'); await new Promise(r => setTimeout(r, 0)); }
+    }
+    const top = o => Object.entries(o).sort((a, b) => b[1] - a[1]);
+    const thin = rows.filter(r => r.thin);
+    const md = ['# Trivia Board Library audit · ' + _triviaTodayStr(), '',
+      'Boards: ' + rows.length + ' · thin (<16): ' + thin.length + ' · players without a photo: ' + Object.keys(noPhoto).length + ' · squares without a team: ' + Object.keys(noTeam).length, '',
+      '## Thin boards', ...thin.map(r => '- ' + r.board + ' — ' + r.items + ' items'), '',
+      '## Players with no photo (boards they appear on)', ...top(noPhoto).map(([n, c]) => '- ' + n + ' (' + c + ')'), '',
+      '## Players with no team label (boards)', ...top(noTeam).map(([n, c]) => '- ' + n + ' (' + c + ')')].join('\n');
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'trivia_library_audit_' + _triviaTodayStr() + '.md'; a.click();
+    const json = new Blob([JSON.stringify({ date: _triviaTodayStr(), rows, noPhoto, noTeam }, null, 1)], { type: 'application/json' });
+    const b = document.createElement('a');
+    b.href = URL.createObjectURL(json); b.download = 'trivia_library_audit_' + _triviaTodayStr() + '.json'; b.click();
+    say('Done: ' + rows.length + ' boards, ' + thin.length + ' thin, ' + Object.keys(noPhoto).length + ' players without a photo — report downloaded.');
+    window._triviaLibraryAuditResult = { rows, noPhoto, noTeam };
+  };
+  _triviaLibInit();
 
   window._triviaPlayDaily = function() {
     const dateStr = _triviaResolveDailyDate();

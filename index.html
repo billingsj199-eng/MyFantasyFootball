@@ -2675,11 +2675,13 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <!-- DAILY TAB -->
 <div id="lbPanelDaily" style="display:none">
 
+<div class="trivia-admin-only">
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Trivia</div>
 <div class="lb-list" id="lbDailyTriviaList" style="margin-bottom:4px"></div>
 <div class="lb-loading" id="lbDailyTriviaLoading">Loading...</div>
 <div class="lb-empty" id="lbDailyTriviaEmpty" style="display:none">No data yet</div>
 <div style="border-bottom:1px solid var(--border);margin:10px 0"></div>
+</div>
 
 <div class="lb-section-title" style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Daily Elite Pull — Current</div>
 <div class="lb-list" id="lbDailyEpCurrentList" style="margin-bottom:4px"></div>
@@ -2730,7 +2732,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <button class="dc-tab" data-dc="2000s">2000s</button>
 <button class="dc-tab" data-dc="2010s">2010s</button>
 <button class="dc-tab" data-dc="guesswho">PHOTO</button>
-<button class="dc-tab" data-dc="trivia">TRIVIA</button>
+<button class="dc-tab trivia-admin-only" data-dc="trivia">TRIVIA</button>
 </div>
 <!-- Daily ELITE PULL — Current -->
 <div class="dc-pane active" data-dc="current" style="max-width:480px">
@@ -2900,7 +2902,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 </div>
 <!-- Daily TRIVIA — the board plays on the Trivia page (it needs the full width);
      this card is the Games entry point. Streak/today filled by _mffTriviaCardRefresh. -->
-<div class="dc-pane" data-dc="trivia" style="max-width:480px">
+<div class="dc-pane trivia-admin-only" data-dc="trivia" style="max-width:480px">
 <div class="gw-card">
 <div class="gw-header" style="padding:1rem 1.25rem .5rem">
 <div class="gw-title" style="font-size:1.5rem">DAILY TRIVIA</div>
@@ -3734,11 +3736,78 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <div id="triviaDailyArchiveList" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto"><div style="color:var(--text2);font-size:.78rem;padding:6px">Loading…</div></div>
 </div>
 
+<!-- BOARD LIBRARY (players): every category board, built live from the current
+     data files — nothing stored, so boards update as the weekly pulls land.
+     Admin keeps the full builder below instead (Jack 10-28). -->
+<div id="triviaLibrary" class="trivia-library">
+<div class="trivia-library-head">
+<div class="trivia-library-title">BOARD LIBRARY</div>
+<div class="trivia-library-sub">Any category, any era. Boards build from the latest stats, so this season's boards grow every week.</div>
+</div>
+<div class="trivia-library-presets" id="libPresets"></div>
+<div class="trivia-library-grid">
+<label>Type
+<select id="libType">
+<option value="season" selected>Season totals</option>
+<option value="career">Career totals</option>
+<option value="game">Single game</option>
+</select>
+</label>
+<label>Stat
+<select id="libStat">
+<option value="fpts" selected>Fantasy Pts</option>
+<option value="ppg">Fantasy PPG</option>
+<option value="rcy">Receiving Yards</option>
+<option value="rec">Receptions</option>
+<option value="rctd">Receiving TDs</option>
+<option value="ry">Rushing Yards</option>
+<option value="rtd">Rushing TDs</option>
+<option value="py">Passing Yards</option>
+<option value="ptd">Passing TDs</option>
+<option value="totalTd">Total TDs</option>
+</select>
+</label>
+<label>Era
+<select id="libEra">
+<option value="all" selected>All-Time</option>
+<option value="since-2020">Since 2020</option>
+<option value="2020-2029">2020s</option>
+<option value="2010-2019">2010s</option>
+<option value="2000-2009">2000s</option>
+<option value="1990-1999">1990s</option>
+<option value="1980-1989">1980s</option>
+<option value="1970-1979">1970s</option>
+</select>
+</label>
+<label>Year
+<select id="libYear"><option value="all" selected>Any year</option></select>
+</label>
+<label>Size
+<select id="libCount">
+<option value="16">Top 16</option>
+<option value="20" selected>Top 20</option>
+<option value="25">Top 25</option>
+<option value="30">Top 30</option>
+</select>
+</label>
+</div>
+<div class="trivia-library-row">
+<div class="trivia-library-pos" id="libPos">
+<button type="button" data-pos="QB" class="on">QB</button>
+<button type="button" data-pos="RB" class="on">RB</button>
+<button type="button" data-pos="WR" class="on">WR</button>
+<button type="button" data-pos="TE" class="on">TE</button>
+</div>
+<button type="button" class="trivia-library-play" id="libPlayBtn" onclick="window._triviaLibraryPlay()">BUILD &amp; PLAY</button>
+</div>
+<div class="trivia-library-note" id="libNote"></div>
+</div>
+
 <!-- Quick-start Templates -->
 <div id="triviaTemplates" class="trivia-admin-only" style="margin-bottom:12px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)">
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text)">QUICK-START TEMPLATES</div>
-<div style="font-size:.6875rem;color:var(--text2)">Click any card to play instantly</div>
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:.6875rem;color:var(--text2)">Click any card to play instantly</span><button type="button" onclick="window._triviaLibraryAudit()" title="Build every Board Library combination once and download a report: thin boards, players with no photo, squares with no team" style="padding:4px 10px;background:rgba(56,189,248,.12);color:#38bdf8;border:1px solid rgba(56,189,248,.45);border-radius:6px;font-size:.68rem;letter-spacing:1px;cursor:pointer">🔎 AUDIT LIBRARY</button><span id="libAuditStatus" style="font-size:.68rem;color:var(--text2)"></span></div>
 </div>
 <div id="triviaTemplateGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px"></div>
 </div>

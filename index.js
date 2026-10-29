@@ -784,8 +784,21 @@ exports.lockTriviaDaily = onRequest(
         return;
       }
       if (req.method !== "POST") { res.status(405).json({ error: "POST only" }); return; }
-      const doc = req.body && req.body.doc;
       const bad = (msg) => { res.status(400).json({ error: msg }); };
+      // {op:'unlock', date}: remove an AUTO lock (never a hand lock) so the
+      // template cycle serves that date again.
+      if (req.body && req.body.op === "unlock") {
+        const d = String(req.body.date || "");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return bad("bad date");
+        const ref = getFirestore().collection("trivia_daily").doc(d);
+        const snap = await ref.get();
+        if (!snap.exists) { res.json({ ok: true, date: d, removed: false }); return; }
+        if ((snap.data() || {}).source !== "auto") { res.status(409).json({ error: "locked-by-admin" }); return; }
+        await ref.delete();
+        res.json({ ok: true, date: d, removed: true });
+        return;
+      }
+      const doc = req.body && req.body.doc;
       if (!doc || typeof doc !== "object") return bad("doc required");
       const date = String(doc.date || "");
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return bad("bad date");

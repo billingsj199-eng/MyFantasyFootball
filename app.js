@@ -55711,10 +55711,149 @@ window.fmtHeight = fmtHeight;
 
   function _getLayout(count) {
     const sel = document.getElementById('triviaLayout').value;
-    if (sel === 'auto') return _autoLayout(count);
+    if (sel === 'auto' || sel === 'tiers') return _autoLayout(count);
     const parts = sel.split('x');
     return [parseInt(parts[0]), parseInt(parts[1])];
   }
+
+  // ── TIER BOARD (Jack 2026-10-28: "for our trivia boards can we also replicate
+  // our fantasy rankings tiers boards") ──────────────────────────────────────
+  // Layout "tiers": the items sit in rank tiers like the rankings page's tier
+  // cards — a colored tier strip, then one tcv-card-style chip per item (rank
+  // top-left, stat top-right, team logo, and after the reveal the headshot +
+  // name strip). Chips keep the .trivia-cell class and data-idx, so reveal /
+  // wrong / give-up / the one search bar / the daily results array and share
+  // grid all work unchanged. Breaks default to 1-3 / 4-8 / 9-14 / 15-20 /
+  // 21-25 (then fives); a board can carry its own via data.tiers = [3,5,6,…],
+  // which the daily lock saves and restores.
+  const _TRIVIA_TIER_DEFAULT = [3, 5, 6, 6, 5];
+  function _triviaLayoutSel() { const el = document.getElementById('triviaLayout'); return (el && el.value) || 'auto'; }
+  function _triviaIsTierLayout() { return _triviaLayoutSel() === 'tiers'; }
+  function _triviaTierSizes(n, data) {
+    const own = (data && Array.isArray(data.tiers)) ? data.tiers.map(x => parseInt(x, 10)).filter(x => x > 0) : [];
+    const src = own.length ? own : _TRIVIA_TIER_DEFAULT;
+    const out = [];
+    let used = 0, k = 0;
+    while (used < n) {
+      let sz = k < src.length ? src[k] : 5;
+      if (used + sz > n) sz = n - used;
+      out.push(sz); used += sz; k++;
+    }
+    return out;
+  }
+  // Same palette as the rankings tier letters (_TCV_VB_TIER_COLORS in core
+  // app.js); the local copy only covers a split build where that const is absent.
+  const _TRIVIA_TIER_PALETTE = [
+    { a: '#dc2626', b: '#f87171', light: false }, { a: '#ea580c', b: '#fb923c', light: false },
+    { a: '#ca8a04', b: '#facc15', light: true },  { a: '#16a34a', b: '#4ade80', light: false },
+    { a: '#0284c7', b: '#38bdf8', light: false }, { a: '#7c3aed', b: '#a78bfa', light: false },
+    { a: '#475569', b: '#94a3b8', light: false }
+  ];
+  function _triviaTierColor(t) {
+    const pal = (typeof _TCV_VB_TIER_COLORS !== 'undefined' && _TCV_VB_TIER_COLORS.length) ? _TCV_VB_TIER_COLORS : _TRIVIA_TIER_PALETTE;
+    return pal[t % pal.length];
+  }
+  const _TRIVIA_ABBR_TO_TEAM = {
+    ARI: 'Arizona Cardinals', ATL: 'Atlanta Falcons', BAL: 'Baltimore Ravens', BUF: 'Buffalo Bills',
+    CAR: 'Carolina Panthers', CHI: 'Chicago Bears', CIN: 'Cincinnati Bengals', CLE: 'Cleveland Browns',
+    DAL: 'Dallas Cowboys', DEN: 'Denver Broncos', DET: 'Detroit Lions', GB: 'Green Bay Packers',
+    HOU: 'Houston Texans', IND: 'Indianapolis Colts', JAX: 'Jacksonville Jaguars', KC: 'Kansas City Chiefs',
+    LAC: 'Los Angeles Chargers', LAR: 'Los Angeles Rams', LV: 'Las Vegas Raiders', MIA: 'Miami Dolphins',
+    MIN: 'Minnesota Vikings', NE: 'New England Patriots', NO: 'New Orleans Saints', NYG: 'New York Giants',
+    NYJ: 'New York Jets', PHI: 'Philadelphia Eagles', PIT: 'Pittsburgh Steelers', SF: 'San Francisco 49ers',
+    SEA: 'Seattle Seahawks', TB: 'Tampa Bay Buccaneers', TEN: 'Tennessee Titans', WAS: 'Washington Commanders'
+  };
+  // Chip colors = the NFL team's primary fill + secondary ring, as on the
+  // rankings cards. Items carry abbreviations; colleges / unknown teams get the
+  // neutral card gradient.
+  function _triviaTeamColors(team) {
+    const neutral = { p: '#1f2937', s: '#64748b' };
+    if (!team) return neutral;
+    const up = String(team).toUpperCase();
+    const canon = _TEAM_ABBR_ALIASES[up] || up;
+    const full = _TRIVIA_ABBR_TO_TEAM[canon] || team;
+    const c = (typeof _tcvTC === 'function') ? _tcvTC(full) : null;
+    return c || neutral;
+  }
+  function _triviaChipRing(tc) {
+    // secondary color ring unless it is too dark to read on the fill (rankings-card rule)
+    const hex = (typeof _tcvLum === 'function' && _tcvLum(tc.s) < 0.16) ? tc.p : tc.s;
+    const m = String(hex).replace('#', '');
+    if (m.length < 6) return '148,163,184';
+    return parseInt(m.slice(0, 2), 16) + ',' + parseInt(m.slice(2, 4), 16) + ',' + parseInt(m.slice(4, 6), 16);
+  }
+  // Last-resort team lookup for an item with no team (both layouts)
+  function _triviaFillTeam(it) {
+    if (!it || it.team) return;
+    const nameMatch = (it.answer || '').match(/^(.+?)\s*[\(\,]/);
+    const yearMatch = (it.answer || '').match(/\b((?:19|20)\d{2})\b/);
+    const pName = nameMatch ? nameMatch[1].trim() : (it.answer || '').trim();
+    const pYear = yearMatch ? parseInt(yearMatch[1]) : null;
+    if (!pName) return;
+    // Try _getTeamForPlayerYear
+    const tm = pYear ? (typeof _getTeamForPlayerYear === 'function' ? _getTeamForPlayerYear(pName, pYear) : null) : null;
+    if (tm) { it.team = tm; return; }
+    // Try D array current team as absolute last resort
+    if (typeof D !== 'undefined') {
+      const dEntry = D.find(p => p.n === pName);
+      if (dEntry && dEntry.t) it.team = dEntry.t;
+    }
+  }
+  // One chip. Same DOM hooks as a grid cell: .trivia-cell[data-idx], the
+  // .trivia-cell-body / .trivia-cell-hint pair the reveal code hides and
+  // restores, .trivia-cell-answer, and the per-square input for team nights.
+  function _triviaTierChipHtml(it, i, mode, freeBar) {
+    const logoUrl = it.logo || _triviaLogoUrl(it.team || '');
+    const tc = _triviaTeamColors(it.team);
+    const ring = _triviaChipRing(tc);
+    const cat = it.category || '';
+    const rankTxt = (it.rank != null && it.rank !== '') ? String(it.rank) : (/^#\d+$/.test(cat) ? cat.slice(1) : String(i + 1));
+    const stat = it.hint || '';
+    const sub = /^#\d+$/.test(cat) ? '' : cat;   // "Pick #3"-style categories ride the bottom strip; "#rank" is already the badge
+    const up = String(it.team || '').toUpperCase();
+    const teamTxt = _TEAM_ABBR_ALIASES[up] || up;
+    const click = mode === 'reveal' ? `window._triviaCellClick(${i})` : `window._triviaCellFocus(${i})`;
+    // Team fill + ring ride CSS custom properties (trivia.css paints them): the
+    // reset / post-game paths clear style.background on every cell, which
+    // would wipe an inline gradient but leaves the variables alone.
+    let h = `<div class="trivia-cell tcv-card trivia-tier-chip" data-idx="${i}" onclick="${click}" style="--chip-p:${tc.p};--chip-ring:${ring}">`;
+    h += `<div class="tcv-card-rank">${_esc(rankTxt)}</div>`;
+    if (stat) h += `<div class="tcv-card-stats trivia-chip-stat trivia-cell-hint" title="${_esc(stat)}">${_esc(stat)}</div>`;
+    h += '<div class="tcv-card-photo trivia-cell-body">';
+    if (logoUrl) h += `<img class="tcv-card-bg-logo trivia-cell-logo" src="${logoUrl}" alt="${_esc(it.team || '')}" loading="lazy" onerror="this.style.display='none'">`;
+    else h += `<div class="trivia-chip-noteam">${_esc(teamTxt || '?')}</div>`;
+    h += '</div>';
+    h += `<div class="tcv-card-name trivia-chip-sub" title="${_esc(sub || teamTxt)}">${_esc(sub || teamTxt || '?')}</div>`;
+    h += `<div class="trivia-cell-answer">${_esc(it.answer || '')}</div>`;
+    if (mode === 'guess' && !freeBar) {
+      h += `<input type="text" class="trivia-guess-input" data-idx="${i}" placeholder="guess..." autocomplete="off" oninput="window._triviaOnInput(${i},this)" onfocus="window._triviaOnInput(${i},this)" onblur="setTimeout(window._triviaHideAC,150)" onkeydown="if(event.key==='Enter'){event.preventDefault();window._triviaGuess(${i})}">`;
+    }
+    h += '</div>';
+    return h;
+  }
+  function _triviaTierBoardHtml(items, data, mode, freeBar, boardBg) {
+    const sizes = _triviaTierSizes(items.length, data);
+    let html = `<div class="trivia-tierboard" style="background:${boardBg}">`;
+    let p = 0;
+    sizes.forEach((sz, t) => {
+      const c = _triviaTierColor(t);
+      const lo = p + 1, hi = p + sz;
+      html += `<div class="tcv-tier-row trivia-tier-row" data-tier="${t}">`;
+      html += `<div class="tcv-letter trivia-tier-letter${c.light ? ' tcv-letter-light' : ''}" style="background:linear-gradient(135deg,${c.a},${c.b})" title="Tier ${t + 1} · ranks ${lo}–${hi}${mode === 'reveal' ? ' · click to reveal the whole tier' : ''}" onclick="window._triviaTierClick(${t})"><span class="trivia-tier-word">TIER</span><span class="trivia-tier-num">${t + 1}</span><span class="trivia-tier-rng">${lo}–${hi}</span></div>`;
+      html += '<div class="tcv-cards trivia-tier-cards">';
+      for (let i = p; i < p + sz; i++) html += _triviaTierChipHtml(items[i], i, mode, freeBar);
+      html += '</div></div>';
+      p += sz;
+    });
+    html += '</div>';
+    return html;
+  }
+  // Host mode: a tier strip reveals its whole tier (guess games ignore it)
+  window._triviaTierClick = function(t) {
+    const modeEl = document.getElementById('triviaMode');
+    if (!modeEl || modeEl.value !== 'reveal') return;
+    document.querySelectorAll(`.trivia-tier-row[data-tier="${t}"] .trivia-cell[data-idx]`).forEach(c => window._triviaCellClick(parseInt(c.dataset.idx, 10)));
+  };
 
   function _renderBoard(data) {
     _triviaData = data;
@@ -55764,32 +55903,20 @@ window.fmtHeight = fmtHeight;
       // holds that player (see _triviaFreeGuess).
       html += `<div class="trivia-freebar-wrap"><input type="text" id="triviaFreeInput" class="trivia-freebar" placeholder="Type any player on the board…" autocomplete="off" autocapitalize="off" spellcheck="false" oninput="window._triviaOnInput(-1,this)" onfocus="window._triviaOnInput(-1,this)" onblur="setTimeout(window._triviaHideAC,150)" onkeydown="if(event.key==='Enter'){event.preventDefault();window._triviaGuess(-1)}"><div class="trivia-freebar-note" id="triviaFreeNote"></div></div>`;
     }
-    html += `<div class="trivia-grid" style="grid-template-columns:repeat(${cols},1fr);background:${boardBg}">`;
-
     const cellHeaderMode = document.getElementById('triviaCellHeader').value;
+    // Last-resort team lookup if team is empty (both layouts)
+    items.forEach(_triviaFillTeam);
+    // TIER BOARD layout (see _triviaTierBoardHtml) or the classic grid
+    const tierMode = _triviaIsTierLayout();
+    data.layout = tierMode ? 'tiers' : _triviaLayoutSel();
+    if (tierMode) {
+      html += _triviaTierBoardHtml(items, data, mode, freeBar, boardBg);
+    } else {
+    html += `<div class="trivia-grid" style="grid-template-columns:repeat(${cols},1fr);background:${boardBg}">`;
 
     for (let i = 0; i < totalCells; i++) {
       if (i < items.length) {
         const it = items[i];
-        // Last-resort team lookup if team is empty
-        if (!it.team) {
-          const nameMatch = (it.answer || '').match(/^(.+?)\s*[\(\,]/);
-          const yearMatch = (it.answer || '').match(/\b((?:19|20)\d{2})\b/);
-          const pName = nameMatch ? nameMatch[1].trim() : (it.answer || '').trim();
-          const pYear = yearMatch ? parseInt(yearMatch[1]) : null;
-          if (pName) {
-            // Try _getTeamForPlayerYear
-            const tm = pYear ? (typeof _getTeamForPlayerYear === 'function' ? _getTeamForPlayerYear(pName, pYear) : null) : null;
-            if (tm) { it.team = tm; }
-            else {
-              // Try D array current team as absolute last resort
-              if (typeof D !== 'undefined') {
-                const dEntry = D.find(p => p.n === pName);
-                if (dEntry && dEntry.t) it.team = dEntry.t;
-              }
-            }
-          }
-        }
         const logoUrl = _triviaLogoUrl(it.team || '');
         if (mode === 'reveal') {
           html += `<div class="trivia-cell" data-idx="${i}" onclick="window._triviaCellClick(${i})">`;
@@ -55816,7 +55943,9 @@ window.fmtHeight = fmtHeight;
       }
     }
 
-    html += '</div></div>';
+    html += '</div>';
+    }
+    html += '</div>';
 
     // Missing players panel
     const missing = data.missing || [];
@@ -55838,6 +55967,13 @@ window.fmtHeight = fmtHeight;
     }
 
     area.innerHTML = html;
+    // TIER BOARD on phones: scale the fixed-width chips so three fit a row
+    // (the rankings page does the same); zoom keeps the card proportions.
+    const _tierEl = area.querySelector('.trivia-tierboard');
+    if (_tierEl && window.matchMedia && window.matchMedia('(max-width:600px)').matches) {
+      const _w = _tierEl.clientWidth || (window.innerWidth - 60);
+      if (_w > 100) _tierEl.style.zoom = String(Math.min(1, _w / 384));
+    }
     // Apply board size
     const sizePct = document.getElementById('triviaBoardSize').value;
     const boardEl = area.querySelector('.trivia-board-outer');
@@ -56749,6 +56885,13 @@ window.fmtHeight = fmtHeight;
     revealHtml += `<button class="trivia-report-flag" onclick="event.stopPropagation();window._triviaOpenReport(${idx})" title="Report this cell" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.35);border:none;color:rgba(255,255,255,.7);font-size:.75rem;width:18px;height:18px;border-radius:4px;cursor:pointer;line-height:1;padding:0;z-index:5">🚩</button>`;
     revealHtml += '</div>';
     cell.insertAdjacentHTML('beforeend', revealHtml);
+    // TIER BOARD chip: the name strip is 114px of Bebas — shrink long names so
+    // the whole answer shows ("CHRISTIAN MCCAFFREY" at 16px would clip).
+    if (cell.classList.contains('trivia-tier-chip')) {
+      const nm = cell.querySelector('.trivia-cell-reveal .reveal-name');
+      const L = nm ? nm.textContent.length : 0;
+      if (nm && L > 13) nm.style.setProperty('font-size', (L > 21 ? 10.5 : L > 18 ? 12 : L > 15 ? 13.5 : 14.5) + 'px', 'important');   // beats main.css's phone !important
+    }
 
     const inp = cell.querySelector('.trivia-guess-input');
     if (inp) inp.style.display = 'none';
@@ -57349,6 +57492,9 @@ window.fmtHeight = fmtHeight;
   const _TRIVIA_TEMPLATES = [
     { title: 'All-Time Receiving Yds', desc: 'Top 20 careers · WR/TE',
       filters: { type: 'career', stat: 'rcy', year: 'all', count: 20, conf: 'all', team: 'all', positions: ['WR','TE'] } },
+    // TIER BOARD template (2026-10-28): same look as the rankings tier cards
+    { title: _TRIVIA_LAST_SEASON + ' Top 25 RB Fantasy Pts', desc: 'TIER BOARD · tiers 1-3 / 4-8 / 9-14 / 15-20 / 21-25 · RB', layout: 'tiers',
+      filters: { type: 'season', stat: 'fpts', year: String(_TRIVIA_LAST_SEASON), count: 25, conf: 'all', team: 'all', positions: ['RB'] } },
     { title: _TRIVIA_LAST_SEASON + ' Rushing TDs', desc: 'Top 20 last season · RB',
       filters: { type: 'season', stat: 'rtd', year: String(_TRIVIA_LAST_SEASON), count: 20, conf: 'all', team: 'all', positions: ['RB'] } },
     { title: 'All-Time Passing TDs', desc: 'QB career leaders',
@@ -57405,6 +57551,13 @@ window.fmtHeight = fmtHeight;
     if (f.draftRound != null) setVal('triviaFilterDraftRound', f.draftRound);
     // Default to regular season unless the template explicitly says postseason.
     setVal('triviaFilterSeasonType', f.seasonType || 'reg');
+    // Board layout: a template can ask for the TIER BOARD; otherwise a leftover
+    // tier layout goes back to Auto so grid templates render as grids. Set
+    // without firing change (that would re-render the previous board).
+    {
+      const lo = document.getElementById('triviaLayout');
+      if (lo) { if (t.layout) lo.value = t.layout; else if (lo.value === 'tiers') lo.value = 'auto'; }
+    }
 
     // Position checkboxes — sync each one's checked state and fire change so the
     // existing label-styling handler updates ✓/✗ visuals.
@@ -57907,8 +58060,15 @@ window.fmtHeight = fmtHeight;
       r === 'correct' ? '🟩' : r === 'wrong' ? '🟥' : '⬜'
     );
     const lines = [];
-    for (let i = 0; i < cells.length; i += cols) {
-      lines.push(cells.slice(i, i + cols).join(''));
+    // TIER BOARD: one emoji row per tier, so the grid reads like the board did.
+    const tierSizes = (_triviaData && _triviaData.layout === 'tiers') ? _triviaTierSizes(cells.length, _triviaData) : null;
+    if (tierSizes) {
+      let p = 0;
+      tierSizes.forEach(sz => { lines.push(cells.slice(p, p + sz).join('')); p += sz; });
+    } else {
+      for (let i = 0; i < cells.length; i += cols) {
+        lines.push(cells.slice(i, i + cols).join(''));
+      }
     }
     const timeStr = _triviaFormatMs(ms);
     const accuracy = total ? Math.round((score / total) * 100) : 0;
@@ -58575,6 +58735,8 @@ window.fmtHeight = fmtHeight;
       colorway: cwSel,
       customColor: customColor,
       layout: layoutSel,
+      // TIER BOARD: custom breaks travel with the lock (null = default 3/5/6/6/5)
+      tiers: (Array.isArray(_triviaData.tiers) && _triviaData.tiers.length) ? _triviaData.tiers.map(Number) : null,
       lockedBy: user.uid,
       lockedByEmail: user.email || '',
       lockedAt: new Date().toISOString()
@@ -58639,6 +58801,8 @@ window.fmtHeight = fmtHeight;
     const data = {
       title: snap.title || 'Daily Board',
       items: snap.items || [],
+      layout: snap.layout || 'auto',
+      tiers: Array.isArray(snap.tiers) ? snap.tiers : null,
       _locked: true,
       _lockedDate: snap.date
     };

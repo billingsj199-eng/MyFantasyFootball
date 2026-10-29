@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-29-hub2" as="script">
+<link rel="preload" href="app.js?v=2026-10-29-entry" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -3669,7 +3669,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- TRIVIA BOARD BUILDER (Admin Only) -->
 <div class="page" id="pageTrivia" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorTrivia"></div>
-<link rel="stylesheet" href="styles/trivia.css?v=2026-10-29-hub2">
+<link rel="stylesheet" href="styles/trivia.css?v=2026-10-29-entry">
 <div class="trivia-wrap">
 <!-- Tabs -->
 <div class="trivia-admin-only" style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
@@ -3689,6 +3689,21 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
      streak + per-day completion live in localStorage (mff_triviaDaily); the
      post-game modal is #triviaDailyModal below. The element ids the trivia
      chunk writes to are unchanged; the rows are filled by _triviaRenderHub. -->
+<!-- ENTRY (Jack 10-29): the tab opens on two choices. PLAY DAILY opens today's
+     board at once; LIBRARY opens the drill-down. After a pick the tiles collapse
+     to a slim switch so you can flip between the two. -->
+<div class="trivia-entry" id="triviaEntry">
+<button type="button" class="trivia-entry-tile" id="triviaEntryDaily" onclick="window._triviaEntryPick('daily')">
+<span class="trivia-entry-k">PLAY DAILY</span>
+<span class="trivia-entry-t" id="triviaEntryDailyT">Today's board</span>
+<span class="trivia-entry-s" id="triviaEntryDailyS">Same board for everyone · new one at midnight ET</span>
+</button>
+<button type="button" class="trivia-entry-tile" id="triviaEntryLibrary" onclick="window._triviaEntryPick('library')">
+<span class="trivia-entry-k">LIBRARY</span>
+<span class="trivia-entry-t">Any category, any era</span>
+<span class="trivia-entry-s" id="triviaEntryLibraryS">Season · career · single game · by team</span>
+</button>
+</div>
 <div class="trivia-hub" id="triviaHub">
 <div class="trivia-hub-head">
 <div class="trivia-hub-brand">DAILY TRIVIA</div>
@@ -6833,7 +6848,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-29-hub2"></script>
+<script defer src="app.js?v=2026-10-29-entry"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

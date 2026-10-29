@@ -260,6 +260,25 @@ body.mff-admin .trivia-player-only{display:none!important}
 
 /* ===== TRIVIA HUB + pooled result modal (2026-10-29 survey R1 / R11 / R13) =====
    Phone-first: one column, 3 compact mode cards across at 375px, 40px+ targets. */
+/* ENTRY: PLAY DAILY / LIBRARY tiles (Jack 10-29). On open only the tiles show; a pick
+   reveals one branch and collapses the tiles to a slim switch. */
+.trivia-entry{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+.trivia-entry-tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:18px 18px 16px;border-radius:12px;border:1px solid var(--border);background:linear-gradient(135deg,rgba(255,209,102,.10),rgba(168,85,247,.08));color:var(--text);text-align:left;cursor:pointer;transition:border-color .15s,transform .15s}
+.trivia-entry-tile:hover{border-color:#ffd166;transform:translateY(-1px)}
+#triviaEntryLibrary{background:linear-gradient(135deg,rgba(56,189,248,.10),rgba(168,85,247,.08))}
+.trivia-entry-k{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2.5px;color:#ffd166;line-height:1}
+#triviaEntryLibrary .trivia-entry-k{color:#38bdf8}
+.trivia-entry-t{font-size:.9rem;font-weight:600}
+.trivia-entry-s{font-size:.72rem;color:var(--text2)}
+.trivia-entry.compact{gap:6px;margin-bottom:10px}
+.trivia-entry.compact .trivia-entry-tile{padding:8px 12px;flex-direction:row;align-items:center;gap:10px;background:var(--surface2);transform:none}
+.trivia-entry.compact .trivia-entry-k{font-size:1.05rem;letter-spacing:1.5px}
+.trivia-entry.compact .trivia-entry-t,.trivia-entry.compact .trivia-entry-s{display:none}
+.trivia-entry.compact .trivia-entry-tile.on{border-color:#ffd166;box-shadow:inset 0 0 0 1px #ffd166}
+#pageTrivia.trivia-mode-entry #triviaHub,#pageTrivia.trivia-mode-entry #triviaLibrary,#pageTrivia.trivia-mode-entry #triviaScoreBar,#pageTrivia.trivia-mode-entry #triviaBoardArea,#pageTrivia.trivia-mode-entry #triviaExportBar{display:none!important}
+#pageTrivia.trivia-mode-daily #triviaLibrary{display:none!important}
+#pageTrivia.trivia-mode-library #triviaHub{display:none!important}
+@media (max-width:480px){.trivia-entry{grid-template-columns:1fr}.trivia-entry-tile{padding:14px}}
 .trivia-hub{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
 .trivia-hub-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:32px}
 .trivia-hub-brand{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:3px;color:var(--accent);line-height:1}

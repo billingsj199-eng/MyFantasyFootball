@@ -58540,7 +58540,60 @@ window.fmtHeight = fmtHeight;
     const m = /^(\d{4})-(\d{4})$/.exec(era || '');
     return !!(m && +m[2] < 1999);
   }
+  // ===== ENTRY: PLAY DAILY / LIBRARY (Jack 10-29) =====
+  // The tab opens on two tiles. 'daily' opens today's board at once (the
+  // hub's PLAY TODAY handler) and scrolls to it; 'library' opens the
+  // drill-down. After a pick the tiles collapse to a slim switch.
+  function _triviaEntryMode(mode) {
+    const page = document.getElementById('pageTrivia');
+    const entry = document.getElementById('triviaEntry');
+    if (!page || !entry) return;
+    page.classList.toggle('trivia-mode-entry', mode === 'entry');
+    page.classList.toggle('trivia-mode-daily', mode === 'daily');
+    page.classList.toggle('trivia-mode-library', mode === 'library');
+    entry.classList.toggle('compact', mode !== 'entry');
+    document.getElementById('triviaEntryDaily').classList.toggle('on', mode === 'daily');
+    document.getElementById('triviaEntryLibrary').classList.toggle('on', mode === 'library');
+  }
+  function _triviaEntryFill() {
+    const t = document.getElementById('triviaDailyTitle'), s = document.getElementById('triviaDailyStreak');
+    const et = document.getElementById('triviaEntryDailyT'), es = document.getElementById('triviaEntryDailyS');
+    if (et && t && t.textContent && t.textContent !== '—') et.textContent = t.textContent;
+    const state = _triviaLoadDailyState();
+    const done = state.completed[_triviaTodayStr()];
+    if (es) es.textContent = done ? ('Done today ' + done.score + '/' + done.total + (state.streak ? ' · 🔥 ' + state.streak : '') + ' · play again or see the answers')
+      : ((state.streak ? '🔥 streak ' + state.streak + ' · ' : '') + 'same board for everyone · new one at midnight ET');
+    const ls = document.getElementById('triviaEntryLibraryS');
+    if (ls) ls.textContent = _libCombos().length + ' boards · season, career, single game · by team or era';
+  }
+  window._triviaEntryShow = function() {
+    _triviaEntryMode('entry');
+    setTimeout(_triviaEntryFill, 600); // after the daily panel has filled
+    const entry = document.getElementById('triviaEntry');
+    if (entry) entry.scrollIntoView({ block: 'start' });
+  };
+  window._triviaEntryPick = function(mode) {
+    _triviaEntryMode(mode);
+    if (mode === 'daily') {
+      if (typeof window._triviaTodayClick === 'function') window._triviaTodayClick();
+      else if (typeof window._triviaPlayDaily === 'function') window._triviaPlayDaily();
+      setTimeout(() => { const a = document.getElementById('triviaBoardArea'); if (a) a.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 900);
+    } else {
+      const lib = document.getElementById('triviaLibrary');
+      if (lib) lib.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+  // Permalinks (?daily=…) and archive opens go straight to the board.
+  function _triviaEntryInit() {
+    const direct = /[?&]daily=\d{4}-\d{2}-\d{2}/.test(location.search || '');
+    _triviaEntryMode(direct ? 'daily' : 'entry');
+    setTimeout(_triviaEntryFill, 800);
+    const nav = document.getElementById('navTriviaBtn');
+    if (nav && !nav.dataset.entryHook) { nav.dataset.entryHook = '1'; nav.addEventListener('click', () => setTimeout(window._triviaEntryShow, 50)); }
+  }
+
   function _triviaLibInit() {
+    _triviaEntryInit();
     _libWizRender();
     const pre = document.getElementById('libPresets');
     if (pre && !pre.children.length) {

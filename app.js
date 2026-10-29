@@ -56472,13 +56472,87 @@ window.fmtHeight = fmtHeight;
   }
 
   // Look up ESPN headshot for a player name (string URL, '' = show initials).
-  function _triviaGetHeadshot(answerText, team) { return _triviaGetHeadshotInfo(answerText, team).url; }
-  // Same lookup with attribution: {url, credit, page}. `credit` is set only for
-  // LEGEND_HEADSHOTS (Wikimedia Commons) photos — the reveal puts it in the img title.
-  // `team` (the cell's team abbreviation, any legacy spelling) picks that team's jersey
-  // photo from LEGEND_HEADSHOTS[name].byTeam when the builder found one (Jack 10-28:
-  // Marcus Allen as a Raider on a Raiders cell); ESPN headshots ignore it (latest team).
-  function _triviaGetHeadshotInfo(answerText, team) {
+  function _triviaGetHeadshot(answerText, team, yr) { return _triviaGetHeadshotInfo(answerText, team, yr).url; }
+
+  // Board year for a reveal: the item's own `yr` (set by the generator: the season, or the
+  // career range's midpoint), else a year in the answer text ("(2008)", "(1976–1984)" →
+  // midpoint, "(2008 Wk5 vs DAL)"), else the board's year filter, else a year in its title.
+  function _triviaYearOf(answerText, yr) {
+    if (yr != null && isFinite(+yr) && +yr > 1900) return +yr;
+    const s = String(answerText || '');
+    const range = s.match(/\b((?:19|20)\d{2})\s*[–\-]\s*((?:19|20)\d{2})\b/);
+    if (range) return Math.round((+range[1] + +range[2]) / 2);
+    const one = s.match(/\b((?:19|20)\d{2})\b/);
+    if (one) return +one[1];
+    const f = _triviaData && _triviaData._filter;
+    if (f && f.year && f.year !== 'all' && isFinite(+f.year)) return +f.year;
+    const t = _triviaData && _triviaData.title ? String(_triviaData.title).match(/\b((?:19|20)\d{2})\b/) : null;
+    return t ? +t[1] : null;
+  }
+
+  // Era-correct transparent cutout for a reveal, or null: {url, credit, page, cutout:true}.
+  // PLAYER_CUTOUTS (data/player_cutouts.js, lazy with the legend photos; img/cutouts/<slug>/
+  // <TEAM>.webp built by scripts/build_player_cutouts.py from free Commons photos) plus
+  // LEGEND_HEADSHOTS_LOCAL (Jack's hand-cut PNGs, same byTeam shape) when that map exists.
+  // Order: the cell team's jersey → the team he had in the board's year → (strict=false,
+  // retired players only, after the ESPN tables miss) the cutout nearest the board's year,
+  // else his default team. Active players never take an other-team cutout: their roster
+  // headshot is current, and a mis-stamped team must not show an old jersey.
+  function _triviaCutoutFor(nameVariants, teamCanon, yr, isActive, strict) {
+    const mk = (b, credit) => ({
+      url: b.src || b.url, credit: credit || '',
+      page: b.file ? 'https://commons.wikimedia.org/wiki/' + encodeURIComponent(String(b.file).replace(/ /g, '_')) : '',
+      cutout: true
+    });
+    const yrTeam = () => {
+      if (!yr || typeof _getTeamForPlayerYear !== 'function') return '';
+      const t0 = _getTeamForPlayerYear(nameVariants[0], yr);
+      if (!t0) return '';
+      const up = String(t0).toUpperCase();
+      return (typeof _TEAM_ABBR_ALIASES !== 'undefined' && _TEAM_ABBR_ALIASES[up]) || up;
+    };
+    const loc = window.LEGEND_HEADSHOTS_LOCAL;
+    if (loc) {
+      for (const v of nameVariants) {
+        const lo = loc[v];
+        if (!lo || !lo.url) continue;
+        const bt = lo.byTeam || {};
+        if (teamCanon && bt[teamCanon] && bt[teamCanon].url) return mk(bt[teamCanon], '');
+        const ty = yrTeam();
+        if (ty && bt[ty] && bt[ty].url) return mk(bt[ty], '');
+        if (!strict && !isActive) return mk(lo, '');
+        break;
+      }
+    }
+    const tab = window.PLAYER_CUTOUTS;
+    if (!tab) return null;
+    let ent = null;
+    for (const v of nameVariants) { if (tab[v] && tab[v].byTeam) { ent = tab[v]; break; } }
+    if (!ent) return null;
+    const by = ent.byTeam;
+    const teams = Object.keys(by);
+    if (!teams.length) return null;
+    if (teamCanon && by[teamCanon]) return mk(by[teamCanon], by[teamCanon].credit);            // 1. that jersey
+    const ty = yrTeam();
+    if (ty && by[ty]) return mk(by[ty], by[ty].credit);                                          // 2. his team that year
+    if (strict || isActive) return null;
+    let best = null, bd = Infinity;                                                              // 3. nearest era
+    teams.forEach(t => {
+      const d = (yr && by[t].yr) ? Math.abs(by[t].yr - yr) : 60;
+      if (d < bd) { bd = d; best = t; }
+    });
+    const t = (bd < 60 && best) ? best : ((ent.default && by[ent.default]) ? ent.default : teams[0]);
+    return mk(by[t], by[t].credit);
+  }
+
+  // Same lookup with attribution: {url, credit, page, cutout?}. `credit` is set for
+  // Commons-sourced images (cutouts + LEGEND_HEADSHOTS lead photos) — the reveal puts it
+  // in the img title; `cutout` marks a transparent PNG/WebP (silhouette outline, not frame).
+  // `team` (the cell's team abbreviation, any legacy spelling) picks that team's jersey;
+  // `yr` (the board's season / career midpoint) picks the era when the team can't.
+  // Order (Jack 10-28): cutout for that team+era → cutout for that team → ESPN headshot
+  // (active / retired id) → cutout nearest the era (retired only) → Commons lead photo → initials.
+  function _triviaGetHeadshotInfo(answerText, team, yr) {
     const none = { url: '', credit: '', page: '' };
     const name = (answerText || '').split(/[\(\,\-–—]/)[0].trim();
     if (!name) return none;
@@ -56506,7 +56580,15 @@ window.fmtHeight = fmtHeight;
     // Etienne at Clemson on an NFL board, Jack 10-28), so an active player never
     // falls through to it — no roster photo yet means initials.
     const _dAct = (typeof D !== 'undefined') ? D.find(p => nameVariants.indexOf(p.n) !== -1) : null;
-    if (_dAct && !_dAct._retired && _dAct.t !== 'Retired') {
+    const _isActive = !!(_dAct && !_dAct._retired && _dAct.t !== 'Retired');
+
+    // 00. PLAYER_CUTOUTS — era-correct transparent cutout in the cell team's jersey (or the
+    // team he had in the board's year). Beats every other source when it matches the team.
+    const _yr = _triviaYearOf(answerText, yr);
+    const _cut = _triviaCutoutFor(nameVariants, _tCanon, _yr, _isActive, true);
+    if (_cut) return _cut;
+
+    if (_isActive) {
       return _dAct._slImg ? { url: _fix(_dAct._slImg), credit: '', page: '' } : none;
     }
 
@@ -56537,6 +56619,11 @@ window.fmtHeight = fmtHeight;
         }
       }
     }
+
+    // 2b. Cutout in another jersey, nearest the board's era (retired players with no ESPN
+    // headshot): a transparent in-uniform cut beats the rectangular Commons lead photo.
+    const _cutAny = _triviaCutoutFor(nameVariants, _tCanon, _yr, false, false);
+    if (_cutAny) return _cutAny;
 
     // 3. LEGEND_HEADSHOTS (2026-10-28) — Wikipedia/Wikimedia Commons lead images for
     // retired legends ESPN has no headshot for (pre-2000 players: Emmitt Smith, Thurman
@@ -56586,7 +56673,7 @@ window.fmtHeight = fmtHeight;
     // value stays prominent; the team color shows only around the headshot.
 
     // Build reveal content with headshot
-    const _hsInfo = _triviaGetHeadshotInfo(item.answer, item.team);
+    const _hsInfo = _triviaGetHeadshotInfo(item.answer, item.team, item.yr);
     const headshot = _hsInfo.url;
     const answerName = (item.answer || '').split(/[\(\,]/)[0].trim();
     const answerDetail = (item.answer || '').replace(answerName, '').trim().replace(/^[\(\,\-–—\s]+|[\)\s]+$/g, '');
@@ -56596,27 +56683,34 @@ window.fmtHeight = fmtHeight;
     const _outlineFilter = `drop-shadow(1.5px 0 0 ${borderColor}) drop-shadow(-1.5px 0 0 ${borderColor}) drop-shadow(0 1.5px 0 ${borderColor}) drop-shadow(0 -1.5px 0 ${borderColor})`;
 
     let revealHtml = `<div class="trivia-cell-reveal" style="--team-outline-filter:${_outlineFilter}">`;
+    // Photo attributes: Commons credit → title tooltip. Cutouts are transparent, so they
+    // keep the silhouette outline; a rectangular Commons lead photo gets the framed class.
+    const _photoAttrs = (info) => {
+      const t = info.credit ? ` title="${_esc('Photo: ' + info.credit + ' (via Wikimedia Commons)')}"` : '';
+      return (info.credit && !info.cutout) ? ` class="trivia-wiki-photo"${t} style="border-color:${borderColor}"` : t;
+    };
+    // The cutout / legend-photo files load lazily: when either is still missing, re-resolve
+    // once they land and upgrade the cell (initials → photo, or ESPN/lead photo → cutout).
+    // The reveal never waits on them.
+    if ((!window.PLAYER_CUTOUTS || !window.LEGEND_HEADSHOTS) && typeof window._loadLegendHeadshots === 'function') {
+      window._loadLegendHeadshots().then(() => {
+        if (!cell.isConnected || !cell.classList.contains('revealed')) return;
+        const late = _triviaGetHeadshotInfo(item.answer, item.team, item.yr);
+        if (!late.url || late.url === headshot) return;
+        if (headshot && !late.cutout) return;
+        const box = cell.querySelector('.trivia-cell-reveal .trivia-initials') || cell.querySelector('.trivia-cell-reveal img');
+        if (!box) return;
+        const img = document.createElement('img');
+        img.src = late.url; img.alt = ''; img.loading = 'lazy';
+        if (late.credit) img.title = 'Photo: ' + late.credit + ' (via Wikimedia Commons)';
+        if (late.credit && !late.cutout) { img.className = 'trivia-wiki-photo'; img.style.borderColor = borderColor; }
+        img.onerror = function() { this.style.display = 'none'; };
+        box.replaceWith(img);
+      }).catch(() => {});
+    }
     if (headshot) {
-      // Wikimedia photos are rectangular (no transparent silhouette): class swaps the
-      // drop-shadow outline for a plain team-color frame; title = CC attribution.
-      const _wiki = _hsInfo.credit ? ` class="trivia-wiki-photo" title="${_esc('Photo: ' + _hsInfo.credit + ' (via Wikimedia Commons)')}" style="border-color:${borderColor}"` : '';
-      revealHtml += `<img src="${headshot}" alt="" loading="lazy"${_wiki} onerror="this.style.display='none'">`;
+      revealHtml += `<img src="${headshot}" alt="" loading="lazy"${_photoAttrs(_hsInfo)} onerror="this.style.display='none'">`;
     } else {
-      // No photo yet: if the legend-photo file is still loading, upgrade this cell
-      // once it lands (the reveal never waits on it — initials show at once).
-      if (!window.LEGEND_HEADSHOTS && typeof window._loadLegendHeadshots === 'function') {
-        window._loadLegendHeadshots().then(() => {
-          if (!cell.isConnected || !cell.classList.contains('revealed')) return;
-          const late = _triviaGetHeadshotInfo(item.answer, item.team);
-          const box = cell.querySelector('.trivia-cell-reveal .trivia-initials');
-          if (!late.url || !box) return;
-          const img = document.createElement('img');
-          img.src = late.url; img.alt = ''; img.loading = 'lazy';
-          if (late.credit) { img.className = 'trivia-wiki-photo'; img.title = 'Photo: ' + late.credit + ' (via Wikimedia Commons)'; img.style.borderColor = borderColor; }
-          img.onerror = function() { this.style.display = 'none'; };
-          box.replaceWith(img);
-        }).catch(() => {});
-      }
       // No transparent silhouette to outline for the placeholder — fall back to
       // a simple border around the initials box.
       const initials = answerName.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
@@ -56993,6 +57087,7 @@ window.fmtHeight = fmtHeight;
         hint: it.hint || '',
         team: it.team || '',
         category: it.category || '',
+        yr: it.yr || null,
       })),
       itemCount: _triviaData.items.length,
       createdBy: user.uid,
@@ -59418,11 +59513,16 @@ window.fmtHeight = fmtHeight;
         } else if (year === 'all') {
           answerText += ' (' + s.yr + ')';
         }
+        // Board year for the era-correct reveal photo: the season, or the career range's midpoint
+        const _itemYr = s._isCareer
+          ? ((s._yrs && s._yrs.length) ? Math.round((Math.min(...s._yrs) + Math.max(...s._yrs)) / 2) : null)
+          : (s.yr || null);
         return {
           answer: answerText,
           team: s.team,
           category: '#' + (i + 1),
-          hint: hint
+          hint: hint,
+          yr: _itemYr
         };
       });
 

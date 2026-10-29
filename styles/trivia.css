@@ -49,7 +49,7 @@
 .trivia-cell.next-up{box-shadow:0 0 0 3px var(--accent),0 0 12px rgba(168,85,247,.4);z-index:1}
 .trivia-cell-cat{width:100%;text-align:center;padding:4px 2px;background:linear-gradient(135deg,#a855f7,#7c3aed);font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.04em;color:#fff;text-shadow:1px 1px 0 #000;line-height:1.2}
 .trivia-cell-body{flex:1;display:flex;align-items:center;justify-content:center;padding:4px;width:100%}
-.trivia-cell-logo{width:52%;max-width:60px;aspect-ratio:1;object-fit:contain;opacity:.85}
+.trivia-cell-logo{width:78%;max-width:110px;aspect-ratio:1;object-fit:contain;opacity:.9}
 .trivia-cell-hint{font-size:.6875rem;color:var(--text2);text-align:center;padding:0 2px 3px;line-height:1.2}
 .trivia-cell.guessing{cursor:default}
 .trivia-guess-input{position:absolute;bottom:0;left:0;right:0;padding:5px 4px;border:none;background:rgba(255,255,255,.97);font-family:'DM Sans',sans-serif;font-size:.6875rem;text-align:center;outline:none;color:#111;z-index:2}

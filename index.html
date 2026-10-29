@@ -2506,7 +2506,10 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 </div>
 <div class="fg-team-name" id="fgTeamName"></div>
 <div class="fg-team-sub" id="fgTeamSub">Pick any player from this team — choose a roster slot to place them</div>
-<input type="text" id="fgSearchInput" placeholder="Search players..." style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.85rem;margin-bottom:8px;outline:none">
+<div class="fg-search-row">
+<input type="text" id="fgSearchInput" placeholder="Search players..." style="flex:1;min-width:0;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.85rem;outline:none">
+<button type="button" class="fg-cheat-btn" id="fgCheatBtn" title="Sort this team's list by the points each player would score (any position). Cheat games keep their own high score and don't post to the leaderboard.">CHEAT · SORT BY BEST</button>
+</div>
 <div class="fg-player-list" id="fgPlayerList"></div>
 <button class="fg-btn fg-btn-skip" id="fgSkipBtn">SKIP TEAM (0 PTS)</button>
 </div>
@@ -3948,8 +3951,10 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
     // Hide year for career mode (era selector takes its slot instead)
     var yearEl = document.getElementById('triviaFilterYear').closest('label');
     if (yearEl) yearEl.style.display = t === 'career' ? 'none' : '';
+    // Era: the only range picker in career mode; in season / game mode it
+    // narrows "All-Time" to a span (2010-2019, since 2020 …) — Jack 10-28.
     var eraEl = document.getElementById('triviaFilterEraLabel');
-    if (eraEl) eraEl.style.display = t === 'career' ? 'flex' : 'none';
+    if (eraEl) eraEl.style.display = t === 'draft' ? 'none' : 'flex';
     // Hide stat category for draft mode (not needed)
     var statEl = document.getElementById('triviaFilterStat').closest('label');
     if (statEl) statEl.style.display = t === 'draft' ? 'none' : '';

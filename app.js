@@ -15465,15 +15465,34 @@ function _getTeamForPlayerYear(playerName, yr) {
       if (played.length > 0 && played[0].tm) return played[0].tm;
     }
   }
-  // 5. D array career data
+  // 5. D array career data — that season's tm, else the nearest season that
+  // has one (381 legend rows lack tm: Marcus Allen 1985 sits between RAI
+  // years; falling to d.t handed it a namesake's Steelers).
   if (typeof D !== 'undefined') {
     const d = D.find(p => p.n === playerName);
     if (d && d.career) {
-      const szn = d.career.find(s => s.yr === yr);
-      if (szn && szn.tm) return szn.tm;
+      const near = _careerTmNear(d.career, yr);
+      if (near) return near;
     }
   }
   return null;
+}
+// Team label for a season from a career array: the row's own tm, else the
+// closest row (by year) that carries one — only within the same stint, i.e.
+// the previous and next labelled rows must agree, so a gap between two
+// different teams stays unknown rather than guessed.
+function _careerTmNear(career, yr) {
+  if (!career || !career.length) return null;
+  const row = career.find(s => s.yr === yr);
+  if (row && row.tm) return row.tm;
+  let prev = null, next = null;
+  career.forEach(s => {
+    if (!s.tm || !s.yr) return;
+    if (s.yr < yr && (!prev || s.yr > prev.yr)) prev = s;
+    if (s.yr > yr && (!next || s.yr < next.yr)) next = s;
+  });
+  if (prev && next) return prev.tm === next.tm ? prev.tm : null;
+  return (prev || next) ? (prev || next).tm : null;
 }
 
 // Helper used in trivia: fix team for all items on a board
@@ -28045,12 +28064,16 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     if (fgEra !== 'all') return fgEra + 's';
     return 'ALL-TIME';
   }
-  function _fgFilterTag() { return _fgFilterLabel() + (fgWeekFilter !== 'best' ? ' Wk ' + fgWeekFilter : ''); }
+  function _fgFilterTag() { return _fgFilterLabel() + (fgWeekFilter !== 'best' ? ' Wk ' + fgWeekFilter : '') + (fgCheat ? ' CHEAT' : ''); }
   function _fgLocalHsKey() {
-    return 'fg_hs_' + fgLeague + '_' + fgMode + '_' + fgScoring + '_' + (fgYear !== 'best' ? 'y' + fgYear : 'e' + fgEra) + (fgWeekFilter !== 'best' ? '_w' + fgWeekFilter : '');
+    return 'fg_hs_' + fgLeague + '_' + fgMode + '_' + fgScoring + '_' + (fgYear !== 'best' ? 'y' + fgYear : 'e' + fgEra) + (fgWeekFilter !== 'best' ? '_w' + fgWeekFilter : '') + (fgCheat ? '_cheat' : '');
   }
+  // CHEAT (Jack 10-28): the team list sorts by the points each player would
+  // score, any position, with the score shown. Session-only; a cheat game is
+  // a "custom" game (own local high score, never posts to the leaderboard).
+  let fgCheat = false;
   function _fgSyncType() {
-    fgType = (fgEra === 'all' && fgYear === 'best' && fgWeekFilter === 'best') ? 'regular' : 'custom';
+    fgType = (!fgCheat && fgEra === 'all' && fgYear === 'best' && fgWeekFilter === 'best') ? 'regular' : 'custom';
     document.getElementById('fgModeSeason').textContent = fgYear !== 'best' ? 'SEASON' : 'BEST SEASON';
     document.getElementById('fgModeWeek').textContent = fgWeekFilter !== 'best' ? 'WEEK' : 'BEST WEEK';
     const note = document.getElementById('fgFilterNote');
@@ -28081,7 +28104,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     const el = document.getElementById('fgSettingsSummary');
     if (!el) return;
     const modeLbl = fgMode === 'week' ? (fgWeekFilter !== 'best' ? 'WEEK ' + fgWeekFilter : 'BEST WEEK') : (fgYear !== 'best' ? 'SEASON' : 'BEST SEASON');
-    el.textContent = [fgLeague === 'college' ? 'COLLEGE' : 'NFL', modeLbl, fgScoring === 'half' ? 'HALF PPR' : 'PPR', _fgFilterLabel()].join(' · ');
+    el.textContent = [fgLeague === 'college' ? 'COLLEGE' : 'NFL', modeLbl, fgScoring === 'half' ? 'HALF PPR' : 'PPR', _fgFilterLabel()].concat(fgCheat ? ['CHEAT'] : []).join(' · ');
   }
   function _fgSetSettingsOpen(open) {
     if (!fgSettingsPanel || !fgSettingsToggle) return;
@@ -28117,20 +28140,35 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     const ws = (typeof WEEKLY_STATS !== 'undefined') ? WEEKLY_STATS[player.n] : null;
     if (!ws) return null;
     const modernTeam = forTeam ? (TEAM_ALIASES[forTeam] || forTeam) : null;
-    let best = null;
+    let best = null, bestPts = -Infinity;
     for (const [szn, weeks] of Object.entries(ws.seasons)) {
       // YEAR / ERA filters
       if (!_fgYearOk(+szn)) continue;
+      // Team for that season from the curated history first: the active weekly
+      // rows carry a player's CURRENT team on last season's games once he moves
+      // (Dowdle listed as a 2025 Steeler), so w.tm is only the fallback.
+      const histTeam = modernTeam ? getTeamForYear(player.n, +szn) : null;
+      const histModern = histTeam ? (TEAM_ALIASES[histTeam] || histTeam) : null;
+      if (histModern && histModern !== modernTeam) continue;
       for (const w of weeks) {
         // Week filter
         if (fgWeekFilter !== 'best' && +w.wk !== +fgWeekFilter) continue;
-        // Check if this week was played for the matching team
-        if (modernTeam && w.tm) {
+        // Check if this week was played for the matching team; a row with no
+        // team at all can't be credited to this team (it put 2026 signings
+        // with empty 2025 rows on last year's roster).
+        if (modernTeam && !histModern) {
+          if (!w.tm) continue;
           const weekTeam = ABBR_TO_FULL[w.tm] || w.tm;
           if (weekTeam !== modernTeam) continue;
         }
-        if (!best || w.fpts > best.fpts) {
-          best = { fpts: w.fpts, yr: +szn, wk: w.wk, tm: w.tm, opp: w.opp || '', rc: w.rc || 0, rec: w.rec || 0 };
+        // Weekly rows store receptions as `rec`; keep it under `rc` too so
+        // _fgScore adds the PPR half-point (it read rc=0 before → half-PPR
+        // totals under the PPR toggle: Pickens Wk4 29.4 instead of 33.4).
+        const rec = w.rc != null ? w.rc : (w.rec || 0);
+        const pts = (w.fpts || 0) + (fgScoring === 'ppr' ? 0.5 * rec : 0);
+        if (pts > bestPts) {
+          bestPts = pts;
+          best = { fpts: w.fpts, yr: +szn, wk: w.wk, tm: w.tm, opp: w.opp || '', rc: rec, rec: rec };
         }
       }
     }
@@ -28749,11 +28787,17 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
       players = players.filter(p => p.n.toLowerCase().includes(lower));
     }
     const posOrder = {QB:0, RB:1, WR:2, TE:3};
-    players.sort((a,b) => {
-      const pa = posOrder[a.s] ?? 9, pb = posOrder[b.s] ?? 9;
-      if (pa !== pb) return pa - pb;
-      return a.n.localeCompare(b.n);
-    });
+    if (fgCheat) {
+      // Cheat: highest points first, any position.
+      const pts = new Map(players.map(p => [p, _fgScore(getScore(p, currentTeam))]));
+      players.sort((a, b) => (pts.get(b) - pts.get(a)) || a.n.localeCompare(b.n));
+    } else {
+      players.sort((a,b) => {
+        const pa = posOrder[a.s] ?? 9, pb = posOrder[b.s] ?? 9;
+        if (pa !== pb) return pa - pb;
+        return a.n.localeCompare(b.n);
+      });
+    }
 
     if (!players.length) {
       playerListEl.innerHTML = '<div style="text-align:center;color:var(--text2);padding:2rem;font-size:.85rem">' + (query ? 'No matching players.' : (fgLeague === 'college' ? 'No available players in this conference. Skip to next.' : 'No available players on this team. Skip to next team.')) + '</div>';
@@ -28787,6 +28831,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
           <div class="fg-pc-name">${p.n}</div>
           <div class="fg-pc-meta">${metaText}</div>
         </div>
+        ${fgCheat ? '<span class="fg-pc-score">' + _fgScore(best).toFixed(1) + '</span>' : ''}
         ${!fits ? '<span class="fg-pc-nobest">No open slot</span>' : ''}
       `;
       if (fits) {
@@ -28799,6 +28844,16 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   searchInput.addEventListener('input', () => {
     renderPlayerList(searchInput.value.trim());
   });
+  const fgCheatBtn = document.getElementById('fgCheatBtn');
+  if (fgCheatBtn) {
+    fgCheatBtn.addEventListener('click', () => {
+      fgCheat = !fgCheat;
+      fgCheatBtn.classList.toggle('active', fgCheat);
+      _fgSyncType();
+      updateFgSubtitle();
+      renderPlayerList(searchInput.value.trim());
+    });
+  }
 
   function selectPlayer(player) {
     const fittingSlots = getOpenSlotsForPos(player.s);
@@ -58812,6 +58867,10 @@ window.fmtHeight = fmtHeight;
       }
       const _eraBounds = _parseEra(era);
       const _eraMin = _eraBounds[0], _eraMax = _eraBounds[1];
+      // Season / game modes: a single Year, or "All-Time" narrowed by the era
+      // range (2010-2019, since 2020 …) — Jack 10-28.
+      const _yrOk = (y) => year !== 'all' ? y === parseInt(year)
+        : ((_eraMin == null || y >= _eraMin) && (_eraMax == null || y <= _eraMax));
       const _eraOk = (yr) => (_eraMin == null || yr >= _eraMin) && (_eraMax == null || yr <= _eraMax);
       const _eraActive = (filterType === 'career') && (era !== 'all');
 
@@ -58921,7 +58980,7 @@ window.fmtHeight = fmtHeight;
               const p = s && s.post;
               if (!p) continue;
               if (!s.yr) continue;
-              if (year !== 'all' && s.yr !== parseInt(year)) continue;
+              if (!_yrOk(s.yr)) continue;
               const tm = s.tm || '';
               if (conf !== 'all' && _teamConf[tm] !== conf) continue;
               if (team !== 'all' && tm !== team) continue;
@@ -59152,7 +59211,7 @@ window.fmtHeight = fmtHeight;
 
             Object.keys(ws.seasons).forEach(szn => {
               const yr = parseInt(szn);
-              if (year !== 'all' && yr !== parseInt(year)) return;
+              if (!_yrOk(yr)) return;
               const weeks = ws.seasons[szn];
               if (!weeks || !weeks.length) return;
 
@@ -59199,7 +59258,7 @@ window.fmtHeight = fmtHeight;
 
             Object.keys(ws.seasons).forEach(szn => {
               const yr = parseInt(szn);
-              if (year !== 'all' && yr !== parseInt(year)) return;
+              if (!_yrOk(yr)) return;
               const weeks = ws.seasons[szn];
               if (!weeks || !weeks.length) return;
 
@@ -59254,12 +59313,12 @@ window.fmtHeight = fmtHeight;
             if (!positions.includes(pos)) return;
             d.career.forEach(s => {
               if (!s.yr) return;
-              if (year !== 'all' && s.yr !== parseInt(year)) return;
+              if (!_yrOk(s.yr)) return;
               const key = d.n + '|' + s.yr;
               if (_seenKey.has(key)) return;
               const fpts = s.fpts || 0;
               if (fpts <= 0 && stat === 'fpts') return;
-              const correctTeam = _getTeamForPlayerYear(d.n, s.yr) || s.tm || d.t || '';
+              const correctTeam = _getTeamForPlayerYear(d.n, s.yr) || s.tm || _careerTmNear(d.career, s.yr) || d.t || '';
               if (conf !== 'all') {
                 const tmConf = _teamConf[correctTeam];
                 if (tmConf !== conf) return;
@@ -59288,8 +59347,17 @@ window.fmtHeight = fmtHeight;
       // entries (not just _seenKey) because the D[].career fill block
       // doesn't update _seenKey, and merged retired players from the
       // legend backfill can now appear in D[] with old-year careers.
-      if (filterType === 'season' && year !== 'all' && typeof SEASON_LEADERS !== 'undefined') {
-        const _slYr = SEASON_LEADERS[String(year)];
+      // One year, or every year of an era range (pre-1999 ranges need it: only
+      // legends have careers there).
+      let _slYears = [];
+      if (filterType === 'season' && typeof SEASON_LEADERS !== 'undefined') {
+        if (year !== 'all') _slYears = [parseInt(year)];
+        else if (_eraMin != null || _eraMax != null) {
+          for (let _y = (_eraMin || 1966); _y <= (_eraMax || 2025); _y++) _slYears.push(_y);
+        }
+      }
+      _slYears.forEach(_slYear => {
+        const _slYr = SEASON_LEADERS[String(_slYear)];
         if (_slYr) {
           // PFR uses some non-standard 3-letter abbreviations; map to
           // the user's canonical set so conf/team filters work.
@@ -59298,7 +59366,7 @@ window.fmtHeight = fmtHeight;
             'TAM':'TB','NOR':'NO','LVR':'LV','RAM':'LAR'
           };
           const _normTm = (t) => _PFR_TM[t] || t || '';
-          const _slYrInt = parseInt(year);
+          const _slYrInt = _slYear;
           const _slEmitted = new Set(allEntries.map(e => e.name + '|' + e.yr));
           // Position resolution: prefer D[]'s modern unified label
           // (RB/WR/TE/QB) over PFR's (which kept FB/HB through the 80s).
@@ -59353,7 +59421,7 @@ window.fmtHeight = fmtHeight;
             allEntries.push(m);
           });
         }
-      }
+      });
 
       // Sort by selected stat
       allEntries.sort((a, b) => (b[stat]||0) - (a[stat]||0));
@@ -59392,7 +59460,8 @@ window.fmtHeight = fmtHeight;
         }
         return '';
       }
-      const yearLabel = filterType === 'career' ? ('Career' + _eraTitleSuffix(era)) : (year === 'all' ? 'All-Time' : year);
+      const yearLabel = filterType === 'career' ? ('Career' + _eraTitleSuffix(era))
+        : (year !== 'all' ? year : (_eraTitleSuffix(era).trim() || 'All-Time'));
       const weekLabel = week !== 'all' && filterType === 'game' ? ' Wk ' + week : '';
       const confLabel = conf === 'all' ? 'NFL' : conf;
       const teamLabel = team === 'all' ? '' : ' ' + team;

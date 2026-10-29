@@ -1,0 +1,1991 @@
+# Players needing a full in-uniform photo — by team
+
+**1887 player-team rows across 32 teams.**
+
+Generated 2026-10-29 from the trivia board pool (top-150 fantasy seasons per year 1970–2025 + career top-60 per position). A row = player × the team he is shown with on those boards; "ESPN face" means a head-only ESPN headshot exists (we still want the full shot); "cutout elsewhere" means we have him in another team's jersey.
+
+**Save as:** `E:/Sports/All Time Players/<AFC|NFC>/<Division>/<Nickname>/<Player Name>.jpg` — one file per player per team folder (the folder = the jersey). Then: `python -I scripts/make_legend_headshots.py --all --bump`.
+
+## Arizona Cardinals (ARI) — 69
+
+- David Johnson · RB · 2015–2019 · best 366
+- Neil Lomax · QB · 1981–1989 · best 289
+- David Boston · WR · 1999–2002 · best 258
+- Rob Moore · WR · 1995–1999 · best 255
+- Jacoby Brissett · QB · 2025 · best 235 · ESPN face, cutout elsewhere
+- MacArthur Lane · RB · 1970–1971 · best 224
+- Larry Centers · RB · 1990–1998 · best 223
+- Stump Mitchell · RB · 1981–1989 · best 209
+- J.T. Smith · WR · 1985–1990 · best 201
+- Edgerrin James · RB · 2006–2008 · best 197 · cutout elsewhere
+- Donny Anderson · RB · 1972–1974 · best 193
+- Michael Pittman · RB · 1998–2001 · best 192
+- Terry Metcalf · RB · 1973–1977 · best 191
+- Marcel Shipp · RB · 2002–2007 · best 190
+- Steve Beuerlein · QB · 1993–1994 · best 186
+- Earl Ferrell · RB · 1982–1989 · best 183
+- Mel Gray · WR · 1971–1982 · best 181
+- Adrian Murrell · RB · 1998–1999 · best 178
+- Tim Hightower · RB · 2008–2010 · best 174 · cutout elsewhere
+- John Brown · WR · 2014–2017 · best 174
+- Timm Rosenbach · QB · 1989–1992 · best 171
+- Beanie Wells · RB · 2009–2012 · best 171
+- Pat Tilley · WR · 1976–1986 · best 167
+- Garrison Hearst · RB · 1993–1995 · best 158
+- John Gilliam · WR · 1970–1971 · best 155
+- Ronald Moore · RB · 1993–1997 · best 153
+- Ernie Jones · WR · 1988–1992 · best 151
+- Jeff Blake · QB · 2003 · best 149
+- Josh McCown · QB · 2002–2005 · best 148 · cutout elsewhere
+- Jim Otis · RB · 1973–1978 · best 147
+- Johnny Johnson · RB · 1990–1992 · best 145
+- Wayne Morris · RB · 1976–1983 · best 144
+- Gary Hogeboom · QB · 1989 · best 141
+- Andre Roberts · WR · 2010–2013 · best 140 · cutout elsewhere
+- Chase Edmonds · RB · 2018–2021 · best 140
+- Frank Sanders · WR · 1999–2002 · best 138
+- Matt Leinart · QB · 2006–2009 · best 134
+- Rashard Mendenhall · RB · 2013 · best 133 · cutout elsewhere
+- Randal Hill · WR · 1991–1994 · best 130
+- A.J. Green · WR · 2021–2022 · best 130 · cutout elsewhere
+- Early Doucet · WR · 2008–2012 · best 126
+- Marquise Brown · WR · 2022–2023 · best 123 · cutout elsewhere
+- J.J. Nelson · WR · 2015–2018 · best 121
+- Bryant Johnson · WR · 2003–2007 · best 118 · cutout elsewhere
+- Josh Rosen · QB · 2018 · best 117 · cutout elsewhere
+- Ike Harris · WR · 1975–1977 · best 110
+- Gary Clark · WR · 1994 · best 108
+- Kent Graham · QB · 1996–1997 · best 106
+- Chris Johnson · RB · 2015–2017 · best 104 · cutout elsewhere
+- Johnny Roland · RB · 1970–1972 · best 103
+- John Skelton · QB · 2010–2012 · best 103
+- Jay Novacek · WR · 1985–1989 · best 100
+- Kevin Kolb · QB · 2011–2012 · best 99 · cutout elsewhere
+- Freddie Jones · TE · 2002–2004 · best 97
+- Tom Tupa · QB · 1988–1991 · best 93
+- Thomas Jones · RB · 2000–2002 · best 92 · cutout elsewhere
+- MarTay Jenkins · WR · 2000–2002 · best 86
+- Walker Gillette · WR · 1972–1973 · best 82
+- Mario Bates · RB · 1998–1999 · best 80
+- Adrian Peterson · RB · 2017 · best 76 · ESPN face, cutout elsewhere
+- Ahmad Rashad · WR · 1972–1973 · best 74
+- Jay Schroeder · QB · 1994 · best 69
+- Jermaine Gresham · TE · 2015–2018 · best 69 · cutout elsewhere
+- Cid Edwards · RB · 1970–1971 · best 68
+- Pete Beathard · QB · 1970–1971 · best 53
+- Todd Heap · TE · 2011–2012 · best 46
+- Gary Cuozzo · QB · 1972 · best 45
+- Charles Clay · TE · 2019 · best 39 · cutout elsewhere
+- Eric Metcalf · WR · 1998 · best 38
+
+## Atlanta Falcons (ATL) — 69
+
+- Jamal Anderson · RB · 1994–2001 · best 316
+- William Andrews · RB · 1979–1986 · best 301
+- Devonta Freeman · RB · 2014–2019 · best 277 · ESPN face
+- Michael Turner · RB · 2008–2012 · best 275 · cutout elsewhere
+- Gerald Riggs · RB · 1982–1988 · best 271
+- Andre Rison · WR · 1990–1994 · best 257
+- Terance Mathis · WR · 1994–2001 · best 256
+- Roddy White · WR · 2005–2015 · best 255
+- Jeff George · QB · 1994–1996 · best 251
+- Alfred Jenkins · WR · 1975–1983 · best 243
+- John Settle · RB · 1987–1990 · best 235
+- Eric Metcalf · WR · 1995–1996 · best 230
+- Chris Miller · QB · 1987–1993 · best 210
+- Craig Heyward · RB · 1994–1996 · best 204
+- Warrick Dunn · RB · 2002–2007 · best 204
+- Art Malone · RB · 1970–1974 · best 203
+- Michael Haynes · WR · 1988–1997 · best 203
+- Bobby Hebert · QB · 1994–1996 · best 189
+- Desmond Ridder · QB · 2022–2023 · best 189
+- Tony Gonzalez · TE · 2009–2013 · best 188 · cutout elsewhere
+- Tony Martin · WR · 1998–2001 · best 187
+- Bert Emanuel · WR · 1994–1997 · best 182
+- Stacey Bailey · WR · 1982–1990 · best 181
+- Wallace Francis · WR · 1975–1981 · best 180
+- Tevin Coleman · RB · 2015–2018 · best 176
+- Erric Pegram · RB · 1991–1994 · best 171
+- Lynn Cain · RB · 1979–1984 · best 168
+- Dave Hampton · RB · 1972–1976 · best 159
+- Chris Chandler · QB · 1999–2001 · best 156
+- T.J. Duckett · RB · 2002–2005 · best 155
+- Alge Crumpler · TE · 2001–2007 · best 154
+- Austin Hooper · TE · 2016–2025 · best 154 · cutout elsewhere
+- Mike Pritchard · WR · 1991–1993 · best 151
+- Haskel Stanback · RB · 1974–1979 · best 148
+- Mohamed Sanu · WR · 2016–2018 · best 147 · cutout elsewhere
+- Charlie Brown · WR · 1985–1987 · best 145
+- Maurice Smith · RB · 2000–2002 · best 143
+- Billy Johnson · WR · 1982–1987 · best 135
+- Tim Dwight · WR · 1999–2000 · best 134 · cutout elsewhere
+- Peerless Price · WR · 2003–2004 · best 134
+- Jim Mitchell · WR · 1970–1979 · best 131
+- Jason Snelling · RB · 2007–2013 · best 130
+- Bob Berry · QB · 1970–1972 · best 126
+- Shawn Jefferson · WR · 2000–2002 · best 124
+- Taylor Gabriel · WR · 2016–2017 · best 123 · cutout elsewhere
+- Bubba Bean · RB · 1976–1979 · best 117
+- Devin Hester · WR · 2014 · best 116 · cutout elsewhere
+- Bob Christian · RB · 1999–2002 · best 114
+- Mike Davis · RB · 2021 · best 112 · cutout elsewhere
+- David Archer · QB · 1984–1987 · best 111
+- Ray-Ray McCloud · WR · 2024–2025 · best 110
+- Joey Harrington · QB · 2007 · best 105
+- Bob Lee · QB · 1973–1974 · best 103
+- Wade Wilson · QB · 1992 · best 103
+- Jacob Tamme · TE · 2015–2016 · best 101 · cutout elsewhere
+- Scott Campbell · QB · 1986–1990 · best 99
+- Ricky Sanders · WR · 1994 · best 99
+- Cannonball Butler · RB · 1970–1971 · best 91
+- Mike Rozier · RB · 1990–1991 · best 83
+- Joe Washington · RB · 1985 · best 82
+- Paul Flatley · WR · 1970 · best 80
+- Harold Green · RB · 1997–1998 · best 64
+- Drew Hill · WR · 1993 · best 55
+- John Gilliam · WR · 1976 · best 52
+- Billy Joe Tolliver · QB · 1991–1997 · best 47
+- Scott Hunter · QB · 1976–1977 · best 41
+- Erik Kramer · QB · 1987 · best 34
+- Steve DeBerg · QB · 1998 · best 26
+- Brett Favre · QB · 1991 · best -2 · cutout elsewhere
+
+## Baltimore Ravens (BAL) — 41
+
+- Vinny Testaverde · QB · 1996–1997 · best 311 · cutout elsewhere
+- Michael Jackson · WR · 1996–1998 · best 242
+- Derrick Alexander · WR · 1996–1997 · best 195
+- Priest Holmes · RB · 1997–2000 · best 184
+- Qadry Ismail · WR · 1999–2001 · best 183
+- Le'Ron McClain · RB · 2007–2010 · best 177 · cutout elsewhere
+- Mike Wallace · WR · 2016–2017 · best 166
+- Travis Taylor · WR · 2000–2004 · best 164
+- Todd Heap · TE · 2001–2010 · best 163
+- Elvis Grbac · QB · 2001 · best 161
+- Kamar Aiken · WR · 2014–2016 · best 159
+- Alex Collins · RB · 2017–2018 · best 156 · cutout elsewhere
+- Errict Rhett · RB · 1998–1999 · best 152
+- Shannon Sharpe · TE · 2000–2001 · best 145
+- Kyle Boller · QB · 2003–2007 · best 143 · cutout elsewhere
+- Bam Morris · RB · 1996–1997 · best 140
+- Dennis Pitta · TE · 2010–2016 · best 139
+- Earnest Byner · RB · 1996–1997 · best 133
+- Jeff Blake · QB · 2002 · best 133
+- Devonta Freeman · RB · 2021 · best 130 · ESPN face
+- Tony Banks · QB · 1999–2000 · best 129
+- Jim Harbaugh · QB · 1998 · best 126
+- John Brown · WR · 2018 · best 123
+- Eric Green · TE · 1996–1998 · best 121
+- Chester Taylor · RB · 2002–2005 · best 115 · cutout elsewhere
+- Ben Watson · WR · 2017 · best 107 · cutout elsewhere
+- Benjamin Watson · TE · 2017 · best 106 · cutout elsewhere
+- Michael Crabtree · WR · 2018 · best 106 · cutout elsewhere
+- Trent Dilfer · QB · 2000 · best 101
+- Owen Daniels · TE · 2014 · best 101 · cutout elsewhere
+- Floyd Turner · WR · 1996–1998 · best 97
+- Terry Allen · RB · 2001 · best 97
+- Marcus Robinson · WR · 2003 · best 97
+- Jason Brookins · RB · 2001 · best 93
+- Justin Armour · WR · 1999 · best 87
+- Dallas Clark · TE · 2013 · best 68 · cutout elsewhere
+- Ricky Williams · RB · 2011 · best 67 · cutout elsewhere
+- Roosevelt Potts · RB · 1998 · best 47
+- Randall Cunningham · QB · 2001 · best 43
+- DeSean Jackson · WR · 2022 · best 20 · cutout elsewhere
+- Ben Coates · TE · 2000 · best 13
+
+## Buffalo Bills (BUF) — 54
+
+- Thurman Thomas · RB · 1988–1999 · best 312
+- Travis Henry · RB · 2001–2004 · best 264
+- Eric Moulds · WR · 1996–2005 · best 240 · cutout elsewhere
+- Andre Reed · WR · 1985–1999 · best 232
+- Peerless Price · WR · 1999–2007 · best 223
+- Joe Ferguson · QB · 1973–1984 · best 222
+- Willis McGahee · RB · 2004–2006 · best 215 · cutout elsewhere
+- Greg Bell · RB · 1984–1987 · best 213
+- Marshawn Lynch · RB · 2007–2009 · best 210 · cutout elsewhere
+- Jim Braxton · RB · 1971–1978 · best 188
+- James Lofton · WR · 1989–1993 · best 184 · cutout elsewhere
+- John Brown · WR · 2019–2022 · best 184
+- Frank Lewis · WR · 1978–1983 · best 181
+- Marlin Briscoe · WR · 1970–1971 · best 176
+- Bill Brooks · WR · 1993–1995 · best 170
+- Terry Miller · RB · 1978–1980 · best 168
+- Bob Chandler · WR · 1971–1979 · best 167
+- Jerry Butler · WR · 1979–1986 · best 156
+- Terrell Owens · WR · 2009 · best 152 · cutout elsewhere
+- Gabe Davis · WR · 2020–2023 · best 148
+- Quinn Early · WR · 1996–1998 · best 145
+- Ronnie Harmon · WR · 1986–1989 · best 144
+- Rob Johnson · QB · 1999–2001 · best 140
+- Larry Centers · RB · 2001–2002 · best 140
+- Byron Franklin · WR · 1981–1984 · best 136
+- Zay Jones · WR · 2017–2018 · best 136 · cutout elsewhere
+- Jonathan Linton · RB · 1998–2000 · best 135
+- Chris Burkett · WR · 1985–1989 · best 127
+- Bobby Shaw · WR · 2003–2004 · best 123
+- Curtis Brown · RB · 1977–1982 · best 121
+- Mike Gillislee · RB · 2015–2016 · best 121
+- Darick Holmes · RB · 1995–1998 · best 119
+- Pete Metzelaars · WR · 1985–1994 · best 117
+- Karlos Williams · RB · 2015 · best 117
+- Kenneth Davis · RB · 1989–1994 · best 114
+- Alex Van Pelt · QB · 1999–2003 · best 110
+- Shawn Bryson · RB · 2000–2002 · best 108
+- Sammy Morris · RB · 2000–2003 · best 106 · cutout elsewhere
+- Haven Moses · WR · 1970–1972 · best 104
+- Jay Riemersma · TE · 1999–2002 · best 104
+- Josh Reed · WR · 2002–2009 · best 102
+- Amari Cooper · WR · 2024 · best 101 · cutout elsewhere
+- Reuben Gant · WR · 1974–1980 · best 97
+- Jeremy McDaniel · WR · 2000–2001 · best 97
+- Antowain Smith · RB · 1999–2000 · best 96
+- Larry Kinnebrew · RB · 1989–1990 · best 92 · cutout elsewhere
+- Frank Gore · RB · 2019 · best 88 · cutout elsewhere
+- Roosevelt Leaks · RB · 1980–1983 · best 82
+- Vince Ferragamo · QB · 1985 · best 70
+- Bruce Mathison · QB · 1985 · best 67
+- Frank Reich · QB · 1985–1994 · best 54
+- Gary Marangi · QB · 1974–1976 · best 52
+- Jordan Matthews · TE · 2017 · best 44
+- Antonio Brown · WR · 2003 · best 2 · ESPN face, cutout elsewhere
+
+## Carolina Panthers (CAR) — 27
+
+- Steve Beuerlein · QB · 1996–2000 · best 309
+- Muhsin Muhammad · WR · 1996–2009 · best 283
+- Patrick Jeffers · WR · 1999–2001 · best 213
+- Stephen Davis · RB · 2003–2005 · best 209
+- Rico Dowdle · RB · 2025 · best 195 · ESPN face
+- Rocket Ismail · WR · 1996–1998 · best 185
+- Wesley Walls · TE · 1996–2002 · best 184
+- Adam Thielen · WR · 2023–2025 · best 180 · cutout elsewhere
+- Anthony Johnson · RB · 1995–1999 · best 176
+- Mike Davis · RB · 2020 · best 176 · cutout elsewhere
+- Robbie Chosen · WR · 2020–2021 · best 176
+- Kerry Collins · QB · 1995–1998 · best 171 · cutout elsewhere
+- Chris Weinke · QB · 2001–2006 · best 166
+- Mark Carrier · WR · 1996–1998 · best 146
+- Donald Hayes · WR · 1999–2001 · best 139
+- Rodney Peete · QB · 2002–2004 · best 139
+- Lamar Smith · RB · 2002 · best 138
+- Tim Biakabutuka · RB · 1996–2001 · best 136
+- Keary Colbert · WR · 2004–2007 · best 127 · cutout elsewhere
+- Fred Lane · RB · 1997–1999 · best 122
+- Mike Goodson · RB · 2009–2011 · best 110 · cutout elsewhere
+- Richard Huntley · RB · 2001 · best 101
+- Drew Carter · WR · 2005–2007 · best 95
+- Derrick Moore · RB · 1995 · best 93
+- Jeremy Shockey · TE · 2011 · best 86 · cutout elsewhere
+- Pete Metzelaars · WR · 1995 · best 45
+- Jordan Matthews · TE · 2024 · best 0
+
+## Chicago Bears (CHI) — 66
+
+- Justin Fields · QB · 2021–2023 · best 304 · ESPN face, cutout elsewhere
+- Matt Forte · RB · 2008–2015 · best 298 · ESPN face
+- Neal Anderson · RB · 1986–1993 · best 276
+- Mitchell Trubisky · QB · 2017–2020 · best 269 · cutout elsewhere
+- Erik Kramer · QB · 1994–1998 · best 261
+- DJ Moore · WR · 2023–2024 · best 239 · ESPN face, cutout elsewhere
+- Marcus Robinson · WR · 1999–2002 · best 234
+- Dick Gordon · WR · 1970–1971 · best 214
+- Jordan Howard · RB · 2016–2018 · best 214 · cutout elsewhere
+- Thomas Jones · RB · 2004–2006 · best 211 · cutout elsewhere
+- Jim Harbaugh · QB · 1987–1993 · best 209
+- Marty Booker · WR · 1999–2008 · best 209 · cutout elsewhere
+- Roland Harper · RB · 1975–1982 · best 199
+- Jeff Graham · WR · 1994–1995 · best 189
+- Anthony Thomas · RB · 2001–2004 · best 189
+- Raymont Harris · RB · 1994–1997 · best 187
+- Rex Grossman · QB · 2003–2008 · best 170 · cutout elsewhere
+- James Allen · RB · 1998–2001 · best 169
+- Curtis Enis · RB · 1998–2000 · best 167
+- Lewis Tillman · RB · 1994–1995 · best 166
+- Bobby Engram · WR · 1996–2000 · best 162
+- Wendell Davis · WR · 1988–1993 · best 161
+- Rashaan Salaam · RB · 1995–1997 · best 159
+- Bernard Berrian · WR · 2004–2007 · best 158
+- Matt Suhey · RB · 1980–1989 · best 156
+- Willie Gault · WR · 1983–1987 · best 152
+- Johnny Knox · WR · 2009–2011 · best 150
+- Muhsin Muhammad · WR · 2005–2007 · best 144
+- Cameron Meredith · WR · 2015–2016 · best 144
+- Mike Tomczak · QB · 1985–1990 · best 143
+- Adrian Peterson (CHI) · RB · 2002–2009 · best 137
+- Jeremy Langford · RB · 2015–2016 · best 137
+- Josh McCown · QB · 2011–2013 · best 135 · cutout elsewhere
+- Jack Concannon · QB · 1970–1971 · best 131
+- George Farmer · RB · 1970–1975 · best 126
+- Jim Miller · QB · 1999–2002 · best 126
+- James Scott · WR · 1976–1983 · best 125
+- Cade McNown · QB · 1999–2000 · best 125
+- Vince Evans · QB · 1977–1983 · best 118
+- Jimmy Graham · TE · 2020–2021 · best 118 · cutout elsewhere
+- Taylor Gabriel · WR · 2018–2019 · best 117 · cutout elsewhere
+- Steve Walsh · QB · 1994–1995 · best 115
+- Dez White · WR · 2000–2003 · best 114
+- Kordell Stewart · QB · 2003 · best 114
+- Khalil Herbert · RB · 2021–2023 · best 113
+- Carl Garrett · RB · 1973–1974 · best 110
+- Michael Timpson · WR · 1995–1996 · best 109
+- Bob Avellini · QB · 1975–1984 · best 106
+- Edgar Bennett · RB · 1998–1999 · best 104
+- Eddie Kennison · WR · 2000 · best 102
+- David Terrell · WR · 2001–2004 · best 96
+- Charlie Wade · WR · 1974 · best 90
+- Shane Matthews · QB · 1999–2001 · best 90
+- Mike Phipps · QB · 1977–1981 · best 89 · cutout elsewhere
+- Curtis Conway · WR · 1999 · best 84
+- Jim Harrison · RB · 1971–1974 · best 82
+- Ken Grandberry · RB · 1974 · best 80
+- Don Shy · RB · 1970–1972 · best 74
+- Bobby Douglass · QB · 1970–1975 · best 74
+- Gary Huff · QB · 1973–1976 · best 74
+- Bob Wallace · WR · 1970–1972 · best 66
+- Bob Grim · WR · 1975 · best 63
+- Tim Worley · RB · 1993–1994 · best 59
+- Kent Nix · QB · 1970–1971 · best 44
+- Steve Fuller · QB · 1984–1986 · best 36
+- Marcedes Lewis · TE · 2023–2025 · best 11 · cutout elsewhere
+
+## Cincinnati Bengals (CIN) — 50
+
+- Jeff Blake · QB · 1994–1999 · best 291
+- Boomer Esiason · QB · 1984–1997 · best 290
+- Ken Anderson · QB · 1971–1986 · best 282
+- Carl Pickens · WR · 1992–1999 · best 276
+- Carson Palmer · QB · 2004–2010 · best 264 · cutout elsewhere
+- James Brooks · RB · 1984–1993 · best 254
+- Pete Johnson · RB · 1977–1983 · best 251
+- Corey Dillon · RB · 1997–2003 · best 242
+- T.J. Houshmandzadeh · WR · 2001–2008 · best 242
+- Rudi Johnson · RB · 2002–2007 · best 238
+- Jon Kitna · QB · 2001–2005 · best 237
+- Ickey Woods · RB · 1988–1991 · best 211
+- Eddie Brown · WR · 1985–1991 · best 205
+- Tim McGee · WR · 1986–1994 · best 205
+- Jeremy Hill · RB · 2014–2017 · best 192
+- Cris Collinsworth · WR · 1981–1988 · best 190
+- Boobie Clark · RB · 1973–1978 · best 188
+- Terrell Owens · WR · 2010 · best 188 · cutout elsewhere
+- Peter Warrick · WR · 2000–2004 · best 180
+- Essex Johnson · RB · 1970–1975 · best 177
+- Darnay Scott · WR · 1994–2001 · best 171
+- Harold Green · RB · 1990–1995 · best 169
+- Marvin Jones Jr. · WR · 2012–2015 · best 163
+- Isaac Curtis · WR · 1973–1984 · best 161
+- Brandon LaFell · WR · 2016–2017 · best 154 · cutout elsewhere
+- Dan Ross · WR · 1979–1985 · best 151
+- Jake Browning · QB · 2023–2024 · best 151
+- Doug Dressler · RB · 1970–1974 · best 145
+- Neil O'Donnell · QB · 1998 · best 145
+- Chris Henry · WR · 2005–2009 · best 133
+- Fred Willis · RB · 1971–1972 · best 129
+- Chip Myers · WR · 1970–1976 · best 126
+- Don Bass · WR · 1978–1981 · best 123
+- Ryan Fitzpatrick · QB · 2008 · best 123 · cutout elsewhere
+- Jerome Simpson · WR · 2008–2011 · best 123 · cutout elsewhere
+- Samaje Perine · RB · 2019–2025 · best 123 · cutout elsewhere
+- Charlie Joiner · WR · 1973–1975 · best 121
+- Derrick Fenner · RB · 1992–1994 · best 119
+- Charles Alexander · RB · 1979–1985 · best 115
+- Billy Brooks · WR · 1976–1979 · best 114
+- Jess Phillips · RB · 1970–1972 · best 113
+- Garrison Hearst · RB · 1996 · best 110
+- Andrew Hawkins · WR · 2011–2013 · best 105 · cutout elsewhere
+- Laveranues Coles · WR · 2009 · best 104 · cutout elsewhere
+- Jordan Shipley · WR · 2010–2011 · best 104
+- Virgil Carter · QB · 1970–1972 · best 98
+- Chris Perry · RB · 2004–2008 · best 96
+- David Klingler · QB · 1992–1995 · best 92
+- Jack Thompson · QB · 1979–1982 · best 85
+- Jay Schroeder · QB · 1993 · best 51
+
+## Cleveland Browns (CLE) — 56
+
+- Derek Anderson · QB · 2006–2009 · best 251 · cutout elsewhere
+- Mike Pruitt · RB · 1976–1984 · best 241
+- Earnest Byner · RB · 1984–1995 · best 219
+- Kevin Johnson · WR · 1999–2003 · best 206
+- Leroy Hoard · RB · 1990–1995 · best 194
+- Vinny Testaverde · QB · 1993–1995 · best 192 · cutout elsewhere
+- Webster Slaughter · WR · 1986–1991 · best 190
+- Reuben Droughns · RB · 2005–2006 · best 190
+- Leroy Kelly · RB · 1970–1973 · best 182
+- Eric Metcalf · WR · 1989–1994 · best 180
+- Kellen Winslow Jr. · TE · 2004–2008 · best 180
+- Terry Kirby · RB · 1999 · best 179
+- Bo Scott · RB · 1970–1974 · best 176
+- Paul McDonald · QB · 1980–1985 · best 172
+- Dave Logan · WR · 1976–1983 · best 168
+- Quincy Morgan · WR · 2001–2003 · best 163
+- Jerome Harrison · RB · 2006–2009 · best 163
+- Odell Beckham Jr. · WR · 2019–2020 · best 163 · ESPN face, cutout elsewhere
+- Antonio Bryant · WR · 2004–2005 · best 158
+- Tim Couch · QB · 1999–2003 · best 156
+- Reggie Rucker · WR · 1975–1981 · best 154
+- Reggie Langhorne · WR · 1985–1991 · best 151
+- Cleo Miller · RB · 1975–1982 · best 145
+- Michael Jackson · WR · 1991–1995 · best 145
+- Jamel White · RB · 2000–2003 · best 144
+- Jameis Winston · QB · 2024 · best 143 · cutout elsewhere
+- William Green · RB · 2002–2005 · best 140
+- Bill Nelsen · QB · 1970–1972 · best 134
+- Travis Prentice · RB · 2000 · best 133
+- Charlie Frye · QB · 2005–2007 · best 130
+- Benjamin Watson · TE · 2010–2012 · best 128 · cutout elsewhere
+- Dennis Northcutt · WR · 2000–2006 · best 126
+- Keenan McCardell · WR · 1992–1995 · best 123
+- Jason Campbell · QB · 2013 · best 120 · cutout elsewhere
+- Derrick Alexander · WR · 1994–1995 · best 119
+- Paul Warfield · WR · 1976–1977 · best 117
+- Trent Dilfer · QB · 2005 · best 115
+- Ken Brown · RB · 1970–1975 · best 114
+- Mark Carrier · WR · 1993 · best 114
+- Lee Suggs · RB · 2003–2005 · best 114
+- Andre Rison · WR · 1995 · best 112
+- Andre Davis · WR · 2002–2004 · best 110
+- Antonio Callaway · WR · 2018–2019 · best 110
+- Jeff Garcia · QB · 2004 · best 108 · cutout elsewhere
+- Tommy Vardell · RB · 1992–1995 · best 107
+- Joe Jurevicius · WR · 2006–2007 · best 104
+- Boyce Green · RB · 1983–1985 · best 95
+- Fair Hooker · WR · 1970–1974 · best 93
+- Curtis Dickey · RB · 1985–1986 · best 93
+- Mike Tomczak · QB · 1992 · best 93
+- Darrin Chiaverini · WR · 1999–2000 · best 90
+- Milt Morin · WR · 1970–1975 · best 86
+- Charles White · RB · 1980–1984 · best 86
+- Kelly Holcomb · QB · 2001–2004 · best 85
+- Gary Collins · WR · 1970–1971 · best 70
+- Don Strock · QB · 1988 · best 48
+
+## Dallas Cowboys (DAL) — 55
+
+- Herschel Walker · RB · 1986–1997 · best 279
+- Michael Irvin · WR · 1988–1999 · best 276
+- Danny White · QB · 1976–1988 · best 270
+- Tony Dorsett · RB · 1977–1988 · best 263
+- Troy Aikman · QB · 1989–2000 · best 232
+- Marion Barber · RB · 2005–2010 · best 220
+- Calvin Hill · RB · 1970–1974 · best 202 · cutout elsewhere
+- Rocket Ismail · WR · 1999–2001 · best 201
+- Raghib Ismail · WR · 1999–2001 · best 200
+- Tony Hill · WR · 1977–1986 · best 196
+- Ron Springs · RB · 1979–1984 · best 192
+- Terry Glenn · WR · 2003–2006 · best 192
+- Vinny Testaverde · QB · 2004 · best 191 · cutout elsewhere
+- Quincy Carter · QB · 2001–2003 · best 190
+- Walt Garrison · RB · 1970–1974 · best 184
+- Laurent Robinson · WR · 2011 · best 179
+- Drew Pearson · WR · 1973–1983 · best 178
+- Rico Dowdle · RB · 2020–2024 · best 176 · ESPN face
+- Steve Pelluer · QB · 1984–1988 · best 175
+- Mike Renfro · WR · 1984–1987 · best 168
+- Keyshawn Johnson · WR · 2004–2005 · best 168 · cutout elsewhere
+- Julius Jones · RB · 2004–2007 · best 165
+- Jon Kitna · QB · 2009–2011 · best 165
+- Joey Galloway · WR · 2000–2003 · best 158 · cutout elsewhere
+- Robert Newhouse · RB · 1972–1983 · best 144
+- Richie Anderson · RB · 2003–2004 · best 144
+- Doug Cosbie · WR · 1979–1988 · best 143
+- Troy Hambrick · RB · 2000–2003 · best 140
+- Preston Pearson · RB · 1975–1980 · best 139
+- Craig Morton · QB · 1970–1973 · best 135
+- Patrick Crayton · WR · 2004–2009 · best 135
+- Jay Novacek · WR · 1990–1995 · best 133
+- Antonio Bryant · WR · 2002–2003 · best 131
+- Randall Cobb · WR · 2019 · best 126 · cutout elsewhere
+- James McKnight · WR · 2000 · best 124
+- Roy Williams · WR · 2008–2010 · best 119
+- Billy Joe DuPree · WR · 1973–1983 · best 117
+- Gary Hogeboom · QB · 1980–1985 · best 109
+- Kelvin Martin · WR · 1987–1996 · best 101
+- Lance Rentzel · WR · 1970 · best 99
+- Doug Dennison · RB · 1974–1978 · best 95
+- David LaFleur · TE · 1999–2000 · best 91
+- Chris Warren III · RB · 1999–2000 · best 88
+- Chris Warren · RB · 1998–1999 · best 85
+- Jackie Harris · TE · 2000–2001 · best 79
+- Eddie George · RB · 2004 · best 78
+- Randall Cunningham · QB · 2000 · best 67
+- Steve Walsh · QB · 1989–1990 · best 66
+- Martellus Bennett · TE · 2008–2011 · best 62 · cutout elsewhere
+- Mike Ditka · WR · 1970–1972 · best 57 · cutout elsewhere
+- Steve Beuerlein · QB · 1991–1992 · best 53
+- Billy Parks · WR · 1972 · best 45
+- Dan Reeves · RB · 1970–1972 · best 32
+- Anthony Fasano · TE · 2006–2007 · best 27 · cutout elsewhere
+- T.Y. Hilton · WR · 2022 · best 16
+
+## Denver Broncos (DEN) — 59
+
+- Peyton Manning · QB · 2012–2015 · best 420 · cutout elsewhere
+- Terrell Davis · RB · 1995–2001 · best 369
+- Clinton Portis · RB · 2002–2003 · best 300 · cutout elsewhere
+- Rod Smith · WR · 1995–2006 · best 269
+- Mike Anderson · RB · 2000–2005 · best 262
+- Otis Armstrong · RB · 1973–1980 · best 260
+- Steve Watson · WR · 1979–1987 · best 233
+- Javon Walker · WR · 2006–2007 · best 209
+- Reuben Droughns · RB · 2002–2004 · best 206
+- Craig Morton · QB · 1978–1982 · best 198
+- Sammy Winder · RB · 1982–1990 · best 192
+- Vance Johnson · WR · 1985–1995 · best 190
+- Brian Griese · QB · 1999–2002 · best 188
+- Julius Thomas · TE · 2011–2014 · best 183
+- Bobby Humphrey · RB · 1989–1991 · best 182
+- Melvin Gordon · RB · 2020–2022 · best 182 · cutout elsewhere
+- Olandis Gary · RB · 1999–2002 · best 180
+- Ashley Lelie · WR · 2002–2005 · best 178 · cutout elsewhere
+- Melvin Gordon III · RB · 2020–2022 · best 178 · cutout elsewhere
+- Charley Johnson · QB · 1972–1975 · best 162
+- Rick Upchurch · WR · 1975–1983 · best 159
+- Gerald Willhite · WR · 1982–1988 · best 159
+- Rod Bernstine · RB · 1993–1995 · best 159
+- Tatum Bell · RB · 2004–2008 · best 158
+- Haven Moses · WR · 1972–1981 · best 157
+- Shannon Sharpe · TE · 1991–2003 · best 156
+- Mark Jackson · WR · 1986–1992 · best 152
+- Dave Preston · RB · 1978–1983 · best 151
+- Leonard Russell · RB · 1994 · best 150
+- Riley Odoms · WR · 1972–1983 · best 146
+- Mike Bell · RB · 2006–2007 · best 142
+- Jon Keyworth · RB · 1974–1980 · best 141
+- Latavius Murray · RB · 2022 · best 141 · cutout elsewhere
+- Tim Patrick · WR · 2018–2023 · best 136
+- Gaston Green · RB · 1991–1992 · best 134
+- Jabar Gaffney · WR · 2009–2010 · best 132 · cutout elsewhere
+- Glyn Milburn · WR · 1993–1995 · best 130
+- Joe Dawkins · RB · 1971–1973 · best 123
+- Robert Delpino · RB · 1993 · best 123
+- Bobby Anderson · RB · 1970–1973 · best 119
+- Selvin Young · RB · 2007–2008 · best 118
+- Rick Parros · RB · 1981–1984 · best 115
+- Desmond Clark · TE · 1999–2001 · best 114 · cutout elsewhere
+- Marvin Mims Jr. · WR · 2023–2025 · best 110
+- Steve Ramsey · QB · 1971–1976 · best 108
+- Gus Frerotte · QB · 2000–2001 · best 105 · cutout elsewhere
+- Rod Sherman · WR · 1972 · best 101
+- Travis Henry · RB · 2007 · best 101
+- Al Denson · WR · 1970 · best 100
+- Peyton Hillis · RB · 2008–2009 · best 95 · cutout elsewhere
+- Steve DeBerg · QB · 1981–1983 · best 94
+- Bubby Brister · QB · 1997–1999 · best 93
+- Jeb Putzier · TE · 2002–2005 · best 87
+- Mike Pritchard · WR · 1994–1995 · best 78
+- Pete Liske · QB · 1970 · best 71
+- Willis Crenshaw · RB · 1970 · best 70
+- Tony Reed · RB · 1981 · best 62
+- Vernon Davis · TE · 2015 · best 59 · cutout elsewhere
+- Don Horn · QB · 1971–1972 · best 40
+
+## Detroit Lions (DET) — 65
+
+- Herman Moore · WR · 1991–2001 · best 310
+- Scott Mitchell · QB · 1994–1998 · best 290
+- Brett Perriman · WR · 1991–1998 · best 255
+- Greg Landry · QB · 1970–1978 · best 244
+- Jon Kitna · QB · 2006–2008 · best 240
+- James Stewart · RB · 2000–2002 · best 224
+- Germane Crowell · WR · 1998–2002 · best 218
+- Roy Williams · WR · 2004–2007 · best 210
+- Dan Orlovsky · QB · 2004–2015 · best 207 · cutout elsewhere
+- Steve Owens · RB · 1970–1974 · best 205
+- Rodney Peete · QB · 1989–1993 · best 195
+- Marvin Jones Jr. · WR · 2016–2023 · best 195
+- Mike Furrey · WR · 2006–2008 · best 192
+- Kevin Smith · RB · 2008–2012 · best 192
+- Richard Johnson · WR · 1989–1990 · best 190
+- Kevin Jones · RB · 2004–2007 · best 189
+- Joey Harrington · QB · 2002–2005 · best 185
+- Johnnie Morton · WR · 1994–2001 · best 182
+- Gary Danielson · QB · 1976–1984 · best 176
+- Eric Hipple · QB · 1980–1989 · best 168
+- Jahvid Best · RB · 2010–2011 · best 168
+- Shaun McDonald · WR · 2007–2008 · best 166
+- Mel Farr · RB · 1970–1973 · best 164
+- Charlie Batch · QB · 1998–2001 · best 163 · cutout elsewhere
+- Freddie Scott · WR · 1978–1983 · best 161
+- Horace King · RB · 1975–1983 · best 160
+- Dexter Bussey · RB · 1974–1984 · best 153
+- Garry James · RB · 1986–1988 · best 149
+- Brandon Pettigrew · TE · 2009–2015 · best 149
+- Pete Mandley · WR · 1984–1988 · best 143
+- Shawn Bryson · RB · 2003–2006 · best 140
+- Anquan Boldin · WR · 2016 · best 140 · cutout elsewhere
+- T.J. Hockenson · TE · 2019–2022 · best 140 · ESPN face
+- Nate Burleson · WR · 2010–2013 · best 139 · cutout elsewhere
+- Altie Taylor · RB · 1970–1975 · best 137
+- Chuck Long · QB · 1986–1989 · best 128
+- Ron Jessie · WR · 1971–1974 · best 123
+- Kerryon Johnson · RB · 2018–2020 · best 122
+- Adrian Peterson · RB · 2020 · best 119 · ESPN face, cutout elsewhere
+- Gus Frerotte · QB · 1999 · best 117 · cutout elsewhere
+- Eric Ebron · TE · 2014–2017 · best 114 · cutout elsewhere
+- David Hill · WR · 1976–1982 · best 113
+- Charlie Sanders · WR · 1970–1977 · best 110
+- Josh Reynolds · WR · 2021–2023 · best 109 · cutout elsewhere
+- Cory Schlesinger · RB · 1999–2006 · best 108
+- Bill Schroeder · WR · 2002–2003 · best 108
+- Kalif Raymond · WR · 2021–2024 · best 108 · cutout elsewhere
+- David Sloan · TE · 1999–2001 · best 107
+- Lawrence Gaines · RB · 1976–1979 · best 106
+- Erik Kramer · QB · 1991–1993 · best 102
+- Bill Munson · QB · 1970–1975 · best 100
+- Az-Zahir Hakim · WR · 2002–2006 · best 97
+- Lamont Warren · RB · 2001–2002 · best 95
+- Marcus Pollard · TE · 2005–2006 · best 91
+- Derrick Moore · RB · 1993–1994 · best 84
+- Bob Gagliano · QB · 1989–1990 · best 79
+- Rusty Hilger · QB · 1988 · best 78
+- Tommy Vardell · RB · 1997–1998 · best 76
+- Joe Reed · WR · 1975–1979 · best 73
+- Marlin Briscoe · WR · 1975 · best 67
+- Joe Ferguson · QB · 1985–1986 · best 59
+- Jeff Garcia · QB · 2005 · best 49 · cutout elsewhere
+- Frank Reich · QB · 1997–1998 · best 47
+- J.D. Hill · WR · 1976–1977 · best 43 · cutout elsewhere
+- Butch Woolfolk · WR · 1987–1988 · best 32
+
+## Green Bay Packers (GB) — 53
+
+- Brett Favre · QB · 1992–2007 · best 352 · cutout elsewhere
+- Don Majkowski · QB · 1987–1992 · best 297
+- Robert Brooks · WR · 1992–1998 · best 281
+- Lynn Dickey · QB · 1976–1985 · best 279
+- Antonio Freeman · WR · 1995–2003 · best 268
+- Dorsey Levens · RB · 1999–2001 · best 245
+- Edgar Bennett · RB · 1992–1996 · best 240
+- Terdell Middleton · RB · 1977–1981 · best 218
+- Gerry Ellis · RB · 1980–1986 · best 200
+- John Brockington · RB · 1971–1977 · best 183
+- Randy Wright · QB · 1984–1988 · best 175
+- Bill Schroeder · WR · 1999–2001 · best 173
+- Paul Coffman · WR · 1978–1985 · best 172
+- AJ Dillon · RB · 2020–2023 · best 167
+- Donny Anderson · RB · 1970–1971 · best 159
+- Brandon Jackson · RB · 2007–2010 · best 150 · cutout elsewhere
+- Vince Workman · RB · 1989–1992 · best 144
+- Brent Fullwood · RB · 1987–1990 · best 131
+- Keith Jackson · WR · 1996 · best 131
+- MacArthur Lane · RB · 1972–1974 · best 130
+- Jamaal Williams · RB · 2017–2020 · best 130 · cutout elsewhere
+- Reggie Cobb · RB · 1994 · best 127
+- Barty Smith · RB · 1974–1980 · best 124
+- Terry Glenn · WR · 2002 · best 120
+- Marquez Valdes-Scantling · WR · 2018–2021 · best 120
+- Donald Lee · TE · 2005–2010 · best 116
+- Carroll Dale · WR · 1970–1972 · best 115
+- David Whitehurst · QB · 1977–1983 · best 112
+- Samkon Gado · RB · 2005 · best 111 · cutout elsewhere
+- Jarrett Boykin · WR · 2012–2014 · best 111
+- Mike Tomczak · QB · 1991 · best 110
+- Corey Bradford · WR · 1999–2001 · best 110
+- Keith Woodside · WR · 1988–1991 · best 108
+- Antonio Chatman · WR · 2004–2005 · best 107
+- Jackie Harris · TE · 1990–1993 · best 105
+- Ken Payne · WR · 1974–1977 · best 103
+- Darrell Thompson · RB · 1990–1994 · best 101
+- Robert Ferguson · WR · 2002–2006 · best 94
+- John Hadl · QB · 1974–1975 · best 87
+- Kenneth Davis · RB · 1986–1988 · best 79
+- John Hilton · WR · 1970 · best 70
+- Darick Holmes · RB · 1998 · best 70
+- Scott Hunter · QB · 1971–1973 · best 65
+- Travis Williams · RB · 1970 · best 58
+- Jared Cook · TE · 2016 · best 56 · cutout elsewhere
+- Dave Hampton · RB · 1970–1971 · best 46
+- Jim Grabowski · RB · 1970 · best 45
+- Martellus Bennett · TE · 2017 · best 44 · cutout elsewhere
+- Wesley Walls · TE · 2003 · best 38
+- Marcedes Lewis · TE · 2018–2022 · best 34 · cutout elsewhere
+- Andre Rison · WR · 1996 · best 26
+- Mark Brunell · QB · 1993–1994 · best 9 · cutout elsewhere
+- Matt Hasselbeck · QB · 1999–2000 · best 8 · cutout elsewhere
+
+## Houston Texans (HOU) — 22
+
+- Domanick Williams · RB · 2003–2005 · best 288
+- Matt Schaub · QB · 2007–2013 · best 279 · cutout elsewhere
+- Brock Osweiler · QB · 2016 · best 180 · cutout elsewhere
+- Lamar Miller · RB · 2016–2018 · best 175 · cutout elsewhere
+- Brian Hoyer · QB · 2015 · best 167 · cutout elsewhere
+- David Johnson · RB · 2020–2021 · best 163
+- Will Fuller V · WR · 2016–2020 · best 162
+- Carlos Hyde · RB · 2019 · best 148 · cutout elsewhere
+- Ben Tate · RB · 2011–2013 · best 131 · cutout elsewhere
+- Duke Johnson · RB · 2019–2020 · best 131 · cutout elsewhere
+- Corey Bradford · WR · 2002–2005 · best 127
+- Nate Washington · WR · 2015 · best 113 · cutout elsewhere
+- Sage Rosenfels · QB · 2006–2008 · best 109
+- James Allen · RB · 2002 · best 108
+- C.J. Fiedorowicz · TE · 2014–2017 · best 106
+- Billy Miller · TE · 2002–2004 · best 105
+- Garrett Graham · TE · 2011–2015 · best 105
+- Alfred Blue · RB · 2014–2018 · best 104
+- Jabar Gaffney · WR · 2002–2005 · best 99 · cutout elsewhere
+- Mark Ingram II · RB · 2021 · best 94 · ESPN face, cutout elsewhere
+- Ahman Green · RB · 2007–2008 · best 57 · cutout elsewhere
+- Derrick Mason · WR · 2011 · best 27 · cutout elsewhere
+
+## Indianapolis Colts (IND) — 68
+
+- Marshall Faulk · RB · 1994–1998 · best 326
+- Marvin Harrison · WR · 1996–2008 · best 311
+- Lydell Mitchell · RB · 1972–1977 · best 284
+- Bert Jones · QB · 1973–1981 · best 247
+- Daniel Jones · QB · 2025 · best 234 · cutout elsewhere
+- Joe Washington · RB · 1978–1980 · best 230
+- T.Y. Hilton · WR · 2012–2021 · best 228
+- Eric Dickerson · RB · 1987–1991 · best 215
+- Gardner Minshew · QB · 2023 · best 205 · cutout elsewhere
+- Gardner Minshew II · QB · 2023 · best 205 · cutout elsewhere
+- Brandon Stokley · WR · 2003–2006 · best 200 · cutout elsewhere
+- Roger Carr · WR · 1974–1981 · best 199
+- Jim Harbaugh · QB · 1994–1997 · best 198
+- Curtis Dickey · RB · 1980–1985 · best 197
+- Frank Gore · RB · 2015–2017 · best 195 · cutout elsewhere
+- Dominic Rhodes · RB · 2001–2010 · best 192
+- Albert Bentley · RB · 1985–1991 · best 190
+- Bill Brooks · WR · 1986–1992 · best 190
+- Anthony Richardson · QB · 2023–2025 · best 175
+- Marlon Mack · RB · 2017–2021 · best 174
+- Pierre Garcon · WR · 2008–2011 · best 163 · cutout elsewhere
+- Norm Bulaich · RB · 1970–1972 · best 162
+- Matt Ryan · QB · 2022 · best 161 · cutout elsewhere
+- Nyheim Miller-Hines · RB · 2018–2021 · best 160
+- Jessie Hester · WR · 1990–1993 · best 156
+- Reggie Langhorne · WR · 1992–1993 · best 156
+- Zack Moss · RB · 2022–2023 · best 156
+- Randy McMillan · RB · 1981–1986 · best 153
+- Matt Bouza · WR · 1982–1989 · best 150
+- Eddie Hinton · WR · 1970–1972 · best 145
+- Marcus Pollard · TE · 1999–2004 · best 145
+- Jeff George · QB · 1990–1993 · best 144
+- Roy Jefferson · WR · 1970 · best 142
+- Don McCauley · WR · 1971–1981 · best 142
+- Anthony Johnson · RB · 1990–1993 · best 141
+- Jack Trudeau · QB · 1986–1993 · best 140
+- Tom Matte · RB · 1970–1972 · best 139
+- Mike Pagel · QB · 1982–1985 · best 138
+- Ahmad Bradshaw · RB · 2013–2015 · best 133 · cutout elsewhere
+- Andre Rison · WR · 1989 · best 132
+- Sean Dawkins · WR · 1993–1997 · best 128
+- Donnie Avery · WR · 2012 · best 126 · cutout elsewhere
+- Vick Ballard · RB · 2012–2013 · best 120
+- Floyd Turner · WR · 1994–1995 · best 119
+- Anthony Gonzalez · WR · 2007–2011 · best 119
+- Glenn Doughty · WR · 1972–1979 · best 111
+- Jerome Pathon · WR · 1999–2001 · best 107
+- Terrence Wilkins · WR · 1999–2006 · best 95
+- Andre Johnson · WR · 2015 · best 95 · cutout elsewhere
+- Marty Domres · QB · 1972–1975 · best 94
+- Bill Troup · QB · 1974–1978 · best 94
+- Ken Dilger · TE · 1999–2001 · best 93
+- Tom Mitchell · WR · 1970–1973 · best 92
+- James Mungro · RB · 2002–2005 · best 92
+- Roosevelt Leaks · RB · 1975–1979 · best 89
+- Raymond Chester · WR · 1973–1977 · best 87
+- Roosevelt Potts · RB · 1993–1997 · best 87
+- Qadry Ismail · WR · 2002 · best 86
+- Don Nottingham · RB · 1971–1973 · best 84
+- Stanley Morgan · WR · 1990 · best 78
+- Gary Hogeboom · QB · 1986–1988 · best 77
+- John Mackey · WR · 1970–1971 · best 74 · cutout elsewhere
+- Don Hardeman · RB · 1978–1979 · best 69
+- Zack Crockett · RB · 1995–1998 · best 55 · cutout elsewhere
+- Freddie Scott · WR · 1974–1977 · best 48
+- Tom Nowatzke · RB · 1970–1972 · best 42
+- Jerry Hill · RB · 1970 · best 34
+- Kerry Collins · QB · 2011 · best 20 · cutout elsewhere
+
+## Jacksonville Jaguars (JAX) — 40
+
+- Maurice Jones-Drew · RB · 2006–2013 · best 297
+- Allen Robinson · WR · 2014–2017 · best 264 · ESPN face, cutout elsewhere
+- Jimmy Smith · WR · 1995–2005 · best 256
+- Brian Thomas · WR · 2024–2025 · best 237
+- David Garrard · QB · 2002–2010 · best 220
+- Leonard Fournette · RB · 2017–2019 · best 220 · cutout elsewhere
+- Keenan McCardell · WR · 1996–2001 · best 192
+- Calvin Ridley · WR · 2023 · best 192 · ESPN face, cutout elsewhere
+- DJ Chark · WR · 2018–2021 · best 189
+- D.J. Chark · WR · 2018–2021 · best 187
+- James Stewart · RB · 1995–1999 · best 185
+- Byron Leftwich · QB · 2003–2006 · best 182
+- Stacey Mack · RB · 1999–2002 · best 174
+- Cecil Shorts · WR · 2011–2014 · best 164
+- Mike Sims-Walker · WR · 2008–2010 · best 158
+- Zay Jones · WR · 2022–2023 · best 157 · cutout elsewhere
+- Justin Blackmon · WR · 2012–2013 · best 152
+- Mike Thomas · WR · 2009–2012 · best 150
+- T.J. Yeldon · RB · 2015–2018 · best 145
+- Natrone Means · RB · 1996–1997 · best 144
+- Dede Westbrook · WR · 2017–2020 · best 144
+- Marvin Jones Jr. · WR · 2021–2022 · best 144
+- Chris Conley · WR · 2019–2020 · best 133
+- Ernest Wilford · WR · 2004–2010 · best 131
+- Laviska Shenault Jr. · WR · 2020–2021 · best 129
+- Keelan Cole · WR · 2017–2020 · best 128
+- Laviska Shenault · WR · 2020–2021 · best 128
+- Kyle Brady · TE · 1999–2006 · best 123 · cutout elsewhere
+- Matt Jones · WR · 2005–2008 · best 117
+- Willie Jackson · WR · 1995–1997 · best 111
+- Dennis Northcutt · WR · 2007–2008 · best 109
+- Donte Moncrief · WR · 2018 · best 106 · cutout elsewhere
+- Rashad Jennings · RB · 2009–2012 · best 105 · cutout elsewhere
+- Torry Holt · WR · 2009 · best 96 · cutout elsewhere
+- Greg Jones · RB · 2004–2012 · best 93
+- Andre Rison · WR · 1996 · best 75
+- Ernest Givins · WR · 1995 · best 61
+- Steve Beuerlein · QB · 1995 · best 50
+- Vaughn Dunbar · RB · 1995 · best 50
+- Jamaal Charles · RB · 2018 · best 2 · ESPN face, cutout elsewhere
+
+## Kansas City Chiefs (KC) — 64
+
+- Priest Holmes · RB · 2001–2007 · best 408
+- Alex Smith · QB · 2013–2017 · best 300 · cutout elsewhere
+- Travis Kelce · TE · 2013–2025 · best 259
+- Bill Kenney · QB · 1980–1988 · best 252
+- Elvis Grbac · QB · 1997–2000 · best 240
+- Steve DeBerg · QB · 1988–1991 · best 226
+- Derrick Alexander · WR · 1998–2001 · best 221
+- Christian Okoye · RB · 1987–1992 · best 219
+- Carlos Carson · WR · 1980–1989 · best 215
+- Tony Reed · RB · 1977–1980 · best 202
+- Steve Bono · QB · 1994–1996 · best 199
+- Jeremy Maclin · WR · 2015–2016 · best 198 · cutout elsewhere
+- Andre Rison · WR · 1997–1999 · best 187
+- Eddie Kennison · WR · 2002–2007 · best 187
+- Otis Taylor · WR · 1970–1975 · best 182
+- Marcus Allen · RB · 1994–1997 · best 178 · cutout elsewhere
+- Stephone Paige · WR · 1983–1991 · best 176
+- MacArthur Lane · RB · 1975–1978 · best 174
+- Spencer Ware · RB · 2015–2019 · best 173
+- Jerick McKinnon · RB · 2021–2023 · best 166 · cutout elsewhere
+- Tony Richardson · RB · 1999–2005 · best 162
+- Ed Podolak · RB · 1970–1977 · best 158
+- Clyde Edwards-Helaire · RB · 2020–2023 · best 158
+- Ted McKnight · RB · 1977–1981 · best 155
+- Walter White · WR · 1975–1979 · best 148
+- Joe Delaney · RB · 1981–1982 · best 148
+- Len Dawson · QB · 1970–1975 · best 147
+- Derrick Blaylock · RB · 2002–2004 · best 145
+- Justin Fields · QB · 2025 · best 144 · ESPN face, cutout elsewhere
+- Mike Livingston · QB · 1970–1979 · best 142
+- Henry Marshall · WR · 1976–1987 · best 142
+- Johnnie Morton · WR · 2002–2004 · best 132
+- Herman Heard · RB · 1984–1989 · best 129
+- Dexter McCluster · WR · 2010–2013 · best 128
+- Kimble Anders · RB · 1991–2000 · best 127
+- Rich Gannon · QB · 1995–1998 · best 126
+- J.T. Smith · WR · 1978–1984 · best 125
+- Damien Williams · RB · 2018–2019 · best 125 · cutout elsewhere
+- Steve Breaston · WR · 2011–2012 · best 124 · cutout elsewhere
+- Barry Word · RB · 1990–1992 · best 122
+- Woody Green · RB · 1974–1976 · best 118
+- Steve Fuller · QB · 1979–1982 · best 118
+- Donnell Bennett · RB · 1994–2000 · best 118
+- Joe Horn · WR · 1996–1999 · best 114
+- Sammy Watkins · WR · 2018–2020 · best 111 · ESPN face, cutout elsewhere
+- Billy Jackson · RB · 1981–1984 · best 110
+- Knile Davis · RB · 2013–2016 · best 109
+- Bam Morris · RB · 1998–1999 · best 106
+- Marquez Valdes-Scantling · WR · 2022–2023 · best 101
+- Greg Hill · RB · 1994–1997 · best 100
+- Marc Boerigter · WR · 2002–2005 · best 100
+- Webster Slaughter · WR · 1995 · best 92
+- Harvey Williams · RB · 1991–1993 · best 83
+- Todd Blackledge · QB · 1983–1987 · best 82
+- Dave Krieg · QB · 1993 · best 75
+- Pete Mandley · WR · 1989–1990 · best 69
+- Boyce Green · RB · 1986 · best 67
+- Mike Pruitt · RB · 1985–1986 · best 66
+- John Brockington · RB · 1977 · best 60
+- Anthony Fasano · TE · 2013–2014 · best 59 · cutout elsewhere
+- Willie Ellison · RB · 1973–1974 · best 58
+- Eric Martin · WR · 1994 · best 47
+- Jim Otis · RB · 1971–1972 · best 43
+- Warren Moon · QB · 1999–2000 · best 12
+
+## Las Vegas Raiders (LV) — 71
+
+- Rich Gannon · QB · 1999–2004 · best 309
+- Charlie Garner · RB · 2001–2003 · best 302
+- Davante Adams · WR · 2022–2024 · best 286 · cutout elsewhere
+- Jeff George · QB · 1997–1998 · best 264
+- LaMont Jordan · RB · 2005–2007 · best 258
+- Darren McFadden · RB · 2008–2014 · best 244 · cutout elsewhere
+- Todd Christensen · WR · 1979–1988 · best 241
+- Tim Brown · WR · 1988–2003 · best 239
+- Ken Stabler · QB · 1970–1979 · best 227
+- Napoleon Kaufman · RB · 1995–2000 · best 224
+- Kerry Collins · QB · 2004–2005 · best 221 · cutout elsewhere
+- Harvey Williams · RB · 1994–1998 · best 220
+- Cliff Branch · WR · 1972–1985 · best 217
+- Jerry Rice · WR · 2001–2003 · best 209 · cutout elsewhere
+- Michael Bush · RB · 2008–2011 · best 204
+- Mark van Eeghen · RB · 1974–1981 · best 203
+- Hunter Renfrow · WR · 2019–2025 · best 203
+- Jeff Hostetler · QB · 1993–1996 · best 197
+- Warren Wells · WR · 1970 · best 184
+- Tyrone Wheatley · RB · 1999–2004 · best 183
+- Jay Schroeder · QB · 1988–1992 · best 181
+- Jerry Porter · WR · 2000–2007 · best 181
+- Charlie Smith · RB · 1970–1974 · best 174
+- Pete Banaszak · RB · 1970–1978 · best 173
+- Dave Casper · WR · 1974–1984 · best 170
+- Nelson Agholor · WR · 2020 · best 162 · cutout elsewhere
+- Bob Chandler · WR · 1980–1982 · best 161
+- Rashad Jennings · RB · 2013 · best 159 · cutout elsewhere
+- Marshawn Lynch · RB · 2017–2018 · best 153 · cutout elsewhere
+- Raymond Chester · WR · 1970–1981 · best 148
+- Terrelle Pryor · WR · 2012–2013 · best 148 · cutout elsewhere
+- Marc Wilson · QB · 1980–1987 · best 147
+- Marv Hubbard · RB · 1970–1975 · best 145
+- Willie Gault · WR · 1989–1993 · best 142
+- Rod Streater · WR · 2012–2015 · best 142
+- Zach Miller · TE · 2007–2010 · best 132 · cutout elsewhere
+- Clarence Davis · RB · 1971–1978 · best 129
+- Rickey Dudley · TE · 1998–2000 · best 129
+- Ronald Curry · WR · 2003–2008 · best 129
+- Bo Jackson · RB · 1987–1990 · best 128
+- Arthur Whittington · RB · 1978–1981 · best 126
+- Mack Hollins · WR · 2022 · best 126
+- Jordy Nelson · WR · 2018 · best 125 · cutout elsewhere
+- Hewritt Dixon · RB · 1970 · best 122
+- Tyrell Williams · WR · 2019 · best 122 · ESPN face, cutout elsewhere
+- Jalen Richard · RB · 2016–2021 · best 121
+- Alexander Mattison · RB · 2024 · best 119
+- Kenny King · RB · 1980–1985 · best 114
+- Jessie Hester · WR · 1985–1987 · best 114
+- Steve Beuerlein · QB · 1987–1990 · best 114
+- Mike Siani · WR · 1972–1977 · best 113
+- Derrick Ramsey · WR · 1978–1983 · best 113
+- Derrick Fenner · RB · 1995–1997 · best 113
+- Andre Rison · WR · 2000 · best 112
+- Doug Martin · RB · 2018 · best 108 · cutout elsewhere
+- Amos Zereoue · RB · 2004 · best 106
+- Rocket Ismail · WR · 1993–1995 · best 101
+- Mychal Rivera · TE · 2013–2016 · best 101
+- Donald Hollas · QB · 1998 · best 94
+- Doug Gabriel · WR · 2003–2005 · best 92
+- James Jett · WR · 1999–2001 · best 87
+- Randy Jordan · RB · 1999–2002 · best 87
+- James Lofton · WR · 1988 · best 69 · cutout elsewhere
+- Vince Evans · QB · 1987–1995 · best 65
+- Wade Wilson · QB · 1998 · best 47
+- Tom Rathman · WR · 1994 · best 44
+- Carl Garrett · RB · 1976–1977 · best 42
+- Rod Sherman · WR · 1970–1971 · best 36
+- Austin Hooper · TE · 2023 · best 36 · cutout elsewhere
+- Jason Witten · TE · 2020 · best 25 · cutout elsewhere
+- Maurice Jones-Drew · RB · 2014 · best 21
+
+## Los Angeles Chargers (LAC) — 55
+
+- John Jefferson · WR · 1978–1980 · best 255 · cutout elsewhere
+- Tony Martin · WR · 1994–1997 · best 244
+- Drew Brees · QB · 2001–2005 · best 243 · cutout elsewhere
+- Natrone Means · RB · 1993–1999 · best 240
+- Stan Humphries · QB · 1992–1997 · best 212
+- Earnest Jackson · RB · 1983–1984 · best 208
+- Ryan Mathews · RB · 2010–2014 · best 207 · cutout elsewhere
+- Mike Williams Jr. · WR · 2017–2023 · best 207
+- Clarence Williams · RB · 1977–1981 · best 206
+- Vincent Jackson · WR · 2005–2011 · best 206 · cutout elsewhere
+- Curtis Conway · WR · 2000–2002 · best 200
+- Marion Butts · RB · 1989–1993 · best 190
+- Doug Flutie · QB · 2001–2004 · best 184
+- Keenan McCardell · WR · 2004–2006 · best 181
+- Cid Edwards · RB · 1972–1974 · best 178
+- Mike Tolbert · RB · 2008–2011 · best 175 · cutout elsewhere
+- Rickey Young · RB · 1975–1977 · best 174
+- Ronnie Harmon · WR · 1990–1995 · best 170
+- Mike Garrett · RB · 1970–1973 · best 169
+- David Boston · WR · 2003 · best 163
+- Billy Joe Tolliver · QB · 1989–1990 · best 151
+- John Friesz · QB · 1990–1993 · best 149
+- Darren Sproles · RB · 2005–2010 · best 149 · cutout elsewhere
+- Eddie Royal · WR · 2012–2014 · best 149 · cutout elsewhere
+- Jeff Graham · WR · 1999–2001 · best 142
+- Rod Bernstine · RB · 1987–1992 · best 141
+- Gary Brown · RB · 1997 · best 139
+- Jim Harbaugh · QB · 1999–2000 · best 138
+- Dontrelle Inman · WR · 2014–2019 · best 134 · cutout elsewhere
+- Josh Palmer · WR · 2021–2024 · best 131 · cutout elsewhere
+- Branden Oliver · RB · 2014–2017 · best 127
+- Leonard Russell · RB · 1996 · best 126
+- Danario Alexander · WR · 2012 · best 126 · cutout elsewhere
+- Freddie Jones · TE · 1999–2001 · best 125
+- Eric Parker · WR · 2002–2006 · best 125
+- James Brooks · RB · 1981–1983 · best 118
+- Terrell Fletcher · RB · 1995–2002 · best 116
+- Gerald Everett · TE · 2022–2023 · best 111
+- Billy Parks · WR · 1971 · best 109
+- Jared Cook · TE · 2021 · best 108 · cutout elsewhere
+- Ryan Leaf · QB · 1998–2000 · best 94
+- Jerry LeVias · WR · 1971–1974 · best 90
+- Ed Luther · QB · 1980–1984 · best 86
+- Craig Whelihan · QB · 1997–1998 · best 85
+- John Cappelletti · RB · 1980–1983 · best 82
+- Eric Metcalf · WR · 1997 · best 81
+- Quinn Early · WR · 1988–1990 · best 80
+- Mark Malone · QB · 1988 · best 74 · cutout elsewhere
+- Darrin Nelson · RB · 1989–1990 · best 66
+- Joe Washington · RB · 1977 · best 60
+- James Harris · QB · 1977–1979 · best 59
+- Dave Williams · RB · 1972–1973 · best 58 · cutout elsewhere
+- Mercury Morris · RB · 1976 · best 45
+- Clint Jones · RB · 1973 · best 35
+- Jim Everett · QB · 1997 · best 18
+
+## Los Angeles Rams (LAR) — 69
+
+- Marshall Faulk · RB · 1999–2005 · best 410
+- Jim Everett · QB · 1986–1993 · best 265
+- Marc Bulger · QB · 2002–2009 · best 250
+- Henry Ellard · WR · 1983–1993 · best 242
+- Greg Bell · RB · 1987–1989 · best 242
+- Vince Ferragamo · QB · 1977–1984 · best 229
+- Jerome Bettis · RB · 1993–1995 · best 218 · cutout elsewhere
+- Robert Delpino · RB · 1988–1992 · best 212
+- Charles White · RB · 1985–1988 · best 211
+- Cleveland Gary · RB · 1989–1993 · best 210
+- Lawrence McCutcheon · RB · 1972–1979 · best 207
+- Harold Jackson · WR · 1973–1977 · best 185
+- Cullen Bryant · RB · 1973–1987 · best 180
+- Steve Smith · WR · 2012 · best 178 · ESPN face
+- Tavon Austin · WR · 2013–2017 · best 171 · cutout elsewhere
+- Zac Stacy · RB · 2013–2014 · best 169
+- Elvis Peacock · RB · 1979–1980 · best 164
+- Chris Miller · QB · 1994–1995 · best 162
+- Brandon Lloyd · WR · 2011 · best 161 · cutout elsewhere
+- Kenny Britt · WR · 2014–2016 · best 160 · cutout elsewhere
+- John Hadl · QB · 1973–1974 · best 157
+- Dieter Brock · QB · 1985 · best 157
+- Jack Snow · WR · 1970–1975 · best 153
+- Les Josephson · RB · 1970–1974 · best 153
+- Pat Haden · QB · 1976–1981 · best 153
+- Kevin Curtis · WR · 2003–2006 · best 153 · cutout elsewhere
+- Willie Ellison · RB · 1970–1972 · best 148
+- Trent Green · QB · 1999–2008 · best 148 · cutout elsewhere
+- Jim Bertelsen · RB · 1972–1976 · best 144
+- Amp Lee · RB · 1997–1999 · best 141
+- John Cappelletti · RB · 1974–1978 · best 135
+- Sony Michel · RB · 2021 · best 135 · cutout elsewhere
+- Cam Akers · RB · 2020–2022 · best 134 · cutout elsewhere
+- Ron Jessie · WR · 1975–1979 · best 133
+- Willie Miller · WR · 1978–1982 · best 129
+- Az-Zahir Hakim · WR · 1999–2001 · best 129
+- James Harris · QB · 1973–1976 · best 127
+- Sammy Watkins · WR · 2017 · best 127 · ESPN face, cutout elsewhere
+- Jeff Kemp · QB · 1981–1985 · best 126
+- Donnie Avery · WR · 2008–2009 · best 125 · cutout elsewhere
+- Tre Mason · RB · 2014–2015 · best 125
+- Harold Green · RB · 1996 · best 121
+- Lance Rentzel · WR · 1971–1974 · best 116
+- Larry Smith · RB · 1970–1973 · best 114
+- Lawrence Phillips · RB · 1996–1997 · best 114
+- Chris Givens · WR · 2012–2014 · best 112
+- Austin Davis · QB · 2014 · best 112 · cutout elsewhere
+- Pete Holohan · WR · 1988–1990 · best 110 · cutout elsewhere
+- Mike Barber · WR · 1982–1985 · best 109
+- Demarcus Robinson · WR · 2023–2024 · best 108 · cutout elsewhere
+- Ricky Proehl · WR · 1999–2002 · best 107
+- Jessie Hester · WR · 1994–1995 · best 106
+- Trung Canidate · RB · 2000–2002 · best 100
+- Ernie Conwell · TE · 1999–2002 · best 91
+- Mark Rypien · QB · 1995–1997 · best 86
+- Shaun McDonald · WR · 2003–2006 · best 86
+- Randy McMichael · TE · 2007–2009 · best 80 · cutout elsewhere
+- Billy Truax · WR · 1970 · best 78
+- Tony Baker · RB · 1973–1974 · best 76
+- Drew Hill · WR · 1979–1984 · best 70
+- David Hill · WR · 1983–1987 · best 52
+- Pat Studstill · WR · 1970 · best 49
+- Greg Hill · RB · 1998 · best 49
+- Steve Bono · QB · 1998 · best 48
+- Ryan Fitzpatrick · QB · 2005–2006 · best 48 · cutout elsewhere
+- Steve Dils · QB · 1984–1987 · best 42
+- Tommy Mason · RB · 1970 · best 35
+- Bert Jones · QB · 1982 · best 32
+- Wes Welker · WR · 2015 · best 17 · cutout elsewhere
+
+## Miami Dolphins (MIA) — 76
+
+- Mark Clayton · WR · 1983–1993 · best 281
+- Raheem Mostert · RB · 2022–2025 · best 255
+- Ryan Fitzpatrick · QB · 2019–2020 · best 246 · cutout elsewhere
+- Jay Fiedler · QB · 2000–2004 · best 239
+- Mark Duper · WR · 1982–1992 · best 231
+- Lamar Smith · RB · 2000–2001 · best 230
+- Chris Chambers · WR · 2001–2006 · best 224 · cutout elsewhere
+- Lorenzo Hampton · RB · 1985–1989 · best 222
+- Karim Abdul-Jabbar · RB · 1996–1999 · best 220
+- Chad Pennington · QB · 2008–2010 · best 218 · cutout elsewhere
+- DeVante Parker · WR · 2015–2021 · best 210
+- Irving Fryar · WR · 1993–1995 · best 206
+- Jay Ajayi · RB · 2015–2017 · best 198 · cutout elsewhere
+- Brandon Marshall · WR · 2010–2011 · best 197 · ESPN face, cutout elsewhere
+- Delvin Williams · RB · 1978–1980 · best 194
+- Reggie Bush · RB · 2011–2012 · best 194 · cutout elsewhere
+- Tony Nathan · WR · 1979–1987 · best 192
+- Bernie Parmalee · RB · 1992–1998 · best 192
+- O.J. McDuffie · WR · 1993–2000 · best 192
+- Terry Kirby · RB · 1993–1995 · best 190
+- Nat Moore · WR · 1974–1986 · best 189
+- Mercury Morris · RB · 1970–1975 · best 180
+- Gus Frerotte · QB · 2005 · best 179 · cutout elsewhere
+- Kenyan Drake · RB · 2016–2018 · best 178 · cutout elsewhere
+- Larry Csonka · RB · 1970–1979 · best 177
+- Mike Wallace · WR · 2013–2014 · best 177
+- Jay Cutler · QB · 2017 · best 166 · cutout elsewhere
+- Tony Martin · WR · 1990–2000 · best 164
+- Troy Stradford · WR · 1987–1990 · best 162
+- Charles Clay · TE · 2011–2014 · best 154 · cutout elsewhere
+- Keith Byars · WR · 1993–1996 · best 149
+- Kenny Stills · WR · 2015–2018 · best 148 · cutout elsewhere
+- Jeffery Wilson · RB · 2022–2024 · best 148 · cutout elsewhere
+- Myles Gaskin · RB · 2019–2022 · best 147
+- Mark Higgs · RB · 1990–1994 · best 146
+- Don Nottingham · RB · 1973–1977 · best 145
+- Sammie Smith · RB · 1989–1991 · best 140
+- Randy McMichael · TE · 2002–2006 · best 140 · cutout elsewhere
+- Marty Booker · WR · 2004–2007 · best 140 · cutout elsewhere
+- Keith Jackson · WR · 1993–1994 · best 139
+- Oronde Gadsden · WR · 1999–2003 · best 138
+- David Woodley · QB · 1980–1983 · best 134
+- Bobby Humphrey · RB · 1992 · best 133
+- Norm Bulaich · RB · 1975–1979 · best 131
+- Jim Jensen · WR · 1981–1992 · best 127
+- Benny Malone · RB · 1974–1978 · best 113
+- James McKnight · WR · 2001–2003 · best 112
+- Sammy Morris · RB · 2004–2006 · best 112 · cutout elsewhere
+- Andra Franklin · RB · 1981–1984 · best 111
+- Scott Mitchell · QB · 1991–1993 · best 111
+- Cleo Lemon · QB · 2006–2007 · best 110
+- Joey Harrington · QB · 2006 · best 109
+- Wes Welker · WR · 2004–2006 · best 108 · cutout elsewhere
+- A.J. Feeley · QB · 2004–2005 · best 102 · cutout elsewhere
+- Greg Camarillo · WR · 2007–2009 · best 101
+- Stanley Pritchett · RB · 1999 · best 98
+- Frank Gore · RB · 2018 · best 97 · cutout elsewhere
+- J.J. Johnson · RB · 1999–2001 · best 95
+- Earl Morrall · QB · 1972–1976 · best 91 · cutout elsewhere
+- Fred Barnett · WR · 1996–1997 · best 90
+- Eric Green · TE · 1995 · best 89
+- Travis Minor · RB · 2001–2006 · best 87 · cutout elsewhere
+- Damon Huard · QB · 1999–2000 · best 84
+- Freddie Solomon · WR · 1975–1977 · best 83
+- Gary Clark · WR · 1995 · best 83
+- Steve DeBerg · QB · 1993 · best 78
+- Darren Waller · TE · 2025 · best 77 · ESPN face, cutout elsewhere
+- Don Strock · QB · 1974–1987 · best 75
+- Randal Hill · WR · 1991–1996 · best 73
+- Marlin Briscoe · WR · 1972–1974 · best 71
+- John Avery · RB · 1998–1999 · best 70
+- Pete Johnson · RB · 1984 · best 68
+- Thurman Thomas · RB · 2000 · best 31
+- Ron Jaworski · QB · 1987–1989 · best 21 · cutout elsewhere
+- Cris Carter · WR · 2002 · best 15
+- Desmond Clark · TE · 2002 · best 5 · cutout elsewhere
+
+## Minnesota Vikings (MIN) — 65
+
+- Daunte Culpepper · QB · 1999–2005 · best 367 · cutout elsewhere
+- Chuck Foreman · RB · 1973–1980 · best 341
+- Randy Moss · WR · 1998–2004 · best 321 · cutout elsewhere
+- Dalvin Cook · RB · 2017–2022 · best 311 · ESPN face
+- Cris Carter · WR · 1990–2001 · best 300
+- Randall Cunningham · QB · 1997–1999 · best 293
+- Warren Moon · QB · 1994–1996 · best 287
+- Terry Allen · RB · 1991–1994 · best 282
+- Robert Smith · RB · 1993–2000 · best 261
+- Ted Brown · RB · 1979–1986 · best 259
+- Tommy Kramer · QB · 1977–1989 · best 237
+- Sidney Rice · WR · 2007–2010 · best 219
+- Moe Williams · RB · 1999–2005 · best 217
+- Michael Bennett · RB · 2001–2005 · best 213
+- Jake Reed · WR · 1991–2001 · best 210
+- Ahmad Rashad · WR · 1976–1982 · best 208
+- Darrin Nelson · RB · 1982–1992 · best 201
+- Rickey Young · RB · 1978–1983 · best 197
+- Nate Burleson · WR · 2003–2005 · best 194 · cutout elsewhere
+- Anthony Carter · WR · 1985–1993 · best 193
+- Joe Senser · WR · 1980–1984 · best 182
+- Jeff George · QB · 1999 · best 181
+- Herschel Walker · RB · 1989–1991 · best 179
+- T.J. Hockenson · TE · 2022–2025 · best 172 · ESPN face
+- John Gilliam · WR · 1972–1975 · best 171
+- Sammy White · WR · 1976–1985 · best 169
+- Bernard Berrian · WR · 2008–2011 · best 165
+- Wade Wilson · QB · 1981–1991 · best 161
+- Steve Jordan · WR · 1982–1994 · best 151
+- Latavius Murray · RB · 2017–2018 · best 149 · cutout elsewhere
+- Bob Grim · WR · 1970–1977 · best 146
+- Steve Dils · QB · 1979–1984 · best 142
+- Amp Lee · RB · 1994–1996 · best 140
+- Rich Gannon · QB · 1987–1992 · best 139
+- Leroy Hoard · RB · 1996–1999 · best 137
+- Marcus Robinson · WR · 2004–2006 · best 137
+- Mewelde Moore · RB · 2004–2007 · best 135
+- Onterrio Smith · RB · 2003–2004 · best 134
+- K.J. Osborn · WR · 2021–2023 · best 134
+- Tony Galbreath · RB · 1981–1983 · best 133
+- Jermaine Wiggins · TE · 2004–2006 · best 130
+- Ed Marinaro · RB · 1972–1975 · best 127
+- Rick Fenney · RB · 1987–1991 · best 127
+- Dave Osborn · RB · 1970–1975 · best 126
+- Tarvaris Jackson · QB · 2006–2010 · best 126 · cutout elsewhere
+- Qadry Ismail · WR · 1993–1996 · best 118
+- D'Wayne Bates · WR · 2002–2003 · best 118
+- Alexander Mattison · RB · 2019–2023 · best 118
+- Matt Cassel · QB · 2013–2014 · best 114 · cutout elsewhere
+- Byron Chamberlain · TE · 2001–2002 · best 111
+- Travis Taylor · WR · 2005–2006 · best 110
+- Alfred Anderson · RB · 1984–1991 · best 108
+- Bobby Wade · WR · 2007–2008 · best 108
+- Tyler Conklin · TE · 2018–2021 · best 107
+- Clint Jones · RB · 1970–1972 · best 97
+- Oscar Reed · RB · 1970–1974 · best 97
+- Kelly Campbell · WR · 2002–2004 · best 94
+- Jimmy Kleinsasser · TE · 1999–2011 · best 89
+- Gary Cuozzo · QB · 1970–1971 · best 87
+- Bob Tucker · WR · 1977–1980 · best 74
+- Barry Word · RB · 1993 · best 67
+- Donovan McNabb · QB · 2011 · best 65 · cutout elsewhere
+- Sam McCullum · WR · 1974–1983 · best 54
+- Roger Craig · RB · 1993 · best 50
+- Bob Lee · QB · 1970–1978 · best 39
+
+## New England Patriots (NE) — 64
+
+- Steve Grogan · QB · 1975–1990 · best 282
+- Curtis Martin · RB · 1995–1997 · best 274
+- Cam Newton · QB · 2020 · best 265 · cutout elsewhere
+- Corey Dillon · RB · 2004–2006 · best 251
+- Stanley Morgan · WR · 1977–1989 · best 249
+- Robert Edwards · RB · 1998 · best 224
+- Antowain Smith · RB · 2001–2003 · best 214
+- Tony Eason · QB · 1983–1989 · best 213
+- Troy Brown · WR · 1993–2007 · best 210
+- Ben Coates · TE · 1991–1999 · best 205
+- Stevan Ridley · RB · 2011–2014 · best 202
+- Damien Harris · RB · 2019–2022 · best 199
+- Mack Herron · RB · 1973–1975 · best 197
+- Terry Glenn · WR · 1996–2001 · best 194
+- Tony Collins · RB · 1981–1987 · best 188
+- Leonard Russell · RB · 1991–1993 · best 180
+- Sam Cunningham · RB · 1973–1982 · best 176
+- Brandon LaFell · WR · 2014–2015 · best 173 · cutout elsewhere
+- Andy Johnson · RB · 1974–1981 · best 169
+- Randy Vataha · WR · 1971–1976 · best 167
+- Harold Jackson · WR · 1978–1981 · best 167
+- Don Calhoun · RB · 1975–1981 · best 155
+- Derrick Ramsey · WR · 1983–1985 · best 154
+- Terry Allen · RB · 1999 · best 154
+- John Stephens · RB · 1988–1992 · best 152
+- Brandon Lloyd · WR · 2012 · best 152 · cutout elsewhere
+- Kendrick Bourne · WR · 2021–2024 · best 152 · cutout elsewhere
+- Irving Fryar · WR · 1984–1992 · best 151
+- Michael Timpson · WR · 1989–1994 · best 151
+- Ezekiel Elliott · RB · 2023 · best 149 · cutout elsewhere
+- Vincent Brisby · WR · 1993–1999 · best 148
+- Leroy Thompson · RB · 1994 · best 148
+- David Patten · WR · 2001–2004 · best 145
+- Laurence Maroney · RB · 2006–2009 · best 145
+- Hugh Millen · QB · 1991–1992 · best 141
+- Martellus Bennett · TE · 2016 · best 141 · cutout elsewhere
+- Shane Vereen · RB · 2011–2014 · best 140 · cutout elsewhere
+- Marv Cook · WR · 1989–1993 · best 136
+- Russ Francis · WR · 1975–1988 · best 135
+- David Givens · WR · 2002–2005 · best 133
+- Marion Butts · RB · 1994 · best 126
+- Shawn Jefferson · WR · 1999 · best 126
+- Carl Garrett · RB · 1970–1972 · best 125
+- Darryl Stingley · WR · 1973–1977 · best 125
+- Josh Gordon · WR · 2018 · best 118 · cutout elsewhere
+- Vagas Ferguson · RB · 1980–1982 · best 116
+- Reggie Rucker · WR · 1971–1974 · best 115
+- Demario Douglas · WR · 2023–2025 · best 115
+- Donte' Stallworth · WR · 2007–2012 · best 112 · cutout elsewhere
+- Bob Perryman · RB · 1987–1990 · best 98
+- Daniel Graham · TE · 2002–2006 · best 93 · cutout elsewhere
+- Austin Hooper · TE · 2024 · best 86 · cutout elsewhere
+- J.R. Redmond · RB · 2000–2002 · best 81
+- Marc Wilson · QB · 1989–1990 · best 78
+- Matt Cavanaugh · QB · 1979–1982 · best 72
+- Bob Windsor · WR · 1972–1975 · best 66
+- Mark van Eeghen · RB · 1982–1983 · best 61
+- Fred Taylor · RB · 2009–2010 · best 52 · cutout elsewhere
+- Keith Byars · WR · 1996–1997 · best 51
+- Larry Centers · RB · 2003 · best 34
+- Alge Crumpler · TE · 2010 · best 20
+- Steven Jackson · RB · 2015 · best 14 · cutout elsewhere
+- Vinny Testaverde · QB · 2006 · best 4 · cutout elsewhere
+- Kellen Winslow Jr. · TE · 2012 · best 2
+
+## New Orleans Saints (NO) — 82
+
+- Michael Thomas · WR · 2016–2023 · best 299
+- Dalton Hilliard · RB · 1986–1993 · best 298
+- Deuce McAllister · RB · 2001–2008 · best 290
+- Chuck Muncie · RB · 1976–1980 · best 267 · cutout elsewhere
+- Jimmy Graham · TE · 2010–2023 · best 261 · cutout elsewhere
+- George Rogers · RB · 1981–1984 · best 257
+- Joe Horn · WR · 2000–2006 · best 253
+- Aaron Brooks · QB · 2000–2005 · best 251
+- Jim Everett · QB · 1994–1996 · best 249
+- Mark Ingram · RB · 2011–2022 · best 249 · ESPN face, cutout elsewhere
+- Mark Ingram II · RB · 2011–2022 · best 246 · ESPN face, cutout elsewhere
+- Ricky Williams · RB · 1999–2001 · best 236 · cutout elsewhere
+- Tony Galbreath · RB · 1976–1980 · best 198
+- Quinn Early · WR · 1991–1995 · best 195
+- Eric Martin · WR · 1985–1993 · best 193
+- Rueben Mayes · RB · 1986–1990 · best 193
+- Bobby Hebert · QB · 1986–1991 · best 191
+- Wes Chandler · WR · 1978–1981 · best 175 · cutout elsewhere
+- Willie Jackson · WR · 2000–2001 · best 175
+- Floyd Turner · WR · 1989–1993 · best 171
+- Donte' Stallworth · WR · 2002–2005 · best 170 · cutout elsewhere
+- Michael Haynes · WR · 1994–1996 · best 169
+- Wayne Wilson · RB · 1979–1986 · best 161
+- Mario Bates · RB · 1994–1997 · best 158
+- Ben Watson · WR · 2013–2018 · best 154 · cutout elsewhere
+- Willie Snead · WR · 2015–2017 · best 154 · cutout elsewhere
+- Taysom Hill · TE · 2018–2025 · best 149
+- Jeff Blake · QB · 2000–2001 · best 146
+- Jared Cook · TE · 2019–2020 · best 146 · cutout elsewhere
+- Lonzell Hill · WR · 1987–1990 · best 140
+- Latavius Murray · RB · 2019–2020 · best 140 · cutout elsewhere
+- Eddie Kennison · WR · 1999 · best 139
+- Henry Childs · WR · 1974–1980 · best 138
+- Keith Poole · WR · 1999–2000 · best 135
+- Ted Ginn · WR · 2017–2019 · best 133 · cutout elsewhere
+- Emmanuel Sanders · WR · 2020 · best 133 · cutout elsewhere
+- Alvin Maxson · RB · 1974–1976 · best 132
+- Wade Wilson · QB · 1993–1994 · best 131
+- Derek Brown · TE · 1993–1996 · best 130
+- Andre Hastings · WR · 1997–1999 · best 128
+- Devery Henderson · WR · 2005–2012 · best 128
+- Ike Harris · WR · 1978–1981 · best 124
+- David Patten · WR · 2007–2008 · best 122
+- Wesley Walls · TE · 1994–1995 · best 120
+- Billy Joe Tolliver · QB · 1998–1999 · best 120
+- Dave Wilson · QB · 1981–1988 · best 117
+- Randal Hill · WR · 1997 · best 117
+- Jameis Winston · QB · 2020–2023 · best 117 · cutout elsewhere
+- Tim Hightower · RB · 2015–2016 · best 116 · cutout elsewhere
+- Steve Walsh · QB · 1990–1993 · best 114
+- Richard Todd · QB · 1984–1985 · best 112
+- Gill Fenerty · RB · 1990–1991 · best 112
+- Aaron Stecker · RB · 2004–2008 · best 112
+- Sean Dawkins · WR · 1998 · best 111
+- Coby Fleener · TE · 2016–2017 · best 110 · cutout elsewhere
+- Mike Strachan · WR · 1975–1980 · best 108
+- Dave Parks · WR · 1970–1972 · best 106
+- Jerome Pathon · WR · 2002–2004 · best 102
+- Chris Ivory · RB · 2010–2012 · best 100 · cutout elsewhere
+- Craig Heyward · RB · 1988–1992 · best 99
+- Ken Stabler · QB · 1983–1984 · best 98
+- Boo Williams · WR · 2001–2004 · best 94
+- Bob Newland · WR · 1971–1974 · best 91
+- Antowain Smith · RB · 2005 · best 91
+- Joel Parker · WR · 1974–1977 · best 90
+- Jess Phillips · RB · 1973–1974 · best 88
+- Earl Campbell · RB · 1985 · best 82
+- Vaughn Dunbar · RB · 1992–1995 · best 79
+- Don Herrmann · WR · 1975–1977 · best 71
+- Kerry Collins · QB · 1998 · best 71 · cutout elsewhere
+- Brett Perriman · WR · 1988–1990 · best 68
+- Edd Hargett · QB · 1970–1972 · best 67
+- Bobby Douglass · QB · 1976–1977 · best 60
+- Bobby Scott · QB · 1973–1981 · best 53
+- Tony Baker · RB · 1970–1971 · best 48
+- Haywood Jeffires · WR · 1996 · best 48
+- Heath Shuler · QB · 1997 · best 46
+- Jim Otis · RB · 1970 · best 36
+- Ken Burrough · WR · 1970 · best 33
+- Barry Word · RB · 1987–1988 · best 32
+- Terry Allen · RB · 2000 · best 31
+- Mark Brunell · QB · 2008–2009 · best 3 · cutout elsewhere
+
+## New York Giants (NYG) — 58
+
+- Tiki Barber · RB · 1997–2006 · best 330
+- Joe Morris · RB · 1982–1991 · best 274
+- Ron Johnson · WR · 1970–1975 · best 264
+- Victor Cruz · WR · 2010–2016 · best 247
+- Rodney Hampton · RB · 1989–1997 · best 230
+- Kerry Collins · QB · 1999–2003 · best 228 · cutout elsewhere
+- Fran Tarkenton · QB · 1970–1971 · best 221 · cutout elsewhere
+- Steve Smith · WR · 2007–2010 · best 218 · ESPN face
+- Plaxico Burress · WR · 2005–2008 · best 210 · cutout elsewhere
+- Ottis Anderson · RB · 1986–1992 · best 205 · cutout elsewhere
+- Earnest Gray · WR · 1979–1984 · best 183
+- Derrick Ward · RB · 2004–2008 · best 173 · cutout elsewhere
+- Billy Taylor · RB · 1978–1981 · best 167
+- Jeremy Shockey · TE · 2002–2007 · best 164 · cutout elsewhere
+- Mark Bavaro · WR · 1985–1990 · best 162
+- Lionel Manuel · WR · 1984–1990 · best 160
+- Rob Carpenter · RB · 1981–1985 · best 157
+- Ike Hilliard · WR · 1999–2004 · best 156 · cutout elsewhere
+- Rueben Randle · WR · 2012–2015 · best 156
+- Norm Snead · QB · 1972–1976 · best 148
+- Dave Brown · QB · 1992–1997 · best 147
+- Butch Woolfolk · WR · 1982–1984 · best 145
+- Gary Brown · RB · 1998–1999 · best 144
+- Doug Kotar · RB · 1974–1981 · best 135
+- Joe Dawkins · RB · 1974–1975 · best 130
+- Bob Tucker · WR · 1970–1977 · best 127
+- Clifton McNeil · WR · 1970–1971 · best 126
+- Mark Jackson · WR · 1993–1994 · best 124
+- Devontae Booker · RB · 2021 · best 124 · cutout elsewhere
+- Craig Morton · QB · 1975–1976 · best 122
+- Ron Dayne · RB · 2000–2004 · best 120 · cutout elsewhere
+- Larry Donnell · TE · 2013–2016 · best 118
+- Ed McCaffrey · WR · 1991–1993 · best 116
+- Scott Brunner · QB · 1980–1983 · best 115
+- Joe Jurevicius · WR · 1999–2001 · best 114
+- Kent Graham · QB · 1992–1999 · best 113
+- Dwayne Harris · WR · 2015–2016 · best 112
+- Joe Pisarcik · QB · 1977–1979 · best 109
+- Kevin Boss · TE · 2007–2010 · best 109
+- Danny Kanell · QB · 1996–1998 · best 105
+- Richie James · WR · 2022 · best 104
+- Jake Ballard · TE · 2011 · best 103
+- Jeff Hostetler · QB · 1985–1992 · best 97
+- Pete Mitchell · TE · 1999–2000 · best 97
+- Domenik Hixon · WR · 2007–2012 · best 96
+- Bobby Hammond · RB · 1976–1979 · best 93
+- Walker Gillette · WR · 1974–1976 · best 92
+- Don Herrmann · WR · 1970–1974 · best 87
+- Bob Grim · WR · 1972–1974 · best 87
+- Darren Waller · TE · 2023 · best 87 · ESPN face, cutout elsewhere
+- Larry Csonka · RB · 1977–1978 · best 78
+- Lewis Tillman · RB · 1989–1993 · best 77
+- Randy Johnson · QB · 1971–1973 · best 71
+- Bobby Duhon · RB · 1970–1972 · best 68
+- Tony Galbreath · RB · 1984–1987 · best 68
+- Johnny Roland · RB · 1973 · best 52
+- Kyle Rudolph · TE · 2021 · best 47 · cutout elsewhere
+- Brandon Marshall · WR · 2017 · best 24 · ESPN face, cutout elsewhere
+
+## New York Jets (NYJ) — 63
+
+- Curtis Martin · RB · 1998–2005 · best 299
+- Aaron Rodgers · QB · 2023–2025 · best 268 · cutout elsewhere
+- Vinny Testaverde · QB · 1998–2005 · best 256 · cutout elsewhere
+- Ken O'Brien · QB · 1984–1992 · best 254
+- Freeman McNeil · RB · 1981–1992 · best 240
+- Richard Todd · QB · 1976–1983 · best 216
+- Keyshawn Johnson · WR · 1996–1999 · best 215 · cutout elsewhere
+- Brett Favre · QB · 2008 · best 211 · cutout elsewhere
+- Santana Moss · WR · 2001–2004 · best 210 · cutout elsewhere
+- Al Toon · WR · 1985–1992 · best 208
+- Wesley Walker · WR · 1977–1989 · best 198
+- Johnny Johnson · RB · 1993–1994 · best 194
+- Wayne Chrebet · WR · 1995–2005 · best 194
+- LaDainian Tomlinson · RB · 2010–2011 · best 190 · cutout elsewhere
+- Kevin Long · RB · 1977–1981 · best 181
+- John Riggins · RB · 1971–1974 · best 176
+- Rob Moore · WR · 1990–1994 · best 176
+- Adrian Murrell · RB · 1993–1997 · best 176
+- Neil O'Donnell · QB · 1996–1997 · best 173
+- Robbie Chosen · WR · 2016–2019 · best 169
+- Matt Forte · RB · 2016–2017 · best 168 · ESPN face
+- Bilal Powell · RB · 2011–2019 · best 167
+- Mickey Shuler · TE · 1978–1989 · best 166
+- Boomer Esiason · QB · 1994–1995 · best 166
+- Rich Caster · WR · 1970–1977 · best 163
+- Davante Adams · WR · 2024 · best 161 · cutout elsewhere
+- Jamison Crowder · WR · 2019–2021 · best 159 · cutout elsewhere
+- Clark Gaines · RB · 1976–1980 · best 155
+- Emerson Boozer · RB · 1970–1975 · best 153
+- Richie Anderson · RB · 1999–2002 · best 141
+- Jeff Graham · WR · 1996–1997 · best 140
+- Quincy Enunwa · WR · 2015–2019 · best 140
+- Jerome Barkum · WR · 1972–1983 · best 139
+- Brad Baxter · RB · 1989–1995 · best 139
+- Michael Carter · RB · 2021–2023 · best 136
+- Ray Lucas · QB · 1997–2000 · best 133
+- Frank Reich · QB · 1996 · best 132
+- Isaiah Crowell · RB · 2018 · best 130 · cutout elsewhere
+- Justin McCareins · WR · 2004–2007 · best 129 · cutout elsewhere
+- Dedric Ward · WR · 1999–2000 · best 127
+- Blair Thomas · RB · 1990–1993 · best 125
+- Jeremy Kerley · WR · 2011–2017 · best 121 · cutout elsewhere
+- Pat Ryan · QB · 1978–1989 · best 120
+- Elijah Moore · WR · 2021–2022 · best 117 · cutout elsewhere
+- Scott Dierking · RB · 1977–1983 · best 116
+- Matt Robinson · QB · 1977–1979 · best 116
+- Carl Garrett · RB · 1975 · best 112
+- Chris Burkett · WR · 1989–1993 · best 105
+- David Knight · WR · 1973–1977 · best 102
+- Browning Nagle · QB · 1991–1993 · best 102
+- Chris Johnson · RB · 2014 · best 102 · cutout elsewhere
+- Tyler Conklin · TE · 2022–2024 · best 101
+- Curtis Conway · WR · 2003 · best 99
+- Frank Gore · RB · 2020 · best 92 · cutout elsewhere
+- Brooks Bollinger · QB · 2004–2005 · best 90 · cutout elsewhere
+- Al Woodall · QB · 1970–1974 · best 78
+- Webster Slaughter · WR · 1996 · best 71
+- Ed Marinaro · RB · 1976 · best 69
+- Kellen Winslow Jr. · TE · 2013 · best 66
+- Terance Mathis · WR · 1990–1993 · best 61
+- Keith Byars · WR · 1998 · best 60
+- Eric Green · TE · 1999 · best 19
+- Mark Brunell · QB · 2010–2011 · best 12 · cutout elsewhere
+
+## Philadelphia Eagles (PHI) — 64
+
+- Randall Cunningham · QB · 1985–1995 · best 370
+- Ricky Watters · RB · 1995–1997 · best 279
+- Ron Jaworski · QB · 1977–1986 · best 255 · cutout elsewhere
+- Mike Quick · WR · 1982–1990 · best 253
+- Terrell Owens · WR · 2004–2005 · best 240 · cutout elsewhere
+- Duce Staley · RB · 1997–2003 · best 231
+- Irving Fryar · WR · 1996–1998 · best 229
+- Ty Detmer · QB · 1996–1997 · best 228
+- Steve Smith · WR · 2011 · best 222 · ESPN face
+- Keith Byars · WR · 1986–1992 · best 208
+- Herschel Walker · RB · 1993–1994 · best 197
+- Tom Sullivan · RB · 1972–1977 · best 187
+- Jordan Matthews · TE · 2014–2019 · best 186
+- Fred Barnett · WR · 1990–1995 · best 180
+- James Thrash · WR · 2001–2003 · best 167 · cutout elsewhere
+- Reggie Brown (PHI) · WR · 2005–2009 · best 164
+- Harold Jackson · WR · 1970–1972 · best 163
+- Keith Jackson · WR · 1988–1991 · best 161
+- DeMarco Murray · RB · 2015 · best 160 · cutout elsewhere
+- Charle Young · WR · 1973–1976 · best 157
+- Darren Sproles · RB · 2014–2019 · best 156 · cutout elsewhere
+- Earnest Jackson · RB · 1985 · best 150
+- Todd Pinkston · WR · 2000–2004 · best 150
+- Cris Carter · WR · 1987–1989 · best 149
+- Chris Jones · WR · 1995–1997 · best 149
+- Golden Tate · WR · 2018 · best 144 · cutout elsewhere
+- John Spagnola · WR · 1979–1987 · best 137
+- Norm Snead · QB · 1970 · best 133
+- Rodney Peete · QB · 1995–1998 · best 132
+- Charles Johnson · WR · 1999–2000 · best 132
+- Bubby Brister · QB · 1993–1994 · best 131
+- Anthony Toney · RB · 1986–1990 · best 127
+- Chad Lewis · TE · 1999–2005 · best 126
+- Roman Gabriel · QB · 1974–1977 · best 120 · cutout elsewhere
+- Heath Sherman · RB · 1989–1993 · best 119
+- Lee Bouggess · RB · 1970–1973 · best 117
+- Norm Bulaich · RB · 1973–1974 · best 113
+- Mike Hogan · RB · 1976–1980 · best 113
+- Marquise Brown · WR · 2025 · best 113 · cutout elsewhere
+- Torrance Small · WR · 1999–2000 · best 112
+- Cyril Pinder · RB · 1970 · best 107 · cutout elsewhere
+- Pete Liske · QB · 1971–1972 · best 107
+- Antonio Freeman · WR · 2002 · best 107
+- Ben Hawkins · WR · 1970–1973 · best 106
+- Charlie Garner · RB · 1994–1998 · best 105
+- LeGarrette Blount · RB · 2017 · best 103 · cutout elsewhere
+- Bobby Hoying · QB · 1996–1998 · best 101
+- Gary Ballman · WR · 1970–1972 · best 100
+- Jeff Graham · WR · 1998 · best 96
+- Darnell Autry · RB · 2000 · best 94
+- Chris Warren · RB · 2000 · best 88
+- Michael Timpson · WR · 1997 · best 79
+- John Reaves · QB · 1972–1974 · best 76
+- Po James · RB · 1972–1975 · best 76
+- Mike Boryla · QB · 1974–1976 · best 72
+- Ron Smith · WR · 1981–1983 · best 69
+- Art Malone · RB · 1975–1976 · best 51
+- Roy Green · WR · 1991–1992 · best 51
+- Joe Pisarcik · QB · 1980–1984 · best 50
+- Ronnie Bull · RB · 1971 · best 49
+- Tony Baker · RB · 1971–1972 · best 48
+- Mark Bavaro · WR · 1994–1995 · best 48
+- Julio Jones · WR · 2023 · best 31 · ESPN face, cutout elsewhere
+- Mickey Shuler · TE · 1990–1991 · best 26
+
+## Pittsburgh Steelers (PIT) — 52
+
+- Kordell Stewart · QB · 1995–2002 · best 301
+- Barry Foster · RB · 1990–1994 · best 269
+- Yancey Thigpen · WR · 1992–1997 · best 221
+- Mike Wallace · WR · 2009–2012 · best 220
+- Louis Lipps · WR · 1984–1991 · best 213
+- Plaxico Burress · WR · 2000–2012 · best 212 · cutout elsewhere
+- Bubby Brister · QB · 1986–1992 · best 192
+- Walter Abercrombie · RB · 1982–1987 · best 191
+- Tommy Maddox · QB · 2001–2005 · best 189
+- Lynn Swann · WR · 1974–1982 · best 185
+- Chase Claypool · WR · 2020–2022 · best 181
+- Neil O'Donnell · QB · 1991–1995 · best 180
+- Merril Hoge · RB · 1987–1993 · best 179
+- Russell Wilson · QB · 2024–2025 · best 178 · ESPN face, cutout elsewhere
+- Kenny Pickett · QB · 2022–2023 · best 159
+- Charles Johnson · WR · 1994–1998 · best 156
+- Mike Tomczak · QB · 1993–1999 · best 153
+- John Fuqua · RB · 1970–1976 · best 152
+- Bam Morris · RB · 1994–1995 · best 151
+- Amos Zereoue · RB · 1999–2003 · best 151
+- Frank Pollard · RB · 1980–1988 · best 150
+- Eric Green · TE · 1990–1994 · best 150
+- Andre Hastings · WR · 1993–1996 · best 147
+- Mewelde Moore · RB · 2008–2011 · best 147
+- Ron Shanklin · WR · 1970–1974 · best 144
+- Jerricho Cotchery · WR · 2011–2013 · best 143 · cutout elsewhere
+- Earnest Jackson · RB · 1986–1988 · best 140
+- Richard Huntley · RB · 1999–2000 · best 138
+- Erric Pegram · RB · 1995–1996 · best 133
+- Troy Edwards · WR · 1999–2001 · best 132
+- Cliff Stoudt · QB · 1980–1983 · best 129
+- Leroy Thompson · RB · 1991–1993 · best 125
+- Najeh Davenport · RB · 2006–2008 · best 119
+- Justin Fields · QB · 2024 · best 119 · ESPN face, cutout elsewhere
+- Dave Smith · WR · 1970–1972 · best 117
+- Courtney Hawkins · WR · 1997–2000 · best 116
+- John Williams · RB · 1994–1995 · best 113
+- Eric Ebron · TE · 2020–2021 · best 113 · cutout elsewhere
+- James Washington · WR · 2018–2021 · best 111
+- Tim Worley · RB · 1989–1993 · best 108
+- Nate Washington · WR · 2006–2008 · best 105 · cutout elsewhere
+- Bobby Shaw · WR · 1999–2001 · best 103
+- Antwaan Randle El · RB · 2002–2010 · best 103
+- Jeff Graham · WR · 1991–1993 · best 102
+- Preston Pearson · RB · 1970–1974 · best 98
+- Duce Staley · RB · 2004–2006 · best 94
+- Chris Fuamatu-Ma'afala · RB · 1999–2002 · best 90
+- Frank Lewis · WR · 1971–1977 · best 87
+- David Woodley · QB · 1984–1985 · best 76
+- Joe Gilliam · QB · 1972–1975 · best 59
+- Terry Hanratty · QB · 1970–1975 · best 53
+- Steve Bono · QB · 1987–1988 · best 36
+
+## San Francisco 49ers (SF) — 63
+
+- Christian McCaffrey · RB · 2022–2025 · best 362 · cutout elsewhere
+- Jeff Garcia · QB · 1999–2003 · best 338 · cutout elsewhere
+- Terrell Owens · WR · 1996–2003 · best 286 · cutout elsewhere
+- Garrison Hearst · RB · 1997–2003 · best 284
+- Charlie Garner · RB · 1999–2000 · best 263
+- Derek Loville · RB · 1994–1996 · best 258
+- Ricky Watters · RB · 1992–1994 · best 243
+- John Brodie · QB · 1970–1973 · best 224
+- Alex Smith · QB · 2005–2012 · best 215 · cutout elsewhere
+- Gene Washington · WR · 1970–1977 · best 209
+- Earl Cooper · WR · 1980–1985 · best 208
+- Paul Hofer · RB · 1976–1981 · best 205
+- Delvin Williams · RB · 1974–1977 · best 204
+- Carlos Hyde · RB · 2014–2017 · best 202 · cutout elsewhere
+- John Taylor · WR · 1987–1995 · best 196
+- Steve DeBerg · QB · 1978–1980 · best 193
+- Dwight Clark · WR · 1979–1987 · best 188
+- Kevan Barlow · RB · 2001–2005 · best 185
+- Ken Willard · RB · 1970–1973 · best 174
+- Freddie Solomon · WR · 1978–1985 · best 173
+- Elijah Mitchell · RB · 2021–2023 · best 156
+- Vic Washington · RB · 1971–1973 · best 153
+- Terry Kirby · RB · 1996–1998 · best 148
+- Matt Breida · RB · 2017–2019 · best 148
+- Ted Kwalick · WR · 1970–1974 · best 146
+- Brent Jones · WR · 1987–1997 · best 144
+- Shaun Hill · QB · 2007–2009 · best 143 · cutout elsewhere
+- Wilbur Jackson · RB · 1974–1979 · best 142
+- Tai Streets · WR · 1999–2003 · best 142
+- Tom Rathman · WR · 1986–1993 · best 139
+- Eric Johnson · TE · 2001–2006 · best 134
+- Blaine Gabbert · QB · 2014–2016 · best 133 · cutout elsewhere
+- Joe Cribbs · RB · 1986–1987 · best 131
+- J.J. Stokes · WR · 1999–2002 · best 128
+- Jeff Moore · WR · 1982–1983 · best 127
+- Brandon Lloyd · WR · 2003–2014 · best 125 · cutout elsewhere
+- Tevin Coleman · RB · 2019–2022 · best 125
+- Larry Schreiber · RB · 1971–1975 · best 120
+- Antonio Bryant · WR · 2006 · best 111
+- Jeremy Kerley · WR · 2016 · best 111 · cutout elsewhere
+- Cedrick Wilson · WR · 2002–2004 · best 106
+- O. J. Simpson · RB · 1978–1979 · best 105 · cutout elsewhere
+- Steve Bono · QB · 1989–1993 · best 105
+- Tim Rattay · QB · 2000–2005 · best 100
+- Jeff Kemp · QB · 1986 · best 98
+- Doug Cunningham · RB · 1970–1973 · best 93
+- Fred Beasley · RB · 1999–2005 · best 92
+- Charle Young · WR · 1980–1982 · best 89
+- Russ Francis · WR · 1982–1987 · best 88
+- Brian Westbrook · RB · 2010 · best 87 · cutout elsewhere
+- Elvis Grbac · QB · 1994–1996 · best 86
+- Norm Snead · QB · 1974–1975 · best 80
+- Tom Owen · QB · 1974–1975 · best 78
+- Amp Lee · RB · 1992–1993 · best 78
+- O.J. Simpson · RB · 1979 · best 72 · cutout elsewhere
+- Danny Abramowicz · WR · 1973–1974 · best 68 · cutout elsewhere
+- Bob Windsor · WR · 1970–1971 · best 64
+- Tom Mitchell · WR · 1974–1977 · best 63
+- Tommy Vardell · RB · 1996–1999 · best 63
+- Jordan Reed · TE · 2020 · best 60 · cutout elsewhere
+- Dick Witcher · WR · 1970–1973 · best 52
+- Steve Young · QB · 1999 · best 29
+- Wesley Walls · TE · 1989–1993 · best 10
+
+## Seattle Seahawks (SEA) — 47
+
+- Shaun Alexander · RB · 2000–2007 · best 369 · cutout elsewhere
+- Dave Krieg · QB · 1980–1991 · best 281
+- Curt Warner · RB · 1983–1990 · best 277
+- Chris Warren · RB · 1990–1997 · best 263
+- Ricky Watters · RB · 1998–2001 · best 261
+- Sherman Smith · RB · 1976–1982 · best 239
+- Warren Moon · QB · 1997–1998 · best 231
+- John Williams · RB · 1986–1993 · best 224
+- Joey Galloway · WR · 1995–1999 · best 213 · cutout elsewhere
+- Jim Zorn · QB · 1976–1984 · best 208
+- Jon Kitna · QB · 1997–2000 · best 204
+- Darrell Jackson · WR · 2000–2006 · best 204
+- Koren Robinson · WR · 2001–2008 · best 199
+- Bobby Engram · WR · 2001–2008 · best 196
+- Derrick Fenner · RB · 1989–1991 · best 193
+- David Sims · RB · 1977–1979 · best 192
+- Brian Blades · WR · 1988–1998 · best 175
+- Derrick Mayes · WR · 1999–2000 · best 174
+- Sean Dawkins · WR · 1999–2000 · best 168
+- Dan Doornink · WR · 1979–1985 · best 162
+- Joe Jurevicius · WR · 2005 · best 157
+- Sam McCullum · WR · 1976–1981 · best 154
+- Golden Tate · WR · 2010–2013 · best 152 · cutout elsewhere
+- T.J. Houshmandzadeh · WR · 2009 · best 147
+- Rick Mirer · QB · 1993–1996 · best 144
+- Sidney Rice · WR · 2011–2013 · best 143
+- Kelvin Martin · WR · 1993–1994 · best 136
+- Julius Jones · RB · 2008–2009 · best 131
+- Paul Richardson · WR · 2014–2017 · best 128 · cutout elsewhere
+- Mike Pritchard · WR · 1996–1999 · best 126
+- Deion Branch · WR · 2006–2009 · best 126 · cutout elsewhere
+- Maurice Morris · RB · 2002–2008 · best 124
+- Thomas Rawls · RB · 2015–2017 · best 122
+- Mike Davis · RB · 2017–2018 · best 120 · cutout elsewhere
+- D.J. Hackett · WR · 2005–2007 · best 108
+- Itula Mili · TE · 1999–2006 · best 96
+- John Friesz · QB · 1995–1998 · best 93
+- Byron Franklin · WR · 1985–1987 · best 83
+- Charle Young · WR · 1983–1985 · best 81
+- Jerry Rice · WR · 2004 · best 76 · cutout elsewhere
+- Stan Gelbaugh · QB · 1992–1996 · best 65
+- Marcus Pollard · TE · 2007 · best 53
+- Jeff Kemp · QB · 1987–1991 · best 52
+- Roger Carr · WR · 1982 · best 46
+- Greg Olsen · TE · 2020 · best 42 · cutout elsewhere
+- Brandon Marshall · WR · 2018 · best 25 · ESPN face, cutout elsewhere
+- Ahman Green · RB · 1999 · best 12 · cutout elsewhere
+
+## Tampa Bay Buccaneers (TB) — 59
+
+- James Wilder · RB · 1981–1990 · best 337
+- Mark Carrier · WR · 1987–1992 · best 237
+- Joey Galloway · WR · 2004–2008 · best 231 · cutout elsewhere
+- Warrick Dunn · RB · 1997–2008 · best 226
+- Doug Williams · QB · 1978–1982 · best 218 · cutout elsewhere
+- Shaun King · QB · 1999–2003 · best 215
+- Brad Johnson · QB · 2001–2004 · best 214 · cutout elsewhere
+- Antonio Bryant · WR · 2008–2009 · best 209
+- Keenan McCardell · WR · 2002–2003 · best 206
+- Michael Clayton · WR · 2004–2009 · best 204
+- Errict Rhett · RB · 1994–1997 · best 201
+- Steve DeBerg · QB · 1984–1993 · best 200
+- Michael Pittman · RB · 2002–2007 · best 200
+- Kevin House · WR · 1980–1987 · best 198
+- Vinny Testaverde · QB · 1987–1992 · best 197 · cutout elsewhere
+- Trent Dilfer · QB · 1994–1999 · best 194
+- Reggie Cobb · RB · 1990–1993 · best 191
+- Mike Williams · WR · 2010–2013 · best 191 · cutout elsewhere
+- Keyshawn Johnson · WR · 2000–2003 · best 184 · cutout elsewhere
+- Bruce Hill · WR · 1987–1991 · best 182
+- Mike Alstott · RB · 1999–2006 · best 177
+- Ryan Fitzpatrick · QB · 2017–2018 · best 174 · cutout elsewhere
+- Craig Erickson · QB · 1992–1994 · best 173
+- Ronald Jones · RB · 2018–2021 · best 172
+- Cadillac Williams · RB · 2005–2010 · best 168
+- Jack Thompson · QB · 1983–1984 · best 167
+- Mike Glennon · QB · 2013–2016 · best 160 · cutout elsewhere
+- Brian Griese · QB · 2004–2008 · best 159
+- Kellen Winslow Jr. · TE · 2009–2011 · best 158
+- Charles Sims · RB · 2014–2017 · best 153
+- Adam Humphries · WR · 2015–2018 · best 151 · cutout elsewhere
+- Courtney Hawkins · WR · 1992–1996 · best 150
+- Gary Anderson · RB · 1990–1993 · best 146 · cutout elsewhere
+- Cameron Brate · TE · 2014–2022 · best 142
+- Gerald Carter · WR · 1981–1987 · best 141
+- LeGarrette Blount · RB · 2010–2012 · best 135 · cutout elsewhere
+- Lawrence Dawsey · WR · 1991–1995 · best 134
+- DeSean Jackson · WR · 2017–2018 · best 131 · cutout elsewhere
+- Jacquez Green · WR · 1999–2001 · best 126
+- Jerry Eckwood · RB · 1979–1981 · best 125
+- Lars Tate · RB · 1988–1989 · best 122
+- Breshad Perriman · WR · 2019–2022 · best 120
+- Vince Workman · RB · 1993–1994 · best 117
+- Timothy Wright · TE · 2013 · best 114
+- Jackie Harris · TE · 1994–1997 · best 108
+- Thomas Jones · RB · 2003 · best 107 · cutout elsewhere
+- Chris Simms · QB · 2004–2006 · best 103 · cutout elsewhere
+- Bert Emanuel · WR · 1998–1999 · best 97
+- Dallas Clark · TE · 2012 · best 91 · cutout elsewhere
+- Steve Spurrier · QB · 1976 · best 81 · cutout elsewhere
+- Louis Carter · RB · 1976–1978 · best 78
+- Julio Jones · WR · 2022 · best 58 · ESPN face, cutout elsewhere
+- Essex Johnson · RB · 1976 · best 55
+- Ron Springs · RB · 1985–1986 · best 55
+- Reggie Brooks · RB · 1996 · best 50
+- Gary Huff · QB · 1977–1978 · best 35
+- Charlie Garner · RB · 2004 · best 22
+- LeSean McCoy · RB · 2020 · best 21 · cutout elsewhere
+- Kyle Rudolph · TE · 2022 · best 10 · cutout elsewhere
+
+## Tennessee Titans (TEN) — 71
+
+- Eddie George · RB · 1996–2003 · best 302
+- Earl Campbell · RB · 1978–1983 · best 295
+- Steve McNair · QB · 1995–2005 · best 271 · cutout elsewhere
+- DeMarco Murray · RB · 2016–2017 · best 264 · cutout elsewhere
+- Marcus Mariota · QB · 2015–2019 · best 260 · cutout elsewhere
+- Lorenzo White · RB · 1988–1994 · best 259
+- Drew Bennett · WR · 2001–2006 · best 237
+- Derrick Mason · WR · 1997–2004 · best 227 · cutout elsewhere
+- Drew Hill · WR · 1985–1991 · best 210
+- Haywood Jeffires · WR · 1987–1995 · best 204
+- Tim Smith · WR · 1980–1986 · best 195
+- Ernest Givins · WR · 1986–1994 · best 188
+- Butch Woolfolk · WR · 1985–1986 · best 181
+- Ken Burrough · WR · 1971–1981 · best 179
+- Travis Henry · RB · 2005–2006 · best 178
+- Rishard Matthews · WR · 2016–2017 · best 178 · cutout elsewhere
+- Gary Brown · RB · 1991–1995 · best 175
+- Ryan Fitzpatrick · QB · 2013 · best 171 · cutout elsewhere
+- Mike Rozier · RB · 1985–1990 · best 168
+- Chris Brown · RB · 2003–2007 · best 166
+- Allen Pinkett · RB · 1986–1991 · best 165
+- Rodney Thomas · RB · 1995–2000 · best 161
+- Kevin Dyson · WR · 1999–2002 · best 152
+- Larry Moriarty · RB · 1983–1986 · best 147
+- Dan Pastorini · QB · 1971–1979 · best 146
+- Fred Willis · RB · 1972–1976 · best 144
+- Curtis Duncan · WR · 1987–1993 · best 142
+- Mike Barber · WR · 1976–1981 · best 131
+- Webster Slaughter · WR · 1994 · best 131
+- Frank Wycheck · TE · 1995–2003 · best 130
+- Ronnie Coleman · RB · 1974–1981 · best 127
+- Dave Casper · WR · 1981–1982 · best 122
+- Roydell Williams · WR · 2005–2007 · best 122
+- Nick Westbrook-Ikhine · WR · 2020–2024 · best 120
+- Ken Stabler · QB · 1981 · best 118
+- Jared Cook · TE · 2009–2012 · best 112 · cutout elsewhere
+- Damian Williams · WR · 2010–2013 · best 112
+- Yancey Thigpen · WR · 1998–2000 · best 106
+- Ben Troupe · TE · 2004–2007 · best 105
+- Jerry LeVias · WR · 1970 · best 103
+- Rob Carpenter · RB · 1977–1981 · best 102
+- Ronnie Harmon · WR · 1996–1997 · best 101
+- Antowain Smith · RB · 2004 · best 101
+- Alvin Reed · WR · 1970–1972 · best 94
+- Erron Kinney · TE · 2000–2005 · best 94
+- Cody Carlson · QB · 1988–1994 · best 93
+- Billy Johnson · WR · 1974–1980 · best 92
+- Don Hardeman · RB · 1975–1977 · best 92
+- Neil O'Donnell · QB · 1999–2003 · best 87
+- Billy Parks · WR · 1973–1975 · best 84
+- Charley Johnson · QB · 1970–1971 · best 82
+- Jim Beirne · WR · 1970–1976 · best 80
+- Jackie Harris · TE · 1998–1999 · best 75
+- Oliver Luck · QB · 1983–1986 · best 74
+- Joe Dawkins · RB · 1970–1976 · best 73
+- Rich Caster · WR · 1978–1980 · best 73
+- Paul Robinson · RB · 1972–1973 · best 72 · cutout elsewhere
+- Mike Renfro · WR · 1978–1983 · best 71
+- Billy Joe Tolliver · QB · 1994 · best 69
+- Gifford Nielsen · QB · 1978–1983 · best 57
+- Anthony Fasano · TE · 2015–2016 · best 54 · cutout elsewhere
+- Jerry Rhome · QB · 1970 · best 53
+- Lynn Dickey · QB · 1971–1975 · best 50
+- Eric Moulds · WR · 2007 · best 50 · cutout elsewhere
+- Vic Washington · RB · 1974 · best 48
+- John Hadl · QB · 1976–1977 · best 45
+- Marion Butts · RB · 1995 · best 45
+- Alge Crumpler · TE · 2008–2009 · best 44
+- Adrian Peterson · RB · 2021 · best 25 · ESPN face, cutout elsewhere
+- Andre Johnson · WR · 2016 · best 25 · cutout elsewhere
+- Dave Krieg · QB · 1998 · best 8
+
+## Washington Commanders (WAS) — 70
+
+- Terry Allen · RB · 1995–1998 · best 297
+- John Riggins · RB · 1976–1985 · best 292
+- Stephen Davis · RB · 1999–2002 · best 259
+- Mark Rypien · QB · 1988–1993 · best 244
+- Larry Brown · RB · 1970–1976 · best 239
+- Art Monk · WR · 1980–1995 · best 232
+- George Rogers · RB · 1986–1987 · best 232
+- Jay Schroeder · QB · 1985–1987 · best 230
+- Gary Clark · WR · 1985–1992 · best 229
+- Trent Green · QB · 1997–1998 · best 228 · cutout elsewhere
+- Ricky Sanders · WR · 1986–1993 · best 225
+- Pierre Garcon · WR · 2012–2016 · best 220 · cutout elsewhere
+- Charlie Brown · WR · 1982–1984 · best 215
+- Ladell Betts · RB · 2002–2009 · best 210
+- Joe Washington · RB · 1981–1984 · best 208
+- Michael Westbrook · WR · 1999–2001 · best 206
+- Earnest Byner · RB · 1989–1993 · best 203
+- Laveranues Coles · WR · 2003–2004 · best 201 · cutout elsewhere
+- Rod Gardner · WR · 2001–2004 · best 184
+- Albert Connell · WR · 1999–2000 · best 183
+- Sonny Jurgensen · QB · 1970–1974 · best 176 · cutout elsewhere
+- Adrian Peterson · RB · 2018–2019 · best 176 · ESPN face, cutout elsewhere
+- Gus Frerotte · QB · 1994–1998 · best 175 · cutout elsewhere
+- Billy Kilmer · QB · 1971–1978 · best 174 · cutout elsewhere
+- Clarence Harmon · WR · 1977–1982 · best 169
+- Chris Cooley · TE · 2004–2012 · best 160
+- Henry Ellard · WR · 1995–1998 · best 159
+- Charley Taylor · WR · 1970–1977 · best 151
+- Frank Grant · WR · 1973–1978 · best 147
+- Reggie Brooks · RB · 1993–1995 · best 145
+- Ricky Ervins · RB · 1991–1994 · best 142
+- Jerry Smith · WR · 1970–1977 · best 136
+- Tony Banks · QB · 2001 · best 135
+- Derrius Thompson · WR · 2001–2002 · best 132
+- Larry Centers · RB · 1999–2000 · best 129
+- Roy Jefferson · WR · 1971–1976 · best 119
+- Wilbur Jackson · RB · 1980–1982 · best 116
+- Antwaan Randle El · RB · 2006–2009 · best 116
+- Charlie Harraway · RB · 1970–1973 · best 111
+- Irving Fryar · WR · 1999–2000 · best 107
+- Kenny Watson · RB · 2002 · best 107 · cutout elsewhere
+- Matt Jones Jr. · RB · 2015–2016 · best 107
+- Keiland Williams · RB · 2010 · best 105
+- Ryan Grant · RB · 2014–2017 · best 104 · cutout elsewhere
+- Ryan Grant (WR) · WR · 2014–2017 · best 104
+- Heath Shuler · QB · 1994–1996 · best 94
+- Gerald Riggs · RB · 1990–1991 · best 90
+- Benny Malone · RB · 1978–1979 · best 89
+- Tim McGee · WR · 1993 · best 88
+- Darnerien McCants · WR · 2002–2004 · best 86
+- Stephen Alexander · TE · 1999–2001 · best 85
+- John Friesz · QB · 1994 · best 82
+- Jeff George · QB · 2000–2001 · best 80
+- Terry Metcalf · RB · 1981 · best 78
+- Duane Thomas · RB · 1973–1974 · best 77 · cutout elsewhere
+- Timmy Smith · RB · 1987–1988 · best 66
+- Bobby Hammond · RB · 1979–1980 · best 65
+- Stan Humphries · QB · 1988–1990 · best 65
+- Calvin Hill · RB · 1976–1977 · best 50 · cutout elsewhere
+- Boyd Dowler · WR · 1971 · best 46 · cutout elsewhere
+- Jeff Hostetler · QB · 1997 · best 46
+- Larry Smith · RB · 1974 · best 44
+- Keenan McCardell · WR · 1991–2007 · best 43
+- Clifton McNeil · WR · 1971–1972 · best 41
+- Rich Gannon · QB · 1993 · best 33
+- Joey Galloway · WR · 2010 · best 23 · cutout elsewhere
+- Andre Reed · WR · 2000 · best 21
+- Frank Wycheck · TE · 1993–1994 · best 19
+- Antonio Brown · WR · 2005 · best 7 · ESPN face, cutout elsewhere
+- Ryan Fitzpatrick · QB · 2021 · best 1 · cutout elsewhere
+

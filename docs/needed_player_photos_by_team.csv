@@ -1,0 +1,1888 @@
+team,team_name,player,pos,years,best_fpts,espn_face,cutout_elsewhere
+ARI,Arizona Cardinals,"David Johnson",RB,2015-2019,366,no,no
+ARI,Arizona Cardinals,"Neil Lomax",QB,1981-1989,289,no,no
+ARI,Arizona Cardinals,"David Boston",WR,1999-2002,258,no,no
+ARI,Arizona Cardinals,"Rob Moore",WR,1995-1999,255,no,no
+ARI,Arizona Cardinals,"Jacoby Brissett",QB,2025,235,yes,yes
+ARI,Arizona Cardinals,"MacArthur Lane",RB,1970-1971,224,no,no
+ARI,Arizona Cardinals,"Larry Centers",RB,1990-1998,223,no,no
+ARI,Arizona Cardinals,"Stump Mitchell",RB,1981-1989,209,no,no
+ARI,Arizona Cardinals,"J.T. Smith",WR,1985-1990,201,no,no
+ARI,Arizona Cardinals,"Edgerrin James",RB,2006-2008,197,no,yes
+ARI,Arizona Cardinals,"Donny Anderson",RB,1972-1974,193,no,no
+ARI,Arizona Cardinals,"Michael Pittman",RB,1998-2001,192,no,no
+ARI,Arizona Cardinals,"Terry Metcalf",RB,1973-1977,191,no,no
+ARI,Arizona Cardinals,"Marcel Shipp",RB,2002-2007,190,no,no
+ARI,Arizona Cardinals,"Steve Beuerlein",QB,1993-1994,186,no,no
+ARI,Arizona Cardinals,"Earl Ferrell",RB,1982-1989,183,no,no
+ARI,Arizona Cardinals,"Mel Gray",WR,1971-1982,181,no,no
+ARI,Arizona Cardinals,"Adrian Murrell",RB,1998-1999,178,no,no
+ARI,Arizona Cardinals,"Tim Hightower",RB,2008-2010,174,no,yes
+ARI,Arizona Cardinals,"John Brown",WR,2014-2017,174,no,no
+ARI,Arizona Cardinals,"Timm Rosenbach",QB,1989-1992,171,no,no
+ARI,Arizona Cardinals,"Beanie Wells",RB,2009-2012,171,no,no
+ARI,Arizona Cardinals,"Pat Tilley",WR,1976-1986,167,no,no
+ARI,Arizona Cardinals,"Garrison Hearst",RB,1993-1995,158,no,no
+ARI,Arizona Cardinals,"John Gilliam",WR,1970-1971,155,no,no
+ARI,Arizona Cardinals,"Ronald Moore",RB,1993-1997,153,no,no
+ARI,Arizona Cardinals,"Ernie Jones",WR,1988-1992,151,no,no
+ARI,Arizona Cardinals,"Jeff Blake",QB,2003,149,no,no
+ARI,Arizona Cardinals,"Josh McCown",QB,2002-2005,148,no,yes
+ARI,Arizona Cardinals,"Jim Otis",RB,1973-1978,147,no,no
+ARI,Arizona Cardinals,"Johnny Johnson",RB,1990-1992,145,no,no
+ARI,Arizona Cardinals,"Wayne Morris",RB,1976-1983,144,no,no
+ARI,Arizona Cardinals,"Gary Hogeboom",QB,1989,141,no,no
+ARI,Arizona Cardinals,"Andre Roberts",WR,2010-2013,140,no,yes
+ARI,Arizona Cardinals,"Chase Edmonds",RB,2018-2021,140,no,no
+ARI,Arizona Cardinals,"Frank Sanders",WR,1999-2002,138,no,no
+ARI,Arizona Cardinals,"Matt Leinart",QB,2006-2009,134,no,no
+ARI,Arizona Cardinals,"Rashard Mendenhall",RB,2013,133,no,yes
+ARI,Arizona Cardinals,"Randal Hill",WR,1991-1994,130,no,no
+ARI,Arizona Cardinals,"A.J. Green",WR,2021-2022,130,no,yes
+ARI,Arizona Cardinals,"Early Doucet",WR,2008-2012,126,no,no
+ARI,Arizona Cardinals,"Marquise Brown",WR,2022-2023,123,no,yes
+ARI,Arizona Cardinals,"J.J. Nelson",WR,2015-2018,121,no,no
+ARI,Arizona Cardinals,"Bryant Johnson",WR,2003-2007,118,no,yes
+ARI,Arizona Cardinals,"Josh Rosen",QB,2018,117,no,yes
+ARI,Arizona Cardinals,"Ike Harris",WR,1975-1977,110,no,no
+ARI,Arizona Cardinals,"Gary Clark",WR,1994,108,no,no
+ARI,Arizona Cardinals,"Kent Graham",QB,1996-1997,106,no,no
+ARI,Arizona Cardinals,"Chris Johnson",RB,2015-2017,104,no,yes
+ARI,Arizona Cardinals,"Johnny Roland",RB,1970-1972,103,no,no
+ARI,Arizona Cardinals,"John Skelton",QB,2010-2012,103,no,no
+ARI,Arizona Cardinals,"Jay Novacek",WR,1985-1989,100,no,no
+ARI,Arizona Cardinals,"Kevin Kolb",QB,2011-2012,99,no,yes
+ARI,Arizona Cardinals,"Freddie Jones",TE,2002-2004,97,no,no
+ARI,Arizona Cardinals,"Tom Tupa",QB,1988-1991,93,no,no
+ARI,Arizona Cardinals,"Thomas Jones",RB,2000-2002,92,no,yes
+ARI,Arizona Cardinals,"MarTay Jenkins",WR,2000-2002,86,no,no
+ARI,Arizona Cardinals,"Walker Gillette",WR,1972-1973,82,no,no
+ARI,Arizona Cardinals,"Mario Bates",RB,1998-1999,80,no,no
+ARI,Arizona Cardinals,"Adrian Peterson",RB,2017,76,yes,yes
+ARI,Arizona Cardinals,"Ahmad Rashad",WR,1972-1973,74,no,no
+ARI,Arizona Cardinals,"Jay Schroeder",QB,1994,69,no,no
+ARI,Arizona Cardinals,"Jermaine Gresham",TE,2015-2018,69,no,yes
+ARI,Arizona Cardinals,"Cid Edwards",RB,1970-1971,68,no,no
+ARI,Arizona Cardinals,"Pete Beathard",QB,1970-1971,53,no,no
+ARI,Arizona Cardinals,"Todd Heap",TE,2011-2012,46,no,no
+ARI,Arizona Cardinals,"Gary Cuozzo",QB,1972,45,no,no
+ARI,Arizona Cardinals,"Charles Clay",TE,2019,39,no,yes
+ARI,Arizona Cardinals,"Eric Metcalf",WR,1998,38,no,no
+ATL,Atlanta Falcons,"Jamal Anderson",RB,1994-2001,316,no,no
+ATL,Atlanta Falcons,"William Andrews",RB,1979-1986,301,no,no
+ATL,Atlanta Falcons,"Devonta Freeman",RB,2014-2019,277,yes,no
+ATL,Atlanta Falcons,"Michael Turner",RB,2008-2012,275,no,yes
+ATL,Atlanta Falcons,"Gerald Riggs",RB,1982-1988,271,no,no
+ATL,Atlanta Falcons,"Andre Rison",WR,1990-1994,257,no,no
+ATL,Atlanta Falcons,"Terance Mathis",WR,1994-2001,256,no,no
+ATL,Atlanta Falcons,"Roddy White",WR,2005-2015,255,no,no
+ATL,Atlanta Falcons,"Jeff George",QB,1994-1996,251,no,no
+ATL,Atlanta Falcons,"Alfred Jenkins",WR,1975-1983,243,no,no
+ATL,Atlanta Falcons,"John Settle",RB,1987-1990,235,no,no
+ATL,Atlanta Falcons,"Eric Metcalf",WR,1995-1996,230,no,no
+ATL,Atlanta Falcons,"Chris Miller",QB,1987-1993,210,no,no
+ATL,Atlanta Falcons,"Craig Heyward",RB,1994-1996,204,no,no
+ATL,Atlanta Falcons,"Warrick Dunn",RB,2002-2007,204,no,no
+ATL,Atlanta Falcons,"Art Malone",RB,1970-1974,203,no,no
+ATL,Atlanta Falcons,"Michael Haynes",WR,1988-1997,203,no,no
+ATL,Atlanta Falcons,"Bobby Hebert",QB,1994-1996,189,no,no
+ATL,Atlanta Falcons,"Desmond Ridder",QB,2022-2023,189,no,no
+ATL,Atlanta Falcons,"Tony Gonzalez",TE,2009-2013,188,no,yes
+ATL,Atlanta Falcons,"Tony Martin",WR,1998-2001,187,no,no
+ATL,Atlanta Falcons,"Bert Emanuel",WR,1994-1997,182,no,no
+ATL,Atlanta Falcons,"Stacey Bailey",WR,1982-1990,181,no,no
+ATL,Atlanta Falcons,"Wallace Francis",WR,1975-1981,180,no,no
+ATL,Atlanta Falcons,"Tevin Coleman",RB,2015-2018,176,no,no
+ATL,Atlanta Falcons,"Erric Pegram",RB,1991-1994,171,no,no
+ATL,Atlanta Falcons,"Lynn Cain",RB,1979-1984,168,no,no
+ATL,Atlanta Falcons,"Dave Hampton",RB,1972-1976,159,no,no
+ATL,Atlanta Falcons,"Chris Chandler",QB,1999-2001,156,no,no
+ATL,Atlanta Falcons,"T.J. Duckett",RB,2002-2005,155,no,no
+ATL,Atlanta Falcons,"Alge Crumpler",TE,2001-2007,154,no,no
+ATL,Atlanta Falcons,"Austin Hooper",TE,2016-2025,154,no,yes
+ATL,Atlanta Falcons,"Mike Pritchard",WR,1991-1993,151,no,no
+ATL,Atlanta Falcons,"Haskel Stanback",RB,1974-1979,148,no,no
+ATL,Atlanta Falcons,"Mohamed Sanu",WR,2016-2018,147,no,yes
+ATL,Atlanta Falcons,"Charlie Brown",WR,1985-1987,145,no,no
+ATL,Atlanta Falcons,"Maurice Smith",RB,2000-2002,143,no,no
+ATL,Atlanta Falcons,"Billy Johnson",WR,1982-1987,135,no,no
+ATL,Atlanta Falcons,"Tim Dwight",WR,1999-2000,134,no,yes
+ATL,Atlanta Falcons,"Peerless Price",WR,2003-2004,134,no,no
+ATL,Atlanta Falcons,"Jim Mitchell",WR,1970-1979,131,no,no
+ATL,Atlanta Falcons,"Jason Snelling",RB,2007-2013,130,no,no
+ATL,Atlanta Falcons,"Bob Berry",QB,1970-1972,126,no,no
+ATL,Atlanta Falcons,"Shawn Jefferson",WR,2000-2002,124,no,no
+ATL,Atlanta Falcons,"Taylor Gabriel",WR,2016-2017,123,no,yes
+ATL,Atlanta Falcons,"Bubba Bean",RB,1976-1979,117,no,no
+ATL,Atlanta Falcons,"Devin Hester",WR,2014,116,no,yes
+ATL,Atlanta Falcons,"Bob Christian",RB,1999-2002,114,no,no
+ATL,Atlanta Falcons,"Mike Davis",RB,2021,112,no,yes
+ATL,Atlanta Falcons,"David Archer",QB,1984-1987,111,no,no
+ATL,Atlanta Falcons,"Ray-Ray McCloud",WR,2024-2025,110,no,no
+ATL,Atlanta Falcons,"Joey Harrington",QB,2007,105,no,no
+ATL,Atlanta Falcons,"Bob Lee",QB,1973-1974,103,no,no
+ATL,Atlanta Falcons,"Wade Wilson",QB,1992,103,no,no
+ATL,Atlanta Falcons,"Jacob Tamme",TE,2015-2016,101,no,yes
+ATL,Atlanta Falcons,"Scott Campbell",QB,1986-1990,99,no,no
+ATL,Atlanta Falcons,"Ricky Sanders",WR,1994,99,no,no
+ATL,Atlanta Falcons,"Cannonball Butler",RB,1970-1971,91,no,no
+ATL,Atlanta Falcons,"Mike Rozier",RB,1990-1991,83,no,no
+ATL,Atlanta Falcons,"Joe Washington",RB,1985,82,no,no
+ATL,Atlanta Falcons,"Paul Flatley",WR,1970,80,no,no
+ATL,Atlanta Falcons,"Harold Green",RB,1997-1998,64,no,no
+ATL,Atlanta Falcons,"Drew Hill",WR,1993,55,no,no
+ATL,Atlanta Falcons,"John Gilliam",WR,1976,52,no,no
+ATL,Atlanta Falcons,"Billy Joe Tolliver",QB,1991-1997,47,no,no
+ATL,Atlanta Falcons,"Scott Hunter",QB,1976-1977,41,no,no
+ATL,Atlanta Falcons,"Erik Kramer",QB,1987,34,no,no
+ATL,Atlanta Falcons,"Steve DeBerg",QB,1998,26,no,no
+ATL,Atlanta Falcons,"Brett Favre",QB,1991,-2,no,yes
+BAL,Baltimore Ravens,"Vinny Testaverde",QB,1996-1997,311,no,yes
+BAL,Baltimore Ravens,"Michael Jackson",WR,1996-1998,242,no,no
+BAL,Baltimore Ravens,"Derrick Alexander",WR,1996-1997,195,no,no
+BAL,Baltimore Ravens,"Priest Holmes",RB,1997-2000,184,no,no
+BAL,Baltimore Ravens,"Qadry Ismail",WR,1999-2001,183,no,no
+BAL,Baltimore Ravens,"Le'Ron McClain",RB,2007-2010,177,no,yes
+BAL,Baltimore Ravens,"Mike Wallace",WR,2016-2017,166,no,no
+BAL,Baltimore Ravens,"Travis Taylor",WR,2000-2004,164,no,no
+BAL,Baltimore Ravens,"Todd Heap",TE,2001-2010,163,no,no
+BAL,Baltimore Ravens,"Elvis Grbac",QB,2001,161,no,no
+BAL,Baltimore Ravens,"Kamar Aiken",WR,2014-2016,159,no,no
+BAL,Baltimore Ravens,"Alex Collins",RB,2017-2018,156,no,yes
+BAL,Baltimore Ravens,"Errict Rhett",RB,1998-1999,152,no,no
+BAL,Baltimore Ravens,"Shannon Sharpe",TE,2000-2001,145,no,no
+BAL,Baltimore Ravens,"Kyle Boller",QB,2003-2007,143,no,yes
+BAL,Baltimore Ravens,"Bam Morris",RB,1996-1997,140,no,no
+BAL,Baltimore Ravens,"Dennis Pitta",TE,2010-2016,139,no,no
+BAL,Baltimore Ravens,"Earnest Byner",RB,1996-1997,133,no,no
+BAL,Baltimore Ravens,"Jeff Blake",QB,2002,133,no,no
+BAL,Baltimore Ravens,"Devonta Freeman",RB,2021,130,yes,no
+BAL,Baltimore Ravens,"Tony Banks",QB,1999-2000,129,no,no
+BAL,Baltimore Ravens,"Jim Harbaugh",QB,1998,126,no,no
+BAL,Baltimore Ravens,"John Brown",WR,2018,123,no,no
+BAL,Baltimore Ravens,"Eric Green",TE,1996-1998,121,no,no
+BAL,Baltimore Ravens,"Chester Taylor",RB,2002-2005,115,no,yes
+BAL,Baltimore Ravens,"Ben Watson",WR,2017,107,no,yes
+BAL,Baltimore Ravens,"Benjamin Watson",TE,2017,106,no,yes
+BAL,Baltimore Ravens,"Michael Crabtree",WR,2018,106,no,yes
+BAL,Baltimore Ravens,"Trent Dilfer",QB,2000,101,no,no
+BAL,Baltimore Ravens,"Owen Daniels",TE,2014,101,no,yes
+BAL,Baltimore Ravens,"Floyd Turner",WR,1996-1998,97,no,no
+BAL,Baltimore Ravens,"Terry Allen",RB,2001,97,no,no
+BAL,Baltimore Ravens,"Marcus Robinson",WR,2003,97,no,no
+BAL,Baltimore Ravens,"Jason Brookins",RB,2001,93,no,no
+BAL,Baltimore Ravens,"Justin Armour",WR,1999,87,no,no
+BAL,Baltimore Ravens,"Dallas Clark",TE,2013,68,no,yes
+BAL,Baltimore Ravens,"Ricky Williams",RB,2011,67,no,yes
+BAL,Baltimore Ravens,"Roosevelt Potts",RB,1998,47,no,no
+BAL,Baltimore Ravens,"Randall Cunningham",QB,2001,43,no,no
+BAL,Baltimore Ravens,"DeSean Jackson",WR,2022,20,no,yes
+BAL,Baltimore Ravens,"Ben Coates",TE,2000,13,no,no
+BUF,Buffalo Bills,"Thurman Thomas",RB,1988-1999,312,no,no
+BUF,Buffalo Bills,"Travis Henry",RB,2001-2004,264,no,no
+BUF,Buffalo Bills,"Eric Moulds",WR,1996-2005,240,no,yes
+BUF,Buffalo Bills,"Andre Reed",WR,1985-1999,232,no,no
+BUF,Buffalo Bills,"Peerless Price",WR,1999-2007,223,no,no
+BUF,Buffalo Bills,"Joe Ferguson",QB,1973-1984,222,no,no
+BUF,Buffalo Bills,"Willis McGahee",RB,2004-2006,215,no,yes
+BUF,Buffalo Bills,"Greg Bell",RB,1984-1987,213,no,no
+BUF,Buffalo Bills,"Marshawn Lynch",RB,2007-2009,210,no,yes
+BUF,Buffalo Bills,"Jim Braxton",RB,1971-1978,188,no,no
+BUF,Buffalo Bills,"James Lofton",WR,1989-1993,184,no,yes
+BUF,Buffalo Bills,"John Brown",WR,2019-2022,184,no,no
+BUF,Buffalo Bills,"Frank Lewis",WR,1978-1983,181,no,no
+BUF,Buffalo Bills,"Marlin Briscoe",WR,1970-1971,176,no,no
+BUF,Buffalo Bills,"Bill Brooks",WR,1993-1995,170,no,no
+BUF,Buffalo Bills,"Terry Miller",RB,1978-1980,168,no,no
+BUF,Buffalo Bills,"Bob Chandler",WR,1971-1979,167,no,no
+BUF,Buffalo Bills,"Jerry Butler",WR,1979-1986,156,no,no
+BUF,Buffalo Bills,"Terrell Owens",WR,2009,152,no,yes
+BUF,Buffalo Bills,"Gabe Davis",WR,2020-2023,148,no,no
+BUF,Buffalo Bills,"Quinn Early",WR,1996-1998,145,no,no
+BUF,Buffalo Bills,"Ronnie Harmon",WR,1986-1989,144,no,no
+BUF,Buffalo Bills,"Rob Johnson",QB,1999-2001,140,no,no
+BUF,Buffalo Bills,"Larry Centers",RB,2001-2002,140,no,no
+BUF,Buffalo Bills,"Byron Franklin",WR,1981-1984,136,no,no
+BUF,Buffalo Bills,"Zay Jones",WR,2017-2018,136,no,yes
+BUF,Buffalo Bills,"Jonathan Linton",RB,1998-2000,135,no,no
+BUF,Buffalo Bills,"Chris Burkett",WR,1985-1989,127,no,no
+BUF,Buffalo Bills,"Bobby Shaw",WR,2003-2004,123,no,no
+BUF,Buffalo Bills,"Curtis Brown",RB,1977-1982,121,no,no
+BUF,Buffalo Bills,"Mike Gillislee",RB,2015-2016,121,no,no
+BUF,Buffalo Bills,"Darick Holmes",RB,1995-1998,119,no,no
+BUF,Buffalo Bills,"Pete Metzelaars",WR,1985-1994,117,no,no
+BUF,Buffalo Bills,"Karlos Williams",RB,2015,117,no,no
+BUF,Buffalo Bills,"Kenneth Davis",RB,1989-1994,114,no,no
+BUF,Buffalo Bills,"Alex Van Pelt",QB,1999-2003,110,no,no
+BUF,Buffalo Bills,"Shawn Bryson",RB,2000-2002,108,no,no
+BUF,Buffalo Bills,"Sammy Morris",RB,2000-2003,106,no,yes
+BUF,Buffalo Bills,"Haven Moses",WR,1970-1972,104,no,no
+BUF,Buffalo Bills,"Jay Riemersma",TE,1999-2002,104,no,no
+BUF,Buffalo Bills,"Josh Reed",WR,2002-2009,102,no,no
+BUF,Buffalo Bills,"Amari Cooper",WR,2024,101,no,yes
+BUF,Buffalo Bills,"Reuben Gant",WR,1974-1980,97,no,no
+BUF,Buffalo Bills,"Jeremy McDaniel",WR,2000-2001,97,no,no
+BUF,Buffalo Bills,"Antowain Smith",RB,1999-2000,96,no,no
+BUF,Buffalo Bills,"Larry Kinnebrew",RB,1989-1990,92,no,yes
+BUF,Buffalo Bills,"Frank Gore",RB,2019,88,no,yes
+BUF,Buffalo Bills,"Roosevelt Leaks",RB,1980-1983,82,no,no
+BUF,Buffalo Bills,"Vince Ferragamo",QB,1985,70,no,no
+BUF,Buffalo Bills,"Bruce Mathison",QB,1985,67,no,no
+BUF,Buffalo Bills,"Frank Reich",QB,1985-1994,54,no,no
+BUF,Buffalo Bills,"Gary Marangi",QB,1974-1976,52,no,no
+BUF,Buffalo Bills,"Jordan Matthews",TE,2017,44,no,no
+BUF,Buffalo Bills,"Antonio Brown",WR,2003,2,yes,yes
+CAR,Carolina Panthers,"Steve Beuerlein",QB,1996-2000,309,no,no
+CAR,Carolina Panthers,"Muhsin Muhammad",WR,1996-2009,283,no,no
+CAR,Carolina Panthers,"Patrick Jeffers",WR,1999-2001,213,no,no
+CAR,Carolina Panthers,"Stephen Davis",RB,2003-2005,209,no,no
+CAR,Carolina Panthers,"Rico Dowdle",RB,2025,195,yes,no
+CAR,Carolina Panthers,"Rocket Ismail",WR,1996-1998,185,no,no
+CAR,Carolina Panthers,"Wesley Walls",TE,1996-2002,184,no,no
+CAR,Carolina Panthers,"Adam Thielen",WR,2023-2025,180,no,yes
+CAR,Carolina Panthers,"Anthony Johnson",RB,1995-1999,176,no,no
+CAR,Carolina Panthers,"Mike Davis",RB,2020,176,no,yes
+CAR,Carolina Panthers,"Robbie Chosen",WR,2020-2021,176,no,no
+CAR,Carolina Panthers,"Kerry Collins",QB,1995-1998,171,no,yes
+CAR,Carolina Panthers,"Chris Weinke",QB,2001-2006,166,no,no
+CAR,Carolina Panthers,"Mark Carrier",WR,1996-1998,146,no,no
+CAR,Carolina Panthers,"Donald Hayes",WR,1999-2001,139,no,no
+CAR,Carolina Panthers,"Rodney Peete",QB,2002-2004,139,no,no
+CAR,Carolina Panthers,"Lamar Smith",RB,2002,138,no,no
+CAR,Carolina Panthers,"Tim Biakabutuka",RB,1996-2001,136,no,no
+CAR,Carolina Panthers,"Keary Colbert",WR,2004-2007,127,no,yes
+CAR,Carolina Panthers,"Fred Lane",RB,1997-1999,122,no,no
+CAR,Carolina Panthers,"Mike Goodson",RB,2009-2011,110,no,yes
+CAR,Carolina Panthers,"Richard Huntley",RB,2001,101,no,no
+CAR,Carolina Panthers,"Drew Carter",WR,2005-2007,95,no,no
+CAR,Carolina Panthers,"Derrick Moore",RB,1995,93,no,no
+CAR,Carolina Panthers,"Jeremy Shockey",TE,2011,86,no,yes
+CAR,Carolina Panthers,"Pete Metzelaars",WR,1995,45,no,no
+CAR,Carolina Panthers,"Jordan Matthews",TE,2024,0,no,no
+CHI,Chicago Bears,"Justin Fields",QB,2021-2023,304,yes,yes
+CHI,Chicago Bears,"Matt Forte",RB,2008-2015,298,yes,no
+CHI,Chicago Bears,"Neal Anderson",RB,1986-1993,276,no,no
+CHI,Chicago Bears,"Mitchell Trubisky",QB,2017-2020,269,no,yes
+CHI,Chicago Bears,"Erik Kramer",QB,1994-1998,261,no,no
+CHI,Chicago Bears,"DJ Moore",WR,2023-2024,239,yes,yes
+CHI,Chicago Bears,"Marcus Robinson",WR,1999-2002,234,no,no
+CHI,Chicago Bears,"Dick Gordon",WR,1970-1971,214,no,no
+CHI,Chicago Bears,"Jordan Howard",RB,2016-2018,214,no,yes
+CHI,Chicago Bears,"Thomas Jones",RB,2004-2006,211,no,yes
+CHI,Chicago Bears,"Jim Harbaugh",QB,1987-1993,209,no,no
+CHI,Chicago Bears,"Marty Booker",WR,1999-2008,209,no,yes
+CHI,Chicago Bears,"Roland Harper",RB,1975-1982,199,no,no
+CHI,Chicago Bears,"Jeff Graham",WR,1994-1995,189,no,no
+CHI,Chicago Bears,"Anthony Thomas",RB,2001-2004,189,no,no
+CHI,Chicago Bears,"Raymont Harris",RB,1994-1997,187,no,no
+CHI,Chicago Bears,"Rex Grossman",QB,2003-2008,170,no,yes
+CHI,Chicago Bears,"James Allen",RB,1998-2001,169,no,no
+CHI,Chicago Bears,"Curtis Enis",RB,1998-2000,167,no,no
+CHI,Chicago Bears,"Lewis Tillman",RB,1994-1995,166,no,no
+CHI,Chicago Bears,"Bobby Engram",WR,1996-2000,162,no,no
+CHI,Chicago Bears,"Wendell Davis",WR,1988-1993,161,no,no
+CHI,Chicago Bears,"Rashaan Salaam",RB,1995-1997,159,no,no
+CHI,Chicago Bears,"Bernard Berrian",WR,2004-2007,158,no,no
+CHI,Chicago Bears,"Matt Suhey",RB,1980-1989,156,no,no
+CHI,Chicago Bears,"Willie Gault",WR,1983-1987,152,no,no
+CHI,Chicago Bears,"Johnny Knox",WR,2009-2011,150,no,no
+CHI,Chicago Bears,"Muhsin Muhammad",WR,2005-2007,144,no,no
+CHI,Chicago Bears,"Cameron Meredith",WR,2015-2016,144,no,no
+CHI,Chicago Bears,"Mike Tomczak",QB,1985-1990,143,no,no
+CHI,Chicago Bears,"Adrian Peterson (CHI)",RB,2002-2009,137,no,no
+CHI,Chicago Bears,"Jeremy Langford",RB,2015-2016,137,no,no
+CHI,Chicago Bears,"Josh McCown",QB,2011-2013,135,no,yes
+CHI,Chicago Bears,"Jack Concannon",QB,1970-1971,131,no,no
+CHI,Chicago Bears,"George Farmer",RB,1970-1975,126,no,no
+CHI,Chicago Bears,"Jim Miller",QB,1999-2002,126,no,no
+CHI,Chicago Bears,"James Scott",WR,1976-1983,125,no,no
+CHI,Chicago Bears,"Cade McNown",QB,1999-2000,125,no,no
+CHI,Chicago Bears,"Vince Evans",QB,1977-1983,118,no,no
+CHI,Chicago Bears,"Jimmy Graham",TE,2020-2021,118,no,yes
+CHI,Chicago Bears,"Taylor Gabriel",WR,2018-2019,117,no,yes
+CHI,Chicago Bears,"Steve Walsh",QB,1994-1995,115,no,no
+CHI,Chicago Bears,"Dez White",WR,2000-2003,114,no,no
+CHI,Chicago Bears,"Kordell Stewart",QB,2003,114,no,no
+CHI,Chicago Bears,"Khalil Herbert",RB,2021-2023,113,no,no
+CHI,Chicago Bears,"Carl Garrett",RB,1973-1974,110,no,no
+CHI,Chicago Bears,"Michael Timpson",WR,1995-1996,109,no,no
+CHI,Chicago Bears,"Bob Avellini",QB,1975-1984,106,no,no
+CHI,Chicago Bears,"Edgar Bennett",RB,1998-1999,104,no,no
+CHI,Chicago Bears,"Eddie Kennison",WR,2000,102,no,no
+CHI,Chicago Bears,"David Terrell",WR,2001-2004,96,no,no
+CHI,Chicago Bears,"Charlie Wade",WR,1974,90,no,no
+CHI,Chicago Bears,"Shane Matthews",QB,1999-2001,90,no,no
+CHI,Chicago Bears,"Mike Phipps",QB,1977-1981,89,no,yes
+CHI,Chicago Bears,"Curtis Conway",WR,1999,84,no,no
+CHI,Chicago Bears,"Jim Harrison",RB,1971-1974,82,no,no
+CHI,Chicago Bears,"Ken Grandberry",RB,1974,80,no,no
+CHI,Chicago Bears,"Don Shy",RB,1970-1972,74,no,no
+CHI,Chicago Bears,"Bobby Douglass",QB,1970-1975,74,no,no
+CHI,Chicago Bears,"Gary Huff",QB,1973-1976,74,no,no
+CHI,Chicago Bears,"Bob Wallace",WR,1970-1972,66,no,no
+CHI,Chicago Bears,"Bob Grim",WR,1975,63,no,no
+CHI,Chicago Bears,"Tim Worley",RB,1993-1994,59,no,no
+CHI,Chicago Bears,"Kent Nix",QB,1970-1971,44,no,no
+CHI,Chicago Bears,"Steve Fuller",QB,1984-1986,36,no,no
+CHI,Chicago Bears,"Marcedes Lewis",TE,2023-2025,11,no,yes
+CIN,Cincinnati Bengals,"Jeff Blake",QB,1994-1999,291,no,no
+CIN,Cincinnati Bengals,"Boomer Esiason",QB,1984-1997,290,no,no
+CIN,Cincinnati Bengals,"Ken Anderson",QB,1971-1986,282,no,no
+CIN,Cincinnati Bengals,"Carl Pickens",WR,1992-1999,276,no,no
+CIN,Cincinnati Bengals,"Carson Palmer",QB,2004-2010,264,no,yes
+CIN,Cincinnati Bengals,"James Brooks",RB,1984-1993,254,no,no
+CIN,Cincinnati Bengals,"Pete Johnson",RB,1977-1983,251,no,no
+CIN,Cincinnati Bengals,"Corey Dillon",RB,1997-2003,242,no,no
+CIN,Cincinnati Bengals,"T.J. Houshmandzadeh",WR,2001-2008,242,no,no
+CIN,Cincinnati Bengals,"Rudi Johnson",RB,2002-2007,238,no,no
+CIN,Cincinnati Bengals,"Jon Kitna",QB,2001-2005,237,no,no
+CIN,Cincinnati Bengals,"Ickey Woods",RB,1988-1991,211,no,no
+CIN,Cincinnati Bengals,"Eddie Brown",WR,1985-1991,205,no,no
+CIN,Cincinnati Bengals,"Tim McGee",WR,1986-1994,205,no,no
+CIN,Cincinnati Bengals,"Jeremy Hill",RB,2014-2017,192,no,no
+CIN,Cincinnati Bengals,"Cris Collinsworth",WR,1981-1988,190,no,no
+CIN,Cincinnati Bengals,"Boobie Clark",RB,1973-1978,188,no,no
+CIN,Cincinnati Bengals,"Terrell Owens",WR,2010,188,no,yes
+CIN,Cincinnati Bengals,"Peter Warrick",WR,2000-2004,180,no,no
+CIN,Cincinnati Bengals,"Essex Johnson",RB,1970-1975,177,no,no
+CIN,Cincinnati Bengals,"Darnay Scott",WR,1994-2001,171,no,no
+CIN,Cincinnati Bengals,"Harold Green",RB,1990-1995,169,no,no
+CIN,Cincinnati Bengals,"Marvin Jones Jr.",WR,2012-2015,163,no,no
+CIN,Cincinnati Bengals,"Isaac Curtis",WR,1973-1984,161,no,no
+CIN,Cincinnati Bengals,"Brandon LaFell",WR,2016-2017,154,no,yes
+CIN,Cincinnati Bengals,"Dan Ross",WR,1979-1985,151,no,no
+CIN,Cincinnati Bengals,"Jake Browning",QB,2023-2024,151,no,no
+CIN,Cincinnati Bengals,"Doug Dressler",RB,1970-1974,145,no,no
+CIN,Cincinnati Bengals,"Neil O'Donnell",QB,1998,145,no,no
+CIN,Cincinnati Bengals,"Chris Henry",WR,2005-2009,133,no,no
+CIN,Cincinnati Bengals,"Fred Willis",RB,1971-1972,129,no,no
+CIN,Cincinnati Bengals,"Chip Myers",WR,1970-1976,126,no,no
+CIN,Cincinnati Bengals,"Don Bass",WR,1978-1981,123,no,no
+CIN,Cincinnati Bengals,"Ryan Fitzpatrick",QB,2008,123,no,yes
+CIN,Cincinnati Bengals,"Jerome Simpson",WR,2008-2011,123,no,yes
+CIN,Cincinnati Bengals,"Samaje Perine",RB,2019-2025,123,no,yes
+CIN,Cincinnati Bengals,"Charlie Joiner",WR,1973-1975,121,no,no
+CIN,Cincinnati Bengals,"Derrick Fenner",RB,1992-1994,119,no,no
+CIN,Cincinnati Bengals,"Charles Alexander",RB,1979-1985,115,no,no
+CIN,Cincinnati Bengals,"Billy Brooks",WR,1976-1979,114,no,no
+CIN,Cincinnati Bengals,"Jess Phillips",RB,1970-1972,113,no,no
+CIN,Cincinnati Bengals,"Garrison Hearst",RB,1996,110,no,no
+CIN,Cincinnati Bengals,"Andrew Hawkins",WR,2011-2013,105,no,yes
+CIN,Cincinnati Bengals,"Laveranues Coles",WR,2009,104,no,yes
+CIN,Cincinnati Bengals,"Jordan Shipley",WR,2010-2011,104,no,no
+CIN,Cincinnati Bengals,"Virgil Carter",QB,1970-1972,98,no,no
+CIN,Cincinnati Bengals,"Chris Perry",RB,2004-2008,96,no,no
+CIN,Cincinnati Bengals,"David Klingler",QB,1992-1995,92,no,no
+CIN,Cincinnati Bengals,"Jack Thompson",QB,1979-1982,85,no,no
+CIN,Cincinnati Bengals,"Jay Schroeder",QB,1993,51,no,no
+CLE,Cleveland Browns,"Derek Anderson",QB,2006-2009,251,no,yes
+CLE,Cleveland Browns,"Mike Pruitt",RB,1976-1984,241,no,no
+CLE,Cleveland Browns,"Earnest Byner",RB,1984-1995,219,no,no
+CLE,Cleveland Browns,"Kevin Johnson",WR,1999-2003,206,no,no
+CLE,Cleveland Browns,"Leroy Hoard",RB,1990-1995,194,no,no
+CLE,Cleveland Browns,"Vinny Testaverde",QB,1993-1995,192,no,yes
+CLE,Cleveland Browns,"Webster Slaughter",WR,1986-1991,190,no,no
+CLE,Cleveland Browns,"Reuben Droughns",RB,2005-2006,190,no,no
+CLE,Cleveland Browns,"Leroy Kelly",RB,1970-1973,182,no,no
+CLE,Cleveland Browns,"Eric Metcalf",WR,1989-1994,180,no,no
+CLE,Cleveland Browns,"Kellen Winslow Jr.",TE,2004-2008,180,no,no
+CLE,Cleveland Browns,"Terry Kirby",RB,1999,179,no,no
+CLE,Cleveland Browns,"Bo Scott",RB,1970-1974,176,no,no
+CLE,Cleveland Browns,"Paul McDonald",QB,1980-1985,172,no,no
+CLE,Cleveland Browns,"Dave Logan",WR,1976-1983,168,no,no
+CLE,Cleveland Browns,"Quincy Morgan",WR,2001-2003,163,no,no
+CLE,Cleveland Browns,"Jerome Harrison",RB,2006-2009,163,no,no
+CLE,Cleveland Browns,"Odell Beckham Jr.",WR,2019-2020,163,yes,yes
+CLE,Cleveland Browns,"Antonio Bryant",WR,2004-2005,158,no,no
+CLE,Cleveland Browns,"Tim Couch",QB,1999-2003,156,no,no
+CLE,Cleveland Browns,"Reggie Rucker",WR,1975-1981,154,no,no
+CLE,Cleveland Browns,"Reggie Langhorne",WR,1985-1991,151,no,no
+CLE,Cleveland Browns,"Cleo Miller",RB,1975-1982,145,no,no
+CLE,Cleveland Browns,"Michael Jackson",WR,1991-1995,145,no,no
+CLE,Cleveland Browns,"Jamel White",RB,2000-2003,144,no,no
+CLE,Cleveland Browns,"Jameis Winston",QB,2024,143,no,yes
+CLE,Cleveland Browns,"William Green",RB,2002-2005,140,no,no
+CLE,Cleveland Browns,"Bill Nelsen",QB,1970-1972,134,no,no
+CLE,Cleveland Browns,"Travis Prentice",RB,2000,133,no,no
+CLE,Cleveland Browns,"Charlie Frye",QB,2005-2007,130,no,no
+CLE,Cleveland Browns,"Benjamin Watson",TE,2010-2012,128,no,yes
+CLE,Cleveland Browns,"Dennis Northcutt",WR,2000-2006,126,no,no
+CLE,Cleveland Browns,"Keenan McCardell",WR,1992-1995,123,no,no
+CLE,Cleveland Browns,"Jason Campbell",QB,2013,120,no,yes
+CLE,Cleveland Browns,"Derrick Alexander",WR,1994-1995,119,no,no
+CLE,Cleveland Browns,"Paul Warfield",WR,1976-1977,117,no,no
+CLE,Cleveland Browns,"Trent Dilfer",QB,2005,115,no,no
+CLE,Cleveland Browns,"Ken Brown",RB,1970-1975,114,no,no
+CLE,Cleveland Browns,"Mark Carrier",WR,1993,114,no,no
+CLE,Cleveland Browns,"Lee Suggs",RB,2003-2005,114,no,no
+CLE,Cleveland Browns,"Andre Rison",WR,1995,112,no,no
+CLE,Cleveland Browns,"Andre Davis",WR,2002-2004,110,no,no
+CLE,Cleveland Browns,"Antonio Callaway",WR,2018-2019,110,no,no
+CLE,Cleveland Browns,"Jeff Garcia",QB,2004,108,no,yes
+CLE,Cleveland Browns,"Tommy Vardell",RB,1992-1995,107,no,no
+CLE,Cleveland Browns,"Joe Jurevicius",WR,2006-2007,104,no,no
+CLE,Cleveland Browns,"Boyce Green",RB,1983-1985,95,no,no
+CLE,Cleveland Browns,"Fair Hooker",WR,1970-1974,93,no,no
+CLE,Cleveland Browns,"Curtis Dickey",RB,1985-1986,93,no,no
+CLE,Cleveland Browns,"Mike Tomczak",QB,1992,93,no,no
+CLE,Cleveland Browns,"Darrin Chiaverini",WR,1999-2000,90,no,no
+CLE,Cleveland Browns,"Milt Morin",WR,1970-1975,86,no,no
+CLE,Cleveland Browns,"Charles White",RB,1980-1984,86,no,no
+CLE,Cleveland Browns,"Kelly Holcomb",QB,2001-2004,85,no,no
+CLE,Cleveland Browns,"Gary Collins",WR,1970-1971,70,no,no
+CLE,Cleveland Browns,"Don Strock",QB,1988,48,no,no
+DAL,Dallas Cowboys,"Herschel Walker",RB,1986-1997,279,no,no
+DAL,Dallas Cowboys,"Michael Irvin",WR,1988-1999,276,no,no
+DAL,Dallas Cowboys,"Danny White",QB,1976-1988,270,no,no
+DAL,Dallas Cowboys,"Tony Dorsett",RB,1977-1988,263,no,no
+DAL,Dallas Cowboys,"Troy Aikman",QB,1989-2000,232,no,no
+DAL,Dallas Cowboys,"Marion Barber",RB,2005-2010,220,no,no
+DAL,Dallas Cowboys,"Calvin Hill",RB,1970-1974,202,no,yes
+DAL,Dallas Cowboys,"Rocket Ismail",WR,1999-2001,201,no,no
+DAL,Dallas Cowboys,"Raghib Ismail",WR,1999-2001,200,no,no
+DAL,Dallas Cowboys,"Tony Hill",WR,1977-1986,196,no,no
+DAL,Dallas Cowboys,"Ron Springs",RB,1979-1984,192,no,no
+DAL,Dallas Cowboys,"Terry Glenn",WR,2003-2006,192,no,no
+DAL,Dallas Cowboys,"Vinny Testaverde",QB,2004,191,no,yes
+DAL,Dallas Cowboys,"Quincy Carter",QB,2001-2003,190,no,no
+DAL,Dallas Cowboys,"Walt Garrison",RB,1970-1974,184,no,no
+DAL,Dallas Cowboys,"Laurent Robinson",WR,2011,179,no,no
+DAL,Dallas Cowboys,"Drew Pearson",WR,1973-1983,178,no,no
+DAL,Dallas Cowboys,"Rico Dowdle",RB,2020-2024,176,yes,no
+DAL,Dallas Cowboys,"Steve Pelluer",QB,1984-1988,175,no,no
+DAL,Dallas Cowboys,"Mike Renfro",WR,1984-1987,168,no,no
+DAL,Dallas Cowboys,"Keyshawn Johnson",WR,2004-2005,168,no,yes
+DAL,Dallas Cowboys,"Julius Jones",RB,2004-2007,165,no,no
+DAL,Dallas Cowboys,"Jon Kitna",QB,2009-2011,165,no,no
+DAL,Dallas Cowboys,"Joey Galloway",WR,2000-2003,158,no,yes
+DAL,Dallas Cowboys,"Robert Newhouse",RB,1972-1983,144,no,no
+DAL,Dallas Cowboys,"Richie Anderson",RB,2003-2004,144,no,no
+DAL,Dallas Cowboys,"Doug Cosbie",WR,1979-1988,143,no,no
+DAL,Dallas Cowboys,"Troy Hambrick",RB,2000-2003,140,no,no
+DAL,Dallas Cowboys,"Preston Pearson",RB,1975-1980,139,no,no
+DAL,Dallas Cowboys,"Craig Morton",QB,1970-1973,135,no,no
+DAL,Dallas Cowboys,"Patrick Crayton",WR,2004-2009,135,no,no
+DAL,Dallas Cowboys,"Jay Novacek",WR,1990-1995,133,no,no
+DAL,Dallas Cowboys,"Antonio Bryant",WR,2002-2003,131,no,no
+DAL,Dallas Cowboys,"Randall Cobb",WR,2019,126,no,yes
+DAL,Dallas Cowboys,"James McKnight",WR,2000,124,no,no
+DAL,Dallas Cowboys,"Roy Williams",WR,2008-2010,119,no,no
+DAL,Dallas Cowboys,"Billy Joe DuPree",WR,1973-1983,117,no,no
+DAL,Dallas Cowboys,"Gary Hogeboom",QB,1980-1985,109,no,no
+DAL,Dallas Cowboys,"Kelvin Martin",WR,1987-1996,101,no,no
+DAL,Dallas Cowboys,"Lance Rentzel",WR,1970,99,no,no
+DAL,Dallas Cowboys,"Doug Dennison",RB,1974-1978,95,no,no
+DAL,Dallas Cowboys,"David LaFleur",TE,1999-2000,91,no,no
+DAL,Dallas Cowboys,"Chris Warren III",RB,1999-2000,88,no,no
+DAL,Dallas Cowboys,"Chris Warren",RB,1998-1999,85,no,no
+DAL,Dallas Cowboys,"Jackie Harris",TE,2000-2001,79,no,no
+DAL,Dallas Cowboys,"Eddie George",RB,2004,78,no,no
+DAL,Dallas Cowboys,"Randall Cunningham",QB,2000,67,no,no
+DAL,Dallas Cowboys,"Steve Walsh",QB,1989-1990,66,no,no
+DAL,Dallas Cowboys,"Martellus Bennett",TE,2008-2011,62,no,yes
+DAL,Dallas Cowboys,"Mike Ditka",WR,1970-1972,57,no,yes
+DAL,Dallas Cowboys,"Steve Beuerlein",QB,1991-1992,53,no,no
+DAL,Dallas Cowboys,"Billy Parks",WR,1972,45,no,no
+DAL,Dallas Cowboys,"Dan Reeves",RB,1970-1972,32,no,no
+DAL,Dallas Cowboys,"Anthony Fasano",TE,2006-2007,27,no,yes
+DAL,Dallas Cowboys,"T.Y. Hilton",WR,2022,16,no,no
+DEN,Denver Broncos,"Peyton Manning",QB,2012-2015,420,no,yes
+DEN,Denver Broncos,"Terrell Davis",RB,1995-2001,369,no,no
+DEN,Denver Broncos,"Clinton Portis",RB,2002-2003,300,no,yes
+DEN,Denver Broncos,"Rod Smith",WR,1995-2006,269,no,no
+DEN,Denver Broncos,"Mike Anderson",RB,2000-2005,262,no,no
+DEN,Denver Broncos,"Otis Armstrong",RB,1973-1980,260,no,no
+DEN,Denver Broncos,"Steve Watson",WR,1979-1987,233,no,no
+DEN,Denver Broncos,"Javon Walker",WR,2006-2007,209,no,no
+DEN,Denver Broncos,"Reuben Droughns",RB,2002-2004,206,no,no
+DEN,Denver Broncos,"Craig Morton",QB,1978-1982,198,no,no
+DEN,Denver Broncos,"Sammy Winder",RB,1982-1990,192,no,no
+DEN,Denver Broncos,"Vance Johnson",WR,1985-1995,190,no,no
+DEN,Denver Broncos,"Brian Griese",QB,1999-2002,188,no,no
+DEN,Denver Broncos,"Julius Thomas",TE,2011-2014,183,no,no
+DEN,Denver Broncos,"Bobby Humphrey",RB,1989-1991,182,no,no
+DEN,Denver Broncos,"Melvin Gordon",RB,2020-2022,182,no,yes
+DEN,Denver Broncos,"Olandis Gary",RB,1999-2002,180,no,no
+DEN,Denver Broncos,"Ashley Lelie",WR,2002-2005,178,no,yes
+DEN,Denver Broncos,"Melvin Gordon III",RB,2020-2022,178,no,yes
+DEN,Denver Broncos,"Charley Johnson",QB,1972-1975,162,no,no
+DEN,Denver Broncos,"Rick Upchurch",WR,1975-1983,159,no,no
+DEN,Denver Broncos,"Gerald Willhite",WR,1982-1988,159,no,no
+DEN,Denver Broncos,"Rod Bernstine",RB,1993-1995,159,no,no
+DEN,Denver Broncos,"Tatum Bell",RB,2004-2008,158,no,no
+DEN,Denver Broncos,"Haven Moses",WR,1972-1981,157,no,no
+DEN,Denver Broncos,"Shannon Sharpe",TE,1991-2003,156,no,no
+DEN,Denver Broncos,"Mark Jackson",WR,1986-1992,152,no,no
+DEN,Denver Broncos,"Dave Preston",RB,1978-1983,151,no,no
+DEN,Denver Broncos,"Leonard Russell",RB,1994,150,no,no
+DEN,Denver Broncos,"Riley Odoms",WR,1972-1983,146,no,no
+DEN,Denver Broncos,"Mike Bell",RB,2006-2007,142,no,no
+DEN,Denver Broncos,"Jon Keyworth",RB,1974-1980,141,no,no
+DEN,Denver Broncos,"Latavius Murray",RB,2022,141,no,yes
+DEN,Denver Broncos,"Tim Patrick",WR,2018-2023,136,no,no
+DEN,Denver Broncos,"Gaston Green",RB,1991-1992,134,no,no
+DEN,Denver Broncos,"Jabar Gaffney",WR,2009-2010,132,no,yes
+DEN,Denver Broncos,"Glyn Milburn",WR,1993-1995,130,no,no
+DEN,Denver Broncos,"Joe Dawkins",RB,1971-1973,123,no,no
+DEN,Denver Broncos,"Robert Delpino",RB,1993,123,no,no
+DEN,Denver Broncos,"Bobby Anderson",RB,1970-1973,119,no,no
+DEN,Denver Broncos,"Selvin Young",RB,2007-2008,118,no,no
+DEN,Denver Broncos,"Rick Parros",RB,1981-1984,115,no,no
+DEN,Denver Broncos,"Desmond Clark",TE,1999-2001,114,no,yes
+DEN,Denver Broncos,"Marvin Mims Jr.",WR,2023-2025,110,no,no
+DEN,Denver Broncos,"Steve Ramsey",QB,1971-1976,108,no,no
+DEN,Denver Broncos,"Gus Frerotte",QB,2000-2001,105,no,yes
+DEN,Denver Broncos,"Rod Sherman",WR,1972,101,no,no
+DEN,Denver Broncos,"Travis Henry",RB,2007,101,no,no
+DEN,Denver Broncos,"Al Denson",WR,1970,100,no,no
+DEN,Denver Broncos,"Peyton Hillis",RB,2008-2009,95,no,yes
+DEN,Denver Broncos,"Steve DeBerg",QB,1981-1983,94,no,no
+DEN,Denver Broncos,"Bubby Brister",QB,1997-1999,93,no,no
+DEN,Denver Broncos,"Jeb Putzier",TE,2002-2005,87,no,no
+DEN,Denver Broncos,"Mike Pritchard",WR,1994-1995,78,no,no
+DEN,Denver Broncos,"Pete Liske",QB,1970,71,no,no
+DEN,Denver Broncos,"Willis Crenshaw",RB,1970,70,no,no
+DEN,Denver Broncos,"Tony Reed",RB,1981,62,no,no
+DEN,Denver Broncos,"Vernon Davis",TE,2015,59,no,yes
+DEN,Denver Broncos,"Don Horn",QB,1971-1972,40,no,no
+DET,Detroit Lions,"Herman Moore",WR,1991-2001,310,no,no
+DET,Detroit Lions,"Scott Mitchell",QB,1994-1998,290,no,no
+DET,Detroit Lions,"Brett Perriman",WR,1991-1998,255,no,no
+DET,Detroit Lions,"Greg Landry",QB,1970-1978,244,no,no
+DET,Detroit Lions,"Jon Kitna",QB,2006-2008,240,no,no
+DET,Detroit Lions,"James Stewart",RB,2000-2002,224,no,no
+DET,Detroit Lions,"Germane Crowell",WR,1998-2002,218,no,no
+DET,Detroit Lions,"Roy Williams",WR,2004-2007,210,no,no
+DET,Detroit Lions,"Dan Orlovsky",QB,2004-2015,207,no,yes
+DET,Detroit Lions,"Steve Owens",RB,1970-1974,205,no,no
+DET,Detroit Lions,"Rodney Peete",QB,1989-1993,195,no,no
+DET,Detroit Lions,"Marvin Jones Jr.",WR,2016-2023,195,no,no
+DET,Detroit Lions,"Mike Furrey",WR,2006-2008,192,no,no
+DET,Detroit Lions,"Kevin Smith",RB,2008-2012,192,no,no
+DET,Detroit Lions,"Richard Johnson",WR,1989-1990,190,no,no
+DET,Detroit Lions,"Kevin Jones",RB,2004-2007,189,no,no
+DET,Detroit Lions,"Joey Harrington",QB,2002-2005,185,no,no
+DET,Detroit Lions,"Johnnie Morton",WR,1994-2001,182,no,no
+DET,Detroit Lions,"Gary Danielson",QB,1976-1984,176,no,no
+DET,Detroit Lions,"Eric Hipple",QB,1980-1989,168,no,no
+DET,Detroit Lions,"Jahvid Best",RB,2010-2011,168,no,no
+DET,Detroit Lions,"Shaun McDonald",WR,2007-2008,166,no,no
+DET,Detroit Lions,"Mel Farr",RB,1970-1973,164,no,no
+DET,Detroit Lions,"Charlie Batch",QB,1998-2001,163,no,yes
+DET,Detroit Lions,"Freddie Scott",WR,1978-1983,161,no,no
+DET,Detroit Lions,"Horace King",RB,1975-1983,160,no,no
+DET,Detroit Lions,"Dexter Bussey",RB,1974-1984,153,no,no
+DET,Detroit Lions,"Garry James",RB,1986-1988,149,no,no
+DET,Detroit Lions,"Brandon Pettigrew",TE,2009-2015,149,no,no
+DET,Detroit Lions,"Pete Mandley",WR,1984-1988,143,no,no
+DET,Detroit Lions,"Shawn Bryson",RB,2003-2006,140,no,no
+DET,Detroit Lions,"Anquan Boldin",WR,2016,140,no,yes
+DET,Detroit Lions,"T.J. Hockenson",TE,2019-2022,140,yes,no
+DET,Detroit Lions,"Nate Burleson",WR,2010-2013,139,no,yes
+DET,Detroit Lions,"Altie Taylor",RB,1970-1975,137,no,no
+DET,Detroit Lions,"Chuck Long",QB,1986-1989,128,no,no
+DET,Detroit Lions,"Ron Jessie",WR,1971-1974,123,no,no
+DET,Detroit Lions,"Kerryon Johnson",RB,2018-2020,122,no,no
+DET,Detroit Lions,"Adrian Peterson",RB,2020,119,yes,yes
+DET,Detroit Lions,"Gus Frerotte",QB,1999,117,no,yes
+DET,Detroit Lions,"Eric Ebron",TE,2014-2017,114,no,yes
+DET,Detroit Lions,"David Hill",WR,1976-1982,113,no,no
+DET,Detroit Lions,"Charlie Sanders",WR,1970-1977,110,no,no
+DET,Detroit Lions,"Josh Reynolds",WR,2021-2023,109,no,yes
+DET,Detroit Lions,"Cory Schlesinger",RB,1999-2006,108,no,no
+DET,Detroit Lions,"Bill Schroeder",WR,2002-2003,108,no,no
+DET,Detroit Lions,"Kalif Raymond",WR,2021-2024,108,no,yes
+DET,Detroit Lions,"David Sloan",TE,1999-2001,107,no,no
+DET,Detroit Lions,"Lawrence Gaines",RB,1976-1979,106,no,no
+DET,Detroit Lions,"Erik Kramer",QB,1991-1993,102,no,no
+DET,Detroit Lions,"Bill Munson",QB,1970-1975,100,no,no
+DET,Detroit Lions,"Az-Zahir Hakim",WR,2002-2006,97,no,no
+DET,Detroit Lions,"Lamont Warren",RB,2001-2002,95,no,no
+DET,Detroit Lions,"Marcus Pollard",TE,2005-2006,91,no,no
+DET,Detroit Lions,"Derrick Moore",RB,1993-1994,84,no,no
+DET,Detroit Lions,"Bob Gagliano",QB,1989-1990,79,no,no
+DET,Detroit Lions,"Rusty Hilger",QB,1988,78,no,no
+DET,Detroit Lions,"Tommy Vardell",RB,1997-1998,76,no,no
+DET,Detroit Lions,"Joe Reed",WR,1975-1979,73,no,no
+DET,Detroit Lions,"Marlin Briscoe",WR,1975,67,no,no
+DET,Detroit Lions,"Joe Ferguson",QB,1985-1986,59,no,no
+DET,Detroit Lions,"Jeff Garcia",QB,2005,49,no,yes
+DET,Detroit Lions,"Frank Reich",QB,1997-1998,47,no,no
+DET,Detroit Lions,"J.D. Hill",WR,1976-1977,43,no,yes
+DET,Detroit Lions,"Butch Woolfolk",WR,1987-1988,32,no,no
+GB,Green Bay Packers,"Brett Favre",QB,1992-2007,352,no,yes
+GB,Green Bay Packers,"Don Majkowski",QB,1987-1992,297,no,no
+GB,Green Bay Packers,"Robert Brooks",WR,1992-1998,281,no,no
+GB,Green Bay Packers,"Lynn Dickey",QB,1976-1985,279,no,no
+GB,Green Bay Packers,"Antonio Freeman",WR,1995-2003,268,no,no
+GB,Green Bay Packers,"Dorsey Levens",RB,1999-2001,245,no,no
+GB,Green Bay Packers,"Edgar Bennett",RB,1992-1996,240,no,no
+GB,Green Bay Packers,"Terdell Middleton",RB,1977-1981,218,no,no
+GB,Green Bay Packers,"Gerry Ellis",RB,1980-1986,200,no,no
+GB,Green Bay Packers,"John Brockington",RB,1971-1977,183,no,no
+GB,Green Bay Packers,"Randy Wright",QB,1984-1988,175,no,no
+GB,Green Bay Packers,"Bill Schroeder",WR,1999-2001,173,no,no
+GB,Green Bay Packers,"Paul Coffman",WR,1978-1985,172,no,no
+GB,Green Bay Packers,"AJ Dillon",RB,2020-2023,167,no,no
+GB,Green Bay Packers,"Donny Anderson",RB,1970-1971,159,no,no
+GB,Green Bay Packers,"Brandon Jackson",RB,2007-2010,150,no,yes
+GB,Green Bay Packers,"Vince Workman",RB,1989-1992,144,no,no
+GB,Green Bay Packers,"Brent Fullwood",RB,1987-1990,131,no,no
+GB,Green Bay Packers,"Keith Jackson",WR,1996,131,no,no
+GB,Green Bay Packers,"MacArthur Lane",RB,1972-1974,130,no,no
+GB,Green Bay Packers,"Jamaal Williams",RB,2017-2020,130,no,yes
+GB,Green Bay Packers,"Reggie Cobb",RB,1994,127,no,no
+GB,Green Bay Packers,"Barty Smith",RB,1974-1980,124,no,no
+GB,Green Bay Packers,"Terry Glenn",WR,2002,120,no,no
+GB,Green Bay Packers,"Marquez Valdes-Scantling",WR,2018-2021,120,no,no
+GB,Green Bay Packers,"Donald Lee",TE,2005-2010,116,no,no
+GB,Green Bay Packers,"Carroll Dale",WR,1970-1972,115,no,no
+GB,Green Bay Packers,"David Whitehurst",QB,1977-1983,112,no,no
+GB,Green Bay Packers,"Samkon Gado",RB,2005,111,no,yes
+GB,Green Bay Packers,"Jarrett Boykin",WR,2012-2014,111,no,no
+GB,Green Bay Packers,"Mike Tomczak",QB,1991,110,no,no
+GB,Green Bay Packers,"Corey Bradford",WR,1999-2001,110,no,no
+GB,Green Bay Packers,"Keith Woodside",WR,1988-1991,108,no,no
+GB,Green Bay Packers,"Antonio Chatman",WR,2004-2005,107,no,no
+GB,Green Bay Packers,"Jackie Harris",TE,1990-1993,105,no,no
+GB,Green Bay Packers,"Ken Payne",WR,1974-1977,103,no,no
+GB,Green Bay Packers,"Darrell Thompson",RB,1990-1994,101,no,no
+GB,Green Bay Packers,"Robert Ferguson",WR,2002-2006,94,no,no
+GB,Green Bay Packers,"John Hadl",QB,1974-1975,87,no,no
+GB,Green Bay Packers,"Kenneth Davis",RB,1986-1988,79,no,no
+GB,Green Bay Packers,"John Hilton",WR,1970,70,no,no
+GB,Green Bay Packers,"Darick Holmes",RB,1998,70,no,no
+GB,Green Bay Packers,"Scott Hunter",QB,1971-1973,65,no,no
+GB,Green Bay Packers,"Travis Williams",RB,1970,58,no,no
+GB,Green Bay Packers,"Jared Cook",TE,2016,56,no,yes
+GB,Green Bay Packers,"Dave Hampton",RB,1970-1971,46,no,no
+GB,Green Bay Packers,"Jim Grabowski",RB,1970,45,no,no
+GB,Green Bay Packers,"Martellus Bennett",TE,2017,44,no,yes
+GB,Green Bay Packers,"Wesley Walls",TE,2003,38,no,no
+GB,Green Bay Packers,"Marcedes Lewis",TE,2018-2022,34,no,yes
+GB,Green Bay Packers,"Andre Rison",WR,1996,26,no,no
+GB,Green Bay Packers,"Mark Brunell",QB,1993-1994,9,no,yes
+GB,Green Bay Packers,"Matt Hasselbeck",QB,1999-2000,8,no,yes
+HOU,Houston Texans,"Domanick Williams",RB,2003-2005,288,no,no
+HOU,Houston Texans,"Matt Schaub",QB,2007-2013,279,no,yes
+HOU,Houston Texans,"Brock Osweiler",QB,2016,180,no,yes
+HOU,Houston Texans,"Lamar Miller",RB,2016-2018,175,no,yes
+HOU,Houston Texans,"Brian Hoyer",QB,2015,167,no,yes
+HOU,Houston Texans,"David Johnson",RB,2020-2021,163,no,no
+HOU,Houston Texans,"Will Fuller V",WR,2016-2020,162,no,no
+HOU,Houston Texans,"Carlos Hyde",RB,2019,148,no,yes
+HOU,Houston Texans,"Ben Tate",RB,2011-2013,131,no,yes
+HOU,Houston Texans,"Duke Johnson",RB,2019-2020,131,no,yes
+HOU,Houston Texans,"Corey Bradford",WR,2002-2005,127,no,no
+HOU,Houston Texans,"Nate Washington",WR,2015,113,no,yes
+HOU,Houston Texans,"Sage Rosenfels",QB,2006-2008,109,no,no
+HOU,Houston Texans,"James Allen",RB,2002,108,no,no
+HOU,Houston Texans,"C.J. Fiedorowicz",TE,2014-2017,106,no,no
+HOU,Houston Texans,"Billy Miller",TE,2002-2004,105,no,no
+HOU,Houston Texans,"Garrett Graham",TE,2011-2015,105,no,no
+HOU,Houston Texans,"Alfred Blue",RB,2014-2018,104,no,no
+HOU,Houston Texans,"Jabar Gaffney",WR,2002-2005,99,no,yes
+HOU,Houston Texans,"Mark Ingram II",RB,2021,94,yes,yes
+HOU,Houston Texans,"Ahman Green",RB,2007-2008,57,no,yes
+HOU,Houston Texans,"Derrick Mason",WR,2011,27,no,yes
+IND,Indianapolis Colts,"Marshall Faulk",RB,1994-1998,326,no,no
+IND,Indianapolis Colts,"Marvin Harrison",WR,1996-2008,311,no,no
+IND,Indianapolis Colts,"Lydell Mitchell",RB,1972-1977,284,no,no
+IND,Indianapolis Colts,"Bert Jones",QB,1973-1981,247,no,no
+IND,Indianapolis Colts,"Daniel Jones",QB,2025,234,no,yes
+IND,Indianapolis Colts,"Joe Washington",RB,1978-1980,230,no,no
+IND,Indianapolis Colts,"T.Y. Hilton",WR,2012-2021,228,no,no
+IND,Indianapolis Colts,"Eric Dickerson",RB,1987-1991,215,no,no
+IND,Indianapolis Colts,"Gardner Minshew",QB,2023,205,no,yes
+IND,Indianapolis Colts,"Gardner Minshew II",QB,2023,205,no,yes
+IND,Indianapolis Colts,"Brandon Stokley",WR,2003-2006,200,no,yes
+IND,Indianapolis Colts,"Roger Carr",WR,1974-1981,199,no,no
+IND,Indianapolis Colts,"Jim Harbaugh",QB,1994-1997,198,no,no
+IND,Indianapolis Colts,"Curtis Dickey",RB,1980-1985,197,no,no
+IND,Indianapolis Colts,"Frank Gore",RB,2015-2017,195,no,yes
+IND,Indianapolis Colts,"Dominic Rhodes",RB,2001-2010,192,no,no
+IND,Indianapolis Colts,"Albert Bentley",RB,1985-1991,190,no,no
+IND,Indianapolis Colts,"Bill Brooks",WR,1986-1992,190,no,no
+IND,Indianapolis Colts,"Anthony Richardson",QB,2023-2025,175,no,no
+IND,Indianapolis Colts,"Marlon Mack",RB,2017-2021,174,no,no
+IND,Indianapolis Colts,"Pierre Garcon",WR,2008-2011,163,no,yes
+IND,Indianapolis Colts,"Norm Bulaich",RB,1970-1972,162,no,no
+IND,Indianapolis Colts,"Matt Ryan",QB,2022,161,no,yes
+IND,Indianapolis Colts,"Nyheim Miller-Hines",RB,2018-2021,160,no,no
+IND,Indianapolis Colts,"Jessie Hester",WR,1990-1993,156,no,no
+IND,Indianapolis Colts,"Reggie Langhorne",WR,1992-1993,156,no,no
+IND,Indianapolis Colts,"Zack Moss",RB,2022-2023,156,no,no
+IND,Indianapolis Colts,"Randy McMillan",RB,1981-1986,153,no,no
+IND,Indianapolis Colts,"Matt Bouza",WR,1982-1989,150,no,no
+IND,Indianapolis Colts,"Eddie Hinton",WR,1970-1972,145,no,no
+IND,Indianapolis Colts,"Marcus Pollard",TE,1999-2004,145,no,no
+IND,Indianapolis Colts,"Jeff George",QB,1990-1993,144,no,no
+IND,Indianapolis Colts,"Roy Jefferson",WR,1970,142,no,no
+IND,Indianapolis Colts,"Don McCauley",WR,1971-1981,142,no,no
+IND,Indianapolis Colts,"Anthony Johnson",RB,1990-1993,141,no,no
+IND,Indianapolis Colts,"Jack Trudeau",QB,1986-1993,140,no,no
+IND,Indianapolis Colts,"Tom Matte",RB,1970-1972,139,no,no
+IND,Indianapolis Colts,"Mike Pagel",QB,1982-1985,138,no,no
+IND,Indianapolis Colts,"Ahmad Bradshaw",RB,2013-2015,133,no,yes
+IND,Indianapolis Colts,"Andre Rison",WR,1989,132,no,no
+IND,Indianapolis Colts,"Sean Dawkins",WR,1993-1997,128,no,no
+IND,Indianapolis Colts,"Donnie Avery",WR,2012,126,no,yes
+IND,Indianapolis Colts,"Vick Ballard",RB,2012-2013,120,no,no
+IND,Indianapolis Colts,"Floyd Turner",WR,1994-1995,119,no,no
+IND,Indianapolis Colts,"Anthony Gonzalez",WR,2007-2011,119,no,no
+IND,Indianapolis Colts,"Glenn Doughty",WR,1972-1979,111,no,no
+IND,Indianapolis Colts,"Jerome Pathon",WR,1999-2001,107,no,no
+IND,Indianapolis Colts,"Terrence Wilkins",WR,1999-2006,95,no,no
+IND,Indianapolis Colts,"Andre Johnson",WR,2015,95,no,yes
+IND,Indianapolis Colts,"Marty Domres",QB,1972-1975,94,no,no
+IND,Indianapolis Colts,"Bill Troup",QB,1974-1978,94,no,no
+IND,Indianapolis Colts,"Ken Dilger",TE,1999-2001,93,no,no
+IND,Indianapolis Colts,"Tom Mitchell",WR,1970-1973,92,no,no
+IND,Indianapolis Colts,"James Mungro",RB,2002-2005,92,no,no
+IND,Indianapolis Colts,"Roosevelt Leaks",RB,1975-1979,89,no,no
+IND,Indianapolis Colts,"Raymond Chester",WR,1973-1977,87,no,no
+IND,Indianapolis Colts,"Roosevelt Potts",RB,1993-1997,87,no,no
+IND,Indianapolis Colts,"Qadry Ismail",WR,2002,86,no,no
+IND,Indianapolis Colts,"Don Nottingham",RB,1971-1973,84,no,no
+IND,Indianapolis Colts,"Stanley Morgan",WR,1990,78,no,no
+IND,Indianapolis Colts,"Gary Hogeboom",QB,1986-1988,77,no,no
+IND,Indianapolis Colts,"John Mackey",WR,1970-1971,74,no,yes
+IND,Indianapolis Colts,"Don Hardeman",RB,1978-1979,69,no,no
+IND,Indianapolis Colts,"Zack Crockett",RB,1995-1998,55,no,yes
+IND,Indianapolis Colts,"Freddie Scott",WR,1974-1977,48,no,no
+IND,Indianapolis Colts,"Tom Nowatzke",RB,1970-1972,42,no,no
+IND,Indianapolis Colts,"Jerry Hill",RB,1970,34,no,no
+IND,Indianapolis Colts,"Kerry Collins",QB,2011,20,no,yes
+JAX,Jacksonville Jaguars,"Maurice Jones-Drew",RB,2006-2013,297,no,no
+JAX,Jacksonville Jaguars,"Allen Robinson",WR,2014-2017,264,yes,yes
+JAX,Jacksonville Jaguars,"Jimmy Smith",WR,1995-2005,256,no,no
+JAX,Jacksonville Jaguars,"Brian Thomas",WR,2024-2025,237,no,no
+JAX,Jacksonville Jaguars,"David Garrard",QB,2002-2010,220,no,no
+JAX,Jacksonville Jaguars,"Leonard Fournette",RB,2017-2019,220,no,yes
+JAX,Jacksonville Jaguars,"Keenan McCardell",WR,1996-2001,192,no,no
+JAX,Jacksonville Jaguars,"Calvin Ridley",WR,2023,192,yes,yes
+JAX,Jacksonville Jaguars,"DJ Chark",WR,2018-2021,189,no,no
+JAX,Jacksonville Jaguars,"D.J. Chark",WR,2018-2021,187,no,no
+JAX,Jacksonville Jaguars,"James Stewart",RB,1995-1999,185,no,no
+JAX,Jacksonville Jaguars,"Byron Leftwich",QB,2003-2006,182,no,no
+JAX,Jacksonville Jaguars,"Stacey Mack",RB,1999-2002,174,no,no
+JAX,Jacksonville Jaguars,"Cecil Shorts",WR,2011-2014,164,no,no
+JAX,Jacksonville Jaguars,"Mike Sims-Walker",WR,2008-2010,158,no,no
+JAX,Jacksonville Jaguars,"Zay Jones",WR,2022-2023,157,no,yes
+JAX,Jacksonville Jaguars,"Justin Blackmon",WR,2012-2013,152,no,no
+JAX,Jacksonville Jaguars,"Mike Thomas",WR,2009-2012,150,no,no
+JAX,Jacksonville Jaguars,"T.J. Yeldon",RB,2015-2018,145,no,no
+JAX,Jacksonville Jaguars,"Natrone Means",RB,1996-1997,144,no,no
+JAX,Jacksonville Jaguars,"Dede Westbrook",WR,2017-2020,144,no,no
+JAX,Jacksonville Jaguars,"Marvin Jones Jr.",WR,2021-2022,144,no,no
+JAX,Jacksonville Jaguars,"Chris Conley",WR,2019-2020,133,no,no
+JAX,Jacksonville Jaguars,"Ernest Wilford",WR,2004-2010,131,no,no
+JAX,Jacksonville Jaguars,"Laviska Shenault Jr.",WR,2020-2021,129,no,no
+JAX,Jacksonville Jaguars,"Keelan Cole",WR,2017-2020,128,no,no
+JAX,Jacksonville Jaguars,"Laviska Shenault",WR,2020-2021,128,no,no
+JAX,Jacksonville Jaguars,"Kyle Brady",TE,1999-2006,123,no,yes
+JAX,Jacksonville Jaguars,"Matt Jones",WR,2005-2008,117,no,no
+JAX,Jacksonville Jaguars,"Willie Jackson",WR,1995-1997,111,no,no
+JAX,Jacksonville Jaguars,"Dennis Northcutt",WR,2007-2008,109,no,no
+JAX,Jacksonville Jaguars,"Donte Moncrief",WR,2018,106,no,yes
+JAX,Jacksonville Jaguars,"Rashad Jennings",RB,2009-2012,105,no,yes
+JAX,Jacksonville Jaguars,"Torry Holt",WR,2009,96,no,yes
+JAX,Jacksonville Jaguars,"Greg Jones",RB,2004-2012,93,no,no
+JAX,Jacksonville Jaguars,"Andre Rison",WR,1996,75,no,no
+JAX,Jacksonville Jaguars,"Ernest Givins",WR,1995,61,no,no
+JAX,Jacksonville Jaguars,"Steve Beuerlein",QB,1995,50,no,no
+JAX,Jacksonville Jaguars,"Vaughn Dunbar",RB,1995,50,no,no
+JAX,Jacksonville Jaguars,"Jamaal Charles",RB,2018,2,yes,yes
+KC,Kansas City Chiefs,"Priest Holmes",RB,2001-2007,408,no,no
+KC,Kansas City Chiefs,"Alex Smith",QB,2013-2017,300,no,yes
+KC,Kansas City Chiefs,"Travis Kelce",TE,2013-2025,259,no,no
+KC,Kansas City Chiefs,"Bill Kenney",QB,1980-1988,252,no,no
+KC,Kansas City Chiefs,"Elvis Grbac",QB,1997-2000,240,no,no
+KC,Kansas City Chiefs,"Steve DeBerg",QB,1988-1991,226,no,no
+KC,Kansas City Chiefs,"Derrick Alexander",WR,1998-2001,221,no,no
+KC,Kansas City Chiefs,"Christian Okoye",RB,1987-1992,219,no,no
+KC,Kansas City Chiefs,"Carlos Carson",WR,1980-1989,215,no,no
+KC,Kansas City Chiefs,"Tony Reed",RB,1977-1980,202,no,no
+KC,Kansas City Chiefs,"Steve Bono",QB,1994-1996,199,no,no
+KC,Kansas City Chiefs,"Jeremy Maclin",WR,2015-2016,198,no,yes
+KC,Kansas City Chiefs,"Andre Rison",WR,1997-1999,187,no,no
+KC,Kansas City Chiefs,"Eddie Kennison",WR,2002-2007,187,no,no
+KC,Kansas City Chiefs,"Otis Taylor",WR,1970-1975,182,no,no
+KC,Kansas City Chiefs,"Marcus Allen",RB,1994-1997,178,no,yes
+KC,Kansas City Chiefs,"Stephone Paige",WR,1983-1991,176,no,no
+KC,Kansas City Chiefs,"MacArthur Lane",RB,1975-1978,174,no,no
+KC,Kansas City Chiefs,"Spencer Ware",RB,2015-2019,173,no,no
+KC,Kansas City Chiefs,"Jerick McKinnon",RB,2021-2023,166,no,yes
+KC,Kansas City Chiefs,"Tony Richardson",RB,1999-2005,162,no,no
+KC,Kansas City Chiefs,"Ed Podolak",RB,1970-1977,158,no,no
+KC,Kansas City Chiefs,"Clyde Edwards-Helaire",RB,2020-2023,158,no,no
+KC,Kansas City Chiefs,"Ted McKnight",RB,1977-1981,155,no,no
+KC,Kansas City Chiefs,"Walter White",WR,1975-1979,148,no,no
+KC,Kansas City Chiefs,"Joe Delaney",RB,1981-1982,148,no,no
+KC,Kansas City Chiefs,"Len Dawson",QB,1970-1975,147,no,no
+KC,Kansas City Chiefs,"Derrick Blaylock",RB,2002-2004,145,no,no
+KC,Kansas City Chiefs,"Justin Fields",QB,2025,144,yes,yes
+KC,Kansas City Chiefs,"Mike Livingston",QB,1970-1979,142,no,no
+KC,Kansas City Chiefs,"Henry Marshall",WR,1976-1987,142,no,no
+KC,Kansas City Chiefs,"Johnnie Morton",WR,2002-2004,132,no,no
+KC,Kansas City Chiefs,"Herman Heard",RB,1984-1989,129,no,no
+KC,Kansas City Chiefs,"Dexter McCluster",WR,2010-2013,128,no,no
+KC,Kansas City Chiefs,"Kimble Anders",RB,1991-2000,127,no,no
+KC,Kansas City Chiefs,"Rich Gannon",QB,1995-1998,126,no,no
+KC,Kansas City Chiefs,"J.T. Smith",WR,1978-1984,125,no,no
+KC,Kansas City Chiefs,"Damien Williams",RB,2018-2019,125,no,yes
+KC,Kansas City Chiefs,"Steve Breaston",WR,2011-2012,124,no,yes
+KC,Kansas City Chiefs,"Barry Word",RB,1990-1992,122,no,no
+KC,Kansas City Chiefs,"Woody Green",RB,1974-1976,118,no,no
+KC,Kansas City Chiefs,"Steve Fuller",QB,1979-1982,118,no,no
+KC,Kansas City Chiefs,"Donnell Bennett",RB,1994-2000,118,no,no
+KC,Kansas City Chiefs,"Joe Horn",WR,1996-1999,114,no,no
+KC,Kansas City Chiefs,"Sammy Watkins",WR,2018-2020,111,yes,yes
+KC,Kansas City Chiefs,"Billy Jackson",RB,1981-1984,110,no,no
+KC,Kansas City Chiefs,"Knile Davis",RB,2013-2016,109,no,no
+KC,Kansas City Chiefs,"Bam Morris",RB,1998-1999,106,no,no
+KC,Kansas City Chiefs,"Marquez Valdes-Scantling",WR,2022-2023,101,no,no
+KC,Kansas City Chiefs,"Greg Hill",RB,1994-1997,100,no,no
+KC,Kansas City Chiefs,"Marc Boerigter",WR,2002-2005,100,no,no
+KC,Kansas City Chiefs,"Webster Slaughter",WR,1995,92,no,no
+KC,Kansas City Chiefs,"Harvey Williams",RB,1991-1993,83,no,no
+KC,Kansas City Chiefs,"Todd Blackledge",QB,1983-1987,82,no,no
+KC,Kansas City Chiefs,"Dave Krieg",QB,1993,75,no,no
+KC,Kansas City Chiefs,"Pete Mandley",WR,1989-1990,69,no,no
+KC,Kansas City Chiefs,"Boyce Green",RB,1986,67,no,no
+KC,Kansas City Chiefs,"Mike Pruitt",RB,1985-1986,66,no,no
+KC,Kansas City Chiefs,"John Brockington",RB,1977,60,no,no
+KC,Kansas City Chiefs,"Anthony Fasano",TE,2013-2014,59,no,yes
+KC,Kansas City Chiefs,"Willie Ellison",RB,1973-1974,58,no,no
+KC,Kansas City Chiefs,"Eric Martin",WR,1994,47,no,no
+KC,Kansas City Chiefs,"Jim Otis",RB,1971-1972,43,no,no
+KC,Kansas City Chiefs,"Warren Moon",QB,1999-2000,12,no,no
+LV,Las Vegas Raiders,"Rich Gannon",QB,1999-2004,309,no,no
+LV,Las Vegas Raiders,"Charlie Garner",RB,2001-2003,302,no,no
+LV,Las Vegas Raiders,"Davante Adams",WR,2022-2024,286,no,yes
+LV,Las Vegas Raiders,"Jeff George",QB,1997-1998,264,no,no
+LV,Las Vegas Raiders,"LaMont Jordan",RB,2005-2007,258,no,no
+LV,Las Vegas Raiders,"Darren McFadden",RB,2008-2014,244,no,yes
+LV,Las Vegas Raiders,"Todd Christensen",WR,1979-1988,241,no,no
+LV,Las Vegas Raiders,"Tim Brown",WR,1988-2003,239,no,no
+LV,Las Vegas Raiders,"Ken Stabler",QB,1970-1979,227,no,no
+LV,Las Vegas Raiders,"Napoleon Kaufman",RB,1995-2000,224,no,no
+LV,Las Vegas Raiders,"Kerry Collins",QB,2004-2005,221,no,yes
+LV,Las Vegas Raiders,"Harvey Williams",RB,1994-1998,220,no,no
+LV,Las Vegas Raiders,"Cliff Branch",WR,1972-1985,217,no,no
+LV,Las Vegas Raiders,"Jerry Rice",WR,2001-2003,209,no,yes
+LV,Las Vegas Raiders,"Michael Bush",RB,2008-2011,204,no,no
+LV,Las Vegas Raiders,"Mark van Eeghen",RB,1974-1981,203,no,no
+LV,Las Vegas Raiders,"Hunter Renfrow",WR,2019-2025,203,no,no
+LV,Las Vegas Raiders,"Jeff Hostetler",QB,1993-1996,197,no,no
+LV,Las Vegas Raiders,"Warren Wells",WR,1970,184,no,no
+LV,Las Vegas Raiders,"Tyrone Wheatley",RB,1999-2004,183,no,no
+LV,Las Vegas Raiders,"Jay Schroeder",QB,1988-1992,181,no,no
+LV,Las Vegas Raiders,"Jerry Porter",WR,2000-2007,181,no,no
+LV,Las Vegas Raiders,"Charlie Smith",RB,1970-1974,174,no,no
+LV,Las Vegas Raiders,"Pete Banaszak",RB,1970-1978,173,no,no
+LV,Las Vegas Raiders,"Dave Casper",WR,1974-1984,170,no,no
+LV,Las Vegas Raiders,"Nelson Agholor",WR,2020,162,no,yes
+LV,Las Vegas Raiders,"Bob Chandler",WR,1980-1982,161,no,no
+LV,Las Vegas Raiders,"Rashad Jennings",RB,2013,159,no,yes
+LV,Las Vegas Raiders,"Marshawn Lynch",RB,2017-2018,153,no,yes
+LV,Las Vegas Raiders,"Raymond Chester",WR,1970-1981,148,no,no
+LV,Las Vegas Raiders,"Terrelle Pryor",WR,2012-2013,148,no,yes
+LV,Las Vegas Raiders,"Marc Wilson",QB,1980-1987,147,no,no
+LV,Las Vegas Raiders,"Marv Hubbard",RB,1970-1975,145,no,no
+LV,Las Vegas Raiders,"Willie Gault",WR,1989-1993,142,no,no
+LV,Las Vegas Raiders,"Rod Streater",WR,2012-2015,142,no,no
+LV,Las Vegas Raiders,"Zach Miller",TE,2007-2010,132,no,yes
+LV,Las Vegas Raiders,"Clarence Davis",RB,1971-1978,129,no,no
+LV,Las Vegas Raiders,"Rickey Dudley",TE,1998-2000,129,no,no
+LV,Las Vegas Raiders,"Ronald Curry",WR,2003-2008,129,no,no
+LV,Las Vegas Raiders,"Bo Jackson",RB,1987-1990,128,no,no
+LV,Las Vegas Raiders,"Arthur Whittington",RB,1978-1981,126,no,no
+LV,Las Vegas Raiders,"Mack Hollins",WR,2022,126,no,no
+LV,Las Vegas Raiders,"Jordy Nelson",WR,2018,125,no,yes
+LV,Las Vegas Raiders,"Hewritt Dixon",RB,1970,122,no,no
+LV,Las Vegas Raiders,"Tyrell Williams",WR,2019,122,yes,yes
+LV,Las Vegas Raiders,"Jalen Richard",RB,2016-2021,121,no,no
+LV,Las Vegas Raiders,"Alexander Mattison",RB,2024,119,no,no
+LV,Las Vegas Raiders,"Kenny King",RB,1980-1985,114,no,no
+LV,Las Vegas Raiders,"Jessie Hester",WR,1985-1987,114,no,no
+LV,Las Vegas Raiders,"Steve Beuerlein",QB,1987-1990,114,no,no
+LV,Las Vegas Raiders,"Mike Siani",WR,1972-1977,113,no,no
+LV,Las Vegas Raiders,"Derrick Ramsey",WR,1978-1983,113,no,no
+LV,Las Vegas Raiders,"Derrick Fenner",RB,1995-1997,113,no,no
+LV,Las Vegas Raiders,"Andre Rison",WR,2000,112,no,no
+LV,Las Vegas Raiders,"Doug Martin",RB,2018,108,no,yes
+LV,Las Vegas Raiders,"Amos Zereoue",RB,2004,106,no,no
+LV,Las Vegas Raiders,"Rocket Ismail",WR,1993-1995,101,no,no
+LV,Las Vegas Raiders,"Mychal Rivera",TE,2013-2016,101,no,no
+LV,Las Vegas Raiders,"Donald Hollas",QB,1998,94,no,no
+LV,Las Vegas Raiders,"Doug Gabriel",WR,2003-2005,92,no,no
+LV,Las Vegas Raiders,"James Jett",WR,1999-2001,87,no,no
+LV,Las Vegas Raiders,"Randy Jordan",RB,1999-2002,87,no,no
+LV,Las Vegas Raiders,"James Lofton",WR,1988,69,no,yes
+LV,Las Vegas Raiders,"Vince Evans",QB,1987-1995,65,no,no
+LV,Las Vegas Raiders,"Wade Wilson",QB,1998,47,no,no
+LV,Las Vegas Raiders,"Tom Rathman",WR,1994,44,no,no
+LV,Las Vegas Raiders,"Carl Garrett",RB,1976-1977,42,no,no
+LV,Las Vegas Raiders,"Rod Sherman",WR,1970-1971,36,no,no
+LV,Las Vegas Raiders,"Austin Hooper",TE,2023,36,no,yes
+LV,Las Vegas Raiders,"Jason Witten",TE,2020,25,no,yes
+LV,Las Vegas Raiders,"Maurice Jones-Drew",RB,2014,21,no,no
+LAC,Los Angeles Chargers,"John Jefferson",WR,1978-1980,255,no,yes
+LAC,Los Angeles Chargers,"Tony Martin",WR,1994-1997,244,no,no
+LAC,Los Angeles Chargers,"Drew Brees",QB,2001-2005,243,no,yes
+LAC,Los Angeles Chargers,"Natrone Means",RB,1993-1999,240,no,no
+LAC,Los Angeles Chargers,"Stan Humphries",QB,1992-1997,212,no,no
+LAC,Los Angeles Chargers,"Earnest Jackson",RB,1983-1984,208,no,no
+LAC,Los Angeles Chargers,"Ryan Mathews",RB,2010-2014,207,no,yes
+LAC,Los Angeles Chargers,"Mike Williams Jr.",WR,2017-2023,207,no,no
+LAC,Los Angeles Chargers,"Clarence Williams",RB,1977-1981,206,no,no
+LAC,Los Angeles Chargers,"Vincent Jackson",WR,2005-2011,206,no,yes
+LAC,Los Angeles Chargers,"Curtis Conway",WR,2000-2002,200,no,no
+LAC,Los Angeles Chargers,"Marion Butts",RB,1989-1993,190,no,no
+LAC,Los Angeles Chargers,"Doug Flutie",QB,2001-2004,184,no,no
+LAC,Los Angeles Chargers,"Keenan McCardell",WR,2004-2006,181,no,no
+LAC,Los Angeles Chargers,"Cid Edwards",RB,1972-1974,178,no,no
+LAC,Los Angeles Chargers,"Mike Tolbert",RB,2008-2011,175,no,yes
+LAC,Los Angeles Chargers,"Rickey Young",RB,1975-1977,174,no,no
+LAC,Los Angeles Chargers,"Ronnie Harmon",WR,1990-1995,170,no,no
+LAC,Los Angeles Chargers,"Mike Garrett",RB,1970-1973,169,no,no
+LAC,Los Angeles Chargers,"David Boston",WR,2003,163,no,no
+LAC,Los Angeles Chargers,"Billy Joe Tolliver",QB,1989-1990,151,no,no
+LAC,Los Angeles Chargers,"John Friesz",QB,1990-1993,149,no,no
+LAC,Los Angeles Chargers,"Darren Sproles",RB,2005-2010,149,no,yes
+LAC,Los Angeles Chargers,"Eddie Royal",WR,2012-2014,149,no,yes
+LAC,Los Angeles Chargers,"Jeff Graham",WR,1999-2001,142,no,no
+LAC,Los Angeles Chargers,"Rod Bernstine",RB,1987-1992,141,no,no
+LAC,Los Angeles Chargers,"Gary Brown",RB,1997,139,no,no
+LAC,Los Angeles Chargers,"Jim Harbaugh",QB,1999-2000,138,no,no
+LAC,Los Angeles Chargers,"Dontrelle Inman",WR,2014-2019,134,no,yes
+LAC,Los Angeles Chargers,"Josh Palmer",WR,2021-2024,131,no,yes
+LAC,Los Angeles Chargers,"Branden Oliver",RB,2014-2017,127,no,no
+LAC,Los Angeles Chargers,"Leonard Russell",RB,1996,126,no,no
+LAC,Los Angeles Chargers,"Danario Alexander",WR,2012,126,no,yes
+LAC,Los Angeles Chargers,"Freddie Jones",TE,1999-2001,125,no,no
+LAC,Los Angeles Chargers,"Eric Parker",WR,2002-2006,125,no,no
+LAC,Los Angeles Chargers,"James Brooks",RB,1981-1983,118,no,no
+LAC,Los Angeles Chargers,"Terrell Fletcher",RB,1995-2002,116,no,no
+LAC,Los Angeles Chargers,"Gerald Everett",TE,2022-2023,111,no,no
+LAC,Los Angeles Chargers,"Billy Parks",WR,1971,109,no,no
+LAC,Los Angeles Chargers,"Jared Cook",TE,2021,108,no,yes
+LAC,Los Angeles Chargers,"Ryan Leaf",QB,1998-2000,94,no,no
+LAC,Los Angeles Chargers,"Jerry LeVias",WR,1971-1974,90,no,no
+LAC,Los Angeles Chargers,"Ed Luther",QB,1980-1984,86,no,no
+LAC,Los Angeles Chargers,"Craig Whelihan",QB,1997-1998,85,no,no
+LAC,Los Angeles Chargers,"John Cappelletti",RB,1980-1983,82,no,no
+LAC,Los Angeles Chargers,"Eric Metcalf",WR,1997,81,no,no
+LAC,Los Angeles Chargers,"Quinn Early",WR,1988-1990,80,no,no
+LAC,Los Angeles Chargers,"Mark Malone",QB,1988,74,no,yes
+LAC,Los Angeles Chargers,"Darrin Nelson",RB,1989-1990,66,no,no
+LAC,Los Angeles Chargers,"Joe Washington",RB,1977,60,no,no
+LAC,Los Angeles Chargers,"James Harris",QB,1977-1979,59,no,no
+LAC,Los Angeles Chargers,"Dave Williams",RB,1972-1973,58,no,yes
+LAC,Los Angeles Chargers,"Mercury Morris",RB,1976,45,no,no
+LAC,Los Angeles Chargers,"Clint Jones",RB,1973,35,no,no
+LAC,Los Angeles Chargers,"Jim Everett",QB,1997,18,no,no
+LAR,Los Angeles Rams,"Marshall Faulk",RB,1999-2005,410,no,no
+LAR,Los Angeles Rams,"Jim Everett",QB,1986-1993,265,no,no
+LAR,Los Angeles Rams,"Marc Bulger",QB,2002-2009,250,no,no
+LAR,Los Angeles Rams,"Henry Ellard",WR,1983-1993,242,no,no
+LAR,Los Angeles Rams,"Greg Bell",RB,1987-1989,242,no,no
+LAR,Los Angeles Rams,"Vince Ferragamo",QB,1977-1984,229,no,no
+LAR,Los Angeles Rams,"Jerome Bettis",RB,1993-1995,218,no,yes
+LAR,Los Angeles Rams,"Robert Delpino",RB,1988-1992,212,no,no
+LAR,Los Angeles Rams,"Charles White",RB,1985-1988,211,no,no
+LAR,Los Angeles Rams,"Cleveland Gary",RB,1989-1993,210,no,no
+LAR,Los Angeles Rams,"Lawrence McCutcheon",RB,1972-1979,207,no,no
+LAR,Los Angeles Rams,"Harold Jackson",WR,1973-1977,185,no,no
+LAR,Los Angeles Rams,"Cullen Bryant",RB,1973-1987,180,no,no
+LAR,Los Angeles Rams,"Steve Smith",WR,2012,178,yes,no
+LAR,Los Angeles Rams,"Tavon Austin",WR,2013-2017,171,no,yes
+LAR,Los Angeles Rams,"Zac Stacy",RB,2013-2014,169,no,no
+LAR,Los Angeles Rams,"Elvis Peacock",RB,1979-1980,164,no,no
+LAR,Los Angeles Rams,"Chris Miller",QB,1994-1995,162,no,no
+LAR,Los Angeles Rams,"Brandon Lloyd",WR,2011,161,no,yes
+LAR,Los Angeles Rams,"Kenny Britt",WR,2014-2016,160,no,yes
+LAR,Los Angeles Rams,"John Hadl",QB,1973-1974,157,no,no
+LAR,Los Angeles Rams,"Dieter Brock",QB,1985,157,no,no
+LAR,Los Angeles Rams,"Jack Snow",WR,1970-1975,153,no,no
+LAR,Los Angeles Rams,"Les Josephson",RB,1970-1974,153,no,no
+LAR,Los Angeles Rams,"Pat Haden",QB,1976-1981,153,no,no
+LAR,Los Angeles Rams,"Kevin Curtis",WR,2003-2006,153,no,yes
+LAR,Los Angeles Rams,"Willie Ellison",RB,1970-1972,148,no,no
+LAR,Los Angeles Rams,"Trent Green",QB,1999-2008,148,no,yes
+LAR,Los Angeles Rams,"Jim Bertelsen",RB,1972-1976,144,no,no
+LAR,Los Angeles Rams,"Amp Lee",RB,1997-1999,141,no,no
+LAR,Los Angeles Rams,"John Cappelletti",RB,1974-1978,135,no,no
+LAR,Los Angeles Rams,"Sony Michel",RB,2021,135,no,yes
+LAR,Los Angeles Rams,"Cam Akers",RB,2020-2022,134,no,yes
+LAR,Los Angeles Rams,"Ron Jessie",WR,1975-1979,133,no,no
+LAR,Los Angeles Rams,"Willie Miller",WR,1978-1982,129,no,no
+LAR,Los Angeles Rams,"Az-Zahir Hakim",WR,1999-2001,129,no,no
+LAR,Los Angeles Rams,"James Harris",QB,1973-1976,127,no,no
+LAR,Los Angeles Rams,"Sammy Watkins",WR,2017,127,yes,yes
+LAR,Los Angeles Rams,"Jeff Kemp",QB,1981-1985,126,no,no
+LAR,Los Angeles Rams,"Donnie Avery",WR,2008-2009,125,no,yes
+LAR,Los Angeles Rams,"Tre Mason",RB,2014-2015,125,no,no
+LAR,Los Angeles Rams,"Harold Green",RB,1996,121,no,no
+LAR,Los Angeles Rams,"Lance Rentzel",WR,1971-1974,116,no,no
+LAR,Los Angeles Rams,"Larry Smith",RB,1970-1973,114,no,no
+LAR,Los Angeles Rams,"Lawrence Phillips",RB,1996-1997,114,no,no
+LAR,Los Angeles Rams,"Chris Givens",WR,2012-2014,112,no,no
+LAR,Los Angeles Rams,"Austin Davis",QB,2014,112,no,yes
+LAR,Los Angeles Rams,"Pete Holohan",WR,1988-1990,110,no,yes
+LAR,Los Angeles Rams,"Mike Barber",WR,1982-1985,109,no,no
+LAR,Los Angeles Rams,"Demarcus Robinson",WR,2023-2024,108,no,yes
+LAR,Los Angeles Rams,"Ricky Proehl",WR,1999-2002,107,no,no
+LAR,Los Angeles Rams,"Jessie Hester",WR,1994-1995,106,no,no
+LAR,Los Angeles Rams,"Trung Canidate",RB,2000-2002,100,no,no
+LAR,Los Angeles Rams,"Ernie Conwell",TE,1999-2002,91,no,no
+LAR,Los Angeles Rams,"Mark Rypien",QB,1995-1997,86,no,no
+LAR,Los Angeles Rams,"Shaun McDonald",WR,2003-2006,86,no,no
+LAR,Los Angeles Rams,"Randy McMichael",TE,2007-2009,80,no,yes
+LAR,Los Angeles Rams,"Billy Truax",WR,1970,78,no,no
+LAR,Los Angeles Rams,"Tony Baker",RB,1973-1974,76,no,no
+LAR,Los Angeles Rams,"Drew Hill",WR,1979-1984,70,no,no
+LAR,Los Angeles Rams,"David Hill",WR,1983-1987,52,no,no
+LAR,Los Angeles Rams,"Pat Studstill",WR,1970,49,no,no
+LAR,Los Angeles Rams,"Greg Hill",RB,1998,49,no,no
+LAR,Los Angeles Rams,"Steve Bono",QB,1998,48,no,no
+LAR,Los Angeles Rams,"Ryan Fitzpatrick",QB,2005-2006,48,no,yes
+LAR,Los Angeles Rams,"Steve Dils",QB,1984-1987,42,no,no
+LAR,Los Angeles Rams,"Tommy Mason",RB,1970,35,no,no
+LAR,Los Angeles Rams,"Bert Jones",QB,1982,32,no,no
+LAR,Los Angeles Rams,"Wes Welker",WR,2015,17,no,yes
+MIA,Miami Dolphins,"Mark Clayton",WR,1983-1993,281,no,no
+MIA,Miami Dolphins,"Raheem Mostert",RB,2022-2025,255,no,no
+MIA,Miami Dolphins,"Ryan Fitzpatrick",QB,2019-2020,246,no,yes
+MIA,Miami Dolphins,"Jay Fiedler",QB,2000-2004,239,no,no
+MIA,Miami Dolphins,"Mark Duper",WR,1982-1992,231,no,no
+MIA,Miami Dolphins,"Lamar Smith",RB,2000-2001,230,no,no
+MIA,Miami Dolphins,"Chris Chambers",WR,2001-2006,224,no,yes
+MIA,Miami Dolphins,"Lorenzo Hampton",RB,1985-1989,222,no,no
+MIA,Miami Dolphins,"Karim Abdul-Jabbar",RB,1996-1999,220,no,no
+MIA,Miami Dolphins,"Chad Pennington",QB,2008-2010,218,no,yes
+MIA,Miami Dolphins,"DeVante Parker",WR,2015-2021,210,no,no
+MIA,Miami Dolphins,"Irving Fryar",WR,1993-1995,206,no,no
+MIA,Miami Dolphins,"Jay Ajayi",RB,2015-2017,198,no,yes
+MIA,Miami Dolphins,"Brandon Marshall",WR,2010-2011,197,yes,yes
+MIA,Miami Dolphins,"Delvin Williams",RB,1978-1980,194,no,no
+MIA,Miami Dolphins,"Reggie Bush",RB,2011-2012,194,no,yes
+MIA,Miami Dolphins,"Tony Nathan",WR,1979-1987,192,no,no
+MIA,Miami Dolphins,"Bernie Parmalee",RB,1992-1998,192,no,no
+MIA,Miami Dolphins,"O.J. McDuffie",WR,1993-2000,192,no,no
+MIA,Miami Dolphins,"Terry Kirby",RB,1993-1995,190,no,no
+MIA,Miami Dolphins,"Nat Moore",WR,1974-1986,189,no,no
+MIA,Miami Dolphins,"Mercury Morris",RB,1970-1975,180,no,no
+MIA,Miami Dolphins,"Gus Frerotte",QB,2005,179,no,yes
+MIA,Miami Dolphins,"Kenyan Drake",RB,2016-2018,178,no,yes
+MIA,Miami Dolphins,"Larry Csonka",RB,1970-1979,177,no,no
+MIA,Miami Dolphins,"Mike Wallace",WR,2013-2014,177,no,no
+MIA,Miami Dolphins,"Jay Cutler",QB,2017,166,no,yes
+MIA,Miami Dolphins,"Tony Martin",WR,1990-2000,164,no,no
+MIA,Miami Dolphins,"Troy Stradford",WR,1987-1990,162,no,no
+MIA,Miami Dolphins,"Charles Clay",TE,2011-2014,154,no,yes
+MIA,Miami Dolphins,"Keith Byars",WR,1993-1996,149,no,no
+MIA,Miami Dolphins,"Kenny Stills",WR,2015-2018,148,no,yes
+MIA,Miami Dolphins,"Jeffery Wilson",RB,2022-2024,148,no,yes
+MIA,Miami Dolphins,"Myles Gaskin",RB,2019-2022,147,no,no
+MIA,Miami Dolphins,"Mark Higgs",RB,1990-1994,146,no,no
+MIA,Miami Dolphins,"Don Nottingham",RB,1973-1977,145,no,no
+MIA,Miami Dolphins,"Sammie Smith",RB,1989-1991,140,no,no
+MIA,Miami Dolphins,"Randy McMichael",TE,2002-2006,140,no,yes
+MIA,Miami Dolphins,"Marty Booker",WR,2004-2007,140,no,yes
+MIA,Miami Dolphins,"Keith Jackson",WR,1993-1994,139,no,no
+MIA,Miami Dolphins,"Oronde Gadsden",WR,1999-2003,138,no,no
+MIA,Miami Dolphins,"David Woodley",QB,1980-1983,134,no,no
+MIA,Miami Dolphins,"Bobby Humphrey",RB,1992,133,no,no
+MIA,Miami Dolphins,"Norm Bulaich",RB,1975-1979,131,no,no
+MIA,Miami Dolphins,"Jim Jensen",WR,1981-1992,127,no,no
+MIA,Miami Dolphins,"Benny Malone",RB,1974-1978,113,no,no
+MIA,Miami Dolphins,"James McKnight",WR,2001-2003,112,no,no
+MIA,Miami Dolphins,"Sammy Morris",RB,2004-2006,112,no,yes
+MIA,Miami Dolphins,"Andra Franklin",RB,1981-1984,111,no,no
+MIA,Miami Dolphins,"Scott Mitchell",QB,1991-1993,111,no,no
+MIA,Miami Dolphins,"Cleo Lemon",QB,2006-2007,110,no,no
+MIA,Miami Dolphins,"Joey Harrington",QB,2006,109,no,no
+MIA,Miami Dolphins,"Wes Welker",WR,2004-2006,108,no,yes
+MIA,Miami Dolphins,"A.J. Feeley",QB,2004-2005,102,no,yes
+MIA,Miami Dolphins,"Greg Camarillo",WR,2007-2009,101,no,no
+MIA,Miami Dolphins,"Stanley Pritchett",RB,1999,98,no,no
+MIA,Miami Dolphins,"Frank Gore",RB,2018,97,no,yes
+MIA,Miami Dolphins,"J.J. Johnson",RB,1999-2001,95,no,no
+MIA,Miami Dolphins,"Earl Morrall",QB,1972-1976,91,no,yes
+MIA,Miami Dolphins,"Fred Barnett",WR,1996-1997,90,no,no
+MIA,Miami Dolphins,"Eric Green",TE,1995,89,no,no
+MIA,Miami Dolphins,"Travis Minor",RB,2001-2006,87,no,yes
+MIA,Miami Dolphins,"Damon Huard",QB,1999-2000,84,no,no
+MIA,Miami Dolphins,"Freddie Solomon",WR,1975-1977,83,no,no
+MIA,Miami Dolphins,"Gary Clark",WR,1995,83,no,no
+MIA,Miami Dolphins,"Steve DeBerg",QB,1993,78,no,no
+MIA,Miami Dolphins,"Darren Waller",TE,2025,77,yes,yes
+MIA,Miami Dolphins,"Don Strock",QB,1974-1987,75,no,no
+MIA,Miami Dolphins,"Randal Hill",WR,1991-1996,73,no,no
+MIA,Miami Dolphins,"Marlin Briscoe",WR,1972-1974,71,no,no
+MIA,Miami Dolphins,"John Avery",RB,1998-1999,70,no,no
+MIA,Miami Dolphins,"Pete Johnson",RB,1984,68,no,no
+MIA,Miami Dolphins,"Thurman Thomas",RB,2000,31,no,no
+MIA,Miami Dolphins,"Ron Jaworski",QB,1987-1989,21,no,yes
+MIA,Miami Dolphins,"Cris Carter",WR,2002,15,no,no
+MIA,Miami Dolphins,"Desmond Clark",TE,2002,5,no,yes
+MIN,Minnesota Vikings,"Daunte Culpepper",QB,1999-2005,367,no,yes
+MIN,Minnesota Vikings,"Chuck Foreman",RB,1973-1980,341,no,no
+MIN,Minnesota Vikings,"Randy Moss",WR,1998-2004,321,no,yes
+MIN,Minnesota Vikings,"Dalvin Cook",RB,2017-2022,311,yes,no
+MIN,Minnesota Vikings,"Cris Carter",WR,1990-2001,300,no,no
+MIN,Minnesota Vikings,"Randall Cunningham",QB,1997-1999,293,no,no
+MIN,Minnesota Vikings,"Warren Moon",QB,1994-1996,287,no,no
+MIN,Minnesota Vikings,"Terry Allen",RB,1991-1994,282,no,no
+MIN,Minnesota Vikings,"Robert Smith",RB,1993-2000,261,no,no
+MIN,Minnesota Vikings,"Ted Brown",RB,1979-1986,259,no,no
+MIN,Minnesota Vikings,"Tommy Kramer",QB,1977-1989,237,no,no
+MIN,Minnesota Vikings,"Sidney Rice",WR,2007-2010,219,no,no
+MIN,Minnesota Vikings,"Moe Williams",RB,1999-2005,217,no,no
+MIN,Minnesota Vikings,"Michael Bennett",RB,2001-2005,213,no,no
+MIN,Minnesota Vikings,"Jake Reed",WR,1991-2001,210,no,no
+MIN,Minnesota Vikings,"Ahmad Rashad",WR,1976-1982,208,no,no
+MIN,Minnesota Vikings,"Darrin Nelson",RB,1982-1992,201,no,no
+MIN,Minnesota Vikings,"Rickey Young",RB,1978-1983,197,no,no
+MIN,Minnesota Vikings,"Nate Burleson",WR,2003-2005,194,no,yes
+MIN,Minnesota Vikings,"Anthony Carter",WR,1985-1993,193,no,no
+MIN,Minnesota Vikings,"Joe Senser",WR,1980-1984,182,no,no
+MIN,Minnesota Vikings,"Jeff George",QB,1999,181,no,no
+MIN,Minnesota Vikings,"Herschel Walker",RB,1989-1991,179,no,no
+MIN,Minnesota Vikings,"T.J. Hockenson",TE,2022-2025,172,yes,no
+MIN,Minnesota Vikings,"John Gilliam",WR,1972-1975,171,no,no
+MIN,Minnesota Vikings,"Sammy White",WR,1976-1985,169,no,no
+MIN,Minnesota Vikings,"Bernard Berrian",WR,2008-2011,165,no,no
+MIN,Minnesota Vikings,"Wade Wilson",QB,1981-1991,161,no,no
+MIN,Minnesota Vikings,"Steve Jordan",WR,1982-1994,151,no,no
+MIN,Minnesota Vikings,"Latavius Murray",RB,2017-2018,149,no,yes
+MIN,Minnesota Vikings,"Bob Grim",WR,1970-1977,146,no,no
+MIN,Minnesota Vikings,"Steve Dils",QB,1979-1984,142,no,no
+MIN,Minnesota Vikings,"Amp Lee",RB,1994-1996,140,no,no
+MIN,Minnesota Vikings,"Rich Gannon",QB,1987-1992,139,no,no
+MIN,Minnesota Vikings,"Leroy Hoard",RB,1996-1999,137,no,no
+MIN,Minnesota Vikings,"Marcus Robinson",WR,2004-2006,137,no,no
+MIN,Minnesota Vikings,"Mewelde Moore",RB,2004-2007,135,no,no
+MIN,Minnesota Vikings,"Onterrio Smith",RB,2003-2004,134,no,no
+MIN,Minnesota Vikings,"K.J. Osborn",WR,2021-2023,134,no,no
+MIN,Minnesota Vikings,"Tony Galbreath",RB,1981-1983,133,no,no
+MIN,Minnesota Vikings,"Jermaine Wiggins",TE,2004-2006,130,no,no
+MIN,Minnesota Vikings,"Ed Marinaro",RB,1972-1975,127,no,no
+MIN,Minnesota Vikings,"Rick Fenney",RB,1987-1991,127,no,no
+MIN,Minnesota Vikings,"Dave Osborn",RB,1970-1975,126,no,no
+MIN,Minnesota Vikings,"Tarvaris Jackson",QB,2006-2010,126,no,yes
+MIN,Minnesota Vikings,"Qadry Ismail",WR,1993-1996,118,no,no
+MIN,Minnesota Vikings,"D'Wayne Bates",WR,2002-2003,118,no,no
+MIN,Minnesota Vikings,"Alexander Mattison",RB,2019-2023,118,no,no
+MIN,Minnesota Vikings,"Matt Cassel",QB,2013-2014,114,no,yes
+MIN,Minnesota Vikings,"Byron Chamberlain",TE,2001-2002,111,no,no
+MIN,Minnesota Vikings,"Travis Taylor",WR,2005-2006,110,no,no
+MIN,Minnesota Vikings,"Alfred Anderson",RB,1984-1991,108,no,no
+MIN,Minnesota Vikings,"Bobby Wade",WR,2007-2008,108,no,no
+MIN,Minnesota Vikings,"Tyler Conklin",TE,2018-2021,107,no,no
+MIN,Minnesota Vikings,"Clint Jones",RB,1970-1972,97,no,no
+MIN,Minnesota Vikings,"Oscar Reed",RB,1970-1974,97,no,no
+MIN,Minnesota Vikings,"Kelly Campbell",WR,2002-2004,94,no,no
+MIN,Minnesota Vikings,"Jimmy Kleinsasser",TE,1999-2011,89,no,no
+MIN,Minnesota Vikings,"Gary Cuozzo",QB,1970-1971,87,no,no
+MIN,Minnesota Vikings,"Bob Tucker",WR,1977-1980,74,no,no
+MIN,Minnesota Vikings,"Barry Word",RB,1993,67,no,no
+MIN,Minnesota Vikings,"Donovan McNabb",QB,2011,65,no,yes
+MIN,Minnesota Vikings,"Sam McCullum",WR,1974-1983,54,no,no
+MIN,Minnesota Vikings,"Roger Craig",RB,1993,50,no,no
+MIN,Minnesota Vikings,"Bob Lee",QB,1970-1978,39,no,no
+NE,New England Patriots,"Steve Grogan",QB,1975-1990,282,no,no
+NE,New England Patriots,"Curtis Martin",RB,1995-1997,274,no,no
+NE,New England Patriots,"Cam Newton",QB,2020,265,no,yes
+NE,New England Patriots,"Corey Dillon",RB,2004-2006,251,no,no
+NE,New England Patriots,"Stanley Morgan",WR,1977-1989,249,no,no
+NE,New England Patriots,"Robert Edwards",RB,1998,224,no,no
+NE,New England Patriots,"Antowain Smith",RB,2001-2003,214,no,no
+NE,New England Patriots,"Tony Eason",QB,1983-1989,213,no,no
+NE,New England Patriots,"Troy Brown",WR,1993-2007,210,no,no
+NE,New England Patriots,"Ben Coates",TE,1991-1999,205,no,no
+NE,New England Patriots,"Stevan Ridley",RB,2011-2014,202,no,no
+NE,New England Patriots,"Damien Harris",RB,2019-2022,199,no,no
+NE,New England Patriots,"Mack Herron",RB,1973-1975,197,no,no
+NE,New England Patriots,"Terry Glenn",WR,1996-2001,194,no,no
+NE,New England Patriots,"Tony Collins",RB,1981-1987,188,no,no
+NE,New England Patriots,"Leonard Russell",RB,1991-1993,180,no,no
+NE,New England Patriots,"Sam Cunningham",RB,1973-1982,176,no,no
+NE,New England Patriots,"Brandon LaFell",WR,2014-2015,173,no,yes
+NE,New England Patriots,"Andy Johnson",RB,1974-1981,169,no,no
+NE,New England Patriots,"Randy Vataha",WR,1971-1976,167,no,no
+NE,New England Patriots,"Harold Jackson",WR,1978-1981,167,no,no
+NE,New England Patriots,"Don Calhoun",RB,1975-1981,155,no,no
+NE,New England Patriots,"Derrick Ramsey",WR,1983-1985,154,no,no
+NE,New England Patriots,"Terry Allen",RB,1999,154,no,no
+NE,New England Patriots,"John Stephens",RB,1988-1992,152,no,no
+NE,New England Patriots,"Brandon Lloyd",WR,2012,152,no,yes
+NE,New England Patriots,"Kendrick Bourne",WR,2021-2024,152,no,yes
+NE,New England Patriots,"Irving Fryar",WR,1984-1992,151,no,no
+NE,New England Patriots,"Michael Timpson",WR,1989-1994,151,no,no
+NE,New England Patriots,"Ezekiel Elliott",RB,2023,149,no,yes
+NE,New England Patriots,"Vincent Brisby",WR,1993-1999,148,no,no
+NE,New England Patriots,"Leroy Thompson",RB,1994,148,no,no
+NE,New England Patriots,"David Patten",WR,2001-2004,145,no,no
+NE,New England Patriots,"Laurence Maroney",RB,2006-2009,145,no,no
+NE,New England Patriots,"Hugh Millen",QB,1991-1992,141,no,no
+NE,New England Patriots,"Martellus Bennett",TE,2016,141,no,yes
+NE,New England Patriots,"Shane Vereen",RB,2011-2014,140,no,yes
+NE,New England Patriots,"Marv Cook",WR,1989-1993,136,no,no
+NE,New England Patriots,"Russ Francis",WR,1975-1988,135,no,no
+NE,New England Patriots,"David Givens",WR,2002-2005,133,no,no
+NE,New England Patriots,"Marion Butts",RB,1994,126,no,no
+NE,New England Patriots,"Shawn Jefferson",WR,1999,126,no,no
+NE,New England Patriots,"Carl Garrett",RB,1970-1972,125,no,no
+NE,New England Patriots,"Darryl Stingley",WR,1973-1977,125,no,no
+NE,New England Patriots,"Josh Gordon",WR,2018,118,no,yes
+NE,New England Patriots,"Vagas Ferguson",RB,1980-1982,116,no,no
+NE,New England Patriots,"Reggie Rucker",WR,1971-1974,115,no,no
+NE,New England Patriots,"Demario Douglas",WR,2023-2025,115,no,no
+NE,New England Patriots,"Donte' Stallworth",WR,2007-2012,112,no,yes
+NE,New England Patriots,"Bob Perryman",RB,1987-1990,98,no,no
+NE,New England Patriots,"Daniel Graham",TE,2002-2006,93,no,yes
+NE,New England Patriots,"Austin Hooper",TE,2024,86,no,yes
+NE,New England Patriots,"J.R. Redmond",RB,2000-2002,81,no,no
+NE,New England Patriots,"Marc Wilson",QB,1989-1990,78,no,no
+NE,New England Patriots,"Matt Cavanaugh",QB,1979-1982,72,no,no
+NE,New England Patriots,"Bob Windsor",WR,1972-1975,66,no,no
+NE,New England Patriots,"Mark van Eeghen",RB,1982-1983,61,no,no
+NE,New England Patriots,"Fred Taylor",RB,2009-2010,52,no,yes
+NE,New England Patriots,"Keith Byars",WR,1996-1997,51,no,no
+NE,New England Patriots,"Larry Centers",RB,2003,34,no,no
+NE,New England Patriots,"Alge Crumpler",TE,2010,20,no,no
+NE,New England Patriots,"Steven Jackson",RB,2015,14,no,yes
+NE,New England Patriots,"Vinny Testaverde",QB,2006,4,no,yes
+NE,New England Patriots,"Kellen Winslow Jr.",TE,2012,2,no,no
+NO,New Orleans Saints,"Michael Thomas",WR,2016-2023,299,no,no
+NO,New Orleans Saints,"Dalton Hilliard",RB,1986-1993,298,no,no
+NO,New Orleans Saints,"Deuce McAllister",RB,2001-2008,290,no,no
+NO,New Orleans Saints,"Chuck Muncie",RB,1976-1980,267,no,yes
+NO,New Orleans Saints,"Jimmy Graham",TE,2010-2023,261,no,yes
+NO,New Orleans Saints,"George Rogers",RB,1981-1984,257,no,no
+NO,New Orleans Saints,"Joe Horn",WR,2000-2006,253,no,no
+NO,New Orleans Saints,"Aaron Brooks",QB,2000-2005,251,no,no
+NO,New Orleans Saints,"Jim Everett",QB,1994-1996,249,no,no
+NO,New Orleans Saints,"Mark Ingram",RB,2011-2022,249,yes,yes
+NO,New Orleans Saints,"Mark Ingram II",RB,2011-2022,246,yes,yes
+NO,New Orleans Saints,"Ricky Williams",RB,1999-2001,236,no,yes
+NO,New Orleans Saints,"Tony Galbreath",RB,1976-1980,198,no,no
+NO,New Orleans Saints,"Quinn Early",WR,1991-1995,195,no,no
+NO,New Orleans Saints,"Eric Martin",WR,1985-1993,193,no,no
+NO,New Orleans Saints,"Rueben Mayes",RB,1986-1990,193,no,no
+NO,New Orleans Saints,"Bobby Hebert",QB,1986-1991,191,no,no
+NO,New Orleans Saints,"Wes Chandler",WR,1978-1981,175,no,yes
+NO,New Orleans Saints,"Willie Jackson",WR,2000-2001,175,no,no
+NO,New Orleans Saints,"Floyd Turner",WR,1989-1993,171,no,no
+NO,New Orleans Saints,"Donte' Stallworth",WR,2002-2005,170,no,yes
+NO,New Orleans Saints,"Michael Haynes",WR,1994-1996,169,no,no
+NO,New Orleans Saints,"Wayne Wilson",RB,1979-1986,161,no,no
+NO,New Orleans Saints,"Mario Bates",RB,1994-1997,158,no,no
+NO,New Orleans Saints,"Ben Watson",WR,2013-2018,154,no,yes
+NO,New Orleans Saints,"Willie Snead",WR,2015-2017,154,no,yes
+NO,New Orleans Saints,"Taysom Hill",TE,2018-2025,149,no,no
+NO,New Orleans Saints,"Jeff Blake",QB,2000-2001,146,no,no
+NO,New Orleans Saints,"Jared Cook",TE,2019-2020,146,no,yes
+NO,New Orleans Saints,"Lonzell Hill",WR,1987-1990,140,no,no
+NO,New Orleans Saints,"Latavius Murray",RB,2019-2020,140,no,yes
+NO,New Orleans Saints,"Eddie Kennison",WR,1999,139,no,no
+NO,New Orleans Saints,"Henry Childs",WR,1974-1980,138,no,no
+NO,New Orleans Saints,"Keith Poole",WR,1999-2000,135,no,no
+NO,New Orleans Saints,"Ted Ginn",WR,2017-2019,133,no,yes
+NO,New Orleans Saints,"Emmanuel Sanders",WR,2020,133,no,yes
+NO,New Orleans Saints,"Alvin Maxson",RB,1974-1976,132,no,no
+NO,New Orleans Saints,"Wade Wilson",QB,1993-1994,131,no,no
+NO,New Orleans Saints,"Derek Brown",TE,1993-1996,130,no,no
+NO,New Orleans Saints,"Andre Hastings",WR,1997-1999,128,no,no
+NO,New Orleans Saints,"Devery Henderson",WR,2005-2012,128,no,no
+NO,New Orleans Saints,"Ike Harris",WR,1978-1981,124,no,no
+NO,New Orleans Saints,"David Patten",WR,2007-2008,122,no,no
+NO,New Orleans Saints,"Wesley Walls",TE,1994-1995,120,no,no
+NO,New Orleans Saints,"Billy Joe Tolliver",QB,1998-1999,120,no,no
+NO,New Orleans Saints,"Dave Wilson",QB,1981-1988,117,no,no
+NO,New Orleans Saints,"Randal Hill",WR,1997,117,no,no
+NO,New Orleans Saints,"Jameis Winston",QB,2020-2023,117,no,yes
+NO,New Orleans Saints,"Tim Hightower",RB,2015-2016,116,no,yes
+NO,New Orleans Saints,"Steve Walsh",QB,1990-1993,114,no,no
+NO,New Orleans Saints,"Richard Todd",QB,1984-1985,112,no,no
+NO,New Orleans Saints,"Gill Fenerty",RB,1990-1991,112,no,no
+NO,New Orleans Saints,"Aaron Stecker",RB,2004-2008,112,no,no
+NO,New Orleans Saints,"Sean Dawkins",WR,1998,111,no,no
+NO,New Orleans Saints,"Coby Fleener",TE,2016-2017,110,no,yes
+NO,New Orleans Saints,"Mike Strachan",WR,1975-1980,108,no,no
+NO,New Orleans Saints,"Dave Parks",WR,1970-1972,106,no,no
+NO,New Orleans Saints,"Jerome Pathon",WR,2002-2004,102,no,no
+NO,New Orleans Saints,"Chris Ivory",RB,2010-2012,100,no,yes
+NO,New Orleans Saints,"Craig Heyward",RB,1988-1992,99,no,no
+NO,New Orleans Saints,"Ken Stabler",QB,1983-1984,98,no,no
+NO,New Orleans Saints,"Boo Williams",WR,2001-2004,94,no,no
+NO,New Orleans Saints,"Bob Newland",WR,1971-1974,91,no,no
+NO,New Orleans Saints,"Antowain Smith",RB,2005,91,no,no
+NO,New Orleans Saints,"Joel Parker",WR,1974-1977,90,no,no
+NO,New Orleans Saints,"Jess Phillips",RB,1973-1974,88,no,no
+NO,New Orleans Saints,"Earl Campbell",RB,1985,82,no,no
+NO,New Orleans Saints,"Vaughn Dunbar",RB,1992-1995,79,no,no
+NO,New Orleans Saints,"Don Herrmann",WR,1975-1977,71,no,no
+NO,New Orleans Saints,"Kerry Collins",QB,1998,71,no,yes
+NO,New Orleans Saints,"Brett Perriman",WR,1988-1990,68,no,no
+NO,New Orleans Saints,"Edd Hargett",QB,1970-1972,67,no,no
+NO,New Orleans Saints,"Bobby Douglass",QB,1976-1977,60,no,no
+NO,New Orleans Saints,"Bobby Scott",QB,1973-1981,53,no,no
+NO,New Orleans Saints,"Tony Baker",RB,1970-1971,48,no,no
+NO,New Orleans Saints,"Haywood Jeffires",WR,1996,48,no,no
+NO,New Orleans Saints,"Heath Shuler",QB,1997,46,no,no
+NO,New Orleans Saints,"Jim Otis",RB,1970,36,no,no
+NO,New Orleans Saints,"Ken Burrough",WR,1970,33,no,no
+NO,New Orleans Saints,"Barry Word",RB,1987-1988,32,no,no
+NO,New Orleans Saints,"Terry Allen",RB,2000,31,no,no
+NO,New Orleans Saints,"Mark Brunell",QB,2008-2009,3,no,yes
+NYG,New York Giants,"Tiki Barber",RB,1997-2006,330,no,no
+NYG,New York Giants,"Joe Morris",RB,1982-1991,274,no,no
+NYG,New York Giants,"Ron Johnson",WR,1970-1975,264,no,no
+NYG,New York Giants,"Victor Cruz",WR,2010-2016,247,no,no
+NYG,New York Giants,"Rodney Hampton",RB,1989-1997,230,no,no
+NYG,New York Giants,"Kerry Collins",QB,1999-2003,228,no,yes
+NYG,New York Giants,"Fran Tarkenton",QB,1970-1971,221,no,yes
+NYG,New York Giants,"Steve Smith",WR,2007-2010,218,yes,no
+NYG,New York Giants,"Plaxico Burress",WR,2005-2008,210,no,yes
+NYG,New York Giants,"Ottis Anderson",RB,1986-1992,205,no,yes
+NYG,New York Giants,"Earnest Gray",WR,1979-1984,183,no,no
+NYG,New York Giants,"Derrick Ward",RB,2004-2008,173,no,yes
+NYG,New York Giants,"Billy Taylor",RB,1978-1981,167,no,no
+NYG,New York Giants,"Jeremy Shockey",TE,2002-2007,164,no,yes
+NYG,New York Giants,"Mark Bavaro",WR,1985-1990,162,no,no
+NYG,New York Giants,"Lionel Manuel",WR,1984-1990,160,no,no
+NYG,New York Giants,"Rob Carpenter",RB,1981-1985,157,no,no
+NYG,New York Giants,"Ike Hilliard",WR,1999-2004,156,no,yes
+NYG,New York Giants,"Rueben Randle",WR,2012-2015,156,no,no
+NYG,New York Giants,"Norm Snead",QB,1972-1976,148,no,no
+NYG,New York Giants,"Dave Brown",QB,1992-1997,147,no,no
+NYG,New York Giants,"Butch Woolfolk",WR,1982-1984,145,no,no
+NYG,New York Giants,"Gary Brown",RB,1998-1999,144,no,no
+NYG,New York Giants,"Doug Kotar",RB,1974-1981,135,no,no
+NYG,New York Giants,"Joe Dawkins",RB,1974-1975,130,no,no
+NYG,New York Giants,"Bob Tucker",WR,1970-1977,127,no,no
+NYG,New York Giants,"Clifton McNeil",WR,1970-1971,126,no,no
+NYG,New York Giants,"Mark Jackson",WR,1993-1994,124,no,no
+NYG,New York Giants,"Devontae Booker",RB,2021,124,no,yes
+NYG,New York Giants,"Craig Morton",QB,1975-1976,122,no,no
+NYG,New York Giants,"Ron Dayne",RB,2000-2004,120,no,yes
+NYG,New York Giants,"Larry Donnell",TE,2013-2016,118,no,no
+NYG,New York Giants,"Ed McCaffrey",WR,1991-1993,116,no,no
+NYG,New York Giants,"Scott Brunner",QB,1980-1983,115,no,no
+NYG,New York Giants,"Joe Jurevicius",WR,1999-2001,114,no,no
+NYG,New York Giants,"Kent Graham",QB,1992-1999,113,no,no
+NYG,New York Giants,"Dwayne Harris",WR,2015-2016,112,no,no
+NYG,New York Giants,"Joe Pisarcik",QB,1977-1979,109,no,no
+NYG,New York Giants,"Kevin Boss",TE,2007-2010,109,no,no
+NYG,New York Giants,"Danny Kanell",QB,1996-1998,105,no,no
+NYG,New York Giants,"Richie James",WR,2022,104,no,no
+NYG,New York Giants,"Jake Ballard",TE,2011,103,no,no
+NYG,New York Giants,"Jeff Hostetler",QB,1985-1992,97,no,no
+NYG,New York Giants,"Pete Mitchell",TE,1999-2000,97,no,no
+NYG,New York Giants,"Domenik Hixon",WR,2007-2012,96,no,no
+NYG,New York Giants,"Bobby Hammond",RB,1976-1979,93,no,no
+NYG,New York Giants,"Walker Gillette",WR,1974-1976,92,no,no
+NYG,New York Giants,"Don Herrmann",WR,1970-1974,87,no,no
+NYG,New York Giants,"Bob Grim",WR,1972-1974,87,no,no
+NYG,New York Giants,"Darren Waller",TE,2023,87,yes,yes
+NYG,New York Giants,"Larry Csonka",RB,1977-1978,78,no,no
+NYG,New York Giants,"Lewis Tillman",RB,1989-1993,77,no,no
+NYG,New York Giants,"Randy Johnson",QB,1971-1973,71,no,no
+NYG,New York Giants,"Bobby Duhon",RB,1970-1972,68,no,no
+NYG,New York Giants,"Tony Galbreath",RB,1984-1987,68,no,no
+NYG,New York Giants,"Johnny Roland",RB,1973,52,no,no
+NYG,New York Giants,"Kyle Rudolph",TE,2021,47,no,yes
+NYG,New York Giants,"Brandon Marshall",WR,2017,24,yes,yes
+NYJ,New York Jets,"Curtis Martin",RB,1998-2005,299,no,no
+NYJ,New York Jets,"Aaron Rodgers",QB,2023-2025,268,no,yes
+NYJ,New York Jets,"Vinny Testaverde",QB,1998-2005,256,no,yes
+NYJ,New York Jets,"Ken O'Brien",QB,1984-1992,254,no,no
+NYJ,New York Jets,"Freeman McNeil",RB,1981-1992,240,no,no
+NYJ,New York Jets,"Richard Todd",QB,1976-1983,216,no,no
+NYJ,New York Jets,"Keyshawn Johnson",WR,1996-1999,215,no,yes
+NYJ,New York Jets,"Brett Favre",QB,2008,211,no,yes
+NYJ,New York Jets,"Santana Moss",WR,2001-2004,210,no,yes
+NYJ,New York Jets,"Al Toon",WR,1985-1992,208,no,no
+NYJ,New York Jets,"Wesley Walker",WR,1977-1989,198,no,no
+NYJ,New York Jets,"Johnny Johnson",RB,1993-1994,194,no,no
+NYJ,New York Jets,"Wayne Chrebet",WR,1995-2005,194,no,no
+NYJ,New York Jets,"LaDainian Tomlinson",RB,2010-2011,190,no,yes
+NYJ,New York Jets,"Kevin Long",RB,1977-1981,181,no,no
+NYJ,New York Jets,"John Riggins",RB,1971-1974,176,no,no
+NYJ,New York Jets,"Rob Moore",WR,1990-1994,176,no,no
+NYJ,New York Jets,"Adrian Murrell",RB,1993-1997,176,no,no
+NYJ,New York Jets,"Neil O'Donnell",QB,1996-1997,173,no,no
+NYJ,New York Jets,"Robbie Chosen",WR,2016-2019,169,no,no
+NYJ,New York Jets,"Matt Forte",RB,2016-2017,168,yes,no
+NYJ,New York Jets,"Bilal Powell",RB,2011-2019,167,no,no
+NYJ,New York Jets,"Mickey Shuler",TE,1978-1989,166,no,no
+NYJ,New York Jets,"Boomer Esiason",QB,1994-1995,166,no,no
+NYJ,New York Jets,"Rich Caster",WR,1970-1977,163,no,no
+NYJ,New York Jets,"Davante Adams",WR,2024,161,no,yes
+NYJ,New York Jets,"Jamison Crowder",WR,2019-2021,159,no,yes
+NYJ,New York Jets,"Clark Gaines",RB,1976-1980,155,no,no
+NYJ,New York Jets,"Emerson Boozer",RB,1970-1975,153,no,no
+NYJ,New York Jets,"Richie Anderson",RB,1999-2002,141,no,no
+NYJ,New York Jets,"Jeff Graham",WR,1996-1997,140,no,no
+NYJ,New York Jets,"Quincy Enunwa",WR,2015-2019,140,no,no
+NYJ,New York Jets,"Jerome Barkum",WR,1972-1983,139,no,no
+NYJ,New York Jets,"Brad Baxter",RB,1989-1995,139,no,no
+NYJ,New York Jets,"Michael Carter",RB,2021-2023,136,no,no
+NYJ,New York Jets,"Ray Lucas",QB,1997-2000,133,no,no
+NYJ,New York Jets,"Frank Reich",QB,1996,132,no,no
+NYJ,New York Jets,"Isaiah Crowell",RB,2018,130,no,yes
+NYJ,New York Jets,"Justin McCareins",WR,2004-2007,129,no,yes
+NYJ,New York Jets,"Dedric Ward",WR,1999-2000,127,no,no
+NYJ,New York Jets,"Blair Thomas",RB,1990-1993,125,no,no
+NYJ,New York Jets,"Jeremy Kerley",WR,2011-2017,121,no,yes
+NYJ,New York Jets,"Pat Ryan",QB,1978-1989,120,no,no
+NYJ,New York Jets,"Elijah Moore",WR,2021-2022,117,no,yes
+NYJ,New York Jets,"Scott Dierking",RB,1977-1983,116,no,no
+NYJ,New York Jets,"Matt Robinson",QB,1977-1979,116,no,no
+NYJ,New York Jets,"Carl Garrett",RB,1975,112,no,no
+NYJ,New York Jets,"Chris Burkett",WR,1989-1993,105,no,no
+NYJ,New York Jets,"David Knight",WR,1973-1977,102,no,no
+NYJ,New York Jets,"Browning Nagle",QB,1991-1993,102,no,no
+NYJ,New York Jets,"Chris Johnson",RB,2014,102,no,yes
+NYJ,New York Jets,"Tyler Conklin",TE,2022-2024,101,no,no
+NYJ,New York Jets,"Curtis Conway",WR,2003,99,no,no
+NYJ,New York Jets,"Frank Gore",RB,2020,92,no,yes
+NYJ,New York Jets,"Brooks Bollinger",QB,2004-2005,90,no,yes
+NYJ,New York Jets,"Al Woodall",QB,1970-1974,78,no,no
+NYJ,New York Jets,"Webster Slaughter",WR,1996,71,no,no
+NYJ,New York Jets,"Ed Marinaro",RB,1976,69,no,no
+NYJ,New York Jets,"Kellen Winslow Jr.",TE,2013,66,no,no
+NYJ,New York Jets,"Terance Mathis",WR,1990-1993,61,no,no
+NYJ,New York Jets,"Keith Byars",WR,1998,60,no,no
+NYJ,New York Jets,"Eric Green",TE,1999,19,no,no
+NYJ,New York Jets,"Mark Brunell",QB,2010-2011,12,no,yes
+PHI,Philadelphia Eagles,"Randall Cunningham",QB,1985-1995,370,no,no
+PHI,Philadelphia Eagles,"Ricky Watters",RB,1995-1997,279,no,no
+PHI,Philadelphia Eagles,"Ron Jaworski",QB,1977-1986,255,no,yes
+PHI,Philadelphia Eagles,"Mike Quick",WR,1982-1990,253,no,no
+PHI,Philadelphia Eagles,"Terrell Owens",WR,2004-2005,240,no,yes
+PHI,Philadelphia Eagles,"Duce Staley",RB,1997-2003,231,no,no
+PHI,Philadelphia Eagles,"Irving Fryar",WR,1996-1998,229,no,no
+PHI,Philadelphia Eagles,"Ty Detmer",QB,1996-1997,228,no,no
+PHI,Philadelphia Eagles,"Steve Smith",WR,2011,222,yes,no
+PHI,Philadelphia Eagles,"Keith Byars",WR,1986-1992,208,no,no
+PHI,Philadelphia Eagles,"Herschel Walker",RB,1993-1994,197,no,no
+PHI,Philadelphia Eagles,"Tom Sullivan",RB,1972-1977,187,no,no
+PHI,Philadelphia Eagles,"Jordan Matthews",TE,2014-2019,186,no,no
+PHI,Philadelphia Eagles,"Fred Barnett",WR,1990-1995,180,no,no
+PHI,Philadelphia Eagles,"James Thrash",WR,2001-2003,167,no,yes
+PHI,Philadelphia Eagles,"Reggie Brown (PHI)",WR,2005-2009,164,no,no
+PHI,Philadelphia Eagles,"Harold Jackson",WR,1970-1972,163,no,no
+PHI,Philadelphia Eagles,"Keith Jackson",WR,1988-1991,161,no,no
+PHI,Philadelphia Eagles,"DeMarco Murray",RB,2015,160,no,yes
+PHI,Philadelphia Eagles,"Charle Young",WR,1973-1976,157,no,no
+PHI,Philadelphia Eagles,"Darren Sproles",RB,2014-2019,156,no,yes
+PHI,Philadelphia Eagles,"Earnest Jackson",RB,1985,150,no,no
+PHI,Philadelphia Eagles,"Todd Pinkston",WR,2000-2004,150,no,no
+PHI,Philadelphia Eagles,"Cris Carter",WR,1987-1989,149,no,no
+PHI,Philadelphia Eagles,"Chris Jones",WR,1995-1997,149,no,no
+PHI,Philadelphia Eagles,"Golden Tate",WR,2018,144,no,yes
+PHI,Philadelphia Eagles,"John Spagnola",WR,1979-1987,137,no,no
+PHI,Philadelphia Eagles,"Norm Snead",QB,1970,133,no,no
+PHI,Philadelphia Eagles,"Rodney Peete",QB,1995-1998,132,no,no
+PHI,Philadelphia Eagles,"Charles Johnson",WR,1999-2000,132,no,no
+PHI,Philadelphia Eagles,"Bubby Brister",QB,1993-1994,131,no,no
+PHI,Philadelphia Eagles,"Anthony Toney",RB,1986-1990,127,no,no
+PHI,Philadelphia Eagles,"Chad Lewis",TE,1999-2005,126,no,no
+PHI,Philadelphia Eagles,"Roman Gabriel",QB,1974-1977,120,no,yes
+PHI,Philadelphia Eagles,"Heath Sherman",RB,1989-1993,119,no,no
+PHI,Philadelphia Eagles,"Lee Bouggess",RB,1970-1973,117,no,no
+PHI,Philadelphia Eagles,"Norm Bulaich",RB,1973-1974,113,no,no
+PHI,Philadelphia Eagles,"Mike Hogan",RB,1976-1980,113,no,no
+PHI,Philadelphia Eagles,"Marquise Brown",WR,2025,113,no,yes
+PHI,Philadelphia Eagles,"Torrance Small",WR,1999-2000,112,no,no
+PHI,Philadelphia Eagles,"Cyril Pinder",RB,1970,107,no,yes
+PHI,Philadelphia Eagles,"Pete Liske",QB,1971-1972,107,no,no
+PHI,Philadelphia Eagles,"Antonio Freeman",WR,2002,107,no,no
+PHI,Philadelphia Eagles,"Ben Hawkins",WR,1970-1973,106,no,no
+PHI,Philadelphia Eagles,"Charlie Garner",RB,1994-1998,105,no,no
+PHI,Philadelphia Eagles,"LeGarrette Blount",RB,2017,103,no,yes
+PHI,Philadelphia Eagles,"Bobby Hoying",QB,1996-1998,101,no,no
+PHI,Philadelphia Eagles,"Gary Ballman",WR,1970-1972,100,no,no
+PHI,Philadelphia Eagles,"Jeff Graham",WR,1998,96,no,no
+PHI,Philadelphia Eagles,"Darnell Autry",RB,2000,94,no,no
+PHI,Philadelphia Eagles,"Chris Warren",RB,2000,88,no,no
+PHI,Philadelphia Eagles,"Michael Timpson",WR,1997,79,no,no
+PHI,Philadelphia Eagles,"John Reaves",QB,1972-1974,76,no,no
+PHI,Philadelphia Eagles,"Po James",RB,1972-1975,76,no,no
+PHI,Philadelphia Eagles,"Mike Boryla",QB,1974-1976,72,no,no
+PHI,Philadelphia Eagles,"Ron Smith",WR,1981-1983,69,no,no
+PHI,Philadelphia Eagles,"Art Malone",RB,1975-1976,51,no,no
+PHI,Philadelphia Eagles,"Roy Green",WR,1991-1992,51,no,no
+PHI,Philadelphia Eagles,"Joe Pisarcik",QB,1980-1984,50,no,no
+PHI,Philadelphia Eagles,"Ronnie Bull",RB,1971,49,no,no
+PHI,Philadelphia Eagles,"Tony Baker",RB,1971-1972,48,no,no
+PHI,Philadelphia Eagles,"Mark Bavaro",WR,1994-1995,48,no,no
+PHI,Philadelphia Eagles,"Julio Jones",WR,2023,31,yes,yes
+PHI,Philadelphia Eagles,"Mickey Shuler",TE,1990-1991,26,no,no
+PIT,Pittsburgh Steelers,"Kordell Stewart",QB,1995-2002,301,no,no
+PIT,Pittsburgh Steelers,"Barry Foster",RB,1990-1994,269,no,no
+PIT,Pittsburgh Steelers,"Yancey Thigpen",WR,1992-1997,221,no,no
+PIT,Pittsburgh Steelers,"Mike Wallace",WR,2009-2012,220,no,no
+PIT,Pittsburgh Steelers,"Louis Lipps",WR,1984-1991,213,no,no
+PIT,Pittsburgh Steelers,"Plaxico Burress",WR,2000-2012,212,no,yes
+PIT,Pittsburgh Steelers,"Bubby Brister",QB,1986-1992,192,no,no
+PIT,Pittsburgh Steelers,"Walter Abercrombie",RB,1982-1987,191,no,no
+PIT,Pittsburgh Steelers,"Tommy Maddox",QB,2001-2005,189,no,no
+PIT,Pittsburgh Steelers,"Lynn Swann",WR,1974-1982,185,no,no
+PIT,Pittsburgh Steelers,"Chase Claypool",WR,2020-2022,181,no,no
+PIT,Pittsburgh Steelers,"Neil O'Donnell",QB,1991-1995,180,no,no
+PIT,Pittsburgh Steelers,"Merril Hoge",RB,1987-1993,179,no,no
+PIT,Pittsburgh Steelers,"Russell Wilson",QB,2024-2025,178,yes,yes
+PIT,Pittsburgh Steelers,"Kenny Pickett",QB,2022-2023,159,no,no
+PIT,Pittsburgh Steelers,"Charles Johnson",WR,1994-1998,156,no,no
+PIT,Pittsburgh Steelers,"Mike Tomczak",QB,1993-1999,153,no,no
+PIT,Pittsburgh Steelers,"John Fuqua",RB,1970-1976,152,no,no
+PIT,Pittsburgh Steelers,"Bam Morris",RB,1994-1995,151,no,no
+PIT,Pittsburgh Steelers,"Amos Zereoue",RB,1999-2003,151,no,no
+PIT,Pittsburgh Steelers,"Frank Pollard",RB,1980-1988,150,no,no
+PIT,Pittsburgh Steelers,"Eric Green",TE,1990-1994,150,no,no
+PIT,Pittsburgh Steelers,"Andre Hastings",WR,1993-1996,147,no,no
+PIT,Pittsburgh Steelers,"Mewelde Moore",RB,2008-2011,147,no,no
+PIT,Pittsburgh Steelers,"Ron Shanklin",WR,1970-1974,144,no,no
+PIT,Pittsburgh Steelers,"Jerricho Cotchery",WR,2011-2013,143,no,yes
+PIT,Pittsburgh Steelers,"Earnest Jackson",RB,1986-1988,140,no,no
+PIT,Pittsburgh Steelers,"Richard Huntley",RB,1999-2000,138,no,no
+PIT,Pittsburgh Steelers,"Erric Pegram",RB,1995-1996,133,no,no
+PIT,Pittsburgh Steelers,"Troy Edwards",WR,1999-2001,132,no,no
+PIT,Pittsburgh Steelers,"Cliff Stoudt",QB,1980-1983,129,no,no
+PIT,Pittsburgh Steelers,"Leroy Thompson",RB,1991-1993,125,no,no
+PIT,Pittsburgh Steelers,"Najeh Davenport",RB,2006-2008,119,no,no
+PIT,Pittsburgh Steelers,"Justin Fields",QB,2024,119,yes,yes
+PIT,Pittsburgh Steelers,"Dave Smith",WR,1970-1972,117,no,no
+PIT,Pittsburgh Steelers,"Courtney Hawkins",WR,1997-2000,116,no,no
+PIT,Pittsburgh Steelers,"John Williams",RB,1994-1995,113,no,no
+PIT,Pittsburgh Steelers,"Eric Ebron",TE,2020-2021,113,no,yes
+PIT,Pittsburgh Steelers,"James Washington",WR,2018-2021,111,no,no
+PIT,Pittsburgh Steelers,"Tim Worley",RB,1989-1993,108,no,no
+PIT,Pittsburgh Steelers,"Nate Washington",WR,2006-2008,105,no,yes
+PIT,Pittsburgh Steelers,"Bobby Shaw",WR,1999-2001,103,no,no
+PIT,Pittsburgh Steelers,"Antwaan Randle El",RB,2002-2010,103,no,no
+PIT,Pittsburgh Steelers,"Jeff Graham",WR,1991-1993,102,no,no
+PIT,Pittsburgh Steelers,"Preston Pearson",RB,1970-1974,98,no,no
+PIT,Pittsburgh Steelers,"Duce Staley",RB,2004-2006,94,no,no
+PIT,Pittsburgh Steelers,"Chris Fuamatu-Ma'afala",RB,1999-2002,90,no,no
+PIT,Pittsburgh Steelers,"Frank Lewis",WR,1971-1977,87,no,no
+PIT,Pittsburgh Steelers,"David Woodley",QB,1984-1985,76,no,no
+PIT,Pittsburgh Steelers,"Joe Gilliam",QB,1972-1975,59,no,no
+PIT,Pittsburgh Steelers,"Terry Hanratty",QB,1970-1975,53,no,no
+PIT,Pittsburgh Steelers,"Steve Bono",QB,1987-1988,36,no,no
+SF,San Francisco 49ers,"Christian McCaffrey",RB,2022-2025,362,no,yes
+SF,San Francisco 49ers,"Jeff Garcia",QB,1999-2003,338,no,yes
+SF,San Francisco 49ers,"Terrell Owens",WR,1996-2003,286,no,yes
+SF,San Francisco 49ers,"Garrison Hearst",RB,1997-2003,284,no,no
+SF,San Francisco 49ers,"Charlie Garner",RB,1999-2000,263,no,no
+SF,San Francisco 49ers,"Derek Loville",RB,1994-1996,258,no,no
+SF,San Francisco 49ers,"Ricky Watters",RB,1992-1994,243,no,no
+SF,San Francisco 49ers,"John Brodie",QB,1970-1973,224,no,no
+SF,San Francisco 49ers,"Alex Smith",QB,2005-2012,215,no,yes
+SF,San Francisco 49ers,"Gene Washington",WR,1970-1977,209,no,no
+SF,San Francisco 49ers,"Earl Cooper",WR,1980-1985,208,no,no
+SF,San Francisco 49ers,"Paul Hofer",RB,1976-1981,205,no,no
+SF,San Francisco 49ers,"Delvin Williams",RB,1974-1977,204,no,no
+SF,San Francisco 49ers,"Carlos Hyde",RB,2014-2017,202,no,yes
+SF,San Francisco 49ers,"John Taylor",WR,1987-1995,196,no,no
+SF,San Francisco 49ers,"Steve DeBerg",QB,1978-1980,193,no,no
+SF,San Francisco 49ers,"Dwight Clark",WR,1979-1987,188,no,no
+SF,San Francisco 49ers,"Kevan Barlow",RB,2001-2005,185,no,no
+SF,San Francisco 49ers,"Ken Willard",RB,1970-1973,174,no,no
+SF,San Francisco 49ers,"Freddie Solomon",WR,1978-1985,173,no,no
+SF,San Francisco 49ers,"Elijah Mitchell",RB,2021-2023,156,no,no
+SF,San Francisco 49ers,"Vic Washington",RB,1971-1973,153,no,no
+SF,San Francisco 49ers,"Terry Kirby",RB,1996-1998,148,no,no
+SF,San Francisco 49ers,"Matt Breida",RB,2017-2019,148,no,no
+SF,San Francisco 49ers,"Ted Kwalick",WR,1970-1974,146,no,no
+SF,San Francisco 49ers,"Brent Jones",WR,1987-1997,144,no,no
+SF,San Francisco 49ers,"Shaun Hill",QB,2007-2009,143,no,yes
+SF,San Francisco 49ers,"Wilbur Jackson",RB,1974-1979,142,no,no
+SF,San Francisco 49ers,"Tai Streets",WR,1999-2003,142,no,no
+SF,San Francisco 49ers,"Tom Rathman",WR,1986-1993,139,no,no
+SF,San Francisco 49ers,"Eric Johnson",TE,2001-2006,134,no,no
+SF,San Francisco 49ers,"Blaine Gabbert",QB,2014-2016,133,no,yes
+SF,San Francisco 49ers,"Joe Cribbs",RB,1986-1987,131,no,no
+SF,San Francisco 49ers,"J.J. Stokes",WR,1999-2002,128,no,no
+SF,San Francisco 49ers,"Jeff Moore",WR,1982-1983,127,no,no
+SF,San Francisco 49ers,"Brandon Lloyd",WR,2003-2014,125,no,yes
+SF,San Francisco 49ers,"Tevin Coleman",RB,2019-2022,125,no,no
+SF,San Francisco 49ers,"Larry Schreiber",RB,1971-1975,120,no,no
+SF,San Francisco 49ers,"Antonio Bryant",WR,2006,111,no,no
+SF,San Francisco 49ers,"Jeremy Kerley",WR,2016,111,no,yes
+SF,San Francisco 49ers,"Cedrick Wilson",WR,2002-2004,106,no,no
+SF,San Francisco 49ers,"O. J. Simpson",RB,1978-1979,105,no,yes
+SF,San Francisco 49ers,"Steve Bono",QB,1989-1993,105,no,no
+SF,San Francisco 49ers,"Tim Rattay",QB,2000-2005,100,no,no
+SF,San Francisco 49ers,"Jeff Kemp",QB,1986,98,no,no
+SF,San Francisco 49ers,"Doug Cunningham",RB,1970-1973,93,no,no
+SF,San Francisco 49ers,"Fred Beasley",RB,1999-2005,92,no,no
+SF,San Francisco 49ers,"Charle Young",WR,1980-1982,89,no,no
+SF,San Francisco 49ers,"Russ Francis",WR,1982-1987,88,no,no
+SF,San Francisco 49ers,"Brian Westbrook",RB,2010,87,no,yes
+SF,San Francisco 49ers,"Elvis Grbac",QB,1994-1996,86,no,no
+SF,San Francisco 49ers,"Norm Snead",QB,1974-1975,80,no,no
+SF,San Francisco 49ers,"Tom Owen",QB,1974-1975,78,no,no
+SF,San Francisco 49ers,"Amp Lee",RB,1992-1993,78,no,no
+SF,San Francisco 49ers,"O.J. Simpson",RB,1979,72,no,yes
+SF,San Francisco 49ers,"Danny Abramowicz",WR,1973-1974,68,no,yes
+SF,San Francisco 49ers,"Bob Windsor",WR,1970-1971,64,no,no
+SF,San Francisco 49ers,"Tom Mitchell",WR,1974-1977,63,no,no
+SF,San Francisco 49ers,"Tommy Vardell",RB,1996-1999,63,no,no
+SF,San Francisco 49ers,"Jordan Reed",TE,2020,60,no,yes
+SF,San Francisco 49ers,"Dick Witcher",WR,1970-1973,52,no,no
+SF,San Francisco 49ers,"Steve Young",QB,1999,29,no,no
+SF,San Francisco 49ers,"Wesley Walls",TE,1989-1993,10,no,no
+SEA,Seattle Seahawks,"Shaun Alexander",RB,2000-2007,369,no,yes
+SEA,Seattle Seahawks,"Dave Krieg",QB,1980-1991,281,no,no
+SEA,Seattle Seahawks,"Curt Warner",RB,1983-1990,277,no,no
+SEA,Seattle Seahawks,"Chris Warren",RB,1990-1997,263,no,no
+SEA,Seattle Seahawks,"Ricky Watters",RB,1998-2001,261,no,no
+SEA,Seattle Seahawks,"Sherman Smith",RB,1976-1982,239,no,no
+SEA,Seattle Seahawks,"Warren Moon",QB,1997-1998,231,no,no
+SEA,Seattle Seahawks,"John Williams",RB,1986-1993,224,no,no
+SEA,Seattle Seahawks,"Joey Galloway",WR,1995-1999,213,no,yes
+SEA,Seattle Seahawks,"Jim Zorn",QB,1976-1984,208,no,no
+SEA,Seattle Seahawks,"Jon Kitna",QB,1997-2000,204,no,no
+SEA,Seattle Seahawks,"Darrell Jackson",WR,2000-2006,204,no,no
+SEA,Seattle Seahawks,"Koren Robinson",WR,2001-2008,199,no,no
+SEA,Seattle Seahawks,"Bobby Engram",WR,2001-2008,196,no,no
+SEA,Seattle Seahawks,"Derrick Fenner",RB,1989-1991,193,no,no
+SEA,Seattle Seahawks,"David Sims",RB,1977-1979,192,no,no
+SEA,Seattle Seahawks,"Brian Blades",WR,1988-1998,175,no,no
+SEA,Seattle Seahawks,"Derrick Mayes",WR,1999-2000,174,no,no
+SEA,Seattle Seahawks,"Sean Dawkins",WR,1999-2000,168,no,no
+SEA,Seattle Seahawks,"Dan Doornink",WR,1979-1985,162,no,no
+SEA,Seattle Seahawks,"Joe Jurevicius",WR,2005,157,no,no
+SEA,Seattle Seahawks,"Sam McCullum",WR,1976-1981,154,no,no
+SEA,Seattle Seahawks,"Golden Tate",WR,2010-2013,152,no,yes
+SEA,Seattle Seahawks,"T.J. Houshmandzadeh",WR,2009,147,no,no
+SEA,Seattle Seahawks,"Rick Mirer",QB,1993-1996,144,no,no
+SEA,Seattle Seahawks,"Sidney Rice",WR,2011-2013,143,no,no
+SEA,Seattle Seahawks,"Kelvin Martin",WR,1993-1994,136,no,no
+SEA,Seattle Seahawks,"Julius Jones",RB,2008-2009,131,no,no
+SEA,Seattle Seahawks,"Paul Richardson",WR,2014-2017,128,no,yes
+SEA,Seattle Seahawks,"Mike Pritchard",WR,1996-1999,126,no,no
+SEA,Seattle Seahawks,"Deion Branch",WR,2006-2009,126,no,yes
+SEA,Seattle Seahawks,"Maurice Morris",RB,2002-2008,124,no,no
+SEA,Seattle Seahawks,"Thomas Rawls",RB,2015-2017,122,no,no
+SEA,Seattle Seahawks,"Mike Davis",RB,2017-2018,120,no,yes
+SEA,Seattle Seahawks,"D.J. Hackett",WR,2005-2007,108,no,no
+SEA,Seattle Seahawks,"Itula Mili",TE,1999-2006,96,no,no
+SEA,Seattle Seahawks,"John Friesz",QB,1995-1998,93,no,no
+SEA,Seattle Seahawks,"Byron Franklin",WR,1985-1987,83,no,no
+SEA,Seattle Seahawks,"Charle Young",WR,1983-1985,81,no,no
+SEA,Seattle Seahawks,"Jerry Rice",WR,2004,76,no,yes
+SEA,Seattle Seahawks,"Stan Gelbaugh",QB,1992-1996,65,no,no
+SEA,Seattle Seahawks,"Marcus Pollard",TE,2007,53,no,no
+SEA,Seattle Seahawks,"Jeff Kemp",QB,1987-1991,52,no,no
+SEA,Seattle Seahawks,"Roger Carr",WR,1982,46,no,no
+SEA,Seattle Seahawks,"Greg Olsen",TE,2020,42,no,yes
+SEA,Seattle Seahawks,"Brandon Marshall",WR,2018,25,yes,yes
+SEA,Seattle Seahawks,"Ahman Green",RB,1999,12,no,yes
+TB,Tampa Bay Buccaneers,"James Wilder",RB,1981-1990,337,no,no
+TB,Tampa Bay Buccaneers,"Mark Carrier",WR,1987-1992,237,no,no
+TB,Tampa Bay Buccaneers,"Joey Galloway",WR,2004-2008,231,no,yes
+TB,Tampa Bay Buccaneers,"Warrick Dunn",RB,1997-2008,226,no,no
+TB,Tampa Bay Buccaneers,"Doug Williams",QB,1978-1982,218,no,yes
+TB,Tampa Bay Buccaneers,"Shaun King",QB,1999-2003,215,no,no
+TB,Tampa Bay Buccaneers,"Brad Johnson",QB,2001-2004,214,no,yes
+TB,Tampa Bay Buccaneers,"Antonio Bryant",WR,2008-2009,209,no,no
+TB,Tampa Bay Buccaneers,"Keenan McCardell",WR,2002-2003,206,no,no
+TB,Tampa Bay Buccaneers,"Michael Clayton",WR,2004-2009,204,no,no
+TB,Tampa Bay Buccaneers,"Errict Rhett",RB,1994-1997,201,no,no
+TB,Tampa Bay Buccaneers,"Steve DeBerg",QB,1984-1993,200,no,no
+TB,Tampa Bay Buccaneers,"Michael Pittman",RB,2002-2007,200,no,no
+TB,Tampa Bay Buccaneers,"Kevin House",WR,1980-1987,198,no,no
+TB,Tampa Bay Buccaneers,"Vinny Testaverde",QB,1987-1992,197,no,yes
+TB,Tampa Bay Buccaneers,"Trent Dilfer",QB,1994-1999,194,no,no
+TB,Tampa Bay Buccaneers,"Reggie Cobb",RB,1990-1993,191,no,no
+TB,Tampa Bay Buccaneers,"Mike Williams",WR,2010-2013,191,no,yes
+TB,Tampa Bay Buccaneers,"Keyshawn Johnson",WR,2000-2003,184,no,yes
+TB,Tampa Bay Buccaneers,"Bruce Hill",WR,1987-1991,182,no,no
+TB,Tampa Bay Buccaneers,"Mike Alstott",RB,1999-2006,177,no,no
+TB,Tampa Bay Buccaneers,"Ryan Fitzpatrick",QB,2017-2018,174,no,yes
+TB,Tampa Bay Buccaneers,"Craig Erickson",QB,1992-1994,173,no,no
+TB,Tampa Bay Buccaneers,"Ronald Jones",RB,2018-2021,172,no,no
+TB,Tampa Bay Buccaneers,"Cadillac Williams",RB,2005-2010,168,no,no
+TB,Tampa Bay Buccaneers,"Jack Thompson",QB,1983-1984,167,no,no
+TB,Tampa Bay Buccaneers,"Mike Glennon",QB,2013-2016,160,no,yes
+TB,Tampa Bay Buccaneers,"Brian Griese",QB,2004-2008,159,no,no
+TB,Tampa Bay Buccaneers,"Kellen Winslow Jr.",TE,2009-2011,158,no,no
+TB,Tampa Bay Buccaneers,"Charles Sims",RB,2014-2017,153,no,no
+TB,Tampa Bay Buccaneers,"Adam Humphries",WR,2015-2018,151,no,yes
+TB,Tampa Bay Buccaneers,"Courtney Hawkins",WR,1992-1996,150,no,no
+TB,Tampa Bay Buccaneers,"Gary Anderson",RB,1990-1993,146,no,yes
+TB,Tampa Bay Buccaneers,"Cameron Brate",TE,2014-2022,142,no,no
+TB,Tampa Bay Buccaneers,"Gerald Carter",WR,1981-1987,141,no,no
+TB,Tampa Bay Buccaneers,"LeGarrette Blount",RB,2010-2012,135,no,yes
+TB,Tampa Bay Buccaneers,"Lawrence Dawsey",WR,1991-1995,134,no,no
+TB,Tampa Bay Buccaneers,"DeSean Jackson",WR,2017-2018,131,no,yes
+TB,Tampa Bay Buccaneers,"Jacquez Green",WR,1999-2001,126,no,no
+TB,Tampa Bay Buccaneers,"Jerry Eckwood",RB,1979-1981,125,no,no
+TB,Tampa Bay Buccaneers,"Lars Tate",RB,1988-1989,122,no,no
+TB,Tampa Bay Buccaneers,"Breshad Perriman",WR,2019-2022,120,no,no
+TB,Tampa Bay Buccaneers,"Vince Workman",RB,1993-1994,117,no,no
+TB,Tampa Bay Buccaneers,"Timothy Wright",TE,2013,114,no,no
+TB,Tampa Bay Buccaneers,"Jackie Harris",TE,1994-1997,108,no,no
+TB,Tampa Bay Buccaneers,"Thomas Jones",RB,2003,107,no,yes
+TB,Tampa Bay Buccaneers,"Chris Simms",QB,2004-2006,103,no,yes
+TB,Tampa Bay Buccaneers,"Bert Emanuel",WR,1998-1999,97,no,no
+TB,Tampa Bay Buccaneers,"Dallas Clark",TE,2012,91,no,yes
+TB,Tampa Bay Buccaneers,"Steve Spurrier",QB,1976,81,no,yes
+TB,Tampa Bay Buccaneers,"Louis Carter",RB,1976-1978,78,no,no
+TB,Tampa Bay Buccaneers,"Julio Jones",WR,2022,58,yes,yes
+TB,Tampa Bay Buccaneers,"Essex Johnson",RB,1976,55,no,no
+TB,Tampa Bay Buccaneers,"Ron Springs",RB,1985-1986,55,no,no
+TB,Tampa Bay Buccaneers,"Reggie Brooks",RB,1996,50,no,no
+TB,Tampa Bay Buccaneers,"Gary Huff",QB,1977-1978,35,no,no
+TB,Tampa Bay Buccaneers,"Charlie Garner",RB,2004,22,no,no
+TB,Tampa Bay Buccaneers,"LeSean McCoy",RB,2020,21,no,yes
+TB,Tampa Bay Buccaneers,"Kyle Rudolph",TE,2022,10,no,yes
+TEN,Tennessee Titans,"Eddie George",RB,1996-2003,302,no,no
+TEN,Tennessee Titans,"Earl Campbell",RB,1978-1983,295,no,no
+TEN,Tennessee Titans,"Steve McNair",QB,1995-2005,271,no,yes
+TEN,Tennessee Titans,"DeMarco Murray",RB,2016-2017,264,no,yes
+TEN,Tennessee Titans,"Marcus Mariota",QB,2015-2019,260,no,yes
+TEN,Tennessee Titans,"Lorenzo White",RB,1988-1994,259,no,no
+TEN,Tennessee Titans,"Drew Bennett",WR,2001-2006,237,no,no
+TEN,Tennessee Titans,"Derrick Mason",WR,1997-2004,227,no,yes
+TEN,Tennessee Titans,"Drew Hill",WR,1985-1991,210,no,no
+TEN,Tennessee Titans,"Haywood Jeffires",WR,1987-1995,204,no,no
+TEN,Tennessee Titans,"Tim Smith",WR,1980-1986,195,no,no
+TEN,Tennessee Titans,"Ernest Givins",WR,1986-1994,188,no,no
+TEN,Tennessee Titans,"Butch Woolfolk",WR,1985-1986,181,no,no
+TEN,Tennessee Titans,"Ken Burrough",WR,1971-1981,179,no,no
+TEN,Tennessee Titans,"Travis Henry",RB,2005-2006,178,no,no
+TEN,Tennessee Titans,"Rishard Matthews",WR,2016-2017,178,no,yes
+TEN,Tennessee Titans,"Gary Brown",RB,1991-1995,175,no,no
+TEN,Tennessee Titans,"Ryan Fitzpatrick",QB,2013,171,no,yes
+TEN,Tennessee Titans,"Mike Rozier",RB,1985-1990,168,no,no
+TEN,Tennessee Titans,"Chris Brown",RB,2003-2007,166,no,no
+TEN,Tennessee Titans,"Allen Pinkett",RB,1986-1991,165,no,no
+TEN,Tennessee Titans,"Rodney Thomas",RB,1995-2000,161,no,no
+TEN,Tennessee Titans,"Kevin Dyson",WR,1999-2002,152,no,no
+TEN,Tennessee Titans,"Larry Moriarty",RB,1983-1986,147,no,no
+TEN,Tennessee Titans,"Dan Pastorini",QB,1971-1979,146,no,no
+TEN,Tennessee Titans,"Fred Willis",RB,1972-1976,144,no,no
+TEN,Tennessee Titans,"Curtis Duncan",WR,1987-1993,142,no,no
+TEN,Tennessee Titans,"Mike Barber",WR,1976-1981,131,no,no
+TEN,Tennessee Titans,"Webster Slaughter",WR,1994,131,no,no
+TEN,Tennessee Titans,"Frank Wycheck",TE,1995-2003,130,no,no
+TEN,Tennessee Titans,"Ronnie Coleman",RB,1974-1981,127,no,no
+TEN,Tennessee Titans,"Dave Casper",WR,1981-1982,122,no,no
+TEN,Tennessee Titans,"Roydell Williams",WR,2005-2007,122,no,no
+TEN,Tennessee Titans,"Nick Westbrook-Ikhine",WR,2020-2024,120,no,no
+TEN,Tennessee Titans,"Ken Stabler",QB,1981,118,no,no
+TEN,Tennessee Titans,"Jared Cook",TE,2009-2012,112,no,yes
+TEN,Tennessee Titans,"Damian Williams",WR,2010-2013,112,no,no
+TEN,Tennessee Titans,"Yancey Thigpen",WR,1998-2000,106,no,no
+TEN,Tennessee Titans,"Ben Troupe",TE,2004-2007,105,no,no
+TEN,Tennessee Titans,"Jerry LeVias",WR,1970,103,no,no
+TEN,Tennessee Titans,"Rob Carpenter",RB,1977-1981,102,no,no
+TEN,Tennessee Titans,"Ronnie Harmon",WR,1996-1997,101,no,no
+TEN,Tennessee Titans,"Antowain Smith",RB,2004,101,no,no
+TEN,Tennessee Titans,"Alvin Reed",WR,1970-1972,94,no,no
+TEN,Tennessee Titans,"Erron Kinney",TE,2000-2005,94,no,no
+TEN,Tennessee Titans,"Cody Carlson",QB,1988-1994,93,no,no
+TEN,Tennessee Titans,"Billy Johnson",WR,1974-1980,92,no,no
+TEN,Tennessee Titans,"Don Hardeman",RB,1975-1977,92,no,no
+TEN,Tennessee Titans,"Neil O'Donnell",QB,1999-2003,87,no,no
+TEN,Tennessee Titans,"Billy Parks",WR,1973-1975,84,no,no
+TEN,Tennessee Titans,"Charley Johnson",QB,1970-1971,82,no,no
+TEN,Tennessee Titans,"Jim Beirne",WR,1970-1976,80,no,no
+TEN,Tennessee Titans,"Jackie Harris",TE,1998-1999,75,no,no
+TEN,Tennessee Titans,"Oliver Luck",QB,1983-1986,74,no,no
+TEN,Tennessee Titans,"Joe Dawkins",RB,1970-1976,73,no,no
+TEN,Tennessee Titans,"Rich Caster",WR,1978-1980,73,no,no
+TEN,Tennessee Titans,"Paul Robinson",RB,1972-1973,72,no,yes
+TEN,Tennessee Titans,"Mike Renfro",WR,1978-1983,71,no,no
+TEN,Tennessee Titans,"Billy Joe Tolliver",QB,1994,69,no,no
+TEN,Tennessee Titans,"Gifford Nielsen",QB,1978-1983,57,no,no
+TEN,Tennessee Titans,"Anthony Fasano",TE,2015-2016,54,no,yes
+TEN,Tennessee Titans,"Jerry Rhome",QB,1970,53,no,no
+TEN,Tennessee Titans,"Lynn Dickey",QB,1971-1975,50,no,no
+TEN,Tennessee Titans,"Eric Moulds",WR,2007,50,no,yes
+TEN,Tennessee Titans,"Vic Washington",RB,1974,48,no,no
+TEN,Tennessee Titans,"John Hadl",QB,1976-1977,45,no,no
+TEN,Tennessee Titans,"Marion Butts",RB,1995,45,no,no
+TEN,Tennessee Titans,"Alge Crumpler",TE,2008-2009,44,no,no
+TEN,Tennessee Titans,"Adrian Peterson",RB,2021,25,yes,yes
+TEN,Tennessee Titans,"Andre Johnson",WR,2016,25,no,yes
+TEN,Tennessee Titans,"Dave Krieg",QB,1998,8,no,no
+WAS,Washington Commanders,"Terry Allen",RB,1995-1998,297,no,no
+WAS,Washington Commanders,"John Riggins",RB,1976-1985,292,no,no
+WAS,Washington Commanders,"Stephen Davis",RB,1999-2002,259,no,no
+WAS,Washington Commanders,"Mark Rypien",QB,1988-1993,244,no,no
+WAS,Washington Commanders,"Larry Brown",RB,1970-1976,239,no,no
+WAS,Washington Commanders,"Art Monk",WR,1980-1995,232,no,no
+WAS,Washington Commanders,"George Rogers",RB,1986-1987,232,no,no
+WAS,Washington Commanders,"Jay Schroeder",QB,1985-1987,230,no,no
+WAS,Washington Commanders,"Gary Clark",WR,1985-1992,229,no,no
+WAS,Washington Commanders,"Trent Green",QB,1997-1998,228,no,yes
+WAS,Washington Commanders,"Ricky Sanders",WR,1986-1993,225,no,no
+WAS,Washington Commanders,"Pierre Garcon",WR,2012-2016,220,no,yes
+WAS,Washington Commanders,"Charlie Brown",WR,1982-1984,215,no,no
+WAS,Washington Commanders,"Ladell Betts",RB,2002-2009,210,no,no
+WAS,Washington Commanders,"Joe Washington",RB,1981-1984,208,no,no
+WAS,Washington Commanders,"Michael Westbrook",WR,1999-2001,206,no,no
+WAS,Washington Commanders,"Earnest Byner",RB,1989-1993,203,no,no
+WAS,Washington Commanders,"Laveranues Coles",WR,2003-2004,201,no,yes
+WAS,Washington Commanders,"Rod Gardner",WR,2001-2004,184,no,no
+WAS,Washington Commanders,"Albert Connell",WR,1999-2000,183,no,no
+WAS,Washington Commanders,"Sonny Jurgensen",QB,1970-1974,176,no,yes
+WAS,Washington Commanders,"Adrian Peterson",RB,2018-2019,176,yes,yes
+WAS,Washington Commanders,"Gus Frerotte",QB,1994-1998,175,no,yes
+WAS,Washington Commanders,"Billy Kilmer",QB,1971-1978,174,no,yes
+WAS,Washington Commanders,"Clarence Harmon",WR,1977-1982,169,no,no
+WAS,Washington Commanders,"Chris Cooley",TE,2004-2012,160,no,no
+WAS,Washington Commanders,"Henry Ellard",WR,1995-1998,159,no,no
+WAS,Washington Commanders,"Charley Taylor",WR,1970-1977,151,no,no
+WAS,Washington Commanders,"Frank Grant",WR,1973-1978,147,no,no
+WAS,Washington Commanders,"Reggie Brooks",RB,1993-1995,145,no,no
+WAS,Washington Commanders,"Ricky Ervins",RB,1991-1994,142,no,no
+WAS,Washington Commanders,"Jerry Smith",WR,1970-1977,136,no,no
+WAS,Washington Commanders,"Tony Banks",QB,2001,135,no,no
+WAS,Washington Commanders,"Derrius Thompson",WR,2001-2002,132,no,no
+WAS,Washington Commanders,"Larry Centers",RB,1999-2000,129,no,no
+WAS,Washington Commanders,"Roy Jefferson",WR,1971-1976,119,no,no
+WAS,Washington Commanders,"Wilbur Jackson",RB,1980-1982,116,no,no
+WAS,Washington Commanders,"Antwaan Randle El",RB,2006-2009,116,no,no
+WAS,Washington Commanders,"Charlie Harraway",RB,1970-1973,111,no,no
+WAS,Washington Commanders,"Irving Fryar",WR,1999-2000,107,no,no
+WAS,Washington Commanders,"Kenny Watson",RB,2002,107,no,yes
+WAS,Washington Commanders,"Matt Jones Jr.",RB,2015-2016,107,no,no
+WAS,Washington Commanders,"Keiland Williams",RB,2010,105,no,no
+WAS,Washington Commanders,"Ryan Grant",RB,2014-2017,104,no,yes
+WAS,Washington Commanders,"Ryan Grant (WR)",WR,2014-2017,104,no,no
+WAS,Washington Commanders,"Heath Shuler",QB,1994-1996,94,no,no
+WAS,Washington Commanders,"Gerald Riggs",RB,1990-1991,90,no,no
+WAS,Washington Commanders,"Benny Malone",RB,1978-1979,89,no,no
+WAS,Washington Commanders,"Tim McGee",WR,1993,88,no,no
+WAS,Washington Commanders,"Darnerien McCants",WR,2002-2004,86,no,no
+WAS,Washington Commanders,"Stephen Alexander",TE,1999-2001,85,no,no
+WAS,Washington Commanders,"John Friesz",QB,1994,82,no,no
+WAS,Washington Commanders,"Jeff George",QB,2000-2001,80,no,no
+WAS,Washington Commanders,"Terry Metcalf",RB,1981,78,no,no
+WAS,Washington Commanders,"Duane Thomas",RB,1973-1974,77,no,yes
+WAS,Washington Commanders,"Timmy Smith",RB,1987-1988,66,no,no
+WAS,Washington Commanders,"Bobby Hammond",RB,1979-1980,65,no,no
+WAS,Washington Commanders,"Stan Humphries",QB,1988-1990,65,no,no
+WAS,Washington Commanders,"Calvin Hill",RB,1976-1977,50,no,yes
+WAS,Washington Commanders,"Boyd Dowler",WR,1971,46,no,yes
+WAS,Washington Commanders,"Jeff Hostetler",QB,1997,46,no,no
+WAS,Washington Commanders,"Larry Smith",RB,1974,44,no,no
+WAS,Washington Commanders,"Keenan McCardell",WR,1991-2007,43,no,no
+WAS,Washington Commanders,"Clifton McNeil",WR,1971-1972,41,no,no
+WAS,Washington Commanders,"Rich Gannon",QB,1993,33,no,no
+WAS,Washington Commanders,"Joey Galloway",WR,2010,23,no,yes
+WAS,Washington Commanders,"Andre Reed",WR,2000,21,no,no
+WAS,Washington Commanders,"Frank Wycheck",TE,1993-1994,19,no,no
+WAS,Washington Commanders,"Antonio Brown",WR,2005,7,yes,yes
+WAS,Washington Commanders,"Ryan Fitzpatrick",QB,2021,1,no,yes

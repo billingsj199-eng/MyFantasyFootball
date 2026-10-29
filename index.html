@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-10-29-games" as="script">
+<link rel="preload" href="app.js?v=2026-10-29-lib2" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -3753,7 +3753,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- TRIVIA BOARD BUILDER (Admin Only) -->
 <div class="page" id="pageTrivia" style="padding:0;overflow-y:auto">
 <div class="auth-anchor" id="authAnchorTrivia"></div>
-<link rel="stylesheet" href="styles/trivia.css?v=2026-10-29-entry">
+<link rel="stylesheet" href="styles/trivia.css?v=2026-10-29-lib2">
 <div class="trivia-wrap">
 <!-- Tabs -->
 <div class="trivia-admin-only" style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
@@ -3881,6 +3881,26 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 </div>
 
+<!-- BOARD LIBRARY · ADMIN REVIEW (2026-10-29): the pre-built, audited, frozen library
+     (data/trivia_library.js). Filters + PREVIEW + "reviewed" toggles; reviewed boards
+     form the Daily Trivia pool. Marks are written to Firestore trivia_library/overrides. -->
+<div id="triviaLibAdmin" class="trivia-admin-only trivia-libadm">
+<div class="trivia-libadm-head">
+<div class="trivia-library-title">BOARD LIBRARY · ADMIN REVIEW</div>
+<div class="trivia-library-sub" id="libAdminSummary">Loading library…</div>
+</div>
+<div class="trivia-libadm-filters">
+<select id="libAdmKind" aria-label="Board kind"><option value="">Any kind</option><option value="season">Season</option><option value="career">Career / era</option><option value="team">Team</option><option value="game">Single game</option></select>
+<select id="libAdmSeason" aria-label="Season or era"><option value="">Any season / era</option></select>
+<select id="libAdmStat" aria-label="Stat"><option value="">Any stat</option></select>
+<select id="libAdmPos" aria-label="Position"><option value="">Any position</option></select>
+<select id="libAdmStatus" aria-label="Status"><option value="">Any status</option><option value="amber">Amber · needs a look</option><option value="green">Green</option><option value="none">Unchecked</option><option value="partial">In-season (partial)</option><option value="reviewed">Reviewed</option><option value="unreviewed">Not reviewed</option></select>
+<button type="button" class="trivia-libadm-btn trivia-libadm-approve" onclick="window._triviaLibApproveGreen()" title="Mark every green, complete, unreviewed board as reviewed in one write">✓ APPROVE ALL GREEN</button>
+<span id="libAdmNote" class="trivia-library-note"></span>
+</div>
+<div id="libAdmList" class="trivia-libadm-list"></div>
+</div>
+
 <!-- Quick-start Templates -->
 <div id="triviaTemplates" class="trivia-admin-only" style="margin-bottom:12px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)">
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px">
@@ -3948,6 +3968,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <label id="triviaFilterYearLabel" style="font-size:.78rem;color:var(--text2);display:flex;flex-direction:column;gap:3px">Year
 <select id="triviaFilterYear" style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem">
 <option value="all">All-Time</option>
+<option value="2026">2026</option>
 <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
 <option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option>
 <option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option>
@@ -6862,6 +6883,16 @@ window._loadLegendHeadshots = function(opts) {
   return window._legendHeadshotsPromise;
 };
 
+// Pre-built, audited, frozen trivia board library (2026-10-29, ~1.4 MB): the Daily
+// Trivia's pool and the admin review panel. Built by scripts/trivia_library/build_library.js.
+// Loaded by the trivia chunk on trivia-page open / PLAY TODAY / a ?board= permalink —
+// never in the warm-up. Bump the ?v= after every rebuild.
+window._loadTriviaLibrary = function(opts) {
+  if (window._triviaLibraryPromise) return window._triviaLibraryPromise;
+  window._triviaLibraryPromise = _injectScripts(['data/trivia_library.js?v=2026-10-29-lib1'], 'TriviaLibrary', opts);
+  return window._triviaLibraryPromise;
+};
+
 // 1970-98 full-league fantasy season totals (2026-10-28): the Fantasy Game's ERA / YEAR
 // picks before 1999 used to draw on legends only, and the trivia generator's 1970s-90s
 // season / career boards on the legend tables. Loaded by the games chunk the first time
@@ -6932,7 +6963,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-10-29-games"></script>
+<script defer src="app.js?v=2026-10-29-lib2"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

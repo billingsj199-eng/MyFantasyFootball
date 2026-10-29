@@ -360,3 +360,24 @@ body.mff-admin .trivia-player-only{display:none!important}
 .trivia-ans-pct{display:flex;align-items:center;gap:5px;font-size:.68rem;color:var(--text2);font-variant-numeric:tabular-nums;justify-content:flex-end}
 .trivia-ans-bar{width:32px;height:6px;border-radius:3px;background:var(--border);overflow:hidden}
 .trivia-ans-bar i{display:block;height:100%;background:#ffd166}
+/* BOARD LIBRARY · ADMIN REVIEW (2026-10-29): pre-built frozen library, review toggles */
+.trivia-libadm{margin-bottom:12px;padding:14px 16px;border-radius:10px;background:var(--surface2);border:1px solid rgba(56,189,248,.35)}
+.trivia-libadm-filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 8px}
+.trivia-libadm-filters select{padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.74rem;max-width:100%}
+.trivia-libadm-btn{padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.66rem;letter-spacing:1px;cursor:pointer;white-space:nowrap}
+.trivia-libadm-btn:hover{border-color:#ffd166;color:#ffd166}
+.trivia-libadm-approve{background:rgba(34,197,94,.12);color:#22c55e;border-color:rgba(34,197,94,.45)}
+.trivia-libadm-list{display:flex;flex-direction:column;gap:4px;max-height:420px;overflow-y:auto;padding-right:4px}
+.trivia-libadm-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;border:1px solid var(--border);font-size:.74rem;min-width:0}
+.trivia-libadm-row.reviewed{border-color:rgba(34,197,94,.35)}
+.trivia-libadm-badge{flex:none;font-size:.6rem;letter-spacing:1px;padding:2px 6px;border-radius:4px;font-weight:700;background:var(--bg);color:var(--text2)}
+.trivia-libadm-badge.green{color:#22c55e;background:rgba(34,197,94,.12)}
+.trivia-libadm-badge.amber{color:#f59e0b;background:rgba(245,158,11,.14)}
+.trivia-libadm-badge.partial{color:#a855f7;background:rgba(168,85,247,.14)}
+.trivia-libadm-badge.pfr{font-weight:600}
+.trivia-libadm-id{flex:none;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.66rem;color:var(--text2);min-width:110px}
+.trivia-libadm-title{flex:1;min-width:0;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trivia-libadm-title small{color:var(--text2)}
+.trivia-libadm-diff{font-size:.64rem;color:#f59e0b;white-space:normal;line-height:1.3;margin-top:2px}
+.trivia-libadm-rev{flex:none;display:flex;align-items:center;gap:4px;font-size:.68rem;color:var(--text2);cursor:pointer;white-space:nowrap}
+@media(max-width:640px){.trivia-libadm-row{flex-wrap:wrap}.trivia-libadm-id{min-width:0}.trivia-libadm-title{flex-basis:100%;white-space:normal}}

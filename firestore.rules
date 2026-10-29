@@ -250,6 +250,14 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isJack();
     }
+    // trivia_library/{docId}: review marks for the pre-built, frozen board library
+    // (data/trivia_library.js). One doc, "overrides" = { reviewed: {boardId: bool},
+    // updatedAt, by }. Every visitor reads it (the reviewed set is the daily pool);
+    // only the admin review panel writes it. Added 2026-10-29.
+    match /trivia_library/{docId} {
+      allow read: if true;
+      allow write: if isJack();
+    }
     // trivia_reports/{reportId}: user-submitted "this cell looks wrong"
     // flags. Anyone can create (no auth required so anonymous players
     // can report) with strict shape validation; admin reads + deletes

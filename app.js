@@ -24385,6 +24385,8 @@ function _pageEnterHooks(page) {
   // reveal reads LEGEND_HEADSHOTS after the ESPN tables miss; fetch it on page open so the
   // first Give Up / reveal already has photos (the reveal also self-loads + upgrades late).
   if (page === 'trivia' && typeof window._loadLegendHeadshots === 'function') window._loadLegendHeadshots();
+  // Pre-built board library (the daily's pool) — chunk-guarded like the headshots.
+  if (page === 'trivia' && typeof window._triviaEnsureLibrary === 'function') window._triviaEnsureLibrary();
   // Retired weekly game-log bundles (~22.5 MB, lazy) — Games (Elite Pull era pools) and
   // Compare (legend weekly rows) read them. Force the load on open so they're ready; the
   // idle preload after `load` usually beats this, but this covers a fast navigator.
@@ -58300,14 +58302,22 @@ window.fmtHeight = fmtHeight;
   // covers all N templates exactly once. Previously `hash(date) % N`
   // could collide on consecutive days. Same-cycle visitors all see the
   // same shuffled order and the same board.
+  // LIBRARY (2026-10-29): the pool is the reviewed boards of the pre-built
+  // library when it has loaded (see _triviaLibDailyPool); the template pool
+  // only while the library is unavailable or nothing is reviewed yet.
+  function _triviaDailyPool() {
+    const lib = (typeof _triviaLibDailyPool === 'function') ? _triviaLibDailyPool() : null;
+    return lib || _TRIVIA_DAILY_POOL;
+  }
   function _triviaPickDailyTemplate(dateStr) {
-    const N = _TRIVIA_DAILY_POOL.length;
+    const pool = _triviaDailyPool();
+    const N = pool.length;
     if (N === 0) return null;
     const dayNum = _triviaDayNumber(dateStr);
     const cycleNum = Math.floor(dayNum / N);
     const cycleIdx = dayNum % N;
     const perm = _triviaShufflePerm(N, cycleNum);
-    return _TRIVIA_DAILY_POOL[perm[cycleIdx]];
+    return pool[perm[cycleIdx]];
   }
 
   // Returns the chain of template indices to try in order, starting from
@@ -58315,13 +58325,14 @@ window.fmtHeight = fmtHeight;
   // when a template yields too few items (validation fix #2). Same date
   // always returns the same chain so fallback is reproducible.
   function _triviaPickDailyChain(dateStr) {
-    const N = _TRIVIA_DAILY_POOL.length;
+    const pool = _triviaDailyPool();
+    const N = pool.length;
     const dayNum = _triviaDayNumber(dateStr);
     const cycleNum = Math.floor(dayNum / N);
     const cycleIdx = dayNum % N;
     const perm = _triviaShufflePerm(N, cycleNum);
     const ordered = [];
-    for (let i = 0; i < N; i++) ordered.push(_TRIVIA_DAILY_POOL[perm[(cycleIdx + i) % N]]);
+    for (let i = 0; i < N; i++) ordered.push(pool[perm[(cycleIdx + i) % N]]);
     return ordered;
   }
 
@@ -58654,8 +58665,18 @@ window.fmtHeight = fmtHeight;
 
   window._triviaPlayDaily = function() {
     const dateStr = _triviaResolveDailyDate();
+    // LIBRARY (2026-10-29): the reviewed boards are the pool, so the lazy file
+    // + review marks come first; a failure just leaves the template pool.
+    _triviaEnsureLibrary().catch(() => null).then(() => {
     const chain = _triviaPickDailyChain(dateStr);
     if (!chain.length) return;
+    // ?board=<id> permalink: that library board, unless it IS the date's pick
+    // (then it runs as the daily below, lock check included).
+    const wantId = _triviaResolveBoardId();
+    if (wantId && !(chain[0] && chain[0]._lib && chain[0]._lib.id === wantId)) {
+      const b = _triviaLibById(wantId);
+      if (b) { _triviaPlayLibraryBoard(b, { daily: false }); return; }
+    }
     // First play = the intro has done its job; clear it for good.
     if (typeof window._triviaDismissIntro === 'function') window._triviaDismissIntro();
     // Capture start time + initialize per-cell results array so the share
@@ -58679,9 +58700,228 @@ window.fmtHeight = fmtHeight;
         if (typeof window._triviaStartGame === 'function') window._triviaStartGame();
         return;
       }
+      // A library pick replays its frozen items like a lock; no generator run.
+      if (chain[0] && chain[0]._lib) { _triviaPlayLibraryBoard(chain[0]._lib, { daily: true }); return; }
       _triviaPlayDailyFromTemplate(chain);
     });
+    });
   };
+
+  // ===== PRE-BUILT BOARD LIBRARY (data/trivia_library.js, 2026-10-29) =====
+  // Every season / career / era / team board, built once by
+  // scripts/trivia_library/build_library.js from the site's own structured
+  // generator, audited once (verifier + PFR cross-checks) and frozen. The
+  // daily draws from the boards marked reviewed; a board replays exactly like
+  // a locked Firestore snapshot (a date lock still wins). Review marks live in
+  // Firestore trivia_library/overrides = { reviewed: { <boardId>: true|false } }
+  // (public read, admin write) and win over the file's own `reviewed` flag, so
+  // Jack reviews in the admin panel below without a rebuild or a commit.
+  let _triviaLibOverrides = null; // { reviewed: {id: bool} } once fetched (or {} on failure)
+  let _triviaLibPromise = null;
+  function _triviaLibBoards() {
+    const lib = window.TRIVIA_LIBRARY;
+    return (lib && Array.isArray(lib.boards)) ? lib.boards : null;
+  }
+  function _triviaLibById(id) { const bs = _triviaLibBoards(); return bs ? (bs.find(b => b.id === id) || null) : null; }
+  function _triviaLibReviewed(b) {
+    const o = _triviaLibOverrides && _triviaLibOverrides.reviewed;
+    if (o && Object.prototype.hasOwnProperty.call(o, b.id)) return !!o[b.id];
+    return !!b.reviewed;
+  }
+  // The daily's pool: reviewed, complete (not an in-season snapshot), playable;
+  // sorted by id so every visitor shuffles the same list. null = fall back.
+  function _triviaLibDailyPool() {
+    const bs = _triviaLibBoards();
+    if (!bs) return null;
+    const pool = bs.filter(b => _triviaLibReviewed(b) && !b.partial && b.items && b.items.length >= _TRIVIA_DAILY_MIN_ITEMS)
+      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+      .map(_triviaLibEntry);
+    return pool.length ? pool : null;
+  }
+  // Template-shaped wrapper: the daily panel and result modal read .title/.desc.
+  function _triviaLibEntry(b) { return { title: b.title, desc: b.desc, filters: b.filters, layout: b.layout || 'auto', _lib: b }; }
+  // ?board=<id> on the URL (shared permalink / admin preview link).
+  function _triviaResolveBoardId() {
+    try { const m = (location.search || '').match(/[?&]board=([a-z0-9-]{3,40})/i); if (m) return m[1]; } catch (_) {}
+    return null;
+  }
+  // Loads the file (index.html _loadTriviaLibrary, lazy) and the overrides doc
+  // once. Firestore may still be booting: wait for it up to 4 s, and apply the
+  // marks whenever they do land. Never rejects.
+  function _triviaEnsureLibrary() {
+    if (_triviaLibPromise) return _triviaLibPromise;
+    const file = (typeof window._loadTriviaLibrary === 'function') ? window._loadTriviaLibrary() : Promise.resolve();
+    const over = new Promise(res => {
+      let done = false;
+      const fin = v => { if (done) return; done = true; res(v); };
+      const apply = v => { _triviaLibOverrides = v || { reviewed: {} }; fin(v); if (done && v) { try { _triviaUpdateDailyPanel(); _triviaLibAdminRender(); } catch (_) {} } };
+      setTimeout(() => fin(null), 4000);
+      try {
+        _whenFirebaseReady(function() {
+          if (typeof firebase === 'undefined' || !firebase.firestore) return fin(null);
+          firebase.firestore().collection('trivia_library').doc('overrides').get()
+            .then(s => apply(s && s.exists ? s.data() : null))
+            .catch(err => { console.warn('[TriviaLib] overrides fetch failed:', err && err.message); fin(null); });
+        });
+      } catch (_) { fin(null); }
+    });
+    _triviaLibPromise = Promise.all([file, over]).then(r => {
+      if (!_triviaLibOverrides) _triviaLibOverrides = r[1] || { reviewed: {} };
+      try { _triviaUpdateDailyPanel(); } catch (_) {}
+      try { _triviaLibAdminRender(); } catch (_) {}
+      return _triviaLibBoards();
+    }).catch(() => _triviaLibBoards());
+    return _triviaLibPromise;
+  }
+  window._triviaEnsureLibrary = _triviaEnsureLibrary;
+  // Replay a library board exactly like a locked snapshot. opts.daily = today's
+  // run (the caller has set _triviaDailyRun; streak counts); otherwise a
+  // preview / permalink run (no streak, result modal still shows).
+  function _triviaPlayLibraryBoard(b, opts) {
+    opts = opts || {};
+    if (!b || !b.items || !b.items.length) return false;
+    if (typeof window._triviaDismissIntro === 'function') window._triviaDismissIntro();
+    if (!opts.daily) {
+      _triviaDailyRun = { date: _triviaResolveDailyDate(), startTime: Date.now(), results: new Array(b.items.length).fill(null), preview: true, archived: true };
+    } else if (_triviaDailyRun) {
+      _triviaDailyRun.results = new Array(b.items.length).fill(null);
+    }
+    const snap = {
+      title: b.title, desc: b.desc,
+      items: b.items.map(it => ({ rank: '', answer: it.answer || '', value: '', hint: it.hint || '', team: it.team || '', category: it.category || '', headshot: '', yr: it.yr || null })),
+      layout: b.layout || 'auto', tiers: null,
+      date: (opts.daily && _triviaDailyRun) ? _triviaDailyRun.date : null
+    };
+    _triviaRenderLockedDaily(snap);
+    if (_triviaData) {
+      _triviaData._libId = b.id;              // share links carry &board=<id>
+      _triviaData._filter = b.filters || null; // autocomplete keeps to the board's years
+    }
+    if (opts.daily) {
+      const expectedV = _triviaResolveDailyVersion();
+      if (expectedV && _triviaData) {
+        const actualV = _triviaContentHash(_triviaData.items);
+        if (actualV !== expectedV) _triviaShowDriftNotice(expectedV, actualV);
+      }
+    }
+    if (typeof window._triviaStartGame === 'function') window._triviaStartGame();
+    setTimeout(() => { const a = document.getElementById('triviaBoardArea'); if (a) a.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+    return true;
+  }
+  // Admin PREVIEW / permalink entry point (by id).
+  window._triviaPlayLibraryBoard = function(id, opts) {
+    _triviaEnsureLibrary().then(() => {
+      const b = _triviaLibById(id);
+      if (!b) { mffAlert('That library board was not found.'); return; }
+      _triviaPlayLibraryBoard(b, opts || { daily: false });
+    });
+  };
+
+  // ---- Admin review panel (#triviaLibAdmin) ----
+  const _LIB_ADM_STAT = { fpts: 'Fantasy Pts', ry: 'Rush Yds', rcy: 'Rec Yds', py: 'Pass Yds', totalTd: 'Total TDs' };
+  const _LIB_ADM_POS = { all: 'All pos', qb: 'QB', rb: 'RB', wrte: 'WR/TE' };
+  let _libAdmInit = false;
+  function _libAdmStatus(b) {
+    if (b.partial) return 'partial';
+    return (b.verifier && b.verifier.status) || 'none';
+  }
+  function _triviaLibAdminRender() {
+    const box = document.getElementById('triviaLibAdmin');
+    if (!box) return;
+    const isAdm = (typeof window.isAdmin === 'function' && window.isAdmin());
+    const list = document.getElementById('libAdmList'), sum = document.getElementById('libAdminSummary');
+    const bs = _triviaLibBoards();
+    if (!bs) { if (sum) sum.textContent = 'Library not loaded (data/trivia_library.js).'; if (list) list.innerHTML = ''; return; }
+    const q = id => document.getElementById(id);
+    if (!_libAdmInit) {
+      _libAdmInit = true;
+      const seasons = q('libAdmSeason'), stats = q('libAdmStat'), poss = q('libAdmPos');
+      const eras = []; bs.forEach(b => { if (eras.indexOf(b.era) < 0) eras.push(b.era); });
+      eras.sort((a, b) => (/^\d{4}$/.test(a) && /^\d{4}$/.test(b)) ? (+b - +a) : (/^\d{4}$/.test(a) ? 1 : /^\d{4}$/.test(b) ? -1 : a.localeCompare(b)));
+      if (seasons) eras.forEach(e => { const o = document.createElement('option'); o.value = e; o.textContent = e; seasons.appendChild(o); });
+      if (stats) Object.keys(_LIB_ADM_STAT).forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = _LIB_ADM_STAT[s]; stats.appendChild(o); });
+      if (poss) Object.keys(_LIB_ADM_POS).forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = _LIB_ADM_POS[p]; poss.appendChild(o); });
+      ['libAdmSeason', 'libAdmStat', 'libAdmPos', 'libAdmStatus', 'libAdmKind'].forEach(id => { const el = q(id); if (el) el.addEventListener('change', _triviaLibAdminRender); });
+    }
+    const fEra = (q('libAdmSeason') || {}).value || '', fStat = (q('libAdmStat') || {}).value || '', fPos = (q('libAdmPos') || {}).value || '', fSt = (q('libAdmStatus') || {}).value || '', fKind = (q('libAdmKind') || {}).value || '';
+    const counts = { green: 0, amber: 0, none: 0, partial: 0, reviewed: 0 };
+    bs.forEach(b => { counts[_libAdmStatus(b)]++; if (_triviaLibReviewed(b)) counts.reviewed++; });
+    const lib = window.TRIVIA_LIBRARY;
+    if (sum) sum.textContent = bs.length + ' boards · built ' + String(lib.built || '').slice(0, 10) + ' · ' + counts.green + ' green · ' + counts.amber + ' amber · ' + counts.none + ' unchecked · ' + counts.partial + ' in-season · ' + counts.reviewed + ' reviewed (daily pool' + (_triviaLibDailyPool() ? '' : ' EMPTY → template pool') + ')';
+    const rows = bs.filter(b => {
+      if (fEra && b.era !== fEra) return false;
+      if (fStat && b.stat !== fStat) return false;
+      if (fPos && b.pos !== fPos) return false;
+      if (fKind && b.kind !== fKind) return false;
+      if (fSt === 'reviewed') return _triviaLibReviewed(b);
+      if (fSt === 'unreviewed') return !_triviaLibReviewed(b);
+      if (fSt && _libAdmStatus(b) !== fSt) return false;
+      return true;
+    });
+    if (!list) return;
+    const MAX = 150;
+    const diffTxt = b => (b.verifier && b.verifier.diff || []).map(d => {
+      const p = [];
+      if (d.missing && d.missing.length) p.push('missing: ' + d.missing.join(', '));
+      if (d.extra && d.extra.length) p.push('extra: ' + d.extra.join(', '));
+      if (d.valueDiffs && d.valueDiffs.length) p.push('values: ' + d.valueDiffs.join('; '));
+      return (d.source || '').split(' (')[0] + ' — ' + p.join(' · ');
+    }).join(' || ');
+    let h = '';
+    rows.slice(0, MAX).forEach(b => {
+      const st = _libAdmStatus(b);
+      const rev = _triviaLibReviewed(b);
+      const link = location.origin + location.pathname + '?board=' + encodeURIComponent(b.id) + '#trivia';
+      h += '<div class="trivia-libadm-row' + (rev ? ' reviewed' : '') + '">' +
+        '<span class="trivia-libadm-badge ' + st + '" title="' + _esc(st === 'amber' ? diffTxt(b) : (b.verifier && b.verifier.checks ? b.verifier.checks.join(' + ') : 'no reference check')) + '">' + st.toUpperCase() + '</span>' +
+        (b.pfr && b.pfr.status && b.pfr.status !== 'na' ? '<span class="trivia-libadm-badge pfr ' + b.pfr.status + '" title="PFR cross-check">PFR</span>' : '') +
+        '<span class="trivia-libadm-id">' + _esc(b.id) + '</span>' +
+        '<span class="trivia-libadm-title" title="' + _esc(b.desc || '') + '">' + _esc(b.title) + ' <small>· ' + b.items.length + '</small>' + (st === 'amber' ? '<div class="trivia-libadm-diff">' + _esc(diffTxt(b)) + '</div>' : '') + '</span>' +
+        '<button type="button" class="trivia-libadm-btn" onclick="window._triviaPlayLibraryBoard(\'' + b.id + '\')">PREVIEW</button>' +
+        '<button type="button" class="trivia-libadm-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + link + '\');this.textContent=\'COPIED\'">LINK</button>' +
+        (isAdm ? '<label class="trivia-libadm-rev"><input type="checkbox"' + (rev ? ' checked' : '') + (b.partial ? ' disabled title="in-season boards never enter the daily pool"' : '') + ' onchange="window._triviaLibSetReviewed(\'' + b.id + '\', this.checked, this)"> reviewed</label>' : '') +
+        '</div>';
+    });
+    if (rows.length > MAX) h += '<div class="trivia-library-note">Showing ' + MAX + ' of ' + rows.length + ' — narrow the filters.</div>';
+    if (!rows.length) h = '<div class="trivia-library-note">No boards match.</div>';
+    list.innerHTML = h;
+  }
+  function _libAdmNote(msg, color) { const n = document.getElementById('libAdmNote'); if (n) { n.textContent = msg || ''; n.style.color = color || 'var(--text2)'; } }
+  // Writes { reviewed: { id: on } } (merge) to trivia_library/overrides.
+  function _triviaLibWriteReviewed(map) {
+    const user = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) || null;
+    if (!user || !(typeof window.isAdmin === 'function' && window.isAdmin())) { _libAdmNote('Admin sign-in required.', '#ef4444'); return Promise.reject(new Error('admin only')); }
+    if (!firebase.firestore) return Promise.reject(new Error('no firestore'));
+    return firebase.firestore().collection('trivia_library').doc('overrides')
+      .set({ reviewed: map, updatedAt: new Date().toISOString(), by: user.email || user.uid }, { merge: true })
+      .then(() => {
+        _triviaLibOverrides = _triviaLibOverrides || { reviewed: {} };
+        _triviaLibOverrides.reviewed = Object.assign({}, _triviaLibOverrides.reviewed || {}, map);
+        _triviaLibAdminRender();
+        try { _triviaUpdateDailyPanel(); } catch (_) {}
+      });
+  }
+  window._triviaLibSetReviewed = function(id, on, el) {
+    const map = {}; map[id] = !!on;
+    _libAdmNote('Saving…');
+    _triviaLibWriteReviewed(map).then(() => _libAdmNote(id + (on ? ' marked reviewed' : ' unmarked'), '#22c55e'))
+      .catch(err => { if (el) el.checked = !on; _libAdmNote('Save failed: ' + (err && err.message || err) + ' (deploy firestore.rules?)', '#ef4444'); });
+  };
+  // One click for the bulk of the work: every green, complete, unreviewed board.
+  window._triviaLibApproveGreen = function() {
+    const bs = _triviaLibBoards(); if (!bs) return;
+    const map = {}; let n = 0;
+    bs.forEach(b => { if (_libAdmStatus(b) === 'green' && !_triviaLibReviewed(b)) { map[b.id] = true; n++; } });
+    if (!n) { _libAdmNote('Every green board is already reviewed.'); return; }
+    if (!_mffConfirm('Mark all ' + n + ' green boards as reviewed? They join the daily rotation.')) return;
+    _libAdmNote('Saving ' + n + '…');
+    _triviaLibWriteReviewed(map).then(() => _libAdmNote(n + ' green boards marked reviewed', '#22c55e'))
+      .catch(err => _libAdmNote('Save failed: ' + (err && err.message || err) + ' (deploy firestore.rules?)', '#ef4444'));
+  };
+  window._triviaLibAdminRender = _triviaLibAdminRender;
+  // Library loads with the page when the visitor lands on #trivia or a board
+  // permalink; otherwise the trivia-page switch / PLAY TODAY triggers it.
+  if (/^#trivia/.test(location.hash || '') || _triviaResolveBoardId()) setTimeout(() => { _triviaEnsureLibrary(); }, 0);
 
   function _triviaPlayDailyFromTemplate(chain) {
 
@@ -58879,7 +59119,7 @@ window.fmtHeight = fmtHeight;
       'MFF Daily #' + boardNum + ' · ' + score + '/' + total + ' · ' + timeStr + (isArchive ? ' (archive)' : '') + '\n' +
       boardTitle + '\n' +
       lines.join('\n') + '\n' +
-      location.origin + location.pathname + '?daily=' + date + '&v=' + contentHash + '#trivia';
+      location.origin + location.pathname + '?daily=' + date + '&v=' + contentHash + (_triviaData && _triviaData._libId ? '&board=' + encodeURIComponent(_triviaData._libId) : '') + '#trivia';
 
     // Stash on the modal so the share button can grab it without rebuild.
     // Preview runs get a marked share text so an accidental share is
@@ -59045,6 +59285,33 @@ window.fmtHeight = fmtHeight;
   };
   // SEASON_LEADERS (PFR year leaders) lists NFL teams only before the 1970 merger.
   const _TRIVIA_AFL_FRANCHISES = new Set(['BUF','DEN','KC','LAC','LV','NE','NYJ','TEN','MIA','CIN']);
+  // Is schedule week `wk` of season `yr` a regular-season week? The 1999+ game logs
+  // (nflverse) number the playoffs as the weeks after the schedule: 17 weeks through
+  // 2020, 18 from 2021. Season / career boards are regular-season boards.
+  function _triviaRegWeek(yr, wk) {
+    const w = parseInt(wk, 10);
+    if (!w) return true;
+    return w <= (yr >= 2021 ? 18 : 17);
+  }
+  // The career array a trivia board reads for a D entry: LEGEND_CAREERS' when it
+  // covers at least as many seasons (the verifier's own source; D[] still holds
+  // stale arrays for some legends — Warren Moon's 1995 at 2,673 yds, John
+  // Stallworth's 1981 with no receiving yards), else the entry's own.
+  function _triviaCareerOf(d) {
+    if (!d) return null;
+    const own = Array.isArray(d.career) ? d.career : null;
+    const L = (typeof LEGEND_CAREERS !== 'undefined' && d.n) ? LEGEND_CAREERS[d.n] : null;
+    if (Array.isArray(L) && L.length && (!own || L.length >= own.length)) return _triviaDropSplitTotals(L);
+    return _triviaDropSplitTotals(own);
+  }
+  // PFR-style career arrays carry a "2TM" total row beside the per-team rows of a
+  // split season (Rob Carpenter 1981: 822 = 74 HOU + 748 NYG); summing all three
+  // doubles the year. Drop the total row when its per-team rows are present.
+  function _triviaDropSplitTotals(career) {
+    if (!Array.isArray(career) || !career.some(s => s && /^\dTM$/i.test(s.tm || ''))) return career;
+    const split = new Set(career.filter(s => s && s.yr && !/^\dTM$/i.test(s.tm || '')).map(s => s.yr));
+    return career.filter(s => !(s && /^\dTM$/i.test(s.tm || '') && split.has(s.yr)));
+  }
   function _triviaFranchise(code, yr) {
     if (!code) return '';
     const raw = String(code).toUpperCase().trim();
@@ -59091,7 +59358,10 @@ window.fmtHeight = fmtHeight;
   }
   function _triviaSeasonTeam(name, yr, d) {
     let t = '';
-    if (typeof getCareerTeamAbbr === 'function') t = _triviaFranchise(getCareerTeamAbbr(name, yr, ''), yr);
+    // ACTIVE_TEAM_HISTORY-first lookup before the re-stamped PLAYER_TEAM_HISTORY
+    // (Cousins 2025 = ATL, not LV; Pacheco 2025 = KC, not DET) — library audit 10-29.
+    if (typeof _getTeamForPlayerYear === 'function') t = _triviaFranchise(_getTeamForPlayerYear(name, yr) || '', yr);
+    if (!t && typeof getCareerTeamAbbr === 'function') t = _triviaFranchise(getCareerTeamAbbr(name, yr, ''), yr);
     if (!t && typeof ACTIVE_TEAM_HISTORY !== 'undefined' && ACTIVE_TEAM_HISTORY[name]) {
       for (const h of ACTIVE_TEAM_HISTORY[name]) {
         if (yr >= h.y1 && yr <= h.y2) {
@@ -59196,7 +59466,8 @@ window.fmtHeight = fmtHeight;
         else if (ra || rc) pos = ra >= rc ? 'RB' : 'WR';
         else pos = ry > rcy ? 'RB' : 'WR';
       }
-      pool[name] = { pos, career, teams: _triviaCareerTeams(name, career) };
+      const _rows = _triviaDropSplitTotals(career);
+      pool[name] = { pos, career: _rows, teams: _triviaCareerTeams(name, _rows) };
     }
     _triviaLegendPoolCache = { sig, pool };
     return pool;
@@ -59240,8 +59511,10 @@ window.fmtHeight = fmtHeight;
         const have = new Set();
         same.forEach(e => e.yrs.forEach(y => have.add(y)));
         const lead = same.find(e => e.d) || same[0];
-        const pos = (same.find(e => e.d && e.pos) || {}).pos || rec.pos; // D's label wins; else PFR's
-        rec.seasons.forEach(s => { if (!have.has(s.yr)) rows.push({ id: pid, name: lead.name, pos, key: lead.name, s, team: _triviaFranchise(s.tm, s.yr) }); });
+        const pos = rec.pos; // PFR's unified label (the file already folds FB/HB into RB); D[] mislabels a few 1970s namesakes
+        // dup = a season the site already holds for this person (career mode skips
+        // it; season mode overwrites the site line with PFR's — library audit 10-29).
+        rec.seasons.forEach(s => rows.push({ id: pid, name: lead.name, pos, key: lead.name, s, team: _triviaFranchise(s.tm, s.yr), dup: have.has(s.yr) }));
         return;
       }
       const key = idx[keyOf(rec.n)] ? rec.n + '#' + pid : rec.n;
@@ -59575,6 +59848,9 @@ window.fmtHeight = fmtHeight;
 
     return result;
   }
+  // Exposed for scripts/trivia_library/build_library.js (headless audit of the
+  // pre-built board library reads the structured result, not the banner).
+  window._triviaVerifyBoard = _triviaVerifyBoard;
 
   // Render the verification banner above the board area. Three states:
   //   - All checks pass: green ✓ "Verified against NFL record book"
@@ -59857,7 +60133,7 @@ window.fmtHeight = fmtHeight;
   _triviaShowFirstVisitTooltip();
   // Shared permalink (?daily=YYYY-MM-DD#trivia): start that board right away
   // instead of landing on the panel.
-  if (/[?&]daily=\d{4}-\d{2}-\d{2}/.test(location.search || '')) {
+  if (/[?&]daily=\d{4}-\d{2}-\d{2}/.test(location.search || '') || /[?&]board=[a-z0-9-]{3,}/i.test(location.search || '')) {
     setTimeout(() => { if (typeof window._triviaPlayDaily === 'function') window._triviaPlayDaily(); }, 400);
   }
 
@@ -59900,6 +60176,8 @@ window.fmtHeight = fmtHeight;
       const p = _triviaTodayStr().split('-').map(Number);
       dateInput.value = new Date(Date.UTC(p[0], p[1] - 1, p[2] + 1)).toISOString().slice(0, 10);
     }
+    // Library review panel: the "reviewed" toggles appear once the admin is signed in.
+    try { _triviaLibAdminRender(); } catch (_) {}
   }
 
   // Wire admin UI to auth state. Initial pass + Firebase listener so the
@@ -60364,6 +60642,10 @@ window.fmtHeight = fmtHeight;
       const _pre1999 = (filterType === 'season' || filterType === 'career') && !isPost &&
         (year !== 'all' ? parseInt(year) < 1999 : (_eraMin != null && _eraMin < 1999));
       if (_pre1999 && typeof window._loadSeasonTotals7098 === 'function') await window._loadSeasonTotals7098();
+      // PFR's position for a 1970-98 person the site also carries (D[] labels the
+      // Giants RB Ron Johnson a WR, the Cardinals WR Mel Gray an RB). Library audit 10-29.
+      const _p7pos = {};
+      if (_pre1999) _trivia7098Seasons().forEach(r => { if (r.key === r.name && r.pos) _p7pos[r.name] = r.pos; });
 
       if (!positions.length) { mffAlert('Select at least one position'); return; }
 
@@ -60649,8 +60931,13 @@ window.fmtHeight = fmtHeight;
               const byTeam = {};
               let sznGp = 0;
               weeks.forEach(w => {
+                if (!_triviaRegWeek(_sznYr, w.wk)) return; // playoff games are not regular-season totals (library audit 10-29)
                 const played = (w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0);
-                const tm = _triviaFranchise(w.tm, _sznYr) || _sznTeamOf();
+                // Last season's active-log rows were re-stamped with this year's team
+                // (Pacheco's 2025 weeks say DET): the history tables decide that year.
+                const tm = (_sznYr === _TRIVIA_LAST_SEASON)
+                  ? (_sznTeamOf() || _triviaFranchise(w.tm, _sznYr))
+                  : (_triviaFranchise(w.tm, _sznYr) || _sznTeamOf());
                 const r = byTeam[tm] || (byTeam[tm] = { yr: _sznYr, team: tm, gp:0, py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0, rec:0, rcy:0, rctd:0, tgt:0, fl:0, fpts:0 });
                 if (played) { r.gp++; sznGp++; }
                 r.py += w.py||0; r.ptd += w.ptd||0; r['int'] += w.int||0;
@@ -60672,17 +60959,23 @@ window.fmtHeight = fmtHeight;
         // s.tm, the history table, or the nearest resolved season).
         if (typeof D !== 'undefined') {
           D.forEach(d => {
-            if (!d.career || !d.career.length) return;
-            const pos = d.s || '';
+            const _car = _triviaCareerOf(d);
+            if (!_car || !_car.length) return;
+            const pos = _p7pos[d.n] || d.s || '';
             if (!positions.includes(pos)) return;
-            const teams = _triviaCareerTeams(d.n, d.career);
-            d.career.forEach((s, i) => {
+            const teams = _triviaCareerTeams(d.n, _car);
+            const _used = [];
+            _car.forEach((s, i) => {
               if (!s || !s.yr) return;
               if (_eraActive && !_eraOk(s.yr)) return;
               if (_seenKey.has(d.n + '|' + s.yr)) return;
               const c = _careerMap[d.n] || (_careerMap[d.n] = _newCareer(d.n, pos));
               _addSeasonRow(c, _seasonRow(s, teams[i]));
+              _used.push(d.n + '|' + s.yr);
             });
+            // Marked after the loop: a split season is two rows of one year
+            // (Dickerson 1987 LA + IND) and both must land.
+            _used.forEach(k => _seenKey.add(k));
           });
         }
 
@@ -60691,19 +60984,24 @@ window.fmtHeight = fmtHeight;
         const _legendOnly = _triviaLegendOnlyPool();
         Object.keys(_legendOnly).forEach(name => {
           const L = _legendOnly[name];
-          if (!positions.includes(L.pos)) return;
+          const _lpos = _p7pos[name] || L.pos;
+          if (!positions.includes(_lpos)) return;
+          const _used = [];
           L.career.forEach((s, i) => {
             if (!s || !s.yr) return;
             if (_eraActive && !_eraOk(s.yr)) return;
             if (_seenKey.has(name + '|' + s.yr)) return;
-            const c = _careerMap[name] || (_careerMap[name] = _newCareer(name, L.pos));
+            const c = _careerMap[name] || (_careerMap[name] = _newCareer(name, _lpos));
             _addSeasonRow(c, _seasonRow(s, L.teams[i]));
+            _used.push(name + '|' + s.yr);
           });
+          _used.forEach(k => _seenKey.add(k));
         });
 
         // 1970-98 PFR season totals: the seasons the sources above lack (see
         // _trivia7098Seasons for the same-person / namesake rule).
         if (_pre1999) _trivia7098Seasons().forEach(r => {
+          // (seasons the D / legend passes consumed are in _seenKey; the rest fill in)
           if (!positions.includes(r.pos)) return;
           if (_eraActive && !_eraOk(r.s.yr)) return;
           if (_seenKey.has(r.name + '|' + r.s.yr)) return;
@@ -60839,6 +61137,10 @@ window.fmtHeight = fmtHeight;
 
               let py=0, ptd=0, pint=0, ry=0, rtd=0, ra=0, rec=0, rcy=0, rctd=0, tgt=0, fl=0, fpts=0, gp=0;
               weeks.forEach(w => {
+                // The game logs carry the playoffs as weeks past the schedule (2014 wk 18-19,
+                // 2025 wk 19+); a season board is a regular-season board (library audit 10-29:
+                // Sony Michel 2018 showed 1,267 = 931 + three playoff games).
+                if (!_triviaRegWeek(yr, w.wk)) return;
                 if (w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0) gp++;
                 py += w.py||0; ptd += w.ptd||0; pint += w.int||0;
                 ry += w.ry||0; rtd += w.rtd||0; ra += w.ra||0;
@@ -60881,19 +61183,21 @@ window.fmtHeight = fmtHeight;
         }
 
         // 2. Fill in from D[].career for players/seasons not in WEEKLY_STATS
+        //    (LEGEND_CAREERS' array when it is at least as long — see _triviaCareerOf)
         if (typeof D !== 'undefined') {
           D.forEach(d => {
-            if (!d.career || !d.career.length) return;
-            const pos = d.s || '';
+            const _car = _triviaCareerOf(d);
+            if (!_car || !_car.length) return;
+            const pos = _p7pos[d.n] || d.s || '';
             if (!positions.includes(pos)) return;
-            d.career.forEach(s => {
-              if (!s.yr) return;
+            _car.forEach(s => {
+              if (!s || !s.yr) return;
               if (!_yrOk(s.yr)) return;
               const key = d.n + '|' + s.yr;
               if (_seenKey.has(key)) return;
               const fpts = s.fpts || 0;
               if (fpts <= 0 && stat === 'fpts') return;
-              const correctTeam = _getTeamForPlayerYear(d.n, s.yr) || s.tm || _careerTmNear(d.career, s.yr) || d.t || '';
+              const correctTeam = _getTeamForPlayerYear(d.n, s.yr) || s.tm || _careerTmNear(_car, s.yr) || d.t || '';
               if (conf !== 'all') {
                 const tmConf = _teamConf[correctTeam];
                 if (tmConf !== conf) return;
@@ -60912,16 +61216,68 @@ window.fmtHeight = fmtHeight;
           });
         }
 
+        // 2b. Legends that exist only in LEGEND_CAREERS (no D entry) — career mode
+        // pools them via _triviaLegendOnlyPool; season boards used to lose them to
+        // the one-category SEASON_LEADERS rows (MacArthur Lane 1970: 163.7 rushing-
+        // only fpts instead of 224.2; Ron Johnson's 237.4 season off the board
+        // entirely). Library audit 10-29.
+        {
+          const _legendOnly = _triviaLegendOnlyPool();
+          Object.keys(_legendOnly).forEach(name => {
+            const L = _legendOnly[name];
+            const _lpos = _p7pos[name] || L.pos;
+            if (!positions.includes(_lpos)) return;
+            L.career.forEach((s, i) => {
+              if (!s || !s.yr || !_yrOk(s.yr)) return;
+              const key = name + '|' + s.yr;
+              if (_seenKey.has(key)) return;
+              const fpts = s.fpts || 0;
+              if (fpts <= 0 && stat === 'fpts') return;
+              const correctTeam = L.teams[i] || s.tm || '';
+              if (conf !== 'all' && _teamConf[correctTeam] !== conf) return;
+              if (team !== 'all' && correctTeam !== team) return;
+              _seenKey.add(key);
+              allEntries.push({
+                name, pos: _lpos, team: correctTeam, yr: s.yr, gp: s.gp || 0,
+                fpts: Math.round(fpts*10)/10, ppg: s.gp > 0 ? Math.round((fpts / s.gp) * 10) / 10 : 0,
+                py: s.py||0, ptd: s.ptd||0, 'int': s.int||0,
+                ry: s.ry||0, rtd: s.rtd||0, rec: s.rc||0, rcy: s.rcy||0, rctd: s.rctd||0,
+                ra: s.ra||0, tgt: s.tgt||0, fl: s.fl||0,
+                totalTd: (s.ptd||0) + (s.rtd||0) + (s.rctd||0)
+              });
+            });
+          });
+        }
+
         // 3. 1970-98 PFR season totals: every qualifying season in the window, not
         // just the legends' (and the top-25 SEASON_LEADERS rows that follow). A
         // multi-team season carries no team label (same as the career rows).
         if (_pre1999) {
           const _emitted = new Set(allEntries.map(e => e.name + '|' + e.yr));
+          // PFR's line wins over the site's for the same (player, season): the legend
+          // tables hold passing-only QB rows (Staubach 1973: no rushing), stale D[]
+          // careers (Moon 1995 at 2,673 yds) and fumble counts PFR never published.
+          // Library audit 10-29.
+          const _byKey = {};
+          allEntries.forEach(e => { _byKey[e.name + '|' + e.yr] = e; });
           _trivia7098Seasons().forEach(r => {
             if (!positions.includes(r.pos) || !_yrOk(r.s.yr)) return;
             const k = r.name + '|' + r.s.yr;
-            if (_seenKey.has(k) || _emitted.has(k)) return;
             const s = r.s, fpts = s.fpts || 0;
+            const _ex = _byKey[k];
+            if (_ex) {
+              if (_ex._pfr) return; // a namesake's PFR line already landed here
+              Object.assign(_ex, {
+                gp: s.gp || _ex.gp || 0, fpts: Math.round(fpts*10)/10,
+                py: s.py||0, ptd: s.ptd||0, 'int': s.int||0,
+                ry: s.ry||0, rtd: s.rtd||0, rec: s.rc||0, rcy: s.rcy||0, rctd: s.rctd||0,
+                ra: s.ra||0, fl: s.fl||0, totalTd: (s.ptd||0) + (s.rtd||0) + (s.rctd||0), _pfr: r.id
+              });
+              _ex.ppg = _ex.gp > 0 ? Math.round((_ex.fpts / _ex.gp) * 10) / 10 : 0;
+              if (!_ex.team && r.team) _ex.team = r.team;
+              return;
+            }
+            if (_seenKey.has(k) || _emitted.has(k)) return;
             if (fpts <= 0 && stat === 'fpts') return;
             const correctTeam = r.team || '';
             if (conf !== 'all' && _teamConf[correctTeam] !== conf) return;
@@ -60975,7 +61331,7 @@ window.fmtHeight = fmtHeight;
           // as "FB" but are RB to the trivia user — defaulting unknown
           // PFR positions to the category default keeps them in.
           const _slPos = (r, cat) => {
-            const dp = (typeof _dPosMap !== 'undefined' ? _dPosMap[r.name] : null);
+            const dp = _p7pos[r.name] || (typeof _dPosMap !== 'undefined' ? _dPosMap[r.name] : null);
             if (dp) return dp;
             const pfr = (r.pos || '').toUpperCase();
             if (['QB','RB','WR','TE'].includes(pfr)) return pfr;
@@ -61034,7 +61390,8 @@ window.fmtHeight = fmtHeight;
         + '|' + (e.pos || '') + '|' + (e._isGame ? e.yr + 'w' + e.wk : (e._isCareer ? 'c' : e.yr));
       const _best = new Map();
       allEntries.forEach(e => { const k = _dupKey(e); const p = _best.get(k); if (!p || (e[stat] || 0) > (p[stat] || 0)) _best.set(k, e); });
-      if (_best.size < allEntries.length) allEntries.splice(0, allEntries.length, ..._best.values());
+      // (no spread: the all-time single-game pool is ~200k rows and `...` blew the stack)
+      if (_best.size < allEntries.length) { allEntries.length = 0; _best.forEach(e => allEntries.push(e)); }
       allEntries.sort((a, b) => (b[stat]||0) - (a[stat]||0));
 
       // Take top N

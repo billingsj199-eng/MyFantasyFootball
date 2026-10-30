@@ -29618,8 +29618,9 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
 })();
 
 // === HIGHER / LOWER (2026-10-29, trivia-site survey G6) ===
-// Two players, same season + position: the left one's PPR points show, call HIGHER or
-// LOWER on the right one, who then becomes the left card (classic chain). One miss ends
+// Two players, same season, any position: the left one's PPR points show, call HIGHER or
+// LOWER on the right one, who then becomes the left card (classic chain); every 5 straight
+// the season changes. One miss ends
 // the run; the best streak posts to leaderboard/{uid}.higherLower (Guess Who's "unlimited"
 // shape: played / correct / streak / bestStreak — window._lbUpdateHigherLower in core).
 // Pairs: ALL_PLAYERS_DB season rows (1999+; fpts stored half-PPR → +0.5/rec), both inside
@@ -29641,8 +29642,9 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   let played = lsNum(LS.played), correct = lsNum(LS.correct), streak = lsNum(LS.streak), best = lsNum(LS.best);
   if (streak > best) best = streak;
   const DEPTH = { QB: 32, RB: 60, WR: 60, TE: 32 };
-  const POS_PICK = ['QB', 'QB', 'RB', 'RB', 'RB', 'WR', 'WR', 'WR', 'TE', 'TE'];
   const MIN_PTS = 60, MIN_GP = 4, MIN_GROUP = 8;
+  const SEASON_RUN = 5;                        // correct calls in a row before the season changes
+  let skipYear = 0;
   const PERMALINK = 'https://myfantasyfootball.co/#games-higherlower';
   // Season-row team codes → the site's / cutout index's current abbreviations.
   const TM_ALIAS = { LA: 'LAR', STL: 'LAR', SD: 'LAC', OAK: 'LV', WSH: 'WAS', JAC: 'JAX' };
@@ -29699,16 +29701,23 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     return [1, 15];
   }
   function pickYear() {
-    // Seasons from 2010 on twice as often — more faces people know.
-    let w = 0; years.forEach(y => { w += y >= 2010 ? 2 : 1; });
+    // Seasons from 2010 on twice as often — more faces people know. After a season
+    // change the old season is skipped so the next pair really is a new year.
+    const pool = years.length > 1 && skipYear ? years.filter(y => y !== skipYear) : years;
+    let w = 0; pool.forEach(y => { w += y >= 2010 ? 2 : 1; });
     let r = Math.random() * w;
-    for (const y of years) { r -= y >= 2010 ? 2 : 1; if (r < 0) return y; }
-    return years[years.length - 1];
+    for (const y of pool) { r -= y >= 2010 ? 2 : 1; if (r < 0) return y; }
+    return pool[pool.length - 1];
+  }
+  // Cross-position (Jack 10-30): a season's QBs, RBs, WRs and TEs all share one pool,
+  // each still cut to its own fantasy depth.
+  function seasonRows(yr) {
+    const g = byYear[yr];
+    return g ? Object.keys(g).reduce((all, pos) => all.concat(g[pos]), []) : [];
   }
   function tryPair(lo, hi, tries) {
     for (let t = 0; t < tries; t++) {
-      const g = byYear[pickYear()], pos = POS_PICK[rnd(POS_PICK.length)];
-      const rows = g && g[pos] ? g[pos].filter(r => !used.has(r.name)) : [];
+      const rows = seasonRows(pickYear()).filter(r => !used.has(r.name));
       if (rows.length < 2) continue;
       const a = rows[rnd(rows.length)];
       const cands = rows.filter(r => r !== a && Math.abs(r.pts - a.pts) >= lo && Math.abs(r.pts - a.pts) <= hi);
@@ -29720,11 +29729,11 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
   }
   // Classic chain (Jack 10-29, replaces winner stays on): the left card is the last
   // round's new player with his points showing, the right card is a fresh player of
-  // the same season + position, and you call HIGHER or LOWER. Every round the new
+  // the same season (any position), and you call HIGHER or LOWER. Every round the new
   // player slides left and the old one leaves, so a big scorer can't hold the chair
-  // and win for free. When that group runs dry the chain restarts with a fresh pair.
+  // and win for free. When that season runs dry the chain restarts with a fresh pair.
   function challengerFor(prev, lo, hi) {
-    const g = byYear[prev.yr], rows = g && g[prev.pos] ? g[prev.pos].filter(r => r.name !== prev.name && !used.has(r.name) && r.pts !== prev.pts) : [];
+    const rows = seasonRows(prev.yr).filter(r => r.name !== prev.name && !used.has(r.name) && r.pts !== prev.pts);
     const cands = rows.filter(r => Math.abs(r.pts - prev.pts) >= lo && Math.abs(r.pts - prev.pts) <= hi);
     return cands.length ? cands[rnd(cands.length)] : (rows.length ? rows[rnd(rows.length)] : null);
   }
@@ -29881,7 +29890,12 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     elB.querySelector('.hl-pts-lbl').textContent = b.pos + b.rank + ' · PPR';
     countUp(elB.querySelector('.hl-pts-num'), b.pts);
     played++;
-    if (won) { streak++; correct++; if (streak > best) best = streak; lastRun = streak; prev = b; }
+    let newSeason = false;
+    if (won) {
+      streak++; correct++; if (streak > best) best = streak; lastRun = streak; prev = b;
+      // Every 5 straight the chain breaks and the next pair comes from a different season.
+      if (streak % SEASON_RUN === 0) { newSeason = true; skipYear = b.yr; prev = null; }
+    }
     else { lastRun = streak; streak = 0; runOver = true; prev = null; }
     persist();
     if (typeof window._lbUpdateHigherLower === 'function') window._lbUpdateHigherLower(played, correct, streak, best);
@@ -29891,8 +29905,9 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     elResult.style.display = 'block';
     if (won) {
       elResult.innerHTML = '<div class="hl-result-text win">CORRECT</div>' +
-        '<div class="hl-result-sub">' + link(b) + ' had ' + diff + ' ' + rel + ' than ' + esc(lastName(a)) + ' in ' + a.yr + '</div>';
-      elNext.textContent = 'NEXT';
+        '<div class="hl-result-sub">' + link(b) + ' had ' + diff + ' ' + rel + ' than ' + esc(lastName(a)) + ' in ' + a.yr + '</div>' +
+        (newSeason ? '<div class="hl-result-sub">' + streak + ' straight — new season next</div>' : '');
+      elNext.textContent = newSeason ? 'NEW SEASON' : 'NEXT';
     } else {
       elResult.innerHTML = '<div class="hl-result-text lose">GAME OVER</div>' +
         '<div class="hl-result-sub">' + link(b) + ' had ' + diff + ' ' + rel + ' than ' + esc(lastName(a)) + ' in ' + a.yr + '</div>' +

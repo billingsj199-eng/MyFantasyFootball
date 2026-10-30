@@ -1,6 +1,32 @@
 {
- "updated": "2026-10-29T22:30:00Z",
+ "updated": "2026-10-30T22:30:00Z",
  "items": [
+  {
+   "player": "Lamar Jackson",
+   "team": "BAL",
+   "pos": "QB",
+   "date": "2026-10-30",
+   "headline": "Full practice all week, no injury designation; set to start Sunday vs. Bills",
+   "take": "Three-game ankle absence is over -- back in as a weekly low-end QB1, Huntley reverts to backup.",
+   "url": "https://www.baltimoreravens.com/news/lamar-jackson-ravens-bills-set-to-play-2026",
+   "tag": "injury",
+   "avail": {
+    "k": "play",
+    "wk": 8
+   },
+   "src_type": "team"
+  },
+  {
+   "player": "Saquon Barkley",
+   "team": "PHI",
+   "pos": "RB",
+   "date": "2026-10-30",
+   "headline": "Dealing with a back issue; Friday status unclear ahead of SNF vs. Commanders",
+   "take": "Eagles are already without Bigsby and Shipley (both IR) -- a Barkley absence would push early-down work to Elijah Mitchell.",
+   "url": "https://www.footballnationusa.com/post/saquon-barkley-back-injury-eagles-week-8-fantasy-impact",
+   "tag": "injury",
+   "src_type": "report"
+  },
   {
    "player": "Aaron Jones",
    "team": "MIN",
@@ -1490,28 +1516,6 @@
    "src_type": "team"
   },
   {
-   "player": "Ashton Jeanty",
-   "team": "LV",
-   "pos": "RB",
-   "date": "2026-10-08",
-   "headline": "Limited in Thursday practice with new ankle and foot issues vs. Patriots",
-   "take": "No final Friday designation found -- confirm his status before trusting a full workload; Mike Washington Jr. is the contingency",
-   "url": "https://www.rotoballer.com/?p=1961567",
-   "tag": "injury",
-   "src_type": "report"
-  },
-  {
-   "player": "Zay Flowers",
-   "team": "BAL",
-   "pos": "WR",
-   "date": "2026-10-08",
-   "headline": "New foot injury (separate from earlier hamstring), limited Thursday vs. Falcons",
-   "take": "Game-time-decision watch for Sunday night -- no final status confirmed yet",
-   "url": "https://www.newsweek.com/sports/nfl/two-ravens-stars-remain-sidelined-with-injury-12538664",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
    "player": "Saquon Barkley",
    "team": "PHI",
    "pos": "RB",
@@ -1654,113 +1658,6 @@
    "headline": "Out for Sunday vs. Giants with a sprained right knee MCL",
    "take": "No fantasy relevance as a backup, but confirms Washington needs Daniels active or Athan Kaliakmanis starts",
    "url": "https://www.newsweek.com/sports/nfl/commanders-get-promising-jayden-daniels-news-days-before-giants-game-12531942",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Bucky Irving",
-   "team": "TB",
-   "pos": "RB",
-   "date": "2026-10-08",
-   "headline": "Career-high 165 rush yards and 2 TDs in TNF upset win over Cowboys",
-   "take": "Workhorse role is fully locked in with Mayfield out and a run-heavy gameplan working -- weekly RB1.",
-   "url": "https://nbcsports.com/fantasy/football/player-news/2026-10-08/bucky-irving-breaks-out-in-upset-win-over-cowboys",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
-   "player": "Jalon Daniels",
-   "team": "TB",
-   "pos": "QB",
-   "date": "2026-10-08",
-   "headline": "Turnover-free 2nd start: 19-of-25, 189 yards, 1 TD, 0 INT in TNF win at Dallas",
-   "take": "Clean step up from his shaky Week 4 debut (2 INT) -- still a game-manager floor, streamer-only while Mayfield (thumb) is out.",
-   "url": "https://bleacherreport.com/articles/25508355-bucs-beat-cowboys-box-score-stats-highlights-dak-bucky-lamb-pickens-top-players",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
-   "player": "Dak Prescott",
-   "team": "DAL",
-   "pos": "QB",
-   "date": "2026-10-08",
-   "headline": "Throws 2 INTs as Cowboys' rushing attack manages just 50 yards in TNF loss to Bucs",
-   "take": "Dallas had no ground game to lean on and Prescott couldn't make up the difference -- a real Week 5 downgrade heading into Week 6 prep.",
-   "url": "https://www.bloggingtheboys.com/dallas-cowboys-analysis/221756/cowboys-buccaneers-recap-loss-brian-schottenheimer-dak-prescott",
-   "tag": "faller",
-   "src_type": "report"
-  },
-  {
-   "player": "DeVonta Smith",
-   "team": "PHI",
-   "pos": "WR",
-   "date": "2026-10-08",
-   "headline": "Garafolo: Smith 'at very best questionable' for London; NBCSP says more likely he sits a 2nd straight game",
-   "take": "Insider read turns more pessimistic than Wednesday's plain DNP report -- treat as a bench/drop vs. Jaguars until Friday's tag confirms otherwise.",
-   "url": "https://www.thefantasyfootballers.com/news/640513/devonta-smith-could-miss-multiple-games/",
-   "tag": "injury",
-   "avail": {
-    "k": "doubt",
-    "wk": 5
-   },
-   "src_type": "insider"
-  },
-  {
-   "player": "DJ Moore",
-   "team": "BUF",
-   "pos": "WR",
-   "date": "2026-10-08",
-   "headline": "Schefter: shoulder injury 'not considered a long-term issue' after Week 4 scare",
-   "take": "Encouraging update on the same AC joint/shoulder that's bothered him since Week 2 -- lean toward him playing Monday night vs. the Rams.",
-   "url": "https://www.newsweek.com/sports/nfl/bills-get-good-news-after-injury-scare-to-star-wr-dj-moore-12523317",
-   "tag": "injury",
-   "src_type": "insider"
-  },
-  {
-   "player": "Justin Jefferson",
-   "team": "MIN",
-   "pos": "WR",
-   "date": "2026-10-08",
-   "headline": "Limited again Thursday (2nd straight day) on ankle; Jefferson: 'plan is definitely to play Sunday, but who knows?'",
-   "take": "No full practice yet, and Minnesota hasn't issued an official Friday tag -- trending positive but confirm the designation before trusting him as a must-start vs. the Saints.",
-   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-08/justin-jefferson-ankle-remains-limited-on-thurs",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
-   "player": "Justin Jefferson",
-   "team": "MIN",
-   "pos": "WR",
-   "date": "2026-10-08",
-   "headline": "O'Connell says Jefferson (ankle) is 'doing great'; Vikings to test him in practice this week before Sunday vs. Saints",
-   "take": "Best lean yet toward a Week 5 return after missing Week 4 -- watch Thu/Fri practice reports before trusting him in lineups",
-   "url": "https://atozsports.com/?p=499378",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
-   "player": "Lamar Jackson",
-   "team": "BAL",
-   "pos": "QB",
-   "date": "2026-10-08",
-   "headline": "4for4's injury report pegs Jackson's ankle at a projected Week 5-8 return depending on high vs. medial sprain",
-   "take": "Independent analyst read lines up with insiders' multi-week framing -- keep Tyler Huntley stashed as the Ravens' Week 5+ starter",
-   "url": "https://www.4for4.com/2026/w4/week-4-injury-report-cost-coming-back-too-soon",
-   "tag": "injury",
-   "src_type": "expert"
-  },
-  {
-   "player": "Baker Mayfield",
-   "team": "TB",
-   "pos": "QB",
-   "date": "2026-10-08",
-   "headline": "Officially OUT for tonight's TNF vs. Cowboys (thumb), per Bucs' final report",
-   "take": "No change to the 3-6 week / Week 10 target -- Jalon Daniels gets a 2nd straight start in Dallas.",
-   "url": "https://www.buccaneers.com/news/buccaneers-cowboys-injury-report-oct-7-week-5",
    "tag": "injury",
    "avail": {
     "k": "out",

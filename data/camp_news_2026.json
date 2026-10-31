@@ -1,6 +1,28 @@
 {
- "updated": "2026-10-30T22:30:00Z",
+ "updated": "2026-10-31T22:14:29Z",
  "items": [
+  {
+   "player": "Josh Downs",
+   "team": "IND",
+   "pos": "WR",
+   "date": "2026-10-28",
+   "headline": "Requests trade out of Indianapolis ahead of Nov. 10 deadline",
+   "take": "No deal done yet, but Chiefs/Steelers are named suitors -- watch for a landing-spot shakeup to WR rooms on both sides if he's dealt",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-28/fowler-josh-downs-asks-for-trade-out-of-indy",
+   "tag": "transaction",
+   "src_type": "insider"
+  },
+  {
+   "player": "Omar Cooper Jr.",
+   "team": "NYJ",
+   "pos": "WR",
+   "date": "2026-10-31",
+   "headline": "Top Week 8 waiver add after back-to-back weeks of 5+ targets and a TD",
+   "take": "Trending toward weekly streaming/flex value in the Jets' offense; still only ~35% rostered",
+   "url": "https://clutchpoints.com/fantasy-sports/fantasy-football-top-10-waiver-wire-pickups-week-8-2026",
+   "tag": "riser",
+   "src_type": "report"
+  },
   {
    "player": "Lamar Jackson",
    "team": "BAL",
@@ -1148,17 +1170,6 @@
    "src_type": "team"
   },
   {
-   "player": "CeeDee Lamb",
-   "team": "DAL",
-   "pos": "WR",
-   "date": "2026-10-09",
-   "headline": "Rapoport: quad bruise \"not considered to be serious,\" not expected to be long-term",
-   "take": "Banged up the same quad twice in two weeks but Dallas execs expect him ready for the Oct. 18 trip to Green Bay -- treat as a locked-in start barring a setback.",
-   "url": "https://www.footballguys.com/article/2026-injury-roundup-week06",
-   "tag": "injury",
-   "src_type": "insider"
-  },
-  {
    "player": "Will Shipley",
    "team": "PHI",
    "pos": "RB",
@@ -1192,17 +1203,6 @@
    "headline": "Left Week 5 loss in a boot; Monken calls ankle \"tweak\" day-to-day, hasn't ruled him out for Browns-Ravens",
    "take": "Snap share already dipped to 53% before the injury -- worth checking Friday's report, with Raheim Sanders the direct backup if Judkins sits.",
    "url": "https://www.rotoballer.com/?p=1963827",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
-   "player": "Kyle Monangai",
-   "team": "CHI",
-   "pos": "RB",
-   "date": "2026-10-09",
-   "headline": "Turf toe injury \"a bigger deal than we initially anticipated,\" per Ben Johnson",
-   "take": "Was 7th in the NFL in rushing before the injury; D'Andre Swift now the clear lead back with Roschon Johnson in the change-of-pace role while Monangai recovers.",
-   "url": "https://www.newsweek.com/sports/nfl/injury-for-bears-rb-kyle-monangai-is-worse-than-initially-thought-12548693",
    "tag": "injury",
    "src_type": "team"
   },
@@ -1511,156 +1511,6 @@
    "tag": "injury",
    "avail": {
     "k": "gtd",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Saquon Barkley",
-   "team": "PHI",
-   "pos": "RB",
-   "date": "2026-10-09",
-   "headline": "Officially ruled OUT for London vs. Jaguars (hamstring), DNP all week",
-   "take": "Confirmed miss \u2014 Will Shipley is the clear lead back Sunday",
-   "url": "https://www.inquirer.com/eagles/saquon-barkley-devonta-smith-injury-report-nfl-week-5-jaguars-20261009.html",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "DeVonta Smith",
-   "team": "PHI",
-   "pos": "WR",
-   "date": "2026-10-09",
-   "headline": "Officially ruled OUT for a 2nd straight game vs. Jaguars (hamstring)",
-   "take": "Confirmed sit \u2014 A.J. Brown and a returning Dallas Goedert see added target share in London",
-   "url": "https://www.bleedinggreennation.com/philadelphia-eagles-injuries/186172/eagles-jaguars-final-injury-report-saquon-barkley-devonta-smith-among-players-ruled-out",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Dallas Goedert",
-   "team": "PHI",
-   "pos": "TE",
-   "date": "2026-10-09",
-   "headline": "Full practice participant Friday, back after missing 2 games with knee injury",
-   "take": "Good to go Sunday \u2014 bigger receiving role with Barkley and Smith both out",
-   "url": "https://www.cbssports.com/fantasy/football/news/eagles-dallas-goedert-sidesteps-injury-report/",
-   "tag": "riser",
-   "avail": {
-    "k": "play",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Lamar Jackson",
-   "team": "BAL",
-   "pos": "QB",
-   "date": "2026-10-09",
-   "headline": "Ruled OUT for Sunday night at Atlanta (ankle), did not practice all week",
-   "take": "Confirmed miss \u2014 Tyler Huntley starts at Atlanta",
-   "url": "https://www.si.com/nfl/falcons/news/atlanta-falcons-baltimore-ravens-lamar-jackson-injury-update-status-out-tyler-huntley-start",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Justin Jefferson",
-   "team": "MIN",
-   "pos": "WR",
-   "date": "2026-10-09",
-   "headline": "Listed questionable (ankle) on Vikings' final injury report vs. Saints",
-   "take": "Limited all week but trending to play \u2014 treat as a game-time call, have Jordan Addison/Odell Beckham Jr. as a hedge",
-   "url": "https://www.espn.com/nfl/story/_/id/50142102/vikings-list-wrs-justin-jefferson-jordan-addison-questionable",
-   "tag": "injury",
-   "avail": {
-    "k": "gtd",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Jordan Addison",
-   "team": "MIN",
-   "pos": "WR",
-   "date": "2026-10-09",
-   "headline": "Also listed questionable (hamstring) on Vikings' final injury report",
-   "take": "Game-time decision alongside Jefferson \u2014 Minnesota could elevate a practice-squad WR as insurance",
-   "url": "https://www.espn.com/nfl/story/_/id/50142102/vikings-list-wrs-justin-jefferson-jordan-addison-questionable",
-   "tag": "injury",
-   "avail": {
-    "k": "gtd",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Ja'Marr Chase",
-   "team": "CIN",
-   "pos": "WR",
-   "date": "2026-10-09",
-   "headline": "Full practice participant Friday, listed questionable (concussion protocol) vs. Dolphins",
-   "take": "Needs to clear protocol Saturday to play \u2014 trending in the right direction after a full week-closing practice",
-   "url": "https://local12.com/sports/bengals/bengals-jamarr-chase-tee-higgins-injury-report-dolphins-week-5",
-   "tag": "injury",
-   "avail": {
-    "k": "gtd",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Tee Higgins",
-   "team": "CIN",
-   "pos": "WR",
-   "date": "2026-10-09",
-   "headline": "Full practice participant Friday, listed questionable (adductor) vs. Dolphins",
-   "take": "Game-time decision \u2014 a better sign than earlier in the week after practicing fully Friday",
-   "url": "https://local12.com/sports/bengals/bengals-jamarr-chase-tee-higgins-injury-report-dolphins-week-5",
-   "tag": "injury",
-   "avail": {
-    "k": "gtd",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Jayden Daniels",
-   "team": "WAS",
-   "pos": "QB",
-   "date": "2026-10-09",
-   "headline": "Full participant all week (elbow), insiders Garafolo and Glazer say he's on track to start vs. Giants",
-   "take": "Trending to play Sunday after missing two games \u2014 locks in as a start if he's active",
-   "url": "https://clutchpoints.com/nfl/washington-commanders/commanders-news-jayden-daniels-expected-back-week-5-vs-giants",
-   "tag": "injury",
-   "avail": {
-    "k": "play",
-    "wk": 5
-   },
-   "src_type": "insider"
-  },
-  {
-   "player": "Marcus Mariota",
-   "team": "WAS",
-   "pos": "QB",
-   "date": "2026-10-09",
-   "headline": "Out for Sunday vs. Giants with a sprained right knee MCL",
-   "take": "No fantasy relevance as a backup, but confirms Washington needs Daniels active or Athan Kaliakmanis starts",
-   "url": "https://www.newsweek.com/sports/nfl/commanders-get-promising-jayden-daniels-news-days-before-giants-game-12531942",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
     "wk": 5
    },
    "src_type": "team"

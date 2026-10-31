@@ -7322,6 +7322,37 @@ window._weeklyAssumedOut = function(name, wk) {
   const a = window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)];
   return !!(a && a.indexOf(name) >= 0);
 };
+// FROZEN WEEK (Jack 2026-10-31: "a bug keeps moving players to out — let me manually do it after the original
+// run"). The week's first run (the start-of-week seed) parks every Q / D / Out player inside the cut and stamps
+// settings/active_week.assumeOutFrozenWeek. From then on the injury pulls and sim exports no longer move anyone
+// into BYE / OUT on their own: a fresh Sleeper "Out" tag or the sim's under-50% call leaves him on the weekly board
+// at his if-active PROJ with the O pill and the → OUT chip, and only Jack's list decides. IR / PUP / SUS stay
+// automatic. My Teams / Start-Sit ({mt:true}) keep their own rule (confirmed Out = 0).
+window._weeklyOutFrozen = function(wk) {
+  wk = wk || window._weeklyActiveWeek || 1;
+  const s = window._weeklyLastSettings;
+  return (parseInt(s && s.assumeOutFrozenWeek, 10) || 0) >= wk || window._weeklyFrozenLocal === wk;
+};
+// The automatic OUT call a frozen week overrides: a plain feed "Out" tag (not IR / PUP / SUS / season-ending) or the
+// sim's under-50% rule (_simAvailFor) for a player Jack has not activated.
+window._weeklyAutoOutCall = function(d, wk) {
+  if (!d || d.s === 'DST' || d._retired) return false;
+  wk = wk || window._weeklyActiveWeek || 1;
+  const t = String(d.inj || '').toLowerCase();
+  if (/\bir\b|\bpup\b|suspend|out for season|season.?ending/.test(t)) return false;
+  if (typeof _tcvOutForSeason === 'function' && _tcvOutForSeason(d)) return false;   // season-enders stay automatic (off the row)
+  if (/\bout\b/.test(t)) return true;
+  if (window._weeklyActivated && window._weeklyActivated(d.n, wk)) return false;
+  const ru = typeof window._simAvailFor === 'function' ? window._simAvailFor(d.n, wk) : null;
+  return !!(ru && ru.out);
+};
+// True = the feed / sim would call him out, but the week is frozen and he is not on Jack's list: he stays in.
+window._weeklyOutHeldIn = function(d, wk) {
+  wk = wk || window._weeklyActiveWeek || 1;
+  if (!d || !window._weeklyOutFrozen(wk) || window._weeklyAssumedOut(d.n, wk)) return false;
+  if (typeof _isOffseasonNow === 'function' && _isOffseasonNow()) return false;
+  return window._weeklyAutoOutCall(d, wk);
+};
 window._weeklyAssumeOutApply = function(map) {
   map = (map && typeof map === 'object') ? map : {};
   if (JSON.stringify(map) === JSON.stringify(window._weeklyAssumeOutMap)) return false;
@@ -7396,6 +7427,8 @@ window._weeklyCanActivate = function(d) {
   // under 50% to play this week (the sim's 50% rule called him out): ACTIVATE = assume he plays a full workload
   const wk = window._weeklyActiveWeek || 1;
   if (window._weeklyActivated(d.n, wk)) return true;
+  // frozen week: a plain Out / under-50% player is in or out by Jack's list — ASSUME OUT / BACK IN, not ACTIVATE
+  if (window._weeklyOutFrozen(wk) && window._weeklyAutoOutCall(d, wk)) return false;
   const ru = typeof window._simAvailFor === 'function' ? window._simAvailFor(d.n, wk) : null;
   if (ru && ru.out) return true;
   return _ACT_RE.test(String(d.inj || '').toLowerCase()) && !(window._irIsOut && window._irIsOut(d.n));
@@ -7472,12 +7505,16 @@ window._weeklyActivateToggle = function(name, wk) {
 // K 16, read on Jack's SEASON board) starts the week assumed out; Jack moves
 // each one back with UNDO as the week's reports come in. Runs once when the
 // admin client writes the Tuesday roll; the Q → OUT button redoes it by hand.
-window._weeklyAssumeOutSeed = function(wk) {
+// 2026-10-31 (FROZEN WEEK): Out-tagged and under-50% players are parked too,
+// since nothing auto-moves anyone after this run. opts.outsOnly = only those
+// (the catch-up for a week seeded before the freeze). null = boards not loaded.
+window._weeklyAssumeOutSeed = function(wk, opts) {
   wk = wk || window._weeklyActiveWeek || 1;
-  if (typeof D === 'undefined') return [];
+  opts = opts || {};
+  if (typeof D === 'undefined') return null;
   const vb = (typeof versionBoards !== 'undefined') ? versionBoards : window.versionBoards;
   const season = vb && vb.jacks && vb.jacks.redraft;
-  if (!season) return [];
+  if (!season || !season.length) return null;
   const cutOf = pos => {
     const m = window._boardCutoff && window._boardCutoff.jacks, key = pos ? ':' + pos : '';
     const n = m && (m['weekly:' + wk + key] || m['weekly:' + (wk - 1) + key]);
@@ -7491,12 +7528,14 @@ window._weeklyAssumeOutSeed = function(wk) {
     if (!d || d._retired || d._isFuturePick || d._isDevy) continue;
     overall++;
     posSeen[d.s] = (posSeen[d.s] || 0) + 1;
-    if (d.s === 'DST' || !d.inj) continue;
+    if (d.s === 'DST') continue;
     if (grp[d.s] ? posSeen[d.s] > cutOf(d.s) : overall > cutOf(null)) continue;
-    const t = String(d.inj).toLowerCase();
-    if (/\bir\b|\bpup\b|suspend|\bout\b|season/.test(t)) continue;          // already out — the row has him anyway
-    if (!/questionable|doubtful|day.?to.?day|\bgtd\b/.test(t)) continue;
+    const t = String(d.inj || '').toLowerCase();
+    if (/\bir\b|\bpup\b|suspend|season/.test(t)) continue;          // IR / PUP / SUS — the row has him anyway
     if (window._irIsOut && window._irIsOut(d.n)) continue;
+    if (window._weeklyActivated && window._weeklyActivated(d.n, wk)) continue;
+    const autoOut = window._weeklyAutoOutCall(d, wk);
+    if (!autoOut && (opts.outsOnly || !/questionable|doubtful|day.?to.?day|\bgtd\b/.test(t))) continue;
     out.push(d.n);
   }
   return out;
@@ -7557,7 +7596,7 @@ function _tcvOutThisWeek(d) {
   if (/\bpup\b/.test(t)) return 'PUP';
   if (/suspend/.test(t)) return 'SUS';
   if (/out for season|season.?ending/.test(t)) return 'OUT';
-  if (/\bout\b/.test(t) && typeof window._weeklyOutConfirmed === 'function' && window._weeklyOutConfirmed(d, window._weeklyActiveWeek || 1)) return 'OUT';
+  if (/\bout\b/.test(t) && !window._weeklyOutHeldIn(d) && typeof window._weeklyOutConfirmed === 'function' && window._weeklyOutConfirmed(d, window._weeklyActiveWeek || 1)) return 'OUT';
   return null;
 }
 function _tcvOppInfo(d) {
@@ -13523,6 +13562,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     if (!entry) return basePpg;
     if (entry.bye) { _tag('bye'); return 0; }
     if (!_mt && typeof window._weeklyAssumedOut === 'function' && window._weeklyAssumedOut(d.n, wk)) { _tag('out'); return 0; }
+    const _held = !_mt && typeof window._weeklyOutHeldIn === 'function' && window._weeklyOutHeldIn(d, wk);
     // Injury gate (in-season only — offseason tags are stale)
     let injMult = 1;
     const _offseason = (typeof _isOffseasonNow === 'function') ? _isOffseasonNow() : false;
@@ -13539,12 +13579,19 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       // 'out-unconfirmed' x0.75 on the fallback paths; sim rows already
       // price it).
       if (/\bout\b/.test(t)) {
-        if (window._weeklyOutConfirmed(d, wk)) { _tag('out'); return 0; }
-        injMult = 0.75;
+        if (_held) injMult = 1;
+        else if (window._weeklyOutConfirmed(d, wk)) { _tag('out'); return 0; }
+        else injMult = 0.75;
       } else if (/doubtful/.test(t)) {
         if (_mt) { _tag('out'); return 0; }
         injMult = 0.5;
       }
+    }
+    // FROZEN WEEK (window._weeklyOutHeldIn): not on Jack's list = playing — his if-active sim row, not the zeroed one
+    if (_held && typeof window._simHeldInRow === 'function') {
+      const _hr = window._simHeldInRow(d, wk);
+      const _hv = _hr && _hr[rankingScoringFmt === 'ppr' ? 1 : rankingScoringFmt === 'std' ? 2 : 0];
+      if (typeof _hv === 'number' && isFinite(_hv) && _hv > 0) { _tag('sim'); return _hv; }
     }
     // SIM-FIRST (Jack 2026-08-26): the Sim Lab weekly export is THE weekly
     // number wherever it has a row — same value as the PROJ column and the
@@ -13845,23 +13892,36 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     // not the list, and run on any admin load — so a week already under way
     // (week 5 at ship time) gets seeded on Jack's next visit, not only at
     // the Tuesday roll.
-    if (wk >= 1 && wk <= 18 && (parseInt(d.assumeOutSeededWeek, 10) || 0) < wk && _weeklyIsAdmin()
+    // FROZEN WEEK (2026-10-31): the same run also stamps assumeOutFrozenWeek
+    // and parks the Out / under-50% players, after which nothing auto-moves
+    // anyone out (window._weeklyOutHeldIn). A week seeded before the freeze
+    // shipped gets a one-time outs-only catch-up (its Q / D UNDOs stay put).
+    if (wk >= 1 && wk <= 18 && (parseInt(d.assumeOutFrozenWeek, 10) || 0) < wk && _weeklyIsAdmin()
         && window._weeklySeedWritten !== wk && typeof window._weeklyAssumeOutSeed === 'function') {
-      window._weeklySeedWritten = wk;
       try {
-        const _aoMap = Object.assign({}, window._weeklyAssumeOutMap || {});
-        const _cur = _aoMap[String(wk)] || [];
-        const _seed = window._weeklyAssumeOutSeed(wk).filter(n => _cur.indexOf(n) < 0);
-        _aoMap[String(wk)] = _cur.concat(_seed);
-        window._weeklyAssumeOutApply(_aoMap);
-        let _sdb = null;
-        try { _sdb = (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length) ? firebase.firestore() : null; } catch (_e) {}
-        if (_sdb) {
-          _sdb.collection('settings').doc('active_week').set({ assumeOut: _aoMap, assumeOutSeededWeek: wk, assumeOutSeededAt: new Date().toISOString() }, { merge: true })
-            .then(() => { console.log('[Weekly] week ' + wk + ' seed: ' + _seed.length + ' Questionable / Doubtful players parked in the BYE / OUT row'); if (_seed.length && typeof toast === 'function') toast('Week ' + wk + ': ' + _seed.length + ' Questionable / Doubtful player' + (_seed.length === 1 ? '' : 's') + ' parked in the BYE / OUT row — UNDO moves one back'); })
-            .catch(e => { console.warn('[Weekly] assume-out seed write failed:', e); window._weeklySeedWritten = null; });
-        } else window._weeklySeedWritten = null;
-      } catch (_e) { console.warn('[Weekly] assume-out seed failed:', _e); window._weeklySeedWritten = null; }
+        const _seeded = (parseInt(d.assumeOutSeededWeek, 10) || 0) >= wk;
+        const _list = window._weeklyAssumeOutSeed(wk, { outsOnly: _seeded });
+        if (_list) {   // null = boards not loaded yet — the 60 s re-check retries
+          window._weeklySeedWritten = wk;
+          window._weeklyFrozenLocal = wk;
+          const _aoMap = Object.assign({}, window._weeklyAssumeOutMap || {});
+          const _cur = _aoMap[String(wk)] || [];
+          const _seed = _list.filter(n => _cur.indexOf(n) < 0);
+          _aoMap[String(wk)] = _cur.concat(_seed);
+          window._weeklyAssumeOutApply(_aoMap);
+          const _now = new Date().toISOString();
+          const _w = { assumeOut: _aoMap, assumeOutFrozenWeek: wk, assumeOutFrozenAt: _now };
+          if (!_seeded) { _w.assumeOutSeededWeek = wk; _w.assumeOutSeededAt = _now; }
+          const _what = _seeded ? 'Out / under-50%' : 'Questionable / Doubtful / Out';
+          let _sdb = null;
+          try { _sdb = (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length) ? firebase.firestore() : null; } catch (_e) {}
+          if (_sdb) {
+            _sdb.collection('settings').doc('active_week').set(_w, { merge: true })
+              .then(() => { console.log('[Weekly] week ' + wk + ' seed: ' + _seed.length + ' ' + _what + ' players parked in the BYE / OUT row; week frozen', _seed); if (_seed.length && typeof toast === 'function') toast('Week ' + wk + ': ' + _seed.length + ' ' + _what + ' player' + (_seed.length === 1 ? '' : 's') + ' parked in the BYE / OUT row — from here only you move players out'); })
+              .catch(e => { console.warn('[Weekly] assume-out seed write failed:', e); window._weeklySeedWritten = null; window._weeklyFrozenLocal = null; });
+          } else { window._weeklySeedWritten = null; window._weeklyFrozenLocal = null; }
+        }
+      } catch (_e) { console.warn('[Weekly] assume-out seed failed:', _e); window._weeklySeedWritten = null; window._weeklyFrozenLocal = null; }
     }
     if (wk >= 1 && wk <= 18) {
       window._weeklyActiveWeek = wk;
@@ -13926,7 +13986,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       const _aw = window._weeklyActiveWeek || 0;
       const pendingAdminWrite = !!(sw && (parseInt(d.autoRolledWeek, 10) || 0) < sw
         && window._weeklyRollWritten !== sw && _weeklyIsAdmin())
-        || !!(_aw && (parseInt(d.assumeOutSeededWeek, 10) || 0) < _aw && window._weeklySeedWritten !== _aw && _weeklyIsAdmin());
+        || !!(_aw && (parseInt(d.assumeOutFrozenWeek, 10) || 0) < _aw && window._weeklySeedWritten !== _aw && _weeklyIsAdmin());
       if (sw !== window._weeklyLastScheduleWeek || pendingAdminWrite) _weeklyApplySettings(d);
     } catch (_e) {}
   }, 60000);
@@ -13978,7 +14038,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       if (!_weeklyIsAdmin()) { if (typeof toast === 'function') toast('Admins only'); return; }
       const wk = window._weeklyActiveWeek || 1;
       const cur = (window._weeklyAssumeOutMap && window._weeklyAssumeOutMap[String(wk)]) || [];
-      const add = window._weeklyAssumeOutSeed(wk).filter(n => cur.indexOf(n) < 0);
+      const add = (window._weeklyAssumeOutSeed(wk) || []).filter(n => cur.indexOf(n) < 0);
       if (!add.length) { if (typeof toast === 'function') toast('No new Questionable / Doubtful players to park for Week ' + wk); return; }
       if (!_mffConfirm('Park ' + add.length + ' Questionable / Doubtful player' + (add.length === 1 ? '' : 's') + ' in the Week ' + wk + ' BYE / OUT row?\n\n'
         + add.slice(0, 30).join(', ') + (add.length > 30 ? ' …' : '')
@@ -15688,6 +15748,19 @@ window._simAvailFor = function(name, wk) {
   }
   return (e && e[String(wk)]) || null;
 };
+// If-active [half, ppr, std] for a player a frozen week holds in (window._weeklyOutHeldIn): the 50% rule's full row,
+// else his sim row when it is not zeroed, else the sim's rest-of-season per-game rate (same fallback as ACTIVATE).
+window._simHeldInRow = function(d, wk) {
+  if (!d) return null;
+  const ru = window._simAvailFor(d.n, wk);
+  if (ru && ru.full) return ru.full.slice(0, 3);
+  const r0 = typeof _simProjRowRaw === 'function' ? _simProjRowRaw(d, wk) : null;
+  if (r0 && (r0[0] || r0[1] || r0[2])) return r0.slice(0, 3);
+  const SP = window.SIM_PROJ_2026, sp = SP && SP.seasonPpg;
+  let v = sp && sp[d.n];
+  if (!v && sp && typeof _campNewsNorm === 'function') { const nn = _campNewsNorm(d.n); const k = Object.keys(sp).find(x => _campNewsNorm(x) === nn); v = k ? sp[k] : null; }
+  return v ? v.slice(0, 3) : null;
+};
 
 // Sim Lab per-week projection row for the 2026 LOGS view (data/sim_proj_2026.js,
 // exported offline by sim_lab/export_site_proj.js — no sims run on the site).
@@ -15727,7 +15800,8 @@ function _qsMask(T, wk, flip) {
     if (!out) Object.keys(AL).forEach(a => { if (AL[a] === k && outSet.has(a)) out = true; });
     // under 50% to play = out by default (_binarySimAvailability) until ACTIVATE puts him in
     const ru = !out && typeof window._simAvailFor === 'function' ? window._simAvailFor(nm, wk) : null;
-    if (ru && ru.out && !actSet.has(k) && !(alias != null && actSet.has(alias))) out = true;
+    // (a frozen week leaves it to Jack's list — window._weeklyOutHeldIn)
+    if (ru && ru.out && !actSet.has(k) && !(alias != null && actSet.has(alias)) && !window._weeklyOutFrozen(wk)) out = true;
     if (flip && Object.prototype.hasOwnProperty.call(flip, k)) out = !!flip[k];
     if (out) m |= (1 << i);
   });

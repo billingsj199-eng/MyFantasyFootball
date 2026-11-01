@@ -1,6 +1,77 @@
 {
- "updated": "2026-10-31T22:14:29Z",
+ "updated": "2026-11-01T23:15:23Z",
  "items": [
+  {
+   "player": "A.J. Brown",
+   "team": "NE",
+   "pos": "WR",
+   "date": "2026-11-01",
+   "headline": "Inactive for Week 8 vs. Dolphins with a knee issue",
+   "take": "Patriots' top WR sits again; expect more targets for Kayshon Boutte and Mack Hollins Sunday",
+   "url": "https://www.patriots.com/news/inactives-analysis-carlton-davis-iii-returns-a-j-brown-and-treveyon-henderson-inactive-for-week-8-vs-dolphins",
+   "tag": "injury",
+   "avail": {
+    "k": "out",
+    "wk": 8
+   },
+   "src_type": "team"
+  },
+  {
+   "player": "TreVeyon Henderson",
+   "team": "NE",
+   "pos": "RB",
+   "date": "2026-11-01",
+   "headline": "Inactive for Week 8 vs. Dolphins with an illness",
+   "take": "Clears the way for Rhamondre Stevenson to handle the Patriots' backfield workload Sunday",
+   "url": "https://www.patriots.com/news/inactives-analysis-carlton-davis-iii-returns-a-j-brown-and-treveyon-henderson-inactive-for-week-8-vs-dolphins",
+   "tag": "injury",
+   "avail": {
+    "k": "out",
+    "wk": 8
+   },
+   "src_type": "team"
+  },
+  {
+   "player": "Emeka Egbuka",
+   "team": "TB",
+   "pos": "WR",
+   "date": "2026-11-01",
+   "headline": "Ruled out for Week 8 vs. Falcons with concussion/foot, per Bowles",
+   "take": "Second straight missed game; more Tampa Bay targets funnel to Mike Evans and Chris Godwin",
+   "url": "https://clutchpoints.com/nfl/tampa-bay-buccaneers/buccaneers-news-emeka-egbuka-ruled-out-falcons-clash-latest-injury-update",
+   "tag": "injury",
+   "avail": {
+    "k": "out",
+    "wk": 8
+   },
+   "src_type": "team"
+  },
+  {
+   "player": "Breece Hall",
+   "team": "NYJ",
+   "pos": "RB",
+   "date": "2026-11-01",
+   "headline": "Listed questionable for Week 8 vs. Raiders with lingering quad injury",
+   "take": "Same quad issue that cost him Week 6; confirm inactives before trusting him as a starter",
+   "url": "https://www.4for4.com/news/breece-hall-questionable-week-8-against-raiders",
+   "tag": "injury",
+   "avail": {
+    "k": "gtd",
+    "wk": 8
+   },
+   "src_type": "report"
+  },
+  {
+   "player": "Cam Skattebo",
+   "team": "NYG",
+   "pos": "RB",
+   "date": "2026-10-29",
+   "headline": "Regained lead role with 42-yard run in OT win at Houston; Giants on bye Week 8",
+   "take": "Snap count climbed back up after a near-benching in Week 6; buy-low ahead of Giants' return from bye",
+   "url": "https://rotoballer.com/player-news/cam-skattebo-emerging-as-the-engine-of-giants-offense/1954621",
+   "tag": "riser",
+   "src_type": "report"
+  },
   {
    "player": "Josh Downs",
    "team": "IND",
@@ -1294,21 +1365,6 @@
    "url": "https://www.therams.com/news/game-recap-rams-fall-to-bills-37-34-in-overtime-on-monday-night-football",
    "tag": "riser",
    "src_type": "report"
-  },
-  {
-   "player": "Josh Palmer",
-   "team": "BUF",
-   "pos": "WR",
-   "date": "2026-10-10",
-   "headline": "Ruled out for Monday night vs. Rams (shoulder) -- first missed game of the season",
-   "take": "Khalil Shakir and Keon Coleman soak up his short-area targets; next chance to play is Week 6 vs. Raiders.",
-   "url": "https://www.tsn.ca/nfl/article/bills-dt-oliver-wr-palmer-out-vs-rams/",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 5
-   },
-   "src_type": "team"
   },
   {
    "player": "Tyquan Thornton",

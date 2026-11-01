@@ -162,7 +162,7 @@ const _GAME_TOTALS_2026 = {
   'W8_CLE_PIT':            { total: 38.5, spread: -3.5, asOf: '2026-10-31', source: 'DK' },
   'W8_ATL_TB':             { total: 43.5, spread: -1.5, asOf: '2026-11-01', source: 'DK' },
   'W8_LAC_LAR':            { total: 45.5, spread: -6.5, asOf: '2026-10-27', source: 'DK' },
-  'W8_KC_DEN':             { total: 41.5, spread: -1.5, asOf: '2026-11-01', source: 'DK' },
+  'W8_KC_DEN':             { total: 42.5, spread: -1.5, asOf: '2026-11-01', source: 'DK' },
   'W8_NE_MIA':             { total: 41.5, spread: +7.0, asOf: '2026-11-01', source: 'DK' },
   'W8_PHI_WAS':            { total: 40.5, spread: -6.0, asOf: '2026-10-31', source: 'DK' },
   'W8_CHI_SEA':            { total: 46.5, spread: -3.0, asOf: '2026-10-27', source: 'DK' },

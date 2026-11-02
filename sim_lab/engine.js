@@ -2962,7 +2962,15 @@
     var m = _inj && _inj.map ? _inj.map[p.norm] : null;
     return { g: injGroup(p, wk), seq: r ? r.seq : '', gs: r ? r.gs : '', inj: r ? r.inj : '', body: b ? (b.b + (b.n ? ' (' + b.n + ')' : '')) : '', news: n || null, lines: linesUp(p, wk), src: m ? m.src : '', note: m ? (m.note || '') : '' };
   }
-  function bangedDock(cls, pos, g, newsPlay) {
+  // v2.36 QUESTIONABLE + MISS STREAK (2026-11-02, Jack on Breece Hall: Q / out W4-8 but projected back every week, Braelon
+  // Allen held at ~8; research_q_streak_play.py): the play odds above ignore how many games in a row he has already missed.
+  // A starter listed Questionable after k straight missed team games plays less: logit shift k1 -.24 / k2 -.45 / k3+ -.33
+  // (fit 2019-25, half-life 3, shrunk K 40; RB Q + limited 72% -> 65 / 58 / 62%). Brier on top of the shipped form: 2019-25
+  // LOYO -1.17% (6/7), forward -1.81% (4/4); 2013-25 LOYO -2.31% (11/13), forward -2.46% (4/4). Only for a player with 2+
+  // games this season before the streak (the tested population); the vacated share flows to teammates through the dock.
+  // Kill: window.SIM_Q_STREAK = false. Backup engine.js.bak_pre_qstreak_20261102.
+  var Q_STREAK = { 1: -0.24, 2: -0.45, 3: -0.33 };
+  function bangedDock(cls, pos, g, newsPlay, streak) {
     var t = BANGED[cls], d = t && (t[pos] || t.WR);
     if (!d) return null;
     var play = d.play, w = typeof window !== 'undefined' ? window : {};
@@ -2971,6 +2979,7 @@
       var s = (g && INJ_TYPE[cls]) ? (INJ_TYPE[cls][g] || 0) : 0;
       if (s) play = _sgm(_lgt(play) + s);
     }
+    if (streak >= 1 && cls !== 'D' && w.SIM_Q_STREAK !== false) play = _sgm(_lgt(play) + Q_STREAK[Math.min(3, streak)]);
     if (newsPlay && cls !== 'D') play = Math.max(play, NEWS_PLAY);
     return { mult: +(play * d.cond).toFixed(3), play: +play.toFixed(3), cond: d.cond };
   }
@@ -3140,10 +3149,22 @@
     var bangedOn = wnd.SIM_BANGED !== false;
     var SIG = injSig(), newsOn = wnd.SIM_NEWS_WINDOWS !== false && SIG && SIG.news;
     var newsPlayOf = function (p) { var n = newsOn ? SIG.news[p.norm] : null; return !!(n && n.flag && n.flag.k === 'play'); };
+    // team games missed in a row before the current week (a bye is not a game), for a player with 2+ games this season (v2.36)
+    var missStreak = function (p) {
+      var rec = jsData().players ? jsData().players[p.norm] : null, wks = rec && rec.wks ? rec.wks : [];
+      var gw = (players.schedule && players.schedule.gameWeeks && players.schedule.gameWeeks[p.tm]) || [], k = 0;
+      if (wks.filter(function (w0) { return w0 < currentWeek; }).length < 2) return 0;
+      for (var gi = gw.length - 1; gi >= 0; gi--) {
+        if (gw[gi] >= currentWeek) continue;
+        if (wks.indexOf(gw[gi]) >= 0) break;
+        k++;
+      }
+      return k;
+    };
     var putDock = function (p, cls, src, legacy) {
-      var g = injGroup(p, currentWeek), np = newsPlayOf(p);
-      var d = bangedOn ? bangedDock(cls, p.pos, g, np) : null;
-      if (d) { map[p.norm] = { from: currentWeek, to: currentWeek, mult: d.mult, play: d.play, cond: d.cond, src: src, g: g, note: np ? 'news: expected to play' : '' }; return; }
+      var g = injGroup(p, currentWeek), np = newsPlayOf(p), qk = cls !== 'D' ? missStreak(p) : 0;
+      var d = bangedOn ? bangedDock(cls, p.pos, g, np, qk) : null;
+      if (d) { map[p.norm] = { from: currentWeek, to: currentWeek, mult: d.mult, play: d.play, cond: d.cond, src: src, g: g, qk: qk, note: np ? 'news: expected to play' : '' }; return; }
       if (legacy < 1) map[p.norm] = { from: currentWeek, to: currentWeek, mult: legacy, src: src };
     };
     var ovAsOf = String(wnd.IN_SEASON_OUT_OVERRIDES_ASOF || '');

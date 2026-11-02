@@ -203,6 +203,13 @@ service cloud.firestore {
     match /user_game_data/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+    // ud_field/c0..c7: every opponent's roster in the user's Underdog pools
+    // (2026-11-02), so live leaderboards work without the extension (phones).
+    // Own docs only; fixed chunk ids.
+    match /user_game_data/{userId}/ud_field/{chunk} {
+      allow read, write: if request.auth != null && request.auth.uid == userId
+                         && chunk.matches('c[0-7]');
+    }
     // gifted_badges: keyed by uid (admin gift panel resolves email -> uid),
     // with legacy 'email_<sanitized>' ids for gifts to not-yet-registered
     // emails (the client never reads those). Own-doc read only (2026-08-31
@@ -348,6 +355,13 @@ service cloud.firestore {
     match /shared/jacks_portfolio {
       allow read: if isJack() || hasStripePremium() || hasGiftedPremium();
       allow write: if isJack();
+    }
+    // shared/jacks_portfolio_field_c0..c7: opponent rosters for the mirror
+    // above (usernames stripped). Same read/write gate.
+    match /shared/{docId} {
+      allow read: if docId.matches('jacks_portfolio_field_c[0-7]')
+                  && (isJack() || hasStripePremium() || hasGiftedPremium());
+      allow write: if docId.matches('jacks_portfolio_field_c[0-7]') && isJack();
     }
     // shared/ud_adp_latest: latest Underdog ADP snapshot (per-player BBM +
     // Superflex ADP), mirrored from Jack's session whenever the Draft Helper

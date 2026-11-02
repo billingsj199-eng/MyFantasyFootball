@@ -72051,10 +72051,215 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   };
 
   // Save portfolio to Firestore
+  // ── Opponent rosters in the cloud (2026-11-02) ──
+  // underdogPortfolio keeps only MY picks; every opponent's roster
+  // (d.allTeams, extension sync) used to live in memory only, so a phone or
+  // any browser without the extension had no live leaderboards, ADVANCE RATE
+  // or WINNING. The field now rides in UD_FIELD_CHUNKS small docs
+  // (user_game_data/<uid>/ud_field/c0..c7; Jack's mirror
+  // shared/jacks_portfolio_field_c0..c7 with usernames stripped), each one
+  // JSON string `j` = { v:1, pl:[[name,pos,team,udProj]], d:{ draftId:
+  // [[entryId, username, userId, isMine, [plIdx, pick, ...]], ...] } }.
+  // ~3 KB per 12-team draft, so 8 chunks hold ~2,500 drafts under the 1 MiB
+  // doc cap. Entries are never pruned on save (a partial in-memory portfolio
+  // can't drop them); CLEAR deletes every chunk.
+  const UD_FIELD_CHUNKS = 8;
+  let _udFieldStore = {};        // draftId -> normalized teams (sorted, canonical)
+  let _udFieldSig = [];          // per chunk: last loaded / written `j`
+  let _udFieldOwner = null;      // 'own:<uid>' | 'jacks'
+  let _udFieldState = 'idle';    // idle | loading | ready | failed
+  let _udFieldTok = 0;
+  let _udFieldSavePending = false;
+
+  function _udFieldChunkOf(id) {
+    let h = 5381;
+    const s = String(id);
+    for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h % UD_FIELD_CHUNKS;
+  }
+  function _udFieldRef(db, src, uid, c) {
+    return src === 'jacks'
+      ? db.collection('shared').doc('jacks_portfolio_field_c' + c)
+      : db.collection('user_game_data').doc(uid).collection('ud_field').doc('c' + c);
+  }
+  function _udFieldFromAllTeams(at) {
+    return Object.values(at)
+      .filter(t => t && Array.isArray(t.picks) && t.picks.length)
+      .map(t => ({
+        entryId: String(t.entryId != null ? t.entryId : ''),
+        username: t.username || null,
+        userId: t.userId != null ? t.userId : null,
+        isMine: !!t.isMine,
+        picks: t.picks.filter(p => p && p.name).map(p => ({
+          name: p.name, pos: p.pos || '', team: p.team || '',
+          pick: parseInt(p.pick || 0, 10) || 0,
+          udProj: (p.udProj != null && !isNaN(parseFloat(p.udProj))) ? parseFloat(p.udProj) : null
+        })).sort((a, b) => a.pick - b.pick)
+      }))
+      .sort((a, b) => (a.entryId < b.entryId ? -1 : a.entryId > b.entryId ? 1 : 0));
+  }
+  // Deterministic: a chunk decoded from the cloud re-encodes to the same `j`.
+  function _udFieldEncodeChunk(c, strip) {
+    const ids = Object.keys(_udFieldStore).filter(id => _udFieldChunkOf(id) === c).sort();
+    if (!ids.length) return '';
+    const pl = [], plIdx = new Map(), d = {};
+    ids.forEach(id => {
+      d[id] = _udFieldStore[id].map(t => {
+        const pk = [];
+        t.picks.forEach(p => {
+          const k = p.name + '\u0001' + p.pos + '\u0001' + p.team;
+          let i = plIdx.get(k);
+          if (i == null) { i = pl.length; plIdx.set(k, i); pl.push([p.name, p.pos, p.team, p.udProj]); }
+          pk.push(i, p.pick);
+        });
+        return [t.entryId, strip ? null : t.username, strip ? null : t.userId, t.isMine ? 1 : 0, pk];
+      });
+    });
+    return JSON.stringify({ v: 1, pl: pl, d: d });
+  }
+  function _udFieldDecodeChunk(j, into) {
+    const o = JSON.parse(j);
+    if (!o || o.v !== 1 || !o.d || !Array.isArray(o.pl)) return;
+    Object.keys(o.d).forEach(id => {
+      into[id] = (o.d[id] || []).map(r => {
+        const pk = r[4] || [], picks = [];
+        for (let i = 0; i + 1 < pk.length; i += 2) {
+          const pp = o.pl[pk[i]];
+          if (pp) picks.push({ name: pp[0], pos: pp[1], team: pp[2], pick: pk[i + 1], udProj: pp[3] });
+        }
+        return { entryId: String(r[0]), username: r[1] || null, userId: r[2] != null ? r[2] : null, isMine: !!r[3], picks: picks };
+      });
+    });
+  }
+  // Fetch every chunk for a source. Resolves (never rejects) once the store
+  // is ready, or marks it failed — a failed load never gets written over.
+  function _udFieldFetch(db, src, uid) {
+    const tok = ++_udFieldTok;
+    _udFieldOwner = src === 'jacks' ? 'jacks' : 'own:' + uid;
+    _udFieldStore = {};
+    _udFieldSig = [];
+    _udFieldState = 'loading';
+    const refs = [];
+    for (let c = 0; c < UD_FIELD_CHUNKS; c++) refs.push(_udFieldRef(db, src, uid, c));
+    return Promise.all(refs.map(r => r.get())).then(docs => {
+      if (tok !== _udFieldTok) return;
+      const store = {}, sig = [];
+      docs.forEach((doc, c) => {
+        const j = doc.exists ? (doc.data() || {}).j : null;
+        if (typeof j !== 'string' || !j) return;
+        try { _udFieldDecodeChunk(j, store); sig[c] = j; }
+        catch (e) { console.warn('[Portfolio] field chunk c' + c + ' unreadable:', e); }
+      });
+      _udFieldStore = store;
+      _udFieldSig = sig;
+      _udFieldState = 'ready';
+      console.log('[Portfolio] field loaded:', Object.keys(store).length, 'drafts (' + _udFieldOwner + ')');
+    }).catch(e => {
+      if (tok === _udFieldTok) _udFieldState = 'failed';
+      console.warn('[Portfolio] field load error:', e);
+    });
+  }
+  // Give cloud-only drafts (no extension push this page load) their
+  // opponents back. An extension-supplied allTeams always wins.
+  function _udFieldAttach(parsed) {
+    if (!parsed || !parsed.drafts || _udFieldState !== 'ready') return 0;
+    let n = 0;
+    Object.values(parsed.drafts).forEach(d => {
+      if (!d || !d.id) return;
+      const teams = _udFieldStore[d.id];
+      if (!teams || teams.length < 2) return;
+      const have = d.allTeams && typeof d.allTeams === 'object' ? Object.keys(d.allTeams).length : 0;
+      if (have >= teams.length) return;
+      const at = {};
+      teams.forEach(t => {
+        at[t.entryId] = { entryId: t.entryId, username: t.username, userId: t.userId, isMine: t.isMine,
+                          pickCount: t.picks.length, picks: t.picks.map(p => Object.assign({}, p)) };
+      });
+      d.allTeams = at;
+      d.teamCount = Math.max(d.teamCount || 0, teams.length);
+      d._udFieldCloud = true;
+      n++;
+    });
+    return n;
+  }
+  window._udFieldAttach = _udFieldAttach;
+  function _udFieldSave(parsed) {
+    const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!db || !user || window._udReadOnly || !parsed || !parsed.drafts) return;
+    const owner = 'own:' + user.uid;
+    if (_udFieldOwner !== owner || _udFieldState === 'loading' || _udFieldState === 'idle') {
+      // Own field not loaded yet — load first so a save can't drop entries.
+      const needFetch = _udFieldOwner !== owner;
+      _udFieldSavePending = true;
+      if (needFetch) _udFieldFetch(db, 'own', user.uid).then(_udFieldFlushPending);
+      return;
+    }
+    if (_udFieldState !== 'ready') return;
+    Object.values(parsed.drafts).forEach(d => {
+      if (!d || !d.id || d._udFieldCloud || !d.allTeams || typeof d.allTeams !== 'object') return;
+      const teams = _udFieldFromAllTeams(d.allTeams);
+      if (teams.length >= 2) _udFieldStore[d.id] = teams;
+    });
+    const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
+    const savedAt = new Date().toISOString();
+    for (let c = 0; c < UD_FIELD_CHUNKS; c++) {
+      const j = _udFieldEncodeChunk(c, false);
+      if (!j || j === _udFieldSig[c]) continue;
+      if (j.length > 950000) { console.warn('[Portfolio] field chunk c' + c + ' too big (' + j.length + ') — not saved'); continue; }
+      _udFieldSig[c] = j;
+      _udFieldRef(db, 'own', user.uid, c).set({ j: j, savedAt: savedAt })
+        .then(() => { console.log('[Portfolio] field chunk c' + c + ' saved'); })
+        .catch(e => { if (_udFieldSig[c] === j) _udFieldSig[c] = null; console.warn('[Portfolio] field save error:', e); });
+    }
+    if (isAdminNow) _udFieldMirror(db);
+  }
+  function _udFieldFlushPending() {
+    if (!_udFieldSavePending) return;
+    _udFieldSavePending = false;
+    if (window._udPortfolio && !window._udReadOnly) _udFieldSave(window._udPortfolio);
+  }
+  // Jack only: shared mirror for premium viewers, usernames stripped. The
+  // last-written hash per chunk is kept in localStorage so a page load with
+  // nothing new writes nothing.
+  function _udFieldMirror(db) {
+    let seen = {};
+    try { seen = JSON.parse(localStorage.getItem('mff_udFieldMirror') || '{}') || {}; } catch (_) { seen = {}; }
+    const savedAt = new Date().toISOString();
+    for (let c = 0; c < UD_FIELD_CHUNKS; c++) {
+      const j = _udFieldEncodeChunk(c, true);
+      if (!j || j.length > 950000) continue;
+      let h = 5381;
+      for (let i = 0; i < j.length; i++) h = ((h * 33) ^ j.charCodeAt(i)) >>> 0;
+      const key = 'c' + c, hv = j.length + ':' + h;
+      if (seen[key] === hv) continue;
+      _udFieldRef(db, 'jacks', null, c).set({ j: j, savedAt: savedAt })
+        .then(() => {
+          seen[key] = hv;
+          try { localStorage.setItem('mff_udFieldMirror', JSON.stringify(seen)); } catch (_) {}
+        })
+        .catch(e => { console.warn('[Portfolio] field mirror error:', e); });
+    }
+  }
+  function _udFieldClear(db, uid) {
+    const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
+    ++_udFieldTok;
+    _udFieldOwner = 'own:' + uid;
+    _udFieldStore = {};
+    _udFieldSig = [];
+    _udFieldState = 'ready';
+    for (let c = 0; c < UD_FIELD_CHUNKS; c++) {
+      _udFieldRef(db, 'own', uid, c).delete().catch(e => { console.warn('[Portfolio] field clear error:', e); });
+      if (isAdminNow) _udFieldRef(db, 'jacks', null, c).delete().catch(() => {});
+    }
+    try { localStorage.removeItem('mff_udFieldMirror'); } catch (_) {}
+  }
+
   function _udSaveToCloud(parsed) {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
+    try { _udFieldSave(parsed); } catch (e) { console.warn('[Portfolio] field save error:', e); }
 
     // Serialize drafts — convert picks arrays, strip Sets from players
     const draftsArr = Object.values(parsed.drafts).map(d => ({
@@ -72178,7 +72383,12 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     function loadOwn() {
       window._udReadOnly = false;
       _udClearReadOnlyUI();
-      db.collection('user_game_data').doc(user.uid).get().then(doc => {
+      // Opponent rosters load alongside the portfolio doc (never rejects).
+      const fieldP = _udFieldFetch(db, 'own', user.uid);
+      Promise.all([db.collection('user_game_data').doc(user.uid).get(), fieldP]).then(([doc]) => {
+        // Runs after this handler: any extension sync that arrived while the
+        // field was loading saves its opponents now.
+        Promise.resolve().then(_udFieldFlushPending);
         if (!doc.exists) {
           // Brand-new account or wiped doc. If the extension already populated
           // _udPortfolio while we were waiting on this .get(), the
@@ -72205,6 +72415,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         const cloud = doc.data().underdogPortfolio;
         const parsed = _udHydrateCloudPayload(cloud);
         if (parsed) {
+          _udFieldAttach(parsed);
           applyParsed(parsed, 'your account', cloud && cloud.savedAt);
           // Admin-only: backfill the shared mirror so premium users can read
           // it without requiring Jack to re-upload. Idempotent — safe to
@@ -72236,7 +72447,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     window._udLoadOwn = loadOwn;
 
     function loadJacks() {
-      db.collection('shared').doc('jacks_portfolio').get().then(doc => {
+      const fieldP = _udFieldFetch(db, 'jacks', null);
+      Promise.all([db.collection('shared').doc('jacks_portfolio').get(), fieldP]).then(([doc]) => {
         if (!doc.exists) {
           const status = document.getElementById('mtUnderdogStatus');
           if (status) {
@@ -72248,6 +72460,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         const cloud = doc.data();
         const parsed = _udHydrateCloudPayload(cloud);
         if (parsed) {
+          _udFieldAttach(parsed);
           window._udReadOnly = true;
           _udApplyReadOnlyUI();
           applyParsed(parsed, "Jack's portfolio", cloud && cloud.savedAt);
@@ -72531,6 +72744,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     // data doesn't immediately re-apply the stale portfolio.
     window._udClearedAt = Date.now();
 
+    _udFieldClear(db, user.uid);
     db.collection('user_game_data').doc(user.uid).set({ underdogPortfolio: null }, { merge: true })
       .then(() => {
         window._udPortfolio = null;

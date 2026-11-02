@@ -60743,6 +60743,51 @@ window.fmtHeight = fmtHeight;
   // season line (2022 Wk17 BUF-CIN, suspended after Damar Hamlin's collapse —
   // Burrow's 52 and Diggs' 26 yards sat in the logs). Game-log rows often lack
   // tm, so the player's team that season stands in.
+  // PFR's season line (SEASON_LEADERS: top 25 per category, 1966-2025) over a 1999+
+  // game-log sum: the early logs miss games and the play-by-play sums drift (see the
+  // season-board pass). Overwrites that category's stats on `row` (fields py/ptd/int,
+  // ry/rtd/ra, rec/rcy/rctd) and moves fpts by the same half-PPR scoring as the
+  // SEASON_LEADERS fallback rows; returns true if anything changed. A PFR row for a
+  // different franchise is a namesake. strictTeam (career rows, one franchise's slice
+  // of a season): the PFR row must name that franchise — a traded player's "2TM" line
+  // covers both teams and must not land on one of them.
+  const _TRIVIA_SL_CATS = [
+    ['passing', [['py', 'pass_yds', 0.04], ['ptd', 'pass_td', 4], ['int', 'pass_int', -1]]],
+    ['rushing', [['ry', 'rush_yds', 0.1], ['rtd', 'rush_td', 6], ['ra', 'rush_att', 0]]],
+    ['receiving', [['rec', 'rec', 0.5], ['rcy', 'rec_yds', 0.1], ['rctd', 'rec_td', 6]]]
+  ];
+  let _triviaSlIdx = null;
+  function _triviaSlReconcile(row, name, yr, team, strictTeam) {
+    if (!(yr >= 1999) || typeof SEASON_LEADERS === 'undefined') return false;
+    const slYr = SEASON_LEADERS[String(yr)];
+    if (!slYr) return false;
+    const key = n => _triviaCollapseName(_triviaStripSuffix(n));
+    if (!_triviaSlIdx || _triviaSlIdx.src !== SEASON_LEADERS) _triviaSlIdx = { src: SEASON_LEADERS, yrs: {} };
+    let idx = _triviaSlIdx.yrs[yr];
+    if (!idx) {
+      idx = _triviaSlIdx.yrs[yr] = {};
+      _TRIVIA_SL_CATS.forEach(([cat]) => (slYr[cat] || []).forEach(r => {
+        if (r && r.name) (idx[cat + '|' + key(r.name)] = idx[cat + '|' + key(r.name)] || []).push(r);
+      }));
+    }
+    const tm = _triviaTeamCode(team, yr);
+    let touched = false;
+    _TRIVIA_SL_CATS.forEach(([cat, fields]) => {
+      const rows = idx[cat + '|' + key(name)];
+      if (!rows) return;
+      const r = rows.find(x => { const t = _triviaTeamCode(x.team, yr); return strictTeam ? (t && t === tm) : (!t || !tm || t === tm); });
+      if (!r) return;
+      fields.forEach(([f, src, w]) => {
+        if (r[src] == null) return;
+        row.fpts = (row.fpts || 0) + (r[src] - (row[f] || 0)) * w;
+        row[f] = r[src];
+      });
+      if (r.g && r.g > (row.gp || 0)) row.gp = r.g;
+      touched = true;
+    });
+    if (touched) row.fpts = Math.round(row.fpts * 10) / 10;
+    return touched;
+  }
   const _TRIVIA_NO_CONTEST = { '2022|17': ['BUF', 'CIN'] };
   function _triviaNoContest(name, yr, w) {
     const teams = _TRIVIA_NO_CONTEST[yr + '|' + (w && w.wk)];
@@ -62466,6 +62511,7 @@ window.fmtHeight = fmtHeight;
               let sznGp = 0;
               weeks.forEach(w => {
                 if (!_triviaRegWeek(_sznYr, w.wk)) return; // playoff games are not regular-season totals (library audit 10-29)
+                if (_triviaNoContest(name, _sznYr, w)) return;
                 const played = (w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0);
                 // Last season's active-log rows were re-stamped with this year's team
                 // (Pacheco's 2025 weeks say DET): the history tables decide that year.
@@ -62482,9 +62528,11 @@ window.fmtHeight = fmtHeight;
               _seenKey.add(name + '|' + szn);
               if (sznGp === 0) return;
               const c = _careerMap[name] || (_careerMap[name] = _newCareer(name, pos));
-              Object.values(byTeam).forEach(r => {
-                if (r.gp > 0 || r.py || r.ry || r.rec || r.fpts) _addSeasonRow(c, r);
-              });
+              const _sznRows = Object.values(byTeam).filter(r => r.gp > 0 || r.py || r.ry || r.rec || r.fpts);
+              // A one-franchise season takes PFR's line like the season boards do (Warner's
+              // 1999 log has no Week 1 — 397 yards short on every career board, 11-02).
+              if (_sznRows.length === 1) _triviaSlReconcile(_sznRows[0], name, _sznYr, _sznRows[0].team, true);
+              _sznRows.forEach(r => _addSeasonRow(c, r));
             });
           });
         }
@@ -62929,41 +62977,9 @@ window.fmtHeight = fmtHeight;
       // fallback rows above (library audit 11-02). A different franchise on the
       // PFR row is a namesake and is left alone.
       if (filterType === 'season' && !isPost && typeof SEASON_LEADERS !== 'undefined') {
-        const _slKey = n => _triviaCollapseName(_triviaStripSuffix(n));
-        const _slCats = [
-          ['passing', [['py', 'pass_yds', 0.04], ['ptd', 'pass_td', 4], ['int', 'pass_int', -1]]],
-          ['rushing', [['ry', 'rush_yds', 0.1], ['rtd', 'rush_td', 6], ['ra', 'rush_att', 0]]],
-          ['receiving', [['rec', 'rec', 0.5], ['rcy', 'rec_yds', 0.1], ['rctd', 'rec_td', 6]]]
-        ];
-        const _slIdx = {};
         allEntries.forEach(e => {
           if (!e || e._sl || e._isGame || e._isCareer || !(e.yr >= 1999)) return;
-          const slYr = SEASON_LEADERS[String(e.yr)];
-          if (!slYr) return;
-          let idx = _slIdx[e.yr];
-          if (!idx) {
-            idx = _slIdx[e.yr] = {};
-            _slCats.forEach(([cat]) => (slYr[cat] || []).forEach(r => {
-              if (r && r.name) (idx[cat + '|' + _slKey(r.name)] = idx[cat + '|' + _slKey(r.name)] || []).push(r);
-            }));
-          }
-          const eTm = _triviaTeamCode(e.team, e.yr);
-          let touched = false;
-          _slCats.forEach(([cat, fields]) => {
-            const rows = idx[cat + '|' + _slKey(e.name)];
-            if (!rows) return;
-            const r = rows.find(x => { const t = _triviaTeamCode(x.team, e.yr); return !t || !eTm || t === eTm; });
-            if (!r) return;
-            fields.forEach(([f, src, w]) => {
-              if (r[src] == null) return;
-              e.fpts = (e.fpts || 0) + (r[src] - (e[f] || 0)) * w;
-              e[f] = r[src];
-            });
-            if (r.g && r.g > (e.gp || 0)) e.gp = r.g;
-            touched = true;
-          });
-          if (!touched) return;
-          e.fpts = Math.round(e.fpts * 10) / 10;
+          if (!_triviaSlReconcile(e, e.name, e.yr, e.team, false)) return;
           e.totalTd = (e.ptd || 0) + (e.rtd || 0) + (e.rctd || 0);
           e.ppg = e.gp > 0 ? Math.round((e.fpts / e.gp) * 10) / 10 : 0;
         });

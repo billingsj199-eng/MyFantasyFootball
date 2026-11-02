@@ -10,6 +10,7 @@ const PLAYER_TEAM_HISTORY = {
   'George Pickens': [{t:'PIT',y1:2022,y2:2024},{t:'DAL',y1:2025,y2:2099}],
   'Jaylen Waddle': [{t:'MIA',y1:2021,y2:2024},{t:'DEN',y1:2025,y2:2099}],
   'Cooper Kupp': [{t:'LAR',y1:2017,y2:2024},{t:'SEA',y1:2025,y2:2099}],
+  'Dalvin Cook': [{t:'MIN',y1:2017,y2:2022},{t:'NYJ',y1:2023,y2:2023},{t:'DAL',y1:2024,y2:2024}],
   'Stefon Diggs': [{t:'MIN',y1:2015,y2:2019},{t:'BUF',y1:2020,y2:2023},{t:'HOU',y1:2024,y2:2025}],
   'DeAndre Hopkins': [{t:'HOU',y1:2013,y2:2019},{t:'ARI',y1:2020,y2:2022},{t:'TEN',y1:2023,y2:2023},{t:'KC',y1:2024,y2:2024},{t:'NE',y1:2025,y2:2025}],
   'DJ Moore': [{t:'CAR',y1:2018,y2:2022},{t:'CHI',y1:2023,y2:2024},{t:'BUF',y1:2025,y2:2099}],

@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-02-faces" as="script">
+<link rel="preload" href="app.js?v=2026-11-02-teams" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -5331,7 +5331,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      _applyLegendCareerBindings on the 'mff:retireddata' event the loader dispatches. -->
 <!-- season_leaders.js (~744 KB) is lazy-loaded via window._ensureSeasonLeaders() — SEASON_LEADERS is read only by the admin Trivia generator, so regular users never fetch it. -->
 <script src="data/ldb.js?v=2026-04-21" defer></script>
-<script src="data/player_team_history.js?v=2026-07-22" defer></script>
+<script src="data/player_team_history.js?v=2026-11-02" defer></script>
 <!-- ep_players_u.js removed: its global const EP_PLAYERS_U is shadowed by a local
      `let EP_PLAYERS_U` in the Unlimited Guess-Who IIFE and never read. Dead payload. -->
 <script src="data/active_team_history.js?v=2026-10-29-0945" defer></script>
@@ -6892,7 +6892,7 @@ window._loadLegendHeadshots = function(opts) {
 // never in the warm-up. Bump the ?v= after every rebuild.
 window._loadTriviaLibrary = function(opts) {
   if (window._triviaLibraryPromise) return window._triviaLibraryPromise;
-  window._triviaLibraryPromise = _injectScripts(['data/trivia_library.js?v=2026-10-29-lib1'], 'TriviaLibrary', opts);
+  window._triviaLibraryPromise = _injectScripts(['data/trivia_library.js?v=2026-11-02-lib2'], 'TriviaLibrary', opts);
   return window._triviaLibraryPromise;
 };
 
@@ -6966,7 +6966,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-02-faces"></script>
+<script defer src="app.js?v=2026-11-02-teams"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

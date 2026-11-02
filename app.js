@@ -60687,6 +60687,17 @@ window.fmtHeight = fmtHeight;
     if (!w) return true;
     return w <= (yr >= 2021 ? 18 : 17);
   }
+  // Games the league declared no contest: their stats are not in any official
+  // season line (2022 Wk17 BUF-CIN, suspended after Damar Hamlin's collapse —
+  // Burrow's 52 and Diggs' 26 yards sat in the logs). Game-log rows often lack
+  // tm, so the player's team that season stands in.
+  const _TRIVIA_NO_CONTEST = { '2022|17': ['BUF', 'CIN'] };
+  function _triviaNoContest(name, yr, w) {
+    const teams = _TRIVIA_NO_CONTEST[yr + '|' + (w && w.wk)];
+    if (!teams) return false;
+    const tm = _triviaTeamCode((w && w.tm) || _getTeamForPlayerYear(name, yr) || '', yr);
+    return teams.includes(tm);
+  }
   // The career array a trivia board reads for a D entry: LEGEND_CAREERS' when it
   // covers at least as many seasons (the verifier's own source; D[] still holds
   // stale arrays for some legends — Warren Moon's 1995 at 2,673 yds, John
@@ -62360,6 +62371,32 @@ window.fmtHeight = fmtHeight;
             if (!ws || !ws.seasons) return;
             const pos = _dPosMap[name] || ws.pos || '';
             if (!positions.includes(pos)) return;
+            // Season team for rows without tm: the history tables or the season's own
+            // tagged rows; a season with neither takes the franchise its nearest
+            // resolved seasons on BOTH sides agree on — the _triviaCareerTeams rule.
+            // Tyler Higbee's 2017-20 logs carry no tm and the history tables start
+            // in 2021, so his Rams total lost 1,842 yards (library audit 11-02).
+            // Built on first need: most players never fall back.
+            let _sznFill = null;
+            const _sznFillOf = (y) => {
+              if (!_sznFill) {
+                const yrs = Object.keys(ws.seasons).map(Number).filter(v => v >= 1999).sort((a, b) => a - b);
+                const own = yrs.map(v => _triviaSeasonTeam(name, v, _dByName[name]) ||
+                  ((ws.seasons[v] || []).map(w => _triviaFranchise(w.tm, v)).find(Boolean) || ''));
+                _sznFill = {};
+                yrs.forEach((v, i) => {
+                  let t = own[i];
+                  if (!t) {
+                    let prev = '', next = '';
+                    for (let j = i - 1; j >= 0 && !prev; j--) prev = own[j];
+                    for (let j = i + 1; j < yrs.length && !next; j++) next = own[j];
+                    if (prev && prev === next) t = prev;
+                  }
+                  _sznFill[v] = t;
+                });
+              }
+              return _sznFill[y] || '';
+            };
 
             Object.keys(ws.seasons).forEach(szn => {
               const weeks = ws.seasons[szn];
@@ -62372,11 +62409,7 @@ window.fmtHeight = fmtHeight;
               if (_sznYr < 1999) return;
               // Season-level team — the fallback when w.tm is missing (older
               // seasons and the blank-tm active logs); resolved only if needed.
-              let _sznTeam = null;
-              const _sznTeamOf = () => {
-                if (_sznTeam == null) _sznTeam = _triviaSeasonTeam(name, _sznYr, _dByName[name]);
-                return _sznTeam;
-              };
+              const _sznTeamOf = () => _sznFillOf(_sznYr);
               const byTeam = {};
               let sznGp = 0;
               weeks.forEach(w => {
@@ -62590,6 +62623,7 @@ window.fmtHeight = fmtHeight;
                 // 2025 wk 19+); a season board is a regular-season board (library audit 10-29:
                 // Sony Michel 2018 showed 1,267 = 931 + three playoff games).
                 if (!_triviaRegWeek(yr, w.wk)) return;
+                if (_triviaNoContest(name, yr, w)) return;
                 if (w.fpts > 0 || w.py > 0 || w.ry > 0 || w.rec > 0) gp++;
                 py += w.py||0; ptd += w.ptd||0; pint += w.int||0;
                 ry += w.ry||0; rtd += w.rtd||0; ra += w.ra||0;
@@ -62803,7 +62837,7 @@ window.fmtHeight = fmtHeight;
                 team: _normTm(r.team), yr: _slYrInt, gp: r.g || 0,
                 py:0, ptd:0, 'int':0, ry:0, rtd:0, ra:0,
                 rec:0, rcy:0, rctd:0, tgt:0, fl:0,
-                fpts:0, ppg:0, totalTd:0
+                fpts:0, ppg:0, totalTd:0, _sl: true
               });
               if (r.pass_yds) m.py = r.pass_yds;
               if (r.pass_td) m.ptd = r.pass_td;
@@ -62834,6 +62868,54 @@ window.fmtHeight = fmtHeight;
           });
         }
       });
+
+      // PFR's season line is the record on 1999+ season boards too: the early game
+      // logs miss games (Warner 1999 has no Week 1, Grbac 2000 is two games short)
+      // and the play-by-play sums drift (Brees 2011: 5,535 vs 5,476). Where
+      // SEASON_LEADERS (PFR top 25 per category) holds the player-season, its line
+      // replaces that category's stats and fpts moves by the same scoring as the
+      // fallback rows above (library audit 11-02). A different franchise on the
+      // PFR row is a namesake and is left alone.
+      if (filterType === 'season' && !isPost && typeof SEASON_LEADERS !== 'undefined') {
+        const _slKey = n => _triviaCollapseName(_triviaStripSuffix(n));
+        const _slCats = [
+          ['passing', [['py', 'pass_yds', 0.04], ['ptd', 'pass_td', 4], ['int', 'pass_int', -1]]],
+          ['rushing', [['ry', 'rush_yds', 0.1], ['rtd', 'rush_td', 6], ['ra', 'rush_att', 0]]],
+          ['receiving', [['rec', 'rec', 0.5], ['rcy', 'rec_yds', 0.1], ['rctd', 'rec_td', 6]]]
+        ];
+        const _slIdx = {};
+        allEntries.forEach(e => {
+          if (!e || e._sl || e._isGame || e._isCareer || !(e.yr >= 1999)) return;
+          const slYr = SEASON_LEADERS[String(e.yr)];
+          if (!slYr) return;
+          let idx = _slIdx[e.yr];
+          if (!idx) {
+            idx = _slIdx[e.yr] = {};
+            _slCats.forEach(([cat]) => (slYr[cat] || []).forEach(r => {
+              if (r && r.name) (idx[cat + '|' + _slKey(r.name)] = idx[cat + '|' + _slKey(r.name)] || []).push(r);
+            }));
+          }
+          const eTm = _triviaTeamCode(e.team, e.yr);
+          let touched = false;
+          _slCats.forEach(([cat, fields]) => {
+            const rows = idx[cat + '|' + _slKey(e.name)];
+            if (!rows) return;
+            const r = rows.find(x => { const t = _triviaTeamCode(x.team, e.yr); return !t || !eTm || t === eTm; });
+            if (!r) return;
+            fields.forEach(([f, src, w]) => {
+              if (r[src] == null) return;
+              e.fpts = (e.fpts || 0) + (r[src] - (e[f] || 0)) * w;
+              e[f] = r[src];
+            });
+            if (r.g && r.g > (e.gp || 0)) e.gp = r.g;
+            touched = true;
+          });
+          if (!touched) return;
+          e.fpts = Math.round(e.fpts * 10) / 10;
+          e.totalTd = (e.ptd || 0) + (e.rtd || 0) + (e.rctd || 0);
+          e.ppg = e.gp > 0 ? Math.round((e.fpts / e.gp) * 10) / 10 : 0;
+        });
+      }
 
       // Sort by selected stat
       // One row per player (Jack 10-28): the sources spell the same man two

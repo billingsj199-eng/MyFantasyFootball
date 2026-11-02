@@ -3161,10 +3161,28 @@
       }
       return k;
     };
+    // v2.37 QUESTIONABLE -> THE NEXT GAME (2026-11-02, Jack: 'contnue looking'; research_q_later_weeks.py): a starter on the
+    // final report as Questionable plays his team's NEXT game less often than a healthy starter (healthy 92%; Q + full 85%,
+    // limited 79%, DNP 72%, recency half-life 3), but the dock above is current-week only. The next team game carries the
+    // class rate / a healthy starter's rate at his position (below) through the curve plumbing, so the share flows to
+    // teammates like any dock. Brier on Q rows vs 'same as healthy': 2019-25 LOYO -7.04% (6/7), forward -4.18% (3/4); 2013-25
+    // -8.06% (12/13), forward -5.13% (4/4). The 2nd / 3rd game after fail forward (2/4) - next game only; streak adds nothing
+    // forward. Only while his team's current-week game has not kicked off (after it, the next export knows if he played).
+    // Kill: window.SIM_Q_NEXT = false. Backup engine.js.bak_pre_qnext_20261102.
+    var Q_NEXT = { 'Q-FP': { QB: 0.965, RB: 0.919, WR: 0.926, TE: 0.909 }, 'Q-LP': { QB: 0.888, RB: 0.846, WR: 0.852, TE: 0.836 }, 'Q-DNP': { QB: 0.817, RB: 0.778, WR: 0.784, TE: 0.769 } };
     var putDock = function (p, cls, src, legacy) {
       var g = injGroup(p, currentWeek), np = newsPlayOf(p), qk = cls !== 'D' ? missStreak(p) : 0;
       var d = bangedOn ? bangedDock(cls, p.pos, g, np, qk) : null;
-      if (d) { map[p.norm] = { from: currentWeek, to: currentWeek, mult: d.mult, play: d.play, cond: d.cond, src: src, g: g, qk: qk, note: np ? 'news: expected to play' : '' }; return; }
+      if (d) {
+        map[p.norm] = { from: currentWeek, to: currentWeek, mult: d.mult, play: d.play, cond: d.cond, src: src, g: g, qk: qk, note: np ? 'news: expected to play' : '' };
+        var qn = Q_NEXT[cls] ? Q_NEXT[cls][p.pos] : null;
+        if (qn && wnd.SIM_Q_NEXT !== false && ((_inj.teamCw && _inj.teamCw[p.tm]) || currentWeek) === currentWeek) {
+          var qgw = (players.schedule && players.schedule.gameWeeks && players.schedule.gameWeeks[p.tm]) || [];
+          var qnx = qgw.filter(function (w0) { return w0 > currentWeek; })[0];
+          if (qnx) { map[p.norm].curve = {}; map[p.norm].curve[qnx] = qn; }
+        }
+        return;
+      }
       if (legacy < 1) map[p.norm] = { from: currentWeek, to: currentWeek, mult: legacy, src: src };
     };
     var ovAsOf = String(wnd.IN_SEASON_OUT_OVERRIDES_ASOF || '');

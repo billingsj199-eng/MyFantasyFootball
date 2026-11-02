@@ -1,6 +1,77 @@
 {
- "updated": "2026-11-01T23:15:23Z",
+ "updated": "2026-11-02T23:15:06Z",
  "items": [
+  {
+   "player": "Saquon Barkley",
+   "team": "PHI",
+   "pos": "RB",
+   "date": "2026-11-02",
+   "headline": "Has no injury designation for Week 8 vs. Commanders after hamstring/back scare",
+   "take": "Cleared without a tag for SNF; expected full workload, though usage may still be managed early",
+   "url": "https://www.rotoballer.com/?p=1979687",
+   "tag": "injury",
+   "avail": {
+    "k": "play",
+    "wk": 8
+   },
+   "src_type": "report"
+  },
+  {
+   "player": "Ja'Marr Chase",
+   "team": "CIN",
+   "pos": "WR",
+   "date": "2026-11-02",
+   "headline": "Back to full practice, expected to play Week 8 vs. Titans despite ankle bruise",
+   "take": "Rapoport says the ankle isn't believed serious; no reason to fade him in lineups",
+   "url": "https://www.4for4.com/news/jamarr-chase-expected-play-sunday-despite-ankle-injury",
+   "tag": "injury",
+   "avail": {
+    "k": "play",
+    "wk": 8
+   },
+   "src_type": "insider"
+  },
+  {
+   "player": "Rashee Rice",
+   "team": "KC",
+   "pos": "WR",
+   "date": "2026-11-02",
+   "headline": "Returned to practice and cleared to play Week 8 vs. Broncos after hamstring absence",
+   "take": "First game back since the Week 4 hamstring injury; target share likely ramps up gradually",
+   "url": "https://www.rotoballer.com/?p=1977928",
+   "tag": "injury",
+   "avail": {
+    "k": "play",
+    "wk": 8
+   },
+   "src_type": "team"
+  },
+  {
+   "player": "Amon-Ra St. Brown",
+   "team": "DET",
+   "pos": "WR",
+   "date": "2026-11-02",
+   "headline": "Removed from injury report, no ankle concern entering Week 8 vs. Vikings",
+   "take": "Full-strength lead target for Detroit's passing game this week",
+   "url": "https://www.rotoballer.com/?p=1979709",
+   "tag": "injury",
+   "avail": {
+    "k": "play",
+    "wk": 8
+   },
+   "src_type": "report"
+  },
+  {
+   "player": "Josh Downs",
+   "team": "IND",
+   "pos": "WR",
+   "date": "2026-11-02",
+   "headline": "Trade market widens as Chiefs, Steelers, Seahawks, Patriots call Colts on him",
+   "take": "Selling Colts (already dealt Nelson, Buckner) look likely to move him before the Nov. 10 deadline; redraft value hinges on landing spot",
+   "url": "https://www.rotoballer.com/?p=1977394",
+   "tag": "transaction",
+   "src_type": "insider"
+  },
   {
    "player": "A.J. Brown",
    "team": "NE",
@@ -1252,21 +1323,6 @@
    "src_type": "insider"
   },
   {
-   "player": "David Montgomery",
-   "team": "HOU",
-   "pos": "RB",
-   "date": "2026-10-11",
-   "headline": "Week-to-week with groin injury, very likely to miss Week 6 in London vs. Jaguars",
-   "take": "Woody Marks (15-62-0 rush, 4/4 receiving Sunday) is the clear top waiver priority; Houston may also add Jawhar Jordan for extra depth behind him.",
-   "url": "https://www.4for4.com/news/texans-rb-david-montgomery-groin-week-week",
-   "tag": "injury",
-   "avail": {
-    "k": "doubt",
-    "wk": 6
-   },
-   "src_type": "report"
-  },
-  {
    "player": "Quinshon Judkins",
    "team": "CLE",
    "pos": "RB",
@@ -1384,94 +1440,6 @@
    "src_type": "insider"
   },
   {
-   "player": "Jayden Daniels",
-   "team": "WAS",
-   "pos": "QB",
-   "date": "2026-10-11",
-   "headline": "Two rushing TDs, but late scramble helps cost Commanders a 27-27 OT tie vs. Giants",
-   "take": "Rushing floor stays elite (2 TDs on the ground) but the late-game decision-making wobble is worth watching; still a clear weekly starter.",
-   "url": "https://www.commanders.com/news/5-takeaways-commanders-vs-giant-week-5-2026",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
-   "player": "Malik Nabers",
-   "team": "NYG",
-   "pos": "WR",
-   "date": "2026-10-11",
-   "headline": "Catches game-tying TD late as Giants erase 14-point deficit, tie Commanders 27-27",
-   "take": "Target monster regardless of who's at QB for New York; locked in as a weekly WR1.",
-   "url": "https://www.si.com/nfl/giants/onsi/giants-comeback-effort-ends-in-27-27-overtime-tie-with-commanders-01m4nz106072",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
-   "player": "Jameis Winston",
-   "team": "NYG",
-   "pos": "QB",
-   "date": "2026-10-11",
-   "headline": "Throws 2 late TDs (Likely, Nabers) to force OT in 27-27 tie with Commanders",
-   "take": "Streamable in deep leagues as long as he keeps the Giants' starting job; found Likely and Nabers for scores in the clutch.",
-   "url": "https://www.si.com/nfl/giants/onsi/giants-comeback-effort-ends-in-27-27-overtime-tie-with-commanders-01m4nz106072",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
-   "player": "Jaylen Warren",
-   "team": "PIT",
-   "pos": "RB",
-   "date": "2026-10-11",
-   "headline": "Explodes for 188 total yards and two long TDs in Steelers' 34-22 win over Colts",
-   "take": "Firmly the lead back in Pittsburgh's backfield regardless of Rico Dowdle's health; delivered RB1 numbers.",
-   "url": "https://www.foxsports.com/nfl/week-5-indianapolis-colts-vs-pittsburgh-steelers-oct-11-2026-game-boxscore-11068",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
-   "player": "Jonathan Taylor",
-   "team": "IND",
-   "pos": "RB",
-   "date": "2026-10-11",
-   "headline": "Held to just 45 rushing yards in Colts' 34-22 loss to Steelers",
-   "take": "Tough matchup limited him, but he's still Indy's clear workload leader -- treat this as a one-week dip, not a trend.",
-   "url": "https://www.foxsports.com/nfl/week-5-indianapolis-colts-vs-pittsburgh-steelers-oct-11-2026-game-boxscore-11068",
-   "tag": "faller",
-   "src_type": "report"
-  },
-  {
-   "player": "Ollie Gordon",
-   "team": "MIA",
-   "pos": "RB",
-   "date": "2026-10-11",
-   "headline": "Runs for 88 yards and a TD on 18 carries in Dolphins' 31-24 loss to Bengals",
-   "take": "Emerging as Miami's clear early-down back in a lost season; worth a flex/streaming look on volume alone.",
-   "url": "https://www.foxsports.com/nfl/week-5-cincinnati-bengals-vs-miami-dolphins-oct-11-2026-game-boxscore-11063",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
-   "player": "Devontez Walker",
-   "team": "BAL",
-   "pos": "WR",
-   "date": "2026-10-11",
-   "headline": "Catches game-tying TD with 44 seconds left as Ravens beat Falcons 30-23 in OT",
-   "take": "Deep-league streamer if Zay Flowers' foot keeps limiting him; Huntley trusted him in the biggest moment of the game.",
-   "url": "https://www.espn.com/nfl/game/_/gameId/401872993/ravens-falcons",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
-   "player": "Caleb Williams",
-   "team": "CHI",
-   "pos": "QB",
-   "date": "2026-10-11",
-   "headline": "Sidelined again with hamstring injury as Bagent starts; Bears fall 31-7 to Packers",
-   "take": "Ben Johnson has mentioned a possible return to practice for the Week 6 game vs. Atlanta, but nothing is confirmed -- don't bench Bagent streamers yet.",
-   "url": "https://www.newsweek.com/sports/nfl/bears-hc-ben-johnson-provides-update-on-caleb-williams-recovery-12548910",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
    "player": "Jaylen Watson",
    "team": "LAR",
    "pos": "CB",
@@ -1502,73 +1470,6 @@
    "take": "Rookie TE's absence pushes more Rams receiving-TE work toward Colby Parkinson once he's healthy; deep-league streaming note only.",
    "url": "https://www.therams.com/news/rams-injury-updates-bills-week-5-2026-jaylen-watson-aaron-donald-terrance-ferguson-monday-night-football",
    "tag": "injury",
-   "src_type": "team"
-  },
-  {
-   "player": "Jalen Nailor",
-   "team": "LV",
-   "pos": "WR",
-   "date": "2026-10-11",
-   "headline": "Ruled out for Week 5 vs. Patriots (concussion), won't play for 2nd straight week",
-   "take": "Cody White and Tre Tucker soak up the expanded WR snaps behind Jeanty uncertainty",
-   "url": "https://www.rotoballer.com/?p=1962148",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Ashton Jeanty",
-   "team": "LV",
-   "pos": "RB",
-   "date": "2026-10-11",
-   "headline": "Questionable (ankle/foot), DNP Friday; Kubiak says he'll \"do his best to go\" at New England",
-   "take": "True game-time call for Sunday's 1pm kickoff -- have Mike Washington Jr. ready as a contingency",
-   "url": "https://www.rotoballer.com/?p=1962094",
-   "tag": "injury",
-   "avail": {
-    "k": "gtd",
-    "wk": 5
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Tyler Huntley",
-   "team": "BAL",
-   "pos": "QB",
-   "date": "2026-10-11",
-   "headline": "Confirmed starter Sunday night vs. Falcons with Lamar Jackson out (ankle)",
-   "take": "Viable streaming QB in deeper leagues with Flowers/Bateman as his top targets",
-   "url": "https://www.tsn.ca/nfl/article/ravens-qb-jackson-out-huntley-to-start-snf-vs-falcons-n1-50141743/",
-   "tag": "role",
-   "src_type": "team"
-  },
-  {
-   "player": "Zay Flowers",
-   "team": "BAL",
-   "pos": "WR",
-   "date": "2026-10-11",
-   "headline": "Foot injury status \"still very much in doubt\" entering Sunday night vs. Falcons",
-   "take": "No final call yet with Huntley under center -- check inactives before trusting him in lineups",
-   "url": "https://www.newsweek.com/sports/nfl/ravens-star-wr-week-5-status-still-very-much-in-doubt-12544332",
-   "tag": "injury",
-   "src_type": "report"
-  },
-  {
-   "player": "Caleb Williams",
-   "team": "CHI",
-   "pos": "QB",
-   "date": "2026-10-11",
-   "headline": "Returned to practice Friday and is questionable, but Bagent still gets the start at Green Bay",
-   "take": "Williams is only a break-glass relief option -- keep starting Bagent streamers as a last resort, not Williams",
-   "url": "https://www.fox32chicago.com/sports/caleb-williams-returns-practice-tyson-bagent-slated-chicago-bears-starting-qb",
-   "tag": "injury",
-   "avail": {
-    "k": "gtd",
-    "wk": 5
-   },
    "src_type": "team"
   },
   {

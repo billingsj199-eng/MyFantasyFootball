@@ -22,6 +22,9 @@
   "birth": "2005-06-20",
   "src": "wikidata:Q136787882"
  },
+ "Antwan Raymond": {
+  "miss": "2026-11-02"
+ },
  "Austin Simmons": {
   "at": "2026-09-30",
   "birth": "2005-11-08",
@@ -40,6 +43,11 @@
  "Caleb Komolafe": {
   "miss": "2026-10-17"
  },
+ "Caleb Odom": {
+  "at": "2026-11-02",
+  "birth": "2005-09-07",
+  "src": "wikidata:Q141583078"
+ },
  "Cam Edwards": {
   "miss": "2026-11-02"
  },
@@ -47,6 +55,11 @@
   "at": "2026-10-17",
   "birth": "2005-05-06",
   "src": "wikipedia:Carlos_Hernandez_(American_football)"
+ },
+ "Cayden Lee": {
+  "at": "2026-11-02",
+  "birth": "2004-11-17",
+  "src": "wikidata:Q137802429"
  },
  "Charlie Becker": {
   "miss": "2026-11-02"
@@ -94,6 +107,11 @@
   "birth": "2004-10-15",
   "src": "wikidata:Q134300780"
  },
+ "Decker DeGraaf": {
+  "at": "2026-11-02",
+  "birth": "2006-05-04",
+  "src": "wikipedia:Decker_DeGraaf"
+ },
  "Deuce Alexander": {
   "at": "2026-09-30",
   "birth": "2005-07-27",
@@ -132,6 +150,9 @@
   "birth": "2006-09-07",
   "src": "on3:elyiss-williams-154112"
  },
+ "Emmett Mosley V": {
+  "miss": "2026-11-02"
+ },
  "Evan Stewart": {
   "at": "2026-10-17",
   "birth": "2003-09-04",
@@ -142,6 +163,11 @@
  },
  "Griffin Wilde": {
   "miss": "2026-10-17"
+ },
+ "Gunner Stockton": {
+  "at": "2026-11-02",
+  "birth": "2003-03-06",
+  "src": "wikidata:Q123588524"
  },
  "Husan Longstreet": {
   "at": "2026-09-30",
@@ -157,6 +183,11 @@
   "at": "2026-09-30",
   "birth": "2003-07-11",
   "src": "wikidata:Q136341922"
+ },
+ "Jamal Roberts": {
+  "at": "2026-11-02",
+  "birth": "2004-10-26",
+  "src": "wikidata:Q137640353"
  },
  "Jamari Johnson": {
   "miss": "2026-11-02"
@@ -176,6 +207,9 @@
  },
  "Jeremiah Hasley": {
   "miss": "2026-10-17"
+ },
+ "Jordan Dwyer": {
+  "miss": "2026-11-02"
  },
  "Jordan Faison": {
   "at": "2026-10-17",
@@ -208,6 +242,11 @@
   "birth": "2006-01-16",
   "src": "on3:kam-davis-71005"
  },
+ "Kamari Moulton": {
+  "at": "2026-11-02",
+  "birth": "2005-04-01",
+  "src": "wikidata:Q136024985"
+ },
  "Kamario Taylor": {
   "at": "2026-09-30",
   "birth": "2007-02-02",
@@ -223,10 +262,18 @@
   "birth": "2004-04-10",
   "src": "wikipedia:Kevin_Jennings_(American_football)"
  },
+ "Keyjuan Brown": {
+  "at": "2026-11-02",
+  "birth": "2004-09-19",
+  "src": "wikipedia:Keyjuan_Brown"
+ },
  "Lawson Luckie": {
   "at": "2026-10-17",
   "birth": "2004-10-21",
   "src": "wikipedia:Lawson_Luckie"
+ },
+ "Lincoln Kienholz": {
+  "miss": "2026-11-02"
  },
  "Linkon Cure": {
   "at": "2026-09-30",
@@ -249,6 +296,11 @@
  "Makhi Hughes": {
   "miss": "2026-10-17"
  },
+ "Michael Masunas": {
+  "at": "2026-11-02",
+  "birth": "2003-10-22",
+  "src": "wikipedia:Michael_Masunas"
+ },
  "Naeem Burroughs": {
   "at": "2026-09-30",
   "birth": "2007-12-03",
@@ -259,6 +311,11 @@
   "birth": "2004-12-20",
   "src": "wikipedia:Omarion_Miller"
  },
+ "Patrick Overmyer": {
+  "at": "2026-11-02",
+  "birth": "2005-05-02",
+  "src": "wikidata:Q141694154"
+ },
  "Perry Thompson": {
   "at": "2026-09-30",
   "birth": "2005-10-23",
@@ -266,6 +323,11 @@
  },
  "Peter Clarke": {
   "miss": "2026-10-17"
+ },
+ "Que'Sean Brown": {
+  "at": "2026-11-02",
+  "birth": "2005-08-22",
+  "src": "wikipedia:Que'Sean_Brown"
  },
  "Quinton Martin Jr.": {
   "at": "2026-09-30",
@@ -309,8 +371,14 @@
   "birth": "2003-07-05",
   "src": "wikipedia:Walker_Eget"
  },
+ "Wayne Knight": {
+  "miss": "2026-11-02"
+ },
  "Wayshawn Parker": {
   "miss": "2026-10-17"
+ },
+ "Willie Rodriguez": {
+  "miss": "2026-11-02"
  },
  "Wyatt Young": {
   "miss": "2026-11-02"

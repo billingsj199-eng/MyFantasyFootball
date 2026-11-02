@@ -387,6 +387,40 @@ window._logoSrc = function(d, logoId) {
   if (d && d._isDevy && d._devyLogo) return d._devyLogo;
   return logoId ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + logoId + '.png' : '';
 };
+// Does this ESPN id belong to THIS player? ESPN ids run roughly in order of entry: the
+// 4-million range starts around 2017, so such an id cannot be a player whose last season
+// was 2014 or earlier — the namesake trap (RETIRED_ESPN_IDS["Marvin Harrison"] showed
+// Marvin Harrison Jr.; the Guess Who pool had Joe Horn Jr., Jacoby Jones, Greg Little…).
+// Same rule Higher/Lower has used since 10-29; unknown careers pass.
+window._espnIdFits = function(name, id) {
+  if (!name || !id || +id < 4000000) return true;
+  const last = window._lastSeasonOf(name);
+  return !(last && last <= 2014);
+};
+window._seasonsOf = function(name) { window._lastSeasonOf(name); return window._seasonsOf._first[name] ? [window._seasonsOf._first[name], window._lastSeasonOf(name)] : null; };
+window._seasonsOf._first = {};
+window._lastSeasonOf = (function() {
+  let map = null, built = 0;
+  const sources = () => (typeof D !== 'undefined' ? 1 : 0) + (typeof EP_RETIRED !== 'undefined' ? 2 : 0) +
+    (typeof LEGEND_CAREERS !== 'undefined' ? 4 : 0) + (typeof ALL_PLAYERS_DB !== 'undefined' ? 8 : 0);
+  return function(name) {
+    const s = sources();
+    if (!map || s !== built) {                       // rebuilt when a lazy career file lands
+      map = {}; built = s;
+      const first = window._seasonsOf._first = {};
+      const add = (n, rows) => { if (!n || !rows) return; rows.forEach(r => {
+        if (!r || !r.yr) return;
+        if (r.yr > (map[n] || 0)) map[n] = r.yr;
+        if (!first[n] || r.yr < first[n]) first[n] = r.yr;
+      }); };
+      if (typeof D !== 'undefined') D.forEach(p => add(p.n, p.career));
+      if (typeof EP_RETIRED !== 'undefined') EP_RETIRED.forEach(p => add(p.name, p.career));
+      if (typeof LEGEND_CAREERS !== 'undefined') Object.keys(LEGEND_CAREERS).forEach(n => add(n, LEGEND_CAREERS[n]));
+      if (typeof ALL_PLAYERS_DB !== 'undefined') ALL_PLAYERS_DB.forEach(p => add(p.name, p.career));
+    }
+    return map[name] || 0;
+  };
+})();
 window._fixHeadshotUrl = function(url) {
   if (!url || typeof url !== 'string') return url;
   // Only rewrite ESPN combiner URLs that force a fixed w×h box.
@@ -23872,7 +23906,7 @@ function renderCompareGrid() {
         || window.RETIRED_ESPN_IDS[d.n + ' Jr.']
         || window.RETIRED_ESPN_IDS[d.n + ' III']
         || window.RETIRED_ESPN_IDS[(d.n || '').replace(/ Jr\.?$/i, '').replace(/ III$/i, '').trim()];
-      if (rid) d._slImg = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + rid + '.png&w=350';
+      if (rid && window._espnIdFits(d.n, rid)) d._slImg = 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + rid + '.png&w=350';
     }
 
     // Duplicate cards get a stable instance key from their DUP seq so each
@@ -25195,7 +25229,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     if (_epDailyCandidates) return _epDailyCandidates;
     const seen = new Set(), out = [];
     const add = (name, pos, team, id) => {
-      if (!name || !id || seen.has(name) || _EP_STATIC_BAD_IDS.has(String(id))) return;
+      if (!name || !id || seen.has(name) || _EP_STATIC_BAD_IDS.has(String(id)) || !window._espnIdFits(name, id)) return;
       seen.add(name);
       out.push({ name, pos, team, id: String(id) });
     };
@@ -25673,7 +25707,7 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     }).filter(p => p.id && !badIds.has(p.id));
     // Retired players with ESPN headshot IDs (pulled from DAILY_RETIRED_POOL)
     const retired = (typeof DAILY_RETIRED_POOL !== 'undefined' ? DAILY_RETIRED_POOL : [])
-      .filter(p => p.name && p.id && !badIds.has(String(p.id)))
+      .filter(p => p.name && p.id && !badIds.has(String(p.id)) && window._espnIdFits(p.name, p.id))
       .map(p => ({name: p.name, team: p.team || 'NFL', pos: p.pos, id: String(p.id)}));
     // Merge, deduping by name (active wins)
     const seen = new Set(active.map(p => p.name.toLowerCase()));
@@ -30263,8 +30297,9 @@ function _enrichFromAllPlayers() {
     // Only add players who are actually retired (last season before 2024)
     if (p.last >= 2024) return;
     const seasons = p.last - p.debut + 1;
-    const imgUrl = (window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.name])
-      ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + window.RETIRED_ESPN_IDS[p.name] + '.png&w=350'
+    const _rid = window.RETIRED_ESPN_IDS && window.RETIRED_ESPN_IDS[p.name];
+    const imgUrl = (_rid && window._espnIdFits(p.name, _rid))
+      ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/' + _rid + '.png&w=350'
       : null;
     // Get last team from career data or team history
     const lastTeam = (p.career && p.career.length && p.career[p.career.length-1].tm)
@@ -57921,8 +57956,12 @@ window.fmtHeight = fmtHeight;
     const name = (answerText || '').split(/\s*[\(,]|\s[-–—]\s/)[0].trim();
     if (!name) return none;
     // Try name plus common suffix variants
+    // A suffix variant that debuted after this player's last season is someone else (the son:
+    // "Michael Pittman" must not get Michael Pittman Jr.'s photo) — dropped from every lookup.
+    const _own = window._seasonsOf(name);
     const nameVariants = [name, name + ' Jr.', name + ' III', name + ' II', name + ' Sr.',
-                          name.replace(/ Jr\.?$/i,'').replace(/ III$/i,'').replace(/ II$/i,'').replace(/ Sr\.?$/i,'').trim()];
+                          name.replace(/ Jr\.?$/i,'').replace(/ III$/i,'').replace(/ II$/i,'').replace(/ Sr\.?$/i,'').trim()]
+      .filter(v => { if (v === name || !_own) return true; const o = window._seasonsOf(v); return !(o && o[0] > _own[1]); });
 
     // Only use sources we trust completely:
 
@@ -57955,7 +57994,15 @@ window.fmtHeight = fmtHeight;
     // Commons table can hold a college-era photo for a current player (Travis
     // Etienne at Clemson on an NFL board, Jack 10-28), so an active player never
     // falls through to it — no roster photo yet means initials.
-    const _dAct = (typeof D !== 'undefined') ? D.find(p => nameVariants.indexOf(p.n) !== -1) : null;
+    // An exact-name row wins; a suffix variant ("Marvin Harrison" -> "Marvin Harrison Jr.") counts
+    // only if that player had debuted by the board's year, else a 1990s answer showed the son's
+    // roster photo (Marvin Harrison, Michael Pittman: 11-02 audit).
+    const _yrEarly = _triviaYearOf(answerText, yr);
+    const _debut = p => { let m = 9999; (p.career || []).forEach(s => { if (s && s.yr && s.yr < m) m = s.yr; }); return m === 9999 ? 0 : m; };
+    const _dMatch = () => (typeof D === 'undefined') ? null :
+      (D.find(p => p.n === name) ||
+       D.find(p => nameVariants.indexOf(p.n) !== -1 && !(_yrEarly && _debut(p) > _yrEarly)) || null);
+    const _dAct = _dMatch();
     const _isActive = !!(_dAct && !_dAct._retired && _dAct.t !== 'Retired');
 
     // 000. LEGEND_HEADSHOTS_LOCAL — hand-picked cutouts in data/legend_hs/ (Jack's own
@@ -57993,7 +58040,7 @@ window.fmtHeight = fmtHeight;
     // 1. FALLBACK_IDS (manually verified active/recent players)
     if (window.FALLBACK_IDS) {
       for (const v of nameVariants) {
-        if (window.FALLBACK_IDS[v]) {
+        if (window.FALLBACK_IDS[v] && window._espnIdFits(v, window.FALLBACK_IDS[v]) && window._espnIdFits(name, window.FALLBACK_IDS[v])) {
           return { url: _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.FALLBACK_IDS[v]}.png&w=350`), credit: '', page: '' };
         }
       }
@@ -58002,7 +58049,9 @@ window.fmtHeight = fmtHeight;
     // 2. RETIRED_ESPN_IDS (verified retired player headshots)
     if (window.RETIRED_ESPN_IDS) {
       for (const v of nameVariants) {
-        if (window.RETIRED_ESPN_IDS[v]) {
+        // ...and it must fit the board's own player too: "Marvin Harrison" must not pick up the id
+        // filed under "Marvin Harrison Jr."
+        if (window.RETIRED_ESPN_IDS[v] && window._espnIdFits(v, window.RETIRED_ESPN_IDS[v]) && window._espnIdFits(name, window.RETIRED_ESPN_IDS[v])) {
           return { url: _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.RETIRED_ESPN_IDS[v]}.png&w=350`), credit: '', page: '' };
         }
       }
@@ -58027,8 +58076,9 @@ window.fmtHeight = fmtHeight;
 
     // 4. D array _slImg (active players with Sleeper/ESPN headshots — these are reliable)
     if (typeof D !== 'undefined') {
-      const d = D.find(p => nameVariants.indexOf(p.n) !== -1);
-      if (d && d._slImg) return { url: _fix(d._slImg), credit: '', page: '' };
+      const d = _dMatch();
+      const did = d && d._slImg && (d._slImg.match(/players\/full\/(\d+)\.png/) || [])[1];
+      if (d && d._slImg && (!did || (window._espnIdFits(d.n, did) && window._espnIdFits(name, did)))) return { url: _fix(d._slImg), credit: '', page: '' };
     }
 
     // 5. Return empty — shows clean initials (better than wrong photo)
@@ -58089,23 +58139,27 @@ window.fmtHeight = fmtHeight;
         const late = _triviaGetHeadshotInfo(item.answer, item.team, item.yr);
         if (!late.url || late.url === headshot) return;
         if (headshot && !late.cutout) return;
-        const box = cell.querySelector('.trivia-cell-reveal .trivia-initials') || cell.querySelector('.trivia-cell-reveal img');
+        // The photo when one is shown (its hidden initials fallback stays behind it), else the initials.
+        const box = headshot ? cell.querySelector('.trivia-cell-reveal img') : cell.querySelector('.trivia-cell-reveal .trivia-initials');
         if (!box) return;
         const img = document.createElement('img');
         img.src = late.url; img.alt = ''; img.loading = 'lazy';
         if (late.credit) img.title = 'Photo: ' + late.credit + ' (via Wikimedia Commons)';
         if (late.credit && !late.cutout) { img.className = 'trivia-wiki-photo'; img.style.borderColor = borderColor; }
-        img.onerror = function() { this.style.display = 'none'; };
+        // A late photo that fails keeps the box it replaced (initials or the first photo).
+        img.onerror = function() { if (this.isConnected) this.replaceWith(box); };
         box.replaceWith(img);
       }).catch(() => {});
     }
+    // No transparent silhouette to outline for the placeholder — a simple border around the
+    // initials box. It also stands in when a photo fails to load (old ESPN ids with no image:
+    // Rod Smith, Dave Brown, Irv Smith), instead of leaving the square blank.
+    const initials = answerName.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
+    const initialsBox = (shown) => `<div class="trivia-initials" style="width:100%;flex:1 1 0;min-height:0;border-radius:4px;border:2px solid ${borderColor};background:${_withAlpha(borderColor, 0.12)};display:${shown ? 'flex' : 'none'};align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:${borderColor};letter-spacing:1px;filter:none">${initials}</div>`;
     if (headshot) {
-      revealHtml += `<img src="${headshot}" alt="" loading="lazy"${_photoAttrs(_hsInfo)} onerror="this.style.display='none'">`;
+      revealHtml += `<img src="${headshot}" alt="" loading="lazy"${_photoAttrs(_hsInfo)} onerror="this.style.display='none';var n=this.nextElementSibling;if(n&&n.classList.contains('trivia-initials'))n.style.display='flex'">` + initialsBox(false);
     } else {
-      // No transparent silhouette to outline for the placeholder — fall back to
-      // a simple border around the initials box.
-      const initials = answerName.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
-      revealHtml += `<div class="trivia-initials" style="width:100%;flex:1 1 0;min-height:0;border-radius:4px;border:2px solid ${borderColor};background:${_withAlpha(borderColor, 0.12)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:${borderColor};letter-spacing:1px;filter:none">${initials}</div>`;
+      revealHtml += initialsBox(true);
     }
     revealHtml += `<div class="reveal-name">${_esc(answerName)}</div>`;
     if (answerDetail) revealHtml += `<div style="font-size:.6875rem;color:var(--text2);text-align:center">${_esc(answerDetail)}</div>`;
@@ -59613,12 +59667,15 @@ window.fmtHeight = fmtHeight;
   // Admin, one-time: build every library combination for closed seasons and
   // download a report — thin boards (<16), players with no photo, squares
   // with no team. Re-run only when the data pipelines change.
-  window._triviaLibraryAudit = async function() {
+  // `faces` records the exact image each square reveals (name|team -> url), so the photos
+  // themselves can be checked (loads, right person, a face in frame). opts.quiet skips downloads.
+  window._triviaLibraryAudit = async function(opts) {
     if (!(typeof window.isAdmin === 'function' && window.isAdmin())) return;
+    const quiet = !!(opts && opts.quiet);
     const st = document.getElementById('libAuditStatus');
     const say = m => { if (st) st.textContent = m; };
     const combos = _libCombos();
-    const rows = [], noPhoto = {}, noTeam = {};
+    const rows = [], noPhoto = {}, noTeam = {}, faces = {};
     let done = 0;
     for (const f of combos) {
       let n = 0;
@@ -59629,7 +59686,9 @@ window.fmtHeight = fmtHeight;
       items.forEach(it => {
         const nm = (it.answer || '').split(/\s*[\(,]|\s[-–—]\s/)[0].trim();
         if (!it.team) { teamless.push(nm); noTeam[nm] = (noTeam[nm] || 0) + 1; }
-        if (!_triviaGetHeadshotInfo(it.answer, it.team).url) { missing.push(nm); noPhoto[nm] = (noPhoto[nm] || 0) + 1; }
+        const hs = _triviaGetHeadshotInfo(it.answer, it.team, it.yr);
+        faces[nm + '|' + (it.team || '')] = hs.url || '';
+        if (!hs.url) { missing.push(nm); noPhoto[nm] = (noPhoto[nm] || 0) + 1; }
       });
       rows.push({ board: label, items: n, thin: n < 16, noPhoto: missing, noTeam: teamless });
       done++;
@@ -59642,10 +59701,12 @@ window.fmtHeight = fmtHeight;
       '## Thin boards', ...thin.map(r => '- ' + r.board + ' — ' + r.items + ' items'), '',
       '## Players with no photo (boards they appear on)', ...top(noPhoto).map(([n, c]) => '- ' + n + ' (' + c + ')'), '',
       '## Players with no team label (boards)', ...top(noTeam).map(([n, c]) => '- ' + n + ' (' + c + ')')].join('\n');
+    window._triviaLibraryAuditResult = { rows, noPhoto, noTeam, faces };
+    if (quiet) { say('Done: ' + rows.length + ' boards (quiet).'); return window._triviaLibraryAuditResult; }
     const blob = new Blob([md], { type: 'text/markdown' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = 'trivia_library_audit_' + _triviaTodayStr() + '.md'; a.click();
-    const json = new Blob([JSON.stringify({ date: _triviaTodayStr(), rows, noPhoto, noTeam }, null, 1)], { type: 'application/json' });
+    const json = new Blob([JSON.stringify({ date: _triviaTodayStr(), rows, noPhoto, noTeam, faces }, null, 1)], { type: 'application/json' });
     const b = document.createElement('a');
     b.href = URL.createObjectURL(json); b.download = 'trivia_library_audit_' + _triviaTodayStr() + '.json'; b.click();
     say('Done: ' + rows.length + ' boards, ' + thin.length + ' thin, ' + Object.keys(noPhoto).length + ' players without a photo — report downloaded.');

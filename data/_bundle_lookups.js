@@ -1619,7 +1619,31 @@ window.LEGEND_BIO={
     'William Powell':'14432','Willie Parker':'5880','Willie Snead':'17258','Willis McGahee':'4481','Xavier Grimble':'17348','Yamon Figurs':'10518',
     'Zac Stacy':'15996','Zach Ertz':'15835','Zach Evans':'4685035','Zach Gentry':'3929924','Zach Line':'16366','Zach Mettenberger':'16814',
     'Zach Miller':'10482','Zach Pascal':'2978109','Zach Potter':'13011','Zach Sudfeld':'16418','Zach Wilson':'4361259','Zach Zenner':'2521161',
-    'Zack Pianalto':'14567','Zander Horvath':'4260406','Zurlon Tipton':'17094'
+    'Zack Pianalto':'14567','Zander Horvath':'4260406','Zurlon Tipton':'17094',
+    // 2026-11-02: found by scripts/find_legend_espn_ids.py (ESPN v2 search, name + position/age checked);
+    // each id's headshot loads and passes window._espnIdFits. Shown on trivia / profiles / Guess Who.
+    "Aaron Shampklin":'4248068',"Adam Prentice":'3929914',"Alec Ingold":'3917668',"Andrew Beck":'3125107',"Bailey Zappe":'4250360',"Ben VanSumeren":'4372070',
+    "Ben Watson":'5557',"Benny Snell Jr.":'4035072',"Blake Watson":'4361604',"Brandon Allen":'2574511',"Brandon Johnson":'4035198',"Brandon Powell":'3115255',
+    "Braxton Berrios":'3123075',"Brevin Jordan":'4362504',"Brian Thomas":'4432773',"British Brooks":'4373273',"C.J. Ham":'4012556',"Carson Steele":'4714365',
+    "Chris Collier":'4698191',"Cody Schrader":'4391845',"Collin Johnson":'4039043',"Craig Reynolds":'4421446',"Curtis Samuel":'3121427',"D'Ernest Johnson":'3139602',
+    "D'Onta Foreman":'3125116',"D.K. Metcalf":'4047650',"DJ Chark":'3115394',"Dante Pettis":'3127306',"Darrynton Evans":'4036431',"David Bell":'4570409',
+    "DeAndre Carter":'2580216',"Derrick Coleman":'15351',"Derrick Mason":'1263',"Deuce Vaughn":'4431453',"Devin Duvernay":'4039050',"Diontae Johnson":'3932905',
+    "Eric Gray":'4570561',"Gardner Minshew II":'4038524',"Geoff Swaim":'3046704',"George Atkinson III":'17396',"Harrison Bryant":'4040774',"Hassan Haskins":'4372071',
+    "Henry Ellard":'6431',"Henry Ruggs":'4241475',"Hunter Luepke":'4383396',"Ian Thomas":'4045305',"Ihmir Smith-Marsette":'4240573',"Isaiah Hodgins":'4242540',
+    "J.J. Taylor":'4039607',"JaMycal Hasty":'3928925',"Jacob Kibodi":'4240911',"Jake Browning":'3886812',"Jalen Reagor":'4241802',"Jamycal Hasty":'3928925',
+    "Jase McClellan":'4429001',"Jeff Graham":'115',"Jermar Jefferson":'4374033',"Jim Harbaugh":'27',"Jimmy Garoppolo":'16760',"Joe Kerridge":'2576236',
+    "John Ross":'3052177',"Johnny Stanton":'3040499',"Jonathan Mingo":'4426485',"Jonathan Ward":'4039274',"Jordan Akins":'3128452',"Jordan Mims":'4243004',
+    "Joshua Kelley":'3910544',"Josiah Deguara":'3914151',"Julius Chestnut":'4367567',"Justin Gage":'4601',"Kadarius Toney":'4240600',"Ke'Shawn Vaughn":'3917612',
+    "Kendall Wright":'14909',"Kene Nwangwu":'4035537',"Kerrith Whyte Jr.":'3919104',"KhaDarel Hodge":'3047876',"Kris Wilson":'5587',"Kylen Granson":'4039160',
+    "Larry Rountree":'4241205',"Laviska Shenault":'4243160',"Laviska Shenault Jr.":'4243160',"Lil'Jordan Humphrey":'4039057',"Marion Barber III":'8523',"Marvin Jones":'15072',
+    "Michael Burton":'2515270',"Mike Boone":'3139033',"Mike White":'3051381',"Miles Sanders":'4045163',"MyCole Pruitt":'2508256',"Nick Vannett":'2576399',
+    "Noah Brown":'3121409',"Parris Campbell":'3121410',"Patrick Ricard":'2975417',"Pete Metzelaars":'6413',"Pharaoh Brown":'2971281',"Pierre Strong":'4249836',
+    "Raheem Blackshear":'4259308',"Raheem Mostert":'2576414',"Ray-Ray McCloud":'3728262',"Reggie Gilliam":'4039505',"River Cracraft":'3052056',"Ronald Jones II":'3912550',
+    "Ronnie Rivers":'4243003',"Ronnie Wingo Jr.":'16242',"Ross Dwelley":'3120303',"Scott Matlock":'4373684',"Sincere McCormick":'4430104',"Steven Sims":'3917960',
+    "Stevie Johnson":'11458',"Tanner Hudson":'3050481',"Taylor Heinicke":'2565969',"Terrace Marshall":'4362630',"Terrell Jennings":'4427600',"Tiki Barber":'1218',
+    "Tony Jones":'4046676',"Tony Jones Jr.":'4046676',"Trent Richardson":'14884',"Trent Sherfield":'3122168',"Trent Taylor":'3040569',"Trenton Irwin":'3931391',
+    "Trey Palmer":'4426407',"Tyler Boyd":'3045144',"Tyler Johnson":'2310331',"Tyler Lockett":'2577327',"Tyrion Davis-Price":'4426475',"Wendell Davis":'6507',
+    "Xavier Gipson":'4427278',"Zack Moss":'4035676'
   };
 
 ;

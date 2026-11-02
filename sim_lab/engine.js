@@ -1268,7 +1268,15 @@
                       // rookie's first games say far less than his draft-capital level (best-fit weight on the season: RB 18% vs the
                       // model's 49%, TE 8% vs 43%). Prior weight x1.6 for rookie RBs (-2.2% / -1.9%, 5/7 both runs) and x2.5 for rookie
                       // TEs (-1.9% / -1.1%, forward 3/4 both). QB and WR rookies did not hold up and are unchanged.
-                      rookieP: { RB: 1.6, TE: 2.5 } },
+                      rookieP: { RB: 1.6, TE: 2.5 },
+                      // v2.35 RB PRIOR WEIGHT AS A SMOOTH CURVE IN ADP (2026-11-02, Jack on Chuba Hubbard: 'should previous adp be in
+                      // bunches or a slow decline?'; research_rb_adp_curve.py section 23): replaces the RB 61-100 x2.5 band with
+                      // 1 + k x exp(-.5((ADP - c) / w)^2) = x1.14 at ADP 20, 1.6 at 45, 2.0 at 70, 1.5 at 100, ~1 by 140. 2012-25: LOYO
+                      // -0.42% 9/14, forward -0.88% 3/4, rank better 12/14 (by band 1-60 -0.68%, 61-100 -1.92%, 101-150 -0.27%); 2019-25
+                      // same direction but forward 2/4 (shipped on Jack's call). Rookie RBs keep max(curve, rookieP). WR bands stay
+                      // (smooth dips lose both histories). Kill: window.SIM_NC_RBCURVE = false (back to the band). Backup
+                      // engine.js.bak_pre_rbcurve_20261102.
+                      rbCurve: { k: 1.0, c: 70, w: 25 } },
             snapLvl: { WR: { edges: [4.87, 6.22, 7.4, 8.68, 9.93, 11.23, 12.87], ref: [45.9, 59.7, 67.2, 72.6, 79.8, 83.3, 83.7, 85.0] },
                        TE: { edges: [3.85, 4.66, 5.4, 6.28, 7.17, 8.04, 9.48], ref: [52.6, 57.7, 64.9, 68.2, 71.7, 74.7, 76.9, 83.8] } } },
     // v2.9 IR / PUP / OUT layer: see shadowOut() - the shadow holds IR / PUP / Out / non-Active players at 0 while the
@@ -3904,12 +3912,14 @@
       rsOn = !!(rsRec && rsRec.g >= rsS.minGames);
       if (rsOn) {
         var rsMid = p.adp > rsS.mid[0] && p.adp <= rsS.mid[1];
-        if (ncP != null && p.pos === 'RB' && rsMid) { ncP *= rsS.rbMidP; ncSrc += '+rsP'; }
+        var rsCv = rsS.rbCurve && !(typeof window !== 'undefined' && window.SIM_NC_RBCURVE === false) ? rsS.rbCurve : null;
+        var rsRbK = p.pos !== 'RB' ? 1 : rsCv ? 1 + rsCv.k * Math.exp(-0.5 * Math.pow((p.adp - rsCv.c) / rsCv.w, 2)) : (rsMid ? rsS.rbMidP : 1);
+        if (ncP != null && p.pos === 'RB') { if (rsRbK > 1.005) { ncP *= rsRbK; ncSrc += '+rsP'; } }
         else if (ncP != null && p.pos === 'WR' && rsMid) { ncP *= rsS.wrMidP; ncSrc += '+rsP'; }
         else if (ncP != null && p.pos === 'QB' && p.exp === 1) { ncP *= rsS.qbYr2P; ncSrc += '+rsP'; }
         var rsRk = p.isRookie && rsS.rookieP ? rsS.rookieP[p.pos] : null;
         if (ncP != null && rsRk) {
-          var rsHad = (p.pos === 'RB' && rsMid) ? rsS.rbMidP : 1;   // a rookie RB drafted 61-100 already carries the larger band weight
+          var rsHad = p.pos === 'RB' ? rsRbK : 1;   // a rookie RB already carries the draft-slot weight (curve / band); keep the larger
           if (rsRk > rsHad) { ncP *= rsRk / rsHad; ncSrc += '+rsRk'; }
         }
         if (p.pos === 'WR' && p.adp > rsS.late[0] && p.adp <= rsS.late[1] && ncUse && ncUse.lam > rsS.wrLateLam) { ncUse.lam = rsS.wrLateLam; ncSrc += '+rsLam'; }

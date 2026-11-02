@@ -69,6 +69,24 @@ function Commit-Push($paths, $msg) {
 #    own every week (Jack 2026-10-10: consensus boards must run weekly) - a later step
 #    failing, a PFF login wait hitting the 1h task limit, or another session's dirty
 #    index.html can no longer lose or skip it (10-05: the 07:15 pull sat uncommitted).
+# The Mock+ rounds 1-2 mock, signed-in big board and Official MDDB mock come from CSVs
+# pulled by hand in Jack's Chrome (nflmdd_extract_chrome.js + save_nflmdd_csv.py);
+# pull_draft_boards.py drops them after MOCK_CSV_MAX_AGE (10) days and silently falls back
+# to the public round-1 / top-100 pages. Warn from day 7, alert loudly once expired.
+$CsvMaxAge = 10
+$expired = @(); $aging = @()
+foreach ($c in 'mock_draft_2027', 'big_board_2027', 'official_mock_2027') {
+    $p = Join-Path $Repo "Site Rankings\$c.csv"
+    $pulled = if (Test-Path $p) { Import-Csv $p | ForEach-Object { $_.pulled } | Where-Object { $_ } | Sort-Object | Select-Object -Last 1 }
+    if (-not $pulled) { $expired += "$c (missing)"; continue }
+    $age = ((Get-Date).Date - [datetime]::ParseExact($pulled, 'yyyy-MM-dd', $null)).Days
+    if ($age -gt $CsvMaxAge) { $expired += "$c (pulled $pulled)" }
+    elseif ($age -ge 7) { $aging += "$c ($age days)" }
+    else { Write-Log "$c.csv fresh (pulled $pulled, $age days)" }
+}
+if ($expired) { Send-DevyAlert 'csv-expired' ("NFLMDD CSVs EXPIRED: " + ($expired -join ', ') + " - draftProj fell back to the public round-1 / top-100 pages; re-pull them in Jack's Chrome") }
+if ($aging) { Send-DevyAlert 'csv-aging' ("NFLMDD CSVs aging: " + ($aging -join ', ') + " - they stop counting after $CsvMaxAge days; re-pull them in Jack's Chrome this week") }
+
 $BoardFiles = @('data/combine_data.js', 'data/draft_proj.js', 'scripts/draft_boards_2027.json')
 $dirty = git status --porcelain -- @BoardFiles
 if ($dirty) {

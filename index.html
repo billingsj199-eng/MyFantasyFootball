@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-11-02-faces" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-02-logos" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-02-namesakes" as="script">
+<link rel="preload" href="app.js?v=2026-11-02-wiki" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-11-02-faces" as="script">
 <link rel="preload" href="data/d.js?v=2026-11-02b" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-11-02-faces">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-02-logos">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -6884,7 +6884,7 @@ window._loadLegendHeadshots = function(opts) {
   if (window._legendHeadshotsPromise) return window._legendHeadshotsPromise;
   // + espn_debut_years.js (11-02): ESPN id -> first season, so a same-name player's photo
   // is refused on a board from before his debut (scripts/pull_espn_debut_years.py).
-  window._legendHeadshotsPromise = _injectScripts(['data/legend_hs_local.js?v=2026-10-28-1756', 'data/legend_headshots.js?v=2026-10-28-legends2', 'data/player_cutouts.js?v=2026-10-29-cutouts2', 'data/espn_debut_years.js?v=2026-11-02'], 'LegendHeadshots', opts);
+  window._legendHeadshotsPromise = _injectScripts(['data/legend_hs_local.js?v=2026-10-28-1756', 'data/legend_headshots.js?v=2026-10-28-legends2', 'data/player_cutouts.js?v=2026-10-29-cutouts2', 'data/espn_debut_years.js?v=2026-11-02', 'data/legend_photo_birth_years.js?v=2026-11-02'], 'LegendHeadshots', opts);
   return window._legendHeadshotsPromise;
 };
 
@@ -6894,7 +6894,7 @@ window._loadLegendHeadshots = function(opts) {
 // never in the warm-up. Bump the ?v= after every rebuild.
 window._loadTriviaLibrary = function(opts) {
   if (window._triviaLibraryPromise) return window._triviaLibraryPromise;
-  window._triviaLibraryPromise = _injectScripts(['data/trivia_library.js?v=2026-11-02-lib3'], 'TriviaLibrary', opts);
+  window._triviaLibraryPromise = _injectScripts(['data/trivia_library.js?v=2026-11-02-live'], 'TriviaLibrary', opts);
   return window._triviaLibraryPromise;
 };
 
@@ -6968,7 +6968,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-02-namesakes"></script>
+<script defer src="app.js?v=2026-11-02-wiki"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

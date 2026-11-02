@@ -57982,7 +57982,9 @@ window.fmtHeight = fmtHeight;
   // (active / retired id) → cutout nearest the era (retired only) → Commons lead photo → initials.
   // Only in-uniform photos on the board (Jack 10-28): cutouts, hand-picked PNGs
   // and ESPN headshots always are; Commons photos only when jersey-matched.
-  const _TRIVIA_UNIFORM_ONLY = true;
+  // Relaxed 11-02 (Jack: "fill in images with full pictures from wiki if needed for
+  // now"): a legend with no uniform photo shows his Wikipedia lead photo, not initials.
+  const _TRIVIA_UNIFORM_ONLY = false;
   function _triviaGetHeadshotInfo(answerText, team, yr) {
     const none = { url: '', credit: '', page: '' };
     // Strip "(1991–1999)" / ", 2004" / " - Wk 4" suffixes. A dash counts only
@@ -58016,12 +58018,11 @@ window.fmtHeight = fmtHeight;
     const _fromLegend = (lh) => {
       const bt = _tCanon && lh.byTeam && lh.byTeam[_tCanon];
       if (bt && bt.url) return { url: bt.url, credit: bt.credit || lh.credit || 'Wikimedia Commons', page: lh.page || '' };
-      if (_TRIVIA_UNIFORM_ONLY) {
-        // Any jersey photo beats no photo: take the first team's cut if the cell's
-        // team has none (still in uniform, just a different stint).
-        const anyTeam = lh.byTeam && Object.values(lh.byTeam).find(b => b && b.url);
-        return anyTeam ? { url: anyTeam.url, credit: anyTeam.credit || lh.credit || 'Wikimedia Commons', page: lh.page || '' } : null;
-      }
+      // Any jersey photo beats the lead photo: take the first team's cut if the cell's
+      // team has none (still in uniform, just a different stint).
+      const anyTeam = lh.byTeam && Object.values(lh.byTeam).find(b => b && b.url);
+      if (anyTeam) return { url: anyTeam.url, credit: anyTeam.credit || lh.credit || 'Wikimedia Commons', page: lh.page || '' };
+      if (_TRIVIA_UNIFORM_ONLY || !lh.url) return null;
       return { url: lh.url, credit: lh.credit || 'Wikimedia Commons', page: lh.page || '' };
     };
 
@@ -58042,6 +58043,14 @@ window.fmtHeight = fmtHeight;
       (D.find(p => p.n === name && _fitsBoard(p)) ||
        D.find(p => nameVariants.indexOf(p.n) !== -1 && _fitsBoard(p)) || null);
     const _dAct = _dMatch();
+    // A legend photo shows its Wikipedia article's subject: refused when he was not of
+    // playing age (19-46) in the board's year — LEGEND_PHOTO_BIRTH_YEARS (Wikidata, lazy with the
+    // photo files). The 1970s Bears' George Farmer had matched "George Farmer (running
+    // back)", born 1993, once lead photos came back (11-02).
+    const _legendFits = v => {
+      const by = window.LEGEND_PHOTO_BIRTH_YEARS && window.LEGEND_PHOTO_BIRTH_YEARS[v];
+      return !by || !_yrEarly || (_yrEarly - by >= 19 && _yrEarly - by <= 46);
+    };
     const _isActive = !!(_dAct && !_dAct._retired && _dAct.t !== 'Retired');
 
     // 000. LEGEND_HEADSHOTS_LOCAL — hand-picked cutouts in data/legend_hs/ (Jack's own
@@ -58072,7 +58081,7 @@ window.fmtHeight = fmtHeight;
     if (window.LEGEND_HEADSHOTS) {
       for (const v of nameVariants) {
         const lh = window.LEGEND_HEADSHOTS[v];
-        if (lh && lh.url && lh.preferCommons) { const r = _fromLegend(lh); if (r) return r; }
+        if (lh && lh.url && lh.preferCommons && _legendFits(v)) { const r = _fromLegend(lh); if (r) return r; }
       }
     }
 
@@ -58111,7 +58120,7 @@ window.fmtHeight = fmtHeight;
     if (window.LEGEND_HEADSHOTS) {
       for (const v of nameVariants) {
         const lh = window.LEGEND_HEADSHOTS[v];
-        if (lh && lh.url) { const r = _fromLegend(lh); if (r) return r; }
+        if (lh && lh.url && _legendFits(v)) { const r = _fromLegend(lh); if (r) return r; }
       }
     }
 
@@ -62966,12 +62975,22 @@ window.fmtHeight = fmtHeight;
       // put him on a board twice. Key = suffix-stripped name + position +
       // season (or week); the higher-stat row wins. Different positions stay
       // apart, so the father (WR) and the son (RB) are not merged.
-      const _dupKey = (e) => (e.name || '').toLowerCase().replace(/\./g, '').replace(/\s+(jr|sr|ii|iii|iv|v)$/, '').replace(/\s+/g, ' ').trim()
+      const _dupKey = (e, n) => (n != null ? n : (e.name || '')).toLowerCase().replace(/\./g, '').replace(/\s+(jr|sr|ii|iii|iv|v)$/, '').replace(/\s+/g, ' ').trim()
         + '|' + (e.pos || '') + '|' + (e._isGame ? e.yr + 'w' + e.wk : (e._isCareer ? 'c' : e.yr));
       const _best = new Map();
       allEntries.forEach(e => { const k = _dupKey(e); const p = _best.get(k); if (!p || (e[stat] || 0) > (p[stat] || 0)) _best.set(k, e); });
       // (no spread: the all-time single-game pool is ~200k rows and `...` blew the stack)
       if (_best.size < allEntries.length) { allEntries.length = 0; _best.forEach(e => allEntries.push(e)); }
+      // ...and the same man under a disambiguation label: D keys a namesake's entry
+      // "Troy Smith (QB)" / "Reggie Brown (PHI)" while another source says plain "Troy
+      // Smith" — both landed on the Ravens / Eagles boards with the same 558 / 2,594
+      // (11-02 audit). Merged only when the stat is identical (two different players
+      // never tie to the yard); the unlabelled name stays.
+      const _lbl = /\s*\([^)]*\)\s*$/;
+      const _plain = new Set();
+      allEntries.forEach(e => { if (!_lbl.test(e.name || '')) _plain.add(_dupKey(e) + '|' + (e[stat] || 0)); });
+      const _unlabelled = allEntries.filter(e => !(_lbl.test(e.name || '') && _plain.has(_dupKey(e, (e.name || '').replace(_lbl, '')) + '|' + (e[stat] || 0))));
+      if (_unlabelled.length < allEntries.length) { allEntries.length = 0; _unlabelled.forEach(e => allEntries.push(e)); }
       allEntries.sort((a, b) => (b[stat]||0) - (a[stat]||0));
 
       // Take top N

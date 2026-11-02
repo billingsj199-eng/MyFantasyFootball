@@ -2148,7 +2148,8 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   .trivia-board-grid{gap:3px!important;padding:6px!important}
   .trivia-cell{border-radius:3px!important}
   .trivia-cell-cat{font-size:.6875rem!important;padding:2px 1px!important;letter-spacing:.5px!important}
-  .trivia-cell-logo{max-width:40px!important}
+  /* (11-02) no 40px cap on team logos either: on 2-column phone boards they sat as 30-40px
+     stamps in ~170px squares; trivia.css sizes them to 78% of the square (max 110px). */
   .trivia-cell-hint{font-size:.6875rem!important;padding:0 1px 2px!important}
   /* (11-02) no 40px cap on reveal photos: phone boards reflow to 2 columns, where the cap shrank
      faces to stamps beside full-size initials boxes; trivia.css already sizes them to the square. */
@@ -2235,7 +2236,6 @@ tr.pm-cmp-selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   .trivia-board-title{font-size:1rem!important}
   .trivia-cell-cat{font-size:.6875rem!important}
   .trivia-cell-hint{font-size:.6875rem!important}
-  .trivia-cell-logo{max-width:30px!important}
   .trivia-guess-input{font-size:.6875rem!important}
   .gw-title{font-size:1rem!important}
   .fg-title{font-size:1.5rem!important}

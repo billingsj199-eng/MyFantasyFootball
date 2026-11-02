@@ -49,6 +49,8 @@ import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
+from PIL import Image  # hard dependency: without it blank placeholders would overwrite faces
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 DEFAULT_ARCHIVE = r'E:\MyFantasyFootball\headshot_archive'
 URLS = {
@@ -182,7 +184,6 @@ def fetch(url, etag):
 def is_blank(body):
     """ESPN answers some ids with a 200 fully transparent (or one-color) PNG."""
     try:
-        from PIL import Image
         im = Image.open(io.BytesIO(body))
         ext = im.getextrema()
     except Exception:
@@ -344,6 +345,8 @@ def main():
     print('this run: new {new}, changed {changed}, unchanged {unchanged}, '
           'gone {gone}, back {back}, no image {no_image}, errors {error}'.format(**counts))
     print('names with no ESPN id (BAKED_ESPN_MISSES): {}'.format(len(misses)))
+    lost = ['{} ({})'.format(ev['name'], ev['key']) for ev in events if ev['event'] == 'gone']
+    print('newly gone this run: {}{}'.format(len(lost), ' - ' + ', '.join(lost) if lost else ''))
     if counts['error']:
         print('re-run to retry the {} errors'.format(counts['error']))
     return 1 if counts['error'] else 0

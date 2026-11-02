@@ -6882,7 +6882,9 @@ window._loadRetiredData = function(opts) {
 // initials until it lands, then upgrades the cell. Regenerate: scripts/build_legend_headshots.py.
 window._loadLegendHeadshots = function(opts) {
   if (window._legendHeadshotsPromise) return window._legendHeadshotsPromise;
-  window._legendHeadshotsPromise = _injectScripts(['data/legend_hs_local.js?v=2026-10-28-1756', 'data/legend_headshots.js?v=2026-10-28-legends2', 'data/player_cutouts.js?v=2026-10-29-cutouts2'], 'LegendHeadshots', opts);
+  // + espn_debut_years.js (11-02): ESPN id -> first season, so a same-name player's photo
+  // is refused on a board from before his debut (scripts/pull_espn_debut_years.py).
+  window._legendHeadshotsPromise = _injectScripts(['data/legend_hs_local.js?v=2026-10-28-1756', 'data/legend_headshots.js?v=2026-10-28-legends2', 'data/player_cutouts.js?v=2026-10-29-cutouts2', 'data/espn_debut_years.js?v=2026-11-02'], 'LegendHeadshots', opts);
   return window._legendHeadshotsPromise;
 };
 

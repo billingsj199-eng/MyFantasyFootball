@@ -397,6 +397,14 @@ window._espnIdFits = function(name, id) {
   const last = window._lastSeasonOf(name);
   return !(last && last <= 2014);
 };
+// ...and could it be the player on a board from season `yr`? ESPN_DEBUT_YEARS (lazy, with
+// the trivia photo files; scripts/pull_espn_debut_years.py) holds each id's first season.
+// A photo of someone who debuted after the board's year is a same-name player: the 1991
+// Dolphins' Mark Clayton showed the Ravens' 2005 rookie (11-02 audit). Unknown → fits.
+window._espnIdFitsYear = function(id, yr) {
+  const d = id && yr && window.ESPN_DEBUT_YEARS && window.ESPN_DEBUT_YEARS[String(id)];
+  return !d || d <= yr + 1;
+};
 window._seasonsOf = function(name) { window._lastSeasonOf(name); return window._seasonsOf._first[name] ? [window._seasonsOf._first[name], window._lastSeasonOf(name)] : null; };
 window._seasonsOf._first = {};
 window._lastSeasonOf = (function() {
@@ -57506,8 +57514,21 @@ window.fmtHeight = fmtHeight;
   };
 
   // Fuzzy name matching: normalize and check if guess matches answer
+  // Nicknames players type that are not a form of the name ("RG3" lost its digit to
+  // the normaliser and counted as a miss, 11-02 play-test). Keys: lowercase, letters
+  // and digits only.
+  const _TRIVIA_NICKNAMES = {
+    rg3: 'Robert Griffin III', rgiii: 'Robert Griffin III', cmc: 'Christian McCaffrey',
+    obj: 'Odell Beckham Jr.', megatron: 'Calvin Johnson', beastmode: 'Marshawn Lynch',
+    gronk: 'Rob Gronkowski', mjd: 'Maurice Jones-Drew', bigben: 'Ben Roethlisberger',
+    tb12: 'Tom Brady', ochocinco: 'Chad Johnson', ocho: 'Chad Johnson', to: 'Terrell Owens',
+    lt: 'LaDainian Tomlinson', ad: 'Adrian Peterson', allday: 'Adrian Peterson',
+    sweetness: 'Walter Payton', thebus: 'Jerome Bettis', bjge: 'BenJarvus Green-Ellis',
+    arsb: 'Amon-Ra St. Brown', jsn: 'Jaxon Smith-Njigba', primetime: 'Deion Sanders'
+  };
   function _triviaNameMatch(guess, answer) {
     if (!guess || !answer) return false;
+    guess = _TRIVIA_NICKNAMES[String(guess).toLowerCase().replace(/[^a-z0-9]/g, '')] || guess;
     // Normalize both strings
     function norm(s) {
       return s.toLowerCase()
@@ -57919,10 +57940,24 @@ window.fmtHeight = fmtHeight;
     }
     const tab = window.PLAYER_CUTOUTS;
     if (!tab) return null;
-    let ent = null;
-    for (const v of nameVariants) { if (tab[v] && tab[v].byTeam) { ent = tab[v]; break; } }
+    // A later same-name player's photos are not this player (11-02): when the name's ESPN
+    // id debuted after the board year, the cutouts shot from that debut on show him —
+    // Justin Watson's 2022 Chiefs photo on a 1999 Rams board, Steve Smith Sr.'s Panthers
+    // photos for the Raiders' Steve Smith. Undated cuts and earlier photos stay.
+    const _laterDebut = v => {
+      if (!yr || !window.ESPN_DEBUT_YEARS) return 0;
+      const id = (window.FALLBACK_IDS || {})[v] || (window.RETIRED_ESPN_IDS || {})[v] || (window.BAKED_ESPN_IDS || {})[v];
+      const d = id && window.ESPN_DEBUT_YEARS[String(id)];
+      return d && d > yr + 1 ? d : 0;
+    };
+    let ent = null, by = null;
+    for (const v of nameVariants) {
+      if (!(tab[v] && tab[v].byTeam)) continue;
+      const later = _laterDebut(v);
+      const b = later ? Object.fromEntries(Object.entries(tab[v].byTeam).filter(([, x]) => !(x && x.yr && x.yr >= later))) : tab[v].byTeam;
+      if (Object.keys(b).length) { ent = tab[v]; by = b; break; }
+    }
     if (!ent) return null;
-    const by = ent.byTeam;
     const teams = Object.keys(by);
     if (!teams.length) return null;
     if (teamCanon && by[teamCanon]) return mk(by[teamCanon], by[teamCanon].credit);            // 1. that jersey
@@ -57999,9 +58034,13 @@ window.fmtHeight = fmtHeight;
     // roster photo (Marvin Harrison, Michael Pittman: 11-02 audit).
     const _yrEarly = _triviaYearOf(answerText, yr);
     const _debut = p => { let m = 9999; (p.career || []).forEach(s => { if (s && s.yr && s.yr < m) m = s.yr; }); return m === 9999 ? 0 : m; };
+    // Neither may be a player who debuted after the board's year, by D's own career or by
+    // the photo's ESPN debut — an exact name can still be a namesake (11-02: Mark Clayton).
+    const _espnIdOf = url => ((url || '').match(/players\/full\/(\d+)\.png/) || [])[1];
+    const _fitsBoard = p => !(_yrEarly && (_debut(p) > _yrEarly + 1 || !window._espnIdFitsYear(_espnIdOf(p._slImg), _yrEarly)));
     const _dMatch = () => (typeof D === 'undefined') ? null :
-      (D.find(p => p.n === name) ||
-       D.find(p => nameVariants.indexOf(p.n) !== -1 && !(_yrEarly && _debut(p) > _yrEarly)) || null);
+      (D.find(p => p.n === name && _fitsBoard(p)) ||
+       D.find(p => nameVariants.indexOf(p.n) !== -1 && _fitsBoard(p)) || null);
     const _dAct = _dMatch();
     const _isActive = !!(_dAct && !_dAct._retired && _dAct.t !== 'Retired');
 
@@ -58040,7 +58079,8 @@ window.fmtHeight = fmtHeight;
     // 1. FALLBACK_IDS (manually verified active/recent players)
     if (window.FALLBACK_IDS) {
       for (const v of nameVariants) {
-        if (window.FALLBACK_IDS[v] && window._espnIdFits(v, window.FALLBACK_IDS[v]) && window._espnIdFits(name, window.FALLBACK_IDS[v])) {
+        if (window.FALLBACK_IDS[v] && window._espnIdFits(v, window.FALLBACK_IDS[v]) && window._espnIdFits(name, window.FALLBACK_IDS[v]) &&
+            window._espnIdFitsYear(window.FALLBACK_IDS[v], _yrEarly)) {
           return { url: _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.FALLBACK_IDS[v]}.png&w=350`), credit: '', page: '' };
         }
       }
@@ -58051,7 +58091,8 @@ window.fmtHeight = fmtHeight;
       for (const v of nameVariants) {
         // ...and it must fit the board's own player too: "Marvin Harrison" must not pick up the id
         // filed under "Marvin Harrison Jr."
-        if (window.RETIRED_ESPN_IDS[v] && window._espnIdFits(v, window.RETIRED_ESPN_IDS[v]) && window._espnIdFits(name, window.RETIRED_ESPN_IDS[v])) {
+        if (window.RETIRED_ESPN_IDS[v] && window._espnIdFits(v, window.RETIRED_ESPN_IDS[v]) && window._espnIdFits(name, window.RETIRED_ESPN_IDS[v]) &&
+            window._espnIdFitsYear(window.RETIRED_ESPN_IDS[v], _yrEarly)) {
           return { url: _fix(`https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/${window.RETIRED_ESPN_IDS[v]}.png&w=350`), credit: '', page: '' };
         }
       }
@@ -60185,9 +60226,11 @@ window.fmtHeight = fmtHeight;
     const accuracy = total ? Math.round((score / total) * 100) : 0;
     const tpl = _triviaPickDailyTemplate(date);
     const contentHash = _triviaContentHash(_triviaData && _triviaData.items);
-    // Locked boards carry their own title; the template's would be wrong.
+    // Locked boards carry their own title; the template's would be wrong. An admin
+    // preview plays a library board, not the day's: its own title (11-02 play-test
+    // showed today's "All-Time Receiving Yds" under a 2003 Total TD board).
     const _locked = _triviaDailyArchiveCache[date];
-    const boardTitle = (_locked && _locked.title) || tpl.title;
+    const boardTitle = (isPreview && _triviaData && _triviaData.title) || (_locked && _locked.title) || tpl.title;
 
     // Share text (survey R12): the board number up top like Wordle / Framed,
     // the title, the grid, the rarity hook once the pool answers, then the

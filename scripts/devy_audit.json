@@ -27,23 +27,62 @@
    "cfbd_id": "5197065",
    "cfbd_team": "Missouri",
    "combine_school": "Missouri",
-   "draftProj": 38,
+   "draftProj": 54,
    "eligYr": 2027,
+   "pff": {
+    "2026": {
+     "pff": null,
+     "pffRush": null
+    }
+   },
    "pos": "RB",
    "school_mismatch": false,
    "seasons": {
     "2026": "Missouri"
    }
   },
+  "Alex Honig": {
+   "cfbd_id": "4569262",
+   "cfbd_team": "Northwestern",
+   "combine_school": "Northwestern",
+   "draftProj": 145,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 69.1,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 73.5,
+     "pffRush": null
+    }
+   },
+   "pos": "TE",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "UConn",
+    "2024": "UConn",
+    "2025": "UConn",
+    "2026": "Northwestern"
+   }
+  },
   "Amare Thomas": {
    "cfbd_id": "5077060",
    "cfbd_team": "Houston",
    "combine_school": "Houston",
-   "draftProj": 213,
+   "draftProj": 106,
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 74.1,
+     "pff": 79.9,
      "pffRush": null
     }
    },
@@ -65,7 +104,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 72.0,
+     "pff": 67.8,
      "pffRush": null
     }
    },
@@ -80,7 +119,7 @@
    "cfbd_id": "4899484",
    "cfbd_team": "Penn State",
    "combine_school": "Penn St.",
-   "draftProj": 194,
+   "draftProj": 126,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -92,7 +131,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 60.3,
+     "pff": 61.8,
      "pffRush": null
     }
    },
@@ -109,7 +148,7 @@
    "cfbd_id": "4907671",
    "cfbd_team": "Mississippi State",
    "combine_school": "Mississippi St.",
-   "draftProj": 203,
+   "draftProj": 155,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -125,7 +164,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 83.3,
+     "pff": 74.4,
      "pffRush": null
     }
    },
@@ -142,11 +181,11 @@
    "cfbd_id": "4870906",
    "cfbd_team": "Texas",
    "combine_school": "Texas",
-   "draftProj": 13,
+   "draftProj": 7,
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 77.7,
+     "pff": 70.1,
      "pffRush": null
     }
    },
@@ -160,7 +199,7 @@
    "cfbd_id": "5141684",
    "cfbd_team": "Missouri",
    "combine_school": "Missouri",
-   "draftProj": 45,
+   "draftProj": 42,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -172,7 +211,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 86.1,
+     "pff": 82.9,
      "pffRush": null
     }
    },
@@ -197,7 +236,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 69.8,
+     "pff": 75.1,
      "pffRush": null
     }
    },
@@ -212,7 +251,7 @@
    "cfbd_id": "4870608",
    "cfbd_team": "Penn State",
    "combine_school": "Penn St.",
-   "draftProj": 176,
+   "draftProj": 154,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -228,7 +267,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 58.9,
+     "pff": 61.0,
      "pffRush": null
     }
    },
@@ -253,8 +292,8 @@
      "pffRush": 85.8
     },
     "2026": {
-     "pff": 62.4,
-     "pffRush": 81.7
+     "pff": 59.2,
+     "pffRush": 81.5
     }
    },
    "pos": "RB",
@@ -272,7 +311,7 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": null,
+     "pff": 66.8,
      "pffRush": null
     }
    },
@@ -298,7 +337,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 57.9,
+     "pff": 57.4,
      "pffRush": null
     }
    },
@@ -314,7 +353,7 @@
    "cfbd_id": null,
    "cfbd_team": null,
    "combine_school": "Cincinnati",
-   "draftProj": 133,
+   "draftProj": 185,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -342,11 +381,11 @@
    "cfbd_id": "5112674",
    "cfbd_team": "Clemson",
    "combine_school": "Clemson",
-   "draftProj": 82,
+   "draftProj": 63,
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 65.7,
+     "pff": 65.0,
      "pffRush": null
     }
    },
@@ -364,7 +403,7 @@
    "eligYr": 2028,
    "pff": {
     "2026": {
-     "pff": 60.2,
+     "pff": 60.4,
      "pffRush": null
     }
    },
@@ -394,7 +433,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 73.7,
+     "pff": 69.5,
      "pffRush": null
     }
    },
@@ -423,7 +462,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 76.0,
+     "pff": 75.3,
      "pffRush": null
     }
    },
@@ -451,8 +490,8 @@
      "pffRush": 63.3
     },
     "2026": {
-     "pff": 53.7,
-     "pffRush": 81.1
+     "pff": 54.4,
+     "pffRush": 80.5
     }
    },
    "pos": "RB",
@@ -468,7 +507,7 @@
    "cfbd_id": "5079369",
    "cfbd_team": "Notre Dame",
    "combine_school": "Notre Dame",
-   "draftProj": 9,
+   "draftProj": 14,
    "eligYr": 2027,
    "pff": {
     "2025": {
@@ -476,7 +515,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 91.1,
+     "pff": 87.7,
      "pffRush": null
     }
    },
@@ -528,7 +567,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 72.5,
+     "pff": 76.6,
      "pffRush": null
     }
    },
@@ -551,8 +590,8 @@
      "pffRush": 94.1
     },
     "2026": {
-     "pff": 63.6,
-     "pffRush": 73.3
+     "pff": 83.8,
+     "pffRush": 85.5
     }
    },
    "pos": "RB",
@@ -566,7 +605,7 @@
    "cfbd_id": "5078244",
    "cfbd_team": "Northwestern",
    "combine_school": "Northwestern",
-   "draftProj": 256,
+   "draftProj": 257,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -582,8 +621,8 @@
      "pffRush": 76.9
     },
     "2026": {
-     "pff": 55.7,
-     "pffRush": 78.5
+     "pff": 64.0,
+     "pffRush": 81.8
     }
    },
    "pos": "RB",
@@ -599,11 +638,11 @@
    "cfbd_id": "5079376",
    "cfbd_team": "Texas",
    "combine_school": "Texas",
-   "draftProj": 8,
+   "draftProj": 13,
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 71.0,
+     "pff": 71.3,
      "pffRush": null
     }
    },
@@ -633,8 +672,8 @@
      "pffRush": 89.4
     },
     "2026": {
-     "pff": 57.4,
-     "pffRush": 77.8
+     "pff": 57.8,
+     "pffRush": 78.4
     }
    },
    "pos": "RB",
@@ -673,7 +712,7 @@
    "cfbd_id": "5153074",
    "cfbd_team": "Wake Forest",
    "combine_school": "Wake Forest",
-   "draftProj": 169,
+   "draftProj": 197,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -689,7 +728,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 85.9,
+     "pff": 87.5,
      "pffRush": null
     }
    },
@@ -706,7 +745,7 @@
    "cfbd_id": "5146735",
    "cfbd_team": "Indiana",
    "combine_school": "Indiana",
-   "draftProj": 15,
+   "draftProj": 8,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -718,7 +757,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 87.1,
+     "pff": 89.7,
      "pffRush": null
     }
    },
@@ -734,7 +773,7 @@
    "cfbd_id": "4717430",
    "cfbd_team": "Arkansas",
    "combine_school": "Arkansas",
-   "draftProj": 186,
+   "draftProj": 56,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -762,7 +801,7 @@
    "cfbd_id": "4923226",
    "cfbd_team": "Illinois",
    "combine_school": "Illinois",
-   "draftProj": 187,
+   "draftProj": 234,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -774,7 +813,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 86.9,
+     "pff": 88.9,
      "pffRush": null
     }
    },
@@ -791,7 +830,7 @@
    "cfbd_id": "4685574",
    "cfbd_team": "Houston",
    "combine_school": "Houston",
-   "draftProj": 233,
+   "draftProj": 150,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -807,7 +846,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 81.7,
+     "pff": 79.3,
      "pffRush": null
     }
    },
@@ -824,7 +863,7 @@
    "cfbd_id": "4804878",
    "cfbd_team": "Miami",
    "combine_school": "Miami (FL)",
-   "draftProj": 147,
+   "draftProj": 187,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -840,7 +879,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 66.9,
+     "pff": 68.8,
      "pffRush": null
     }
    },
@@ -869,7 +908,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 73.0,
+     "pff": 70.3,
      "pffRush": null
     }
    },
@@ -885,7 +924,7 @@
    "cfbd_id": "5218931",
    "cfbd_team": "Iowa",
    "combine_school": "Iowa",
-   "draftProj": 175,
+   "draftProj": 206,
    "eligYr": 2027,
    "pff": {
     "2025": {
@@ -893,7 +932,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 75.4,
+     "pff": 77.3,
      "pffRush": null
     }
    },
@@ -913,7 +952,7 @@
    "eligYr": 2028,
    "pff": {
     "2026": {
-     "pff": 64.4,
+     "pff": 66.8,
      "pffRush": null
     }
    },
@@ -931,7 +970,7 @@
    "eligYr": 2028,
    "pff": {
     "2026": {
-     "pff": 76.5,
+     "pff": 71.8,
      "pffRush": null
     }
    },
@@ -978,7 +1017,7 @@
    "cfbd_id": "4870921",
    "cfbd_team": "Oregon",
    "combine_school": "Oregon",
-   "draftProj": 6,
+   "draftProj": 24,
    "eligYr": 2027,
    "pff": {
     "2026": {
@@ -1008,7 +1047,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 92.3,
+     "pff": 92.8,
      "pffRush": null
     }
    },
@@ -1019,6 +1058,68 @@
     "2024": "Tulane",
     "2025": "Duke",
     "2026": "Miami"
+   }
+  },
+  "DeAndre Moore Jr.": {
+   "cfbd_id": "4870860",
+   "cfbd_team": "Colorado",
+   "combine_school": "Colorado",
+   "draftProj": 241,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": 65.0,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 71.7,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 69.3,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Texas",
+    "2024": "Texas",
+    "2025": "Texas",
+    "2026": "Colorado"
+   }
+  },
+  "DeSean Bishop": {
+   "cfbd_id": "4921108",
+   "cfbd_team": "Tennessee",
+   "combine_school": "Tennessee",
+   "draftProj": 202,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": 56.6,
+     "pffRush": 82.4
+    },
+    "2025": {
+     "pff": 55.9,
+     "pffRush": 90.1
+    },
+    "2026": {
+     "pff": 59.7,
+     "pffRush": 87.8
+    }
+   },
+   "pos": "RB",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Tennessee",
+    "2024": "Tennessee",
+    "2025": "Tennessee",
+    "2026": "Tennessee"
    }
   },
   "Demond Williams Jr.": {
@@ -1037,7 +1138,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 65.9,
+     "pff": 65.7,
      "pffRush": null
     }
    },
@@ -1053,7 +1154,7 @@
    "cfbd_id": "5152158",
    "cfbd_team": "Ole Miss",
    "combine_school": "Mississippi",
-   "draftProj": 49,
+   "draftProj": 65,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -1069,7 +1170,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 80.9,
+     "pff": 73.8,
      "pffRush": null
     }
    },
@@ -1109,7 +1210,7 @@
    "cfbd_id": "5076952",
    "cfbd_team": "Ohio State",
    "combine_school": "Ohio St.",
-   "draftProj": 222,
+   "draftProj": 204,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -1125,7 +1226,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 72.0,
+     "pff": 69.2,
      "pffRush": null
     }
    },
@@ -1150,8 +1251,8 @@
      "pffRush": 91.4
     },
     "2026": {
-     "pff": 89.5,
-     "pffRush": 79.4
+     "pff": 81.9,
+     "pffRush": 85.7
     }
    },
    "pos": "RB",
@@ -1177,8 +1278,8 @@
      "pffRush": 73.5
     },
     "2026": {
-     "pff": 70.3,
-     "pffRush": 77.9
+     "pff": 71.8,
+     "pffRush": 81.3
     }
    },
    "pos": "RB",
@@ -1193,7 +1294,7 @@
    "cfbd_id": "5144959",
    "cfbd_team": "Minnesota",
    "combine_school": "Minnesota",
-   "draftProj": 118,
+   "draftProj": 184,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -1205,7 +1306,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 69.4,
+     "pff": 62.6,
      "pffRush": null
     }
    },
@@ -1221,7 +1322,7 @@
    "cfbd_id": "5219834",
    "cfbd_team": "Oklahoma State",
    "combine_school": "Oklahoma St.",
-   "draftProj": 3,
+   "draftProj": 2,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -1233,7 +1334,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 84.3,
+     "pff": 83.5,
      "pffRush": null
     }
    },
@@ -1249,7 +1350,7 @@
    "cfbd_id": "4870922",
    "cfbd_team": "Florida State",
    "combine_school": "Florida St.",
-   "draftProj": 72,
+   "draftProj": 65,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -1265,7 +1366,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 64.5,
+     "pff": 66.4,
      "pffRush": null
     }
    },
@@ -1294,7 +1395,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 64.5,
      "pffRush": null
     }
    },
@@ -1304,6 +1405,34 @@
     "2024": "Nebraska",
     "2025": "Nebraska",
     "2026": "Oregon"
+   }
+  },
+  "Dylan Riley": {
+   "cfbd_id": "5146712",
+   "cfbd_team": "Boise State",
+   "combine_school": "Boise St.",
+   "draftProj": 189,
+   "eligYr": 2027,
+   "pff": {
+    "2024": {
+     "pff": null,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 55.0,
+     "pffRush": 80.6
+    },
+    "2026": {
+     "pff": 66.5,
+     "pffRush": 83.1
+    }
+   },
+   "pos": "RB",
+   "school_mismatch": false,
+   "seasons": {
+    "2024": "Boise State",
+    "2025": "Boise State",
+    "2026": "Boise State"
    }
   },
   "Elyiss Williams": {
@@ -1333,11 +1462,11 @@
    "cfbd_id": "5095360",
    "cfbd_team": "Florida",
    "combine_school": "Florida",
-   "draftProj": 184,
+   "draftProj": 186,
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": null,
+     "pff": 55.5,
      "pffRush": null
     }
    },
@@ -1367,7 +1496,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 59.1,
+     "pff": 60.3,
      "pffRush": null
     }
    },
@@ -1384,7 +1513,7 @@
    "cfbd_id": "4685565",
    "cfbd_team": "Oregon",
    "combine_school": "Oregon",
-   "draftProj": 241,
+   "draftProj": 239,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -1396,7 +1525,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 66.8,
+     "pff": 67.6,
      "pffRush": null
     }
    },
@@ -1413,7 +1542,7 @@
    "cfbd_id": "5220197",
    "cfbd_team": "Mississippi State",
    "combine_school": "Mississippi St.",
-   "draftProj": 236,
+   "draftProj": "U",
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -1425,8 +1554,8 @@
      "pffRush": 76.2
     },
     "2026": {
-     "pff": 83.2,
-     "pffRush": 88.5
+     "pff": 78.1,
+     "pffRush": 86.1
     }
    },
    "pos": "RB",
@@ -1449,8 +1578,8 @@
      "pffRush": 71.4
     },
     "2026": {
-     "pff": 51.1,
-     "pffRush": 73.9
+     "pff": 47.4,
+     "pffRush": 73.5
     }
    },
    "pos": "RB",
@@ -1464,7 +1593,7 @@
    "cfbd_id": "5154734",
    "cfbd_team": "Northwestern",
    "combine_school": "Northwestern",
-   "draftProj": 139,
+   "draftProj": 158,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -1480,7 +1609,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 81.9,
+     "pff": 85.1,
      "pffRush": null
     }
    },
@@ -1505,8 +1634,8 @@
      "pffRush": 71.1
     },
     "2026": {
-     "pff": 63.8,
-     "pffRush": 75.5
+     "pff": 79.5,
+     "pffRush": 80.6
     }
    },
    "pos": "RB",
@@ -1536,8 +1665,8 @@
      "pffRush": 79.4
     },
     "2026": {
-     "pff": 67.2,
-     "pffRush": 76.7
+     "pff": 67.7,
+     "pffRush": 76.5
     }
    },
    "pos": "RB",
@@ -1592,7 +1721,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 64.1,
+     "pff": 64.4,
      "pffRush": null
     }
    },
@@ -1609,12 +1738,12 @@
    "cfbd_id": "5079349",
    "cfbd_team": "Louisville",
    "combine_school": "Louisville",
-   "draftProj": 135,
+   "draftProj": 173,
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 54.5,
-     "pffRush": 78.7
+     "pff": 64.0,
+     "pffRush": 83.6
     }
    },
    "pos": "RB",
@@ -1643,7 +1772,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 61.2,
+     "pff": 62.2,
      "pffRush": null
     }
    },
@@ -1664,7 +1793,7 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 72.6,
+     "pff": 75.7,
      "pffRush": null
     }
    },
@@ -1678,12 +1807,12 @@
    "cfbd_id": "5079322",
    "cfbd_team": "Florida",
    "combine_school": "Florida",
-   "draftProj": 27,
+   "draftProj": 22,
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 52.1,
-     "pffRush": 88.6
+     "pff": 51.4,
+     "pffRush": 85.2
     }
    },
    "pos": "RB",
@@ -1696,7 +1825,7 @@
    "cfbd_id": "4922988",
    "cfbd_team": "Oregon",
    "combine_school": "Oregon",
-   "draftProj": 19,
+   "draftProj": 16,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -1708,7 +1837,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 68.5,
+     "pff": 72.8,
      "pffRush": null
     }
    },
@@ -1733,7 +1862,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 73.7,
+     "pff": 71.4,
      "pffRush": null
     }
    },
@@ -1748,7 +1877,7 @@
    "cfbd_id": "4831976",
    "cfbd_team": "Minnesota",
    "combine_school": "Minnesota",
-   "draftProj": 251,
+   "draftProj": "U",
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -1764,7 +1893,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 71.8,
+     "pff": 73.1,
      "pffRush": null
     }
    },
@@ -1799,11 +1928,11 @@
    "cfbd_id": "4685454",
    "cfbd_team": "USC",
    "combine_school": "USC",
-   "draftProj": 30,
+   "draftProj": 65,
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 90.2,
+     "pff": 85.4,
      "pffRush": null
     }
    },
@@ -1817,7 +1946,7 @@
    "cfbd_id": "4871039",
    "cfbd_team": "North Carolina",
    "combine_school": "North Carolina",
-   "draftProj": 255,
+   "draftProj": "U",
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -1833,7 +1962,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 78.1,
+     "pff": 81.0,
      "pffRush": null
     }
    },
@@ -1850,7 +1979,7 @@
    "cfbd_id": "4869728",
    "cfbd_team": "Duke",
    "combine_school": "Duke",
-   "draftProj": 215,
+   "draftProj": 253,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -1866,7 +1995,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 75.9,
+     "pff": 76.5,
      "pffRush": null
     }
    },
@@ -1887,7 +2016,7 @@
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 94.2,
+     "pff": 93.0,
      "pffRush": null
     }
    },
@@ -1945,7 +2074,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 48.7,
+     "pff": 53.8,
      "pffRush": null
     }
    },
@@ -1995,7 +2124,7 @@
    "cfbd_id": "5150424",
    "cfbd_team": "Notre Dame",
    "combine_school": "Notre Dame",
-   "draftProj": 120,
+   "draftProj": 121,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -2011,7 +2140,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 77.9,
+     "pff": 75.4,
      "pffRush": null
     }
    },
@@ -2040,8 +2169,8 @@
      "pffRush": 88.6
     },
     "2026": {
-     "pff": 61.7,
-     "pffRush": 67.9
+     "pff": 59.3,
+     "pffRush": 71.2
     }
    },
    "pos": "RB",
@@ -2064,8 +2193,8 @@
      "pffRush": 91.4
     },
     "2026": {
-     "pff": 47.8,
-     "pffRush": 69.3
+     "pff": 47.1,
+     "pffRush": 70.5
     }
    },
    "pos": "RB",
@@ -2095,7 +2224,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 79.3,
+     "pff": 75.6,
      "pffRush": null
     }
    },
@@ -2124,7 +2253,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 64.8,
+     "pff": 64.4,
      "pffRush": null
     }
    },
@@ -2186,11 +2315,11 @@
    "cfbd_id": "5079712",
    "cfbd_team": "Ohio State",
    "combine_school": "Ohio St.",
-   "draftProj": 62,
+   "draftProj": "U",
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 90.3,
+     "pff": 82.8,
      "pffRush": null
     }
    },
@@ -2204,7 +2333,7 @@
    "cfbd_id": "5078165",
    "cfbd_team": "Vanderbilt",
    "combine_school": "Vanderbilt",
-   "draftProj": 106,
+   "draftProj": 88,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -2220,7 +2349,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 73.4,
+     "pff": 75.5,
      "pffRush": null
     }
    },
@@ -2253,8 +2382,8 @@
      "pffRush": 83.5
     },
     "2026": {
-     "pff": 66.7,
-     "pffRush": 80.5
+     "pff": 64.4,
+     "pffRush": 79.6
     }
    },
    "pos": "RB",
@@ -2270,7 +2399,7 @@
    "cfbd_id": "5084771",
    "cfbd_team": "Rutgers",
    "combine_school": "Rutgers",
-   "draftProj": 41,
+   "draftProj": 65,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -2282,7 +2411,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 87.3,
+     "pff": 84.6,
      "pffRush": null
     }
    },
@@ -2303,6 +2432,10 @@
    "pff": {
     "2025": {
      "pff": 73.1,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": null,
      "pffRush": null
     }
    },
@@ -2352,8 +2485,8 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 60.2,
-     "pffRush": 90.4
+     "pff": 56.7,
+     "pffRush": 90.7
     }
    },
    "pos": "RB",
@@ -2399,7 +2532,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 87.2,
+     "pff": 83.8,
      "pffRush": null
     }
    },
@@ -2430,7 +2563,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 67.5,
+     "pff": 71.0,
      "pffRush": null
     }
    },
@@ -2443,11 +2576,44 @@
     "2026": "Texas Tech"
    }
   },
+  "Kevin Jennings": {
+   "cfbd_id": "5084084",
+   "cfbd_team": "SMU",
+   "combine_school": "SMU",
+   "draftProj": 250,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": 80.4,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": 85.0,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 77.9,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 90.0,
+     "pffRush": null
+    }
+   },
+   "pos": "QB",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "SMU",
+    "2024": "SMU",
+    "2025": "SMU",
+    "2026": "SMU"
+   }
+  },
   "Kewan Lacy": {
    "cfbd_id": "5086388",
    "cfbd_team": "Ole Miss",
    "combine_school": "Mississippi",
-   "draftProj": 49,
+   "draftProj": 34,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -2459,8 +2625,8 @@
      "pffRush": 91.6
     },
     "2026": {
-     "pff": 51.7,
-     "pffRush": 84.9
+     "pff": 56.5,
+     "pffRush": 81.7
     }
    },
    "pos": "RB",
@@ -2508,11 +2674,11 @@
    "cfbd_id": "4875127",
    "cfbd_team": "South Carolina",
    "combine_school": "South Carolina",
-   "draftProj": 70,
+   "draftProj": 183,
    "eligYr": 2027,
    "pff": {
     "2026": {
-     "pff": 66.0,
+     "pff": 63.1,
      "pffRush": null
     }
    },
@@ -2526,7 +2692,7 @@
    "cfbd_id": "4870874",
    "cfbd_team": "Georgia",
    "combine_school": "Georgia",
-   "draftProj": 138,
+   "draftProj": 190,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -2567,7 +2733,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 52.5,
      "pffRush": null
     }
    },
@@ -2576,6 +2742,39 @@
    "seasons": {
     "2025": "Kansas State",
     "2026": "Kansas State"
+   }
+  },
+  "London Humphreys": {
+   "cfbd_id": "5078453",
+   "cfbd_team": "Georgia",
+   "combine_school": "Georgia",
+   "draftProj": 238,
+   "eligYr": 2027,
+   "pff": {
+    "2023": {
+     "pff": 68.7,
+     "pffRush": null
+    },
+    "2024": {
+     "pff": 60.4,
+     "pffRush": null
+    },
+    "2025": {
+     "pff": 61.5,
+     "pffRush": null
+    },
+    "2026": {
+     "pff": 66.6,
+     "pffRush": null
+    }
+   },
+   "pos": "WR",
+   "school_mismatch": false,
+   "seasons": {
+    "2023": "Vanderbilt",
+    "2024": "Georgia",
+    "2025": "Georgia",
+    "2026": "Georgia"
    }
   },
   "Luke Hasz": {
@@ -2598,7 +2797,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 60.7,
      "pffRush": null
     }
    },
@@ -2615,7 +2814,7 @@
    "cfbd_id": "5138451",
    "cfbd_team": "Virginia Tech",
    "combine_school": "Virginia Tech",
-   "draftProj": 63,
+   "draftProj": 70,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -2627,7 +2826,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 84.4,
+     "pff": 86.6,
      "pffRush": null
     }
    },
@@ -2643,7 +2842,7 @@
    "cfbd_id": "4816098",
    "cfbd_team": "Houston",
    "combine_school": "Houston",
-   "draftProj": 232,
+   "draftProj": 226,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -2659,8 +2858,8 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 62.6,
-     "pffRush": 74.3
+     "pff": 59.6,
+     "pffRush": 73.4
     }
    },
    "pos": "RB",
@@ -2684,7 +2883,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 93.0,
+     "pff": 95.2,
      "pffRush": null
     }
    },
@@ -2715,7 +2914,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 55.8,
+     "pff": 57.6,
      "pffRush": null
     }
    },
@@ -2732,7 +2931,7 @@
    "cfbd_id": "5079345",
    "cfbd_team": "Texas A&M",
    "combine_school": "Texas A&M",
-   "draftProj": 58,
+   "draftProj": 64,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -2744,7 +2943,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 69.5,
+     "pff": 68.6,
      "pffRush": null
     }
    },
@@ -2760,7 +2959,7 @@
    "cfbd_id": "4870736",
    "cfbd_team": "Miami",
    "combine_school": "Miami (FL)",
-   "draftProj": 112,
+   "draftProj": 135,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -2776,8 +2975,8 @@
      "pffRush": 92.0
     },
     "2026": {
-     "pff": 69.7,
-     "pffRush": 79.8
+     "pff": 77.6,
+     "pffRush": 80.7
     }
    },
    "pos": "RB",
@@ -2805,7 +3004,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
+     "pff": 55.0,
      "pffRush": null
     }
    },
@@ -2833,7 +3032,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 68.3,
+     "pff": 71.0,
      "pffRush": null
     }
    },
@@ -2867,7 +3066,7 @@
    "cfbd_id": "5084047",
    "cfbd_team": "Georgia",
    "combine_school": "Georgia",
-   "draftProj": 96,
+   "draftProj": 139,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -2879,8 +3078,8 @@
      "pffRush": 90.8
     },
     "2026": {
-     "pff": null,
-     "pffRush": null
+     "pff": 53.9,
+     "pffRush": 85.4
     }
    },
    "pos": "RB",
@@ -2903,8 +3102,8 @@
      "pffRush": 90.9
     },
     "2026": {
-     "pff": 70.3,
-     "pffRush": 83.3
+     "pff": 78.5,
+     "pffRush": 80.4
     }
    },
    "pos": "RB",
@@ -2930,7 +3129,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 57.9,
+     "pff": 61.6,
      "pffRush": null
     }
    },
@@ -2947,7 +3146,7 @@
    "cfbd_id": "5079600",
    "cfbd_team": "Indiana",
    "combine_school": "Indiana",
-   "draftProj": 20,
+   "draftProj": 65,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -2959,7 +3158,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 86.1,
+     "pff": 77.6,
      "pffRush": null
     }
    },
@@ -3008,7 +3207,7 @@
    "cfbd_id": "4870745",
    "cfbd_team": "South Carolina",
    "combine_school": "South Carolina",
-   "draftProj": 161,
+   "draftProj": 132,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -3024,7 +3223,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 60.3,
+     "pff": 60.5,
      "pffRush": null
     }
    },
@@ -3041,7 +3240,7 @@
    "cfbd_id": "4870850",
    "cfbd_team": "Arizona State",
    "combine_school": "Arizona St.",
-   "draftProj": 55,
+   "draftProj": 67,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -3057,7 +3256,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 61.9,
+     "pff": 59.8,
      "pffRush": null
     }
    },
@@ -3082,8 +3281,8 @@
      "pffRush": 80.5
     },
     "2026": {
-     "pff": 66.7,
-     "pffRush": 89.5
+     "pff": 66.0,
+     "pffRush": 85.8
     }
    },
    "pos": "RB",
@@ -3121,7 +3320,7 @@
    "cfbd_id": "5080547",
    "cfbd_team": "Temple",
    "combine_school": "Temple",
-   "draftProj": 150,
+   "draftProj": 176,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -3137,7 +3336,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 63.1,
+     "pff": 68.5,
      "pffRush": null
     }
    },
@@ -3185,8 +3384,8 @@
      "pffRush": 90.0
     },
     "2026": {
-     "pff": 52.9,
-     "pffRush": 76.4
+     "pff": 60.2,
+     "pffRush": 73.8
     }
    },
    "pos": "RB",
@@ -3214,8 +3413,8 @@
      "pffRush": null
     },
     "2026": {
-     "pff": null,
-     "pffRush": null
+     "pff": 50.3,
+     "pffRush": 70.2
     }
    },
    "pos": "RB",
@@ -3230,7 +3429,7 @@
    "cfbd_id": "4871076",
    "cfbd_team": "Florida State",
    "combine_school": "Florida St.",
-   "draftProj": 231,
+   "draftProj": 223,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -3246,8 +3445,8 @@
      "pffRush": 81.5
     },
     "2026": {
-     "pff": null,
-     "pffRush": null
+     "pff": 87.2,
+     "pffRush": 69.0
     }
    },
    "pos": "RB",
@@ -3279,8 +3478,8 @@
      "pffRush": 88.0
     },
     "2026": {
-     "pff": 48.0,
-     "pffRush": 72.6
+     "pff": 50.8,
+     "pffRush": 75.6
     }
    },
    "pos": "RB",
@@ -3296,7 +3495,7 @@
    "cfbd_id": "5031157",
    "cfbd_team": "Arizona State",
    "combine_school": "Arizona St.",
-   "draftProj": 54,
+   "draftProj": 48,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -3312,7 +3511,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 89.7,
+     "pff": 84.6,
      "pffRush": null
     }
    },
@@ -3345,7 +3544,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 70.1,
+     "pff": 68.3,
      "pffRush": null
     }
    },
@@ -3362,7 +3561,7 @@
    "cfbd_id": "5141711",
    "cfbd_team": "Alabama",
    "combine_school": "Alabama",
-   "draftProj": 26,
+   "draftProj": 31,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -3390,7 +3589,7 @@
    "cfbd_id": "5218633",
    "cfbd_team": "Texas",
    "combine_school": "Texas",
-   "draftProj": 61,
+   "draftProj": 62,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -3402,7 +3601,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 69.4,
+     "pff": 67.7,
      "pffRush": null
     }
    },
@@ -3418,7 +3617,7 @@
    "cfbd_id": "5078810",
    "cfbd_team": "LSU",
    "combine_school": "LSU",
-   "draftProj": 116,
+   "draftProj": 182,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -3434,7 +3633,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 88.1,
+     "pff": 89.5,
      "pffRush": null
     }
    },
@@ -3463,7 +3662,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 63.9,
+     "pff": 61.4,
      "pffRush": null
     }
    },
@@ -3487,7 +3686,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 81.4,
+     "pff": 76.6,
      "pffRush": null
     }
    },
@@ -3548,7 +3747,7 @@
    "cfbd_id": "4867887",
    "cfbd_team": "Texas Tech",
    "combine_school": "Texas Tech",
-   "draftProj": 105,
+   "draftProj": 128,
    "eligYr": 2027,
    "pff": {
     "2023": {
@@ -3564,7 +3763,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 81.5,
+     "pff": 75.5,
      "pffRush": null
     }
    },
@@ -3581,7 +3780,7 @@
    "cfbd_id": "5300856",
    "cfbd_team": "Iowa",
    "combine_school": "Iowa",
-   "draftProj": 211,
+   "draftProj": 256,
    "eligYr": 2027,
    "pff": {
     "2025": {
@@ -3589,7 +3788,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 70.4,
+     "pff": 70.6,
      "pffRush": null
     }
    },
@@ -3604,7 +3803,7 @@
    "cfbd_id": "5079420",
    "cfbd_team": "LSU",
    "combine_school": "LSU",
-   "draftProj": 29,
+   "draftProj": 23,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -3616,7 +3815,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 72.7,
+     "pff": 73.2,
      "pffRush": null
     }
    },
@@ -3632,7 +3831,7 @@
    "cfbd_id": "4911529",
    "cfbd_team": "Ole Miss",
    "combine_school": "Mississippi",
-   "draftProj": 18,
+   "draftProj": 3,
    "eligYr": 2027,
    "pff": {
     "2025": {
@@ -3640,7 +3839,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 81.0,
+     "pff": 83.0,
      "pffRush": null
     }
    },
@@ -3656,7 +3855,7 @@
    "cfbd_id": "4694149",
    "cfbd_team": "Duke",
    "combine_school": "Duke",
-   "draftProj": 167,
+   "draftProj": 213,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -3668,7 +3867,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 77.3,
+     "pff": 71.1,
      "pffRush": null
     }
    },
@@ -3685,7 +3884,7 @@
    "cfbd_id": "5173431",
    "cfbd_team": "Utah",
    "combine_school": "Utah",
-   "draftProj": 162,
+   "draftProj": 151,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -3697,8 +3896,8 @@
      "pffRush": 85.3
     },
     "2026": {
-     "pff": 76.6,
-     "pffRush": 93.1
+     "pff": 84.4,
+     "pffRush": 92.1
     }
    },
    "pos": "RB",
@@ -3713,7 +3912,7 @@
    "cfbd_id": "5148787",
    "cfbd_team": "Oklahoma State",
    "combine_school": "Oklahoma St.",
-   "draftProj": 97,
+   "draftProj": 82,
    "eligYr": 2027,
    "pff": {
     "2024": {
@@ -3725,7 +3924,7 @@
      "pffRush": null
     },
     "2026": {
-     "pff": 85.0,
+     "pff": 83.3,
      "pffRush": null
     }
    },
@@ -3738,6 +3937,6 @@
    }
   }
  },
- "run": "2026-10-17",
+ "run": "2026-11-02",
  "season": 2026
 }

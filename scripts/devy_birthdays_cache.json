@@ -4,6 +4,9 @@
   "birth": "2006-09-28",
   "src": "on3:ak-dear-177140"
  },
+ "Alex Honig": {
+  "miss": "2026-11-02"
+ },
  "Amare Thomas": {
   "at": "2026-09-30",
   "birth": "2005-11-18",
@@ -38,7 +41,7 @@
   "miss": "2026-10-17"
  },
  "Cam Edwards": {
-  "miss": "2026-09-30"
+  "miss": "2026-11-02"
  },
  "Carlos Hernandez": {
   "at": "2026-10-17",
@@ -46,7 +49,7 @@
   "src": "wikipedia:Carlos_Hernandez_(American_football)"
  },
  "Charlie Becker": {
-  "miss": "2026-09-30"
+  "miss": "2026-11-02"
  },
  "Chris Marshall": {
   "at": "2026-10-17",
@@ -79,7 +82,17 @@
   "src": "on3:dallas-wilson-162895"
  },
  "Danny Scudero": {
-  "miss": "2026-09-30"
+  "miss": "2026-11-02"
+ },
+ "DeAndre Moore Jr.": {
+  "at": "2026-11-02",
+  "birth": "2004-03-13",
+  "src": "wikipedia:DeAndre_Moore_Jr."
+ },
+ "DeSean Bishop": {
+  "at": "2026-11-02",
+  "birth": "2004-10-15",
+  "src": "wikidata:Q134300780"
  },
  "Deuce Alexander": {
   "at": "2026-09-30",
@@ -102,12 +115,17 @@
   "src": "wikipedia:Drake_Lindsey"
  },
  "Drew Mestemaker": {
-  "miss": "2026-09-30"
+  "miss": "2026-11-02"
  },
  "Duce Robinson": {
   "at": "2026-09-30",
   "birth": "2005-01-19",
   "src": "wikipedia:Duce_Robinson"
+ },
+ "Dylan Riley": {
+  "at": "2026-11-02",
+  "birth": "2006-06-16",
+  "src": "wikipedia:Dylan_Riley_(American_football)"
  },
  "Elyiss Williams": {
   "at": "2026-09-30",
@@ -141,7 +159,7 @@
   "src": "wikidata:Q136341922"
  },
  "Jamari Johnson": {
-  "miss": "2026-09-30"
+  "miss": "2026-11-02"
  },
  "Jaron-Keawe Sagapolutele": {
   "at": "2026-09-30",
@@ -170,7 +188,7 @@
   "src": "wikipedia:Joshisa_Trader"
  },
  "Joshua Moore": {
-  "miss": "2026-09-30"
+  "miss": "2026-11-02"
  },
  "Junior Sherrill": {
   "at": "2026-10-17",
@@ -183,7 +201,7 @@
   "src": "wikipedia:KJ_Duff"
  },
  "Kaelan Chudzinski": {
-  "miss": "2026-09-30"
+  "miss": "2026-11-02"
  },
  "Kam Davis": {
   "at": "2026-09-30",
@@ -200,6 +218,11 @@
   "birth": "2005-03-28",
   "src": "wikidata:Q129408837"
  },
+ "Kevin Jennings": {
+  "at": "2026-11-02",
+  "birth": "2004-04-10",
+  "src": "wikipedia:Kevin_Jennings_(American_football)"
+ },
  "Lawson Luckie": {
   "at": "2026-10-17",
   "birth": "2004-10-21",
@@ -210,13 +233,18 @@
   "birth": "2006-05-12",
   "src": "on3:linkon-cure-236082"
  },
+ "London Humphreys": {
+  "at": "2026-11-02",
+  "birth": "2005-05-13",
+  "src": "wikipedia:London_Humphreys"
+ },
  "Luke Hasz": {
   "at": "2026-09-30",
   "birth": "2004-04-19",
   "src": "wikidata:Q122692008"
  },
  "Luke Reynolds": {
-  "miss": "2026-09-30"
+  "miss": "2026-11-02"
  },
  "Makhi Hughes": {
   "miss": "2026-10-17"
@@ -250,7 +278,7 @@
   "src": "wikipedia:Quintrevion_Wisner"
  },
  "Reed Harris": {
-  "miss": "2026-09-30"
+  "miss": "2026-11-02"
  },
  "Rocky Beers": {
   "miss": "2026-10-17"
@@ -259,7 +287,7 @@
   "miss": "2026-09-30"
  },
  "Terrance Carter Jr.": {
-  "miss": "2026-09-30"
+  "miss": "2026-11-02"
  },
  "Tony Diaz": {
   "at": "2026-10-17",
@@ -285,6 +313,6 @@
   "miss": "2026-10-17"
  },
  "Wyatt Young": {
-  "miss": "2026-09-30"
+  "miss": "2026-11-02"
  }
 }

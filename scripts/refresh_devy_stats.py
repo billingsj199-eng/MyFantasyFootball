@@ -252,8 +252,9 @@ def bump_tag(html, fname):
         log("  WARN: no ?v= tag found for", fname)
         return html
     cur = m.group(2)
-    m2 = re.match(r"%sdv(\d+)$" % re.escape(today), cur)
-    new = today if not cur.startswith(today) else today + "dv%d" % ((int(m2.group(1)) + 1) if m2 else 2)
+    # Clock suffix on a same-day re-bump (other scripts bump shared tags - a counter can
+    # land on a tag already served earlier that day).
+    new = today if not cur.startswith(today) else today + "dv" + datetime.datetime.now().strftime("%H%M%S")
     if cur == new:
         return html
     log("  bump %s ?v= %s -> %s" % (fname, cur, new))

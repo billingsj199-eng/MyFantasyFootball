@@ -67,8 +67,9 @@ def bump_tag(html, fname):
     if not m:
         return html
     cur = m.group(2)
-    m2 = re.match(r"%spt(\d+)$" % re.escape(today), cur)
-    new = today if not cur.startswith(today) else today + "pt%d" % ((int(m2.group(1)) + 1) if m2 else 2)
+    # Clock suffix on a same-day re-bump (pull_draft_boards.py bumps this tag too - a counter
+    # can land on a tag already served earlier that day).
+    new = today if not cur.startswith(today) else today + "pt" + datetime.datetime.now().strftime("%H%M%S")
     return pat.sub(lambda mm: mm.group(1) + new, html) if cur != new else html
 
 

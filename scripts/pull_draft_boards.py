@@ -259,8 +259,10 @@ def bump_tag(html, fname):
         log("  WARN: no ?v= tag for", fname)
         return html
     cur = m.group(2)
-    m2 = re.match(r"%sdb(\d+)$" % re.escape(today), cur)
-    new = today if not cur.startswith(today) else today + "db%d" % ((int(m2.group(1)) + 1) if m2 else 2)
+    # Same-day re-bump gets a clock suffix, not a counter: combine_data.js is also bumped by
+    # apply_projected_testing.py ("pt"), so a counter reset db2 -> pt2 -> db2 (11-02) and
+    # re-served the 12:43 copy from browser caches.
+    new = today if not cur.startswith(today) else today + "db" + datetime.datetime.now().strftime("%H%M%S")
     if cur == new:
         return html
     log("  bump %s ?v= %s -> %s" % (fname, cur, new))

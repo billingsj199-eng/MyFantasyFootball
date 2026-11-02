@@ -42,8 +42,15 @@ Write-Log '=== weekly devy refresh start ==='
 # Repo turn (2026-10-20) only around each commit, not the whole run: a PFF login wait
 # can hold this job for up to an hour, and its files never overlap the other jobs'
 # (index.html goes through stage_vbump, never the working copy).
+# Log + toast (2026-11-02: three Mondays 10-19..11-02 skipped on a dirty combine_data.js
+# while Task Scheduler showed result 0 - a skip or failure must be loud, not just logged).
+function Send-DevyAlert($key, $msg) {
+    Write-Log $msg
+    Send-MffAlert -Key ('devy-' + $key) -Message ('Devy/CFB refresh: ' + $msg)
+}
+
 function Commit-Push($paths, $msg) {
-    if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'devy refresh')) { Write-Log "$msg left uncommitted (no repo turn)"; return }
+    if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'devy refresh')) { Send-DevyAlert 'no-turn' "$msg left uncommitted (no repo turn)"; return }
     try {
         $chg = git status --porcelain -- @paths
         if (-not $chg) { Write-Log "$msg - no movement, nothing to commit"; return }
@@ -51,10 +58,10 @@ function Commit-Push($paths, $msg) {
         $o = & $Python 'scripts\stage_vbump.py' @paths 2>&1 | Out-String
         Write-Log $o.Trim()
         git commit -m ('{0} {1}' -f $msg, (Get-Date -Format 'yyyy-MM-dd'))
-        if ($LASTEXITCODE -ne 0) { Write-Log "COMMIT FAILED (exit $LASTEXITCODE) - $msg left uncommitted"; return }
+        if ($LASTEXITCODE -ne 0) { Send-DevyAlert 'commit-failed' "COMMIT FAILED (exit $LASTEXITCODE) - $msg left uncommitted"; return }
         # Other jobs/cloud routines can land commits mid-morning; rebase so the push fast-forwards.
         $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'devy refresh') { 0 } else { 1 })   # aborts + alerts a conflicted pull --rebase (2026-10-14)
-        if ($LASTEXITCODE -eq 0) { Write-Log "pushed: $msg" } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - $msg commit is local" }
+        if ($LASTEXITCODE -eq 0) { Write-Log "pushed: $msg" } else { Send-DevyAlert 'push-failed' "PUSH FAILED (exit $LASTEXITCODE) - $msg commit is local" }
     } finally { Exit-RepoTurn }
 }
 
@@ -65,12 +72,12 @@ function Commit-Push($paths, $msg) {
 $BoardFiles = @('data/combine_data.js', 'data/draft_proj.js', 'scripts/draft_boards_2027.json')
 $dirty = git status --porcelain -- @BoardFiles
 if ($dirty) {
-    Write-Log "BOARDS SKIP: uncommitted changes in board files:`n$dirty"
+    Send-DevyAlert 'boards-skip' ("BOARDS SKIP: uncommitted changes in " + (($dirty | ForEach-Object { $_.Substring(3) }) -join ', ') + ' - commit or revert them, then rerun')
 } else {
     $out = & $Python 'scripts\pull_draft_boards.py' '--add' 2>&1 | Out-String
     Write-Log ('draft boards: ' + $out.Trim())
     if ($LASTEXITCODE -eq 3) { Write-Log 'consensus board unavailable - draftProj unchanged this week' }
-    elseif ($LASTEXITCODE -ne 0) { Write-Log "draft boards FAILED (exit $LASTEXITCODE) - continuing" }
+    elseif ($LASTEXITCODE -ne 0) { Send-DevyAlert 'boards-failed' "draft boards FAILED (exit $LASTEXITCODE) - continuing" }
     Commit-Push $BoardFiles 'Auto draft boards (NFLMDD mock + big board -> 2027 draftProj)'
 }
 
@@ -82,14 +89,14 @@ $Files = @('data/college_stats_devy.js', 'data/combine_data.js', 'scripts/devy_r
            'data/legend_birth_years.js', 'data/_bundle_lookups.js', 'data/_bundle_bbm.js', 'scripts/devy_birthdays_cache.json')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
-    Write-Log "SKIP: uncommitted changes present:`n$dirty"
-    exit 0
+    Send-DevyAlert 'skip' ("SKIPPED - no CFB stats this week: uncommitted changes in " + (($dirty | ForEach-Object { $_.Substring(3) }) -join ', ') + ' - commit or revert them, then rerun')
+    exit 2   # nonzero so Task Scheduler's Last Run Result shows the skip (was exit 0)
 }
 
 # 2. PFF college weekly facets (needs the PFF Pro API key in pbp_cache/pff/api_key.txt)
 $out = & $Python 'scripts\pull_pff_ncaa.py' 2>&1 | Out-String
 Write-Log ('pff ncaa: ' + $out.Trim())
-if ($LASTEXITCODE -eq 2) { Write-Log 'PFF API KEY MISSING OR REFUSED - college PFF grades stay at last pull until the key in pbp_cache/pff/api_key.txt works' }
+if ($LASTEXITCODE -eq 2) { Send-DevyAlert 'pff-key' 'PFF API KEY MISSING OR REFUSED - college PFF grades stay at last pull until the key in pbp_cache/pff/api_key.txt works' }
 elseif ($LASTEXITCODE -ne 0) { Write-Log "pff ncaa FAILED (exit $LASTEXITCODE) - continuing with cached files" }
 
 # 2b. Published projected forties (Stick to the Model board; Jack's DraftBuzz rows in the CSV win)
@@ -102,7 +109,7 @@ Write-Log ('projected testing apply: ' + $out.Trim())
 $out = & $Python 'scripts\refresh_devy_stats.py' 2>&1 | Out-String
 Write-Log $out
 if ($LASTEXITCODE -ne 0) {
-    Write-Log "REFRESH FAILED (exit $LASTEXITCODE) - nothing committed"
+    Send-DevyAlert 'refresh-failed' "REFRESH FAILED (exit $LASTEXITCODE) - nothing committed"
     exit 1
 }
 

@@ -72346,7 +72346,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       // sync belongs to the viewer's own account, not Jack's.
       const recentExt = window._udExtensionAppliedAt &&
                         (Date.now() - window._udExtensionAppliedAt) < 60000;
-      if (!window._udReadOnly && recentExt && window._udPortfolio && window._udPortfolio.drafts) {
+      // An extension push still waiting on this load merges regardless of age.
+      if (!window._udReadOnly && (recentExt || window._udExtensionAwaitingCloudSave) &&
+          window._udPortfolio && window._udPortfolio.drafts) {
         const merged = Object.assign({}, parsed.drafts || {}, window._udPortfolio.drafts);
         const rebuilt = _udRebuildPlayers(merged);
         window._udPortfolio = rebuilt;
@@ -72803,13 +72805,18 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         // the rankings page sees today's live ADPs every reload.
         try { if (typeof _udLoadAdpSnapshot === 'function') _udLoadAdpSnapshot(); } catch (_) {}
 
-        if (window._udPortfolio) return;
+        // 2026-11-02: a portfolio that only came from an extension push made
+        // before auth resolved (awaiting flag) is NOT loaded — skipping here
+        // left the flag stuck, so no portfolio/field save ever ran on Jack's
+        // desktop (cloud stuck at 10-26). Load and let applyParsed merge.
+        const _udLoaded = () => window._udPortfolio && !window._udExtensionAwaitingCloudSave;
+        if (_udLoaded()) return;
 
         let attempts = 0;
         const maxAttempts = 20; // ~10s at 500ms each
         const tryLoad = () => {
           attempts++;
-          if (window._udPortfolio) return; // already loaded
+          if (_udLoaded()) return; // already loaded
           const isAdminNow = (typeof window.isAdmin === 'function') && window.isAdmin();
           const isPremNow = (typeof window.hasPremium === 'function') && window.hasPremium();
           if (isAdminNow || isPremNow) {

@@ -1,0 +1,38 @@
+=== Questionable starters (final report), 2013-2025: 2,398 player-weeks; starter = 50%+ snaps and 3+ half-PPR pts/g in games before the streak ===
+  EV = his game (0 if he sat) / his pre-injury pts per game; engine EV = practice dock x (.85 if he missed last week)
+  streak  practice     n   played  snaps-if-played  EV      engine EV   EV/engine | seasons with EV < engine
+  k=0     DNP      347   0.533     0.887          0.449   0.750      0.598   | 13/13
+  k=0     LP      1150   0.807     0.931          0.734   1.000      0.734   | 13/13
+  k=0     FP       251   0.924     0.980          0.903   1.000      0.903   | 9/13
+  k=0     all     1748   0.769     0.934          0.702   0.950      0.738   | 13/13
+  k=1     DNP       34   0.294     0.856          0.305   0.637      0.478   | 2/3
+  k=1     LP       243   0.667     0.876          0.594   0.850      0.699   | 12/13
+  k=1     FP        60   0.817     0.913          0.817   0.850      0.961   | 4/8
+  k=1     all      337   0.656     0.883          0.604   0.829      0.729   | 12/13
+  k=2     LP       111   0.505     0.809          0.506   0.850      0.595   | 13/13
+  k=2     FP        30   0.900     0.892          0.719   0.850      0.846   | 2/2
+  k=2     all      151   0.570     0.840          0.521   0.836      0.623   | 12/13
+  k=3+    LP       109   0.541     0.817          0.421   0.850      0.495   | 11/13
+  k=3+    FP        46   0.717     0.759          0.562   0.850      0.661   | 5/6
+  k=3+    all      162   0.580     0.797          0.449   0.841      0.534   | 12/13
+
+  by position, streak 2+ (all practice):
+    QB  n   43  played 0.372  EV 0.343  engine 0.840
+    RB  n   52  played 0.692  EV 0.566  engine 0.850
+    WR  n  168  played 0.589  EV 0.470  engine 0.834
+    TE  n   50  played 0.580  EV 0.563  engine 0.842
+
+=== BACKUP in those weeks (RB/WR/TE; backup = top-snap teammate at the position during the starter's missed streak, 40%+ snaps, 3+ pts; played this week) ===
+  backup's game / his own fill-in rate during the streak (pre-injury = his rate before the injury / fill-in rate)
+  k=1    starter sat     n    66  backup game / fill-in rate 0.968  (median 0.734)  pre-injury level / fill-in 0.711
+  k=1    starter played  n   168  backup game / fill-in rate 0.668  (median 0.537)  pre-injury level / fill-in 0.822
+  k=1    all             n   234  backup game / fill-in rate 0.753  (median 0.613)  pre-injury level / fill-in 0.791
+  k=2    starter sat     n    44  backup game / fill-in rate 0.973  (median 0.847)  pre-injury level / fill-in 0.725
+  k=2    starter played  n    63  backup game / fill-in rate 0.859  (median 0.673)  pre-injury level / fill-in 0.739
+  k=2    all             n   107  backup game / fill-in rate 0.906  (median 0.728)  pre-injury level / fill-in 0.733
+  k=3+   starter sat     n    43  backup game / fill-in rate 0.857  (median 0.768)  pre-injury level / fill-in 0.792
+  k=3+   starter played  n    76  backup game / fill-in rate 0.845  (median 0.572)  pre-injury level / fill-in 0.817
+  k=3+   all             n   119  backup game / fill-in rate 0.849  (median 0.573)  pre-injury level / fill-in 0.808
+    RB streak 2+: n 44  starter played 0.682  backup game / fill-in 0.757  pre-injury level / fill-in 0.488
+    WR streak 2+: n 149  starter played 0.597  backup game / fill-in 0.935  pre-injury level / fill-in 0.930
+    TE streak 2+: n 33  starter played 0.606  backup game / fill-in 0.767  pre-injury level / fill-in 0.404

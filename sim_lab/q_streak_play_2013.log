@@ -1,0 +1,35 @@
+=== Questionable starters (40%+ snaps over 2+ prior games) 2013-2025: 3,019 rows ===
+  played by miss streak (raw):  k0: 75% n 2156 | k1: 63% n 447 | k2: 51% n 201 | k3+: 59% n 215
+    Q-FP   k0: 93% n 299 | k1: 83% n 81 | k2: 79% n 42 | k3+: 70% n 63
+    Q-LP   k0: 79% n 1420 | k1: 64% n 321 | k2: 47% n 143 | k3+: 57% n 141
+    Q-DNP  k0: 48% n 437 | k1: 24% n 45 | k2: 19% n 16 | k3+: 27% n 11
+
+  LEAVE-ONE-SEASON-OUT: Brier
+    shipped          all 0.18818 (+0.00%, seasons better 0/13) | streak rows 0.23593 (+0.00%, n 863) | k1 +0.00% | k2 +0.00% | k3+ +0.00%
+    streak pooled    all 0.18384 (-2.31%, seasons better 11/13) | streak rows 0.22072 (-6.45%, n 863) | k1 -2.66% | k2 -12.78% | k3+ -6.69%
+    streak x class   all 0.18338 (-2.55%, seasons better 9/13) | streak rows 0.21912 (-7.12%, n 863) | k1 -2.57% | k2 -14.67% | k3+ -7.48%
+
+  FORWARD (train on earlier seasons, test 2022-2025): Brier
+    shipped          all 0.19480 (+0.00%, seasons better 0/4) | streak rows 0.22739 (+0.00%, n 280) | k1 +0.00% | k2 +0.00% | k3+ +0.00%
+    streak pooled    all 0.19000 (-2.46%, seasons better 4/4) | streak rows 0.21144 (-7.01%, n 280) | k1 -5.09% | k2 -11.10% | k3+ -6.67%
+    streak x class   all 0.18989 (-2.52%, seasons better 4/4) | streak rows 0.21106 (-7.18%, n 280) | k1 -4.74% | k2 -11.69% | k3+ -7.27%
+
+  FIT ON ALL SEASONS (half-life 3, K 40): pooled logit shift k1: -0.29  k2: -0.53  k3+: -0.42
+    Q-DNP  k1   shift -0.40
+    Q-DNP  k2   shift -0.62
+    Q-DNP  k3+  shift -0.38
+    Q-FP   k1   shift -0.23
+    Q-FP   k2   shift -0.58
+    Q-FP   k3+  shift -0.62
+    Q-LP   k1   shift -0.35
+    Q-LP   k2   shift -0.69
+    Q-LP   k3+  shift -0.51
+    RB Q-FP: shipped 89% -> k1 87%  k2 82%  k3+ 81%
+    RB Q-LP: shipped 72% -> k1 64%  k2 56%  k3+ 60%
+    RB Q-DNP: shipped 47% -> k1 37%  k2 32%  k3+ 38%
+
+  LATER WEEKS (engine: Q dock is current-week only; availability curve skips Questionable -> next games assumed 100%)
+    Q this week, k0   n  2156: plays this week  75% | plays next game  80% | game after  81% | sat this week -> plays next  59% (n 548)
+    Q this week, k1   n   447: plays this week  63% | plays next game  76% | game after  78% | sat this week -> plays next  53% (n 164)
+    Q this week, k2   n   201: plays this week  51% | plays next game  77% | game after  74% | sat this week -> plays next  67% (n 98)
+    Q this week, k3+  n   215: plays this week  59% | plays next game  74% | game after  77% | sat this week -> plays next  49% (n 88)

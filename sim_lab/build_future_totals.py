@@ -35,7 +35,12 @@ import os, re, json, datetime, sys
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "data", "sim_future_totals.js")
-LAM, HL, CAP, FRESH_DAYS = 2.0, 2.0, 4.0, 10
+# CAP 4 -> 6 (2026-11-03, Jack "whatever best"): the 4-point cap bound only on backup-quarterback offenses (PHI McKee,
+# BAL Slovis / Huntley sat at -4 while the book had moved them further). 2019-25 sweep (own-totals harness, live timing):
+# vs the closing line -0.13% overall, -5.1% on the 2.7% of games where 4 binds (4/7 seasons; -8.0% / 5/7 checkpoint
+# timing), points-scored error flat; 6 = 8 = no cap (nothing moved past 6). 2026 W9 hold-out 1.04 -> 0.97, PHI +3.3 -> +1.4.
+# Backup build_future_totals.bak_pre_cap6_20261103.py.
+LAM, HL, CAP, FRESH_DAYS = 2.0, 2.0, 6.0, 10
 LAM_QB = 0.5     # ridge on a quarterback's deviation from his team's shift (backtest_future_totals_live_form.py)
 # weather a line already priced in (2019-25: closing line minus the preseason view ran -0.86 in wind 15+ and
 # -0.67 in wind 10-15 / rain / snow, vs -0.17 in clean games) - taken back out before the shift is measured

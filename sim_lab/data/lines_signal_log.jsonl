@@ -3128,3 +3128,6 @@
 {"ts":"2026-11-03T20:17Z","wk":9,"n":"chris rodriguez","name":"Chris Rodriguez Jr.","pos":"RB","tm":"JAX","gs":"","pr":"","seq":"","sl":"Questionable","g":"hand","books":["UD"],"usual":true,"ko":"2026-11-06T01:15Z"}
 {"ts":"2026-11-03T20:17Z","wk":9,"n":"emeka egbuka","name":"Emeka Egbuka","pos":"WR","tm":"TB","gs":"","pr":"","seq":"","sl":"Out","g":"foot","books":["DK","FD","PP"],"usual":true,"ko":"2026-11-09T01:20Z"}
 {"ts":"2026-11-03T20:17Z","wk":9,"n":"woody marks","name":"Woody Marks","pos":"RB","tm":"HOU","gs":"","pr":"","seq":"","sl":"Questionable","g":"other","books":["DK","FD","PP"],"usual":true,"ko":"2026-11-08T21:05Z"}
+{"ts":"2026-11-03T20:39Z","wk":9,"n":"chris rodriguez","name":"Chris Rodriguez Jr.","pos":"RB","tm":"JAX","gs":"","pr":"","seq":"","sl":"Questionable","g":"hand","books":[],"usual":true,"ko":"2026-11-06T01:15Z"}
+{"ts":"2026-11-03T20:39Z","wk":9,"n":"emeka egbuka","name":"Emeka Egbuka","pos":"WR","tm":"TB","gs":"","pr":"","seq":"","sl":"Out","g":"foot","books":["DK","FD","PP","UD"],"usual":true,"ko":"2026-11-09T01:20Z"}
+{"ts":"2026-11-03T20:39Z","wk":9,"n":"woody marks","name":"Woody Marks","pos":"RB","tm":"HOU","gs":"","pr":"","seq":"","sl":"Questionable","g":"other","books":["DK","FD","PP","UD"],"usual":true,"ko":"2026-11-08T21:05Z"}

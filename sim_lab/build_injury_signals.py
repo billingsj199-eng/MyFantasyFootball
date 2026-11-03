@@ -89,6 +89,11 @@ MULTI_SPAN = {"multiple": (2, 4), "a couple": (2, 4), "some": (2, 4), "a few": (
 # placed on IR = 4-game minimum (2026 rules); "designated to return / activated / back from IR" are returns (OTHER guard + RX_IR_BACK)
 RX_IR = re.compile(r"(?:plac(?:ed|es|ing)|land(?:s|ed)?|lands?|mov(?:ed|es)|head(?:ed|ing|s)?|go(?:es|ing)?|put|sent|going)\s+(?:him\s+)?(?:on|to)\s+(?:the\s+)?(?:injured reserve|ir)\b|\b(?:injured reserve|ir)(?:\s+stint)?\s+(?:is\s+)?(?:expected|likely|coming|looming|bound)|(?:remains|still|stays) on (?:injured reserve|ir)\b", re.I)   # no bare "to IR": "Chenal to IR opens the spot" is someone else
 RX_IR_BACK = re.compile(r"activat\w+|designat\w+ (?:him |\w+ )?(?:to|for) return|return\w* (?:from|off)|off (?:of )?(?:injured reserve|ir)\b|practice window|eligible to return|window (?:opened|opens)", re.I)
+# 2026-11-03 (Jack: when Lamar's comeback starts, start projecting it): the team opening his IR return - designated
+# to return, practice window opened, activated - ends a season / multi-week read. No return week is invented: the
+# window is dropped and his designation + the availability curve take over. "Eligible to return" is a minimum date,
+# not a comeback, so it is not in here.
+RX_IR_ACTIVE = re.compile(r"designat\w+ (?:him |\w+ )?(?:to|for) return|(?:practice )?window (?:has )?(?:opened|opens|open)\b|opens? (?:\w+['’]s |his |the |a )?(?:\d+-day )?practice window|activat\w+ (?:him |\w+ )?(?:off|from|to the active roster|to the 53)|return\w* to practice", re.I)
 RX_TIMELINE_N = re.compile(_N + r"[- ]week (?:timeline|absence|recovery|timetable)", re.I)
 RX_RET = re.compile(r"(?:out until|until at least|earliest (?:return )?(?:is |in )?|eligible (?:to return )?(?:in |for )?|expected back (?:in |by |for )?|targeting (?:a )?|return(?:s|ing)? (?:in |by |for )|back (?:in |by |for )|out through)\s*(?:at least )?week\s*(\d{1,2})", re.I)
 RX_OUT = re.compile(r"ruled out|will not play|won'?t play|not playing|inactive (?:for|vs|tonight|sunday|monday|thursday)|ruled inactive|declared (?:out|inactive)|is out (?:for|vs)|out for (?:week \d+|sunday|monday|thursday|saturday|tonight)|will sit|downgraded to out", re.I)
@@ -114,7 +119,7 @@ def _other(text, m):
     return re.search(OTHER, pre, re.I) is not None
 
 def parse_item(it):
-    """-> {k: season|weeks|ret|out|play|doubt|gtd|w2w, lo, hi, wk} or None. The routine's own structured `avail`
+    """-> {k: season|weeks|ret|irback|out|play|doubt|gtd|w2w, lo, hi, wk} or None. The routine's own structured `avail`
     field wins when present. The fallback reads the HEADLINE only (the take is commentary and usually names other
     players) and skips hedged or second-hand phrases; the engine also requires the player's own designation to agree."""
     a = it.get("avail")
@@ -138,6 +143,8 @@ def parse_item(it):
         lo = _n(m.group(1))
         if lo and lo <= 16:
             return {"k": "weeks", "lo": lo, "hi": lo + 2, "unit": (m.group(2)[0].lower() if m.lastindex and m.lastindex >= 2 else "w")}
+    m = RX_IR_ACTIVE.search(text)
+    if ok(m) and not RX_IR.search(text) and not ok(RX_PLAY.search(text)): return {"k": "irback"}   # "...and cleared to play Week 8" stays a play read (it also ends the window)
     # 2026-10-14: injured reserve and vague multi-week timelines (no number in the headline)
     m = RX_IR.search(text)
     if ok(m) and not RX_IR_BACK.search(text):
@@ -280,6 +287,8 @@ def news_state(items, kicks, cur, played=None, opps=None):
                 s["out"].pop(str(wk), None)
                 if s.get("win") and s["win"]["k"] != "season" and wk >= s["win"]["from"]: s.pop("win", None)   # back ahead of the timeline
                 elif s.get("win") and s["win"]["k"] == "season": s.pop("win", None)
+        elif k == "irback":
+            s.pop("win", None)   # comeback under way: the designation + availability curve own it from here
         # w2w: no window - the designation logic + availability curve own it
     out = {}
     for n, s in by.items():

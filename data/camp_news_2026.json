@@ -2,6 +2,37 @@
  "updated": "2026-11-02T23:15:06Z",
  "items": [
   {
+   "player": "Lamar Jackson",
+   "team": "BAL",
+   "pos": "QB",
+   "date": "2026-11-02",
+   "headline": "Headed to IR for right thumb surgery; Rapoport says he is 'likely out for the season'",
+   "take": "Coach Jesse Minter called the thumb injury potentially season-ending, and IR means four games at minimum either way. With Huntley (turf toe) also out, Baltimore is down to Slovis / Fagnano.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-11-02/rap-lamar-thumb-likely-out-for-the-season",
+   "tag": "injury",
+   "avail": {
+    "k": "season"
+   },
+   "src_type": "insider"
+  },
+  {
+   "player": "Tyler Huntley",
+   "team": "BAL",
+   "pos": "QB",
+   "date": "2026-11-02",
+   "headline": "Turf toe from Week 8 expected to cost him extended time; out for Week 9 vs. Jaguars",
+   "take": "Ravens signed Kedon Slovis off Green Bay's practice squad; 'extended time' read as 3-6 weeks.",
+   "url": "https://nfltraderumors.co/ravens-qb-tyler-huntley-expected-to-miss-extended-time-with-turf-toe/",
+   "tag": "injury",
+   "avail": {
+    "k": "weeks",
+    "lo": 3,
+    "hi": 6,
+    "unit": "w"
+   },
+   "src_type": "report"
+  },
+  {
    "player": "Saquon Barkley",
    "team": "PHI",
    "pos": "RB",

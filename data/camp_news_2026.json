@@ -1,6 +1,57 @@
 {
- "updated": "2026-11-02T23:15:06Z",
+ "updated": "2026-11-03T23:15:43Z",
  "items": [
+  {
+   "player": "Zach Charbonnet",
+   "team": "SEA",
+   "pos": "RB",
+   "date": "2026-11-03",
+   "headline": "Season debut vs. Bears: 9 touches (6 car, 3 rec) after Feb ACL surgery",
+   "take": "Now Seattle's clear early-down back with Kenneth Walker in KC -- role should grow weekly; solid speculative flex add.",
+   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-11-03/nine-touches-for-charbonnet-in-first-game-back",
+   "tag": "role",
+   "src_type": "report"
+  },
+  {
+   "player": "Kendrick Bourne",
+   "team": "ARI",
+   "pos": "WR",
+   "date": "2026-11-02",
+   "headline": "Fractured tibia from Week 8 OT win at Dallas ends his season; no surgery needed",
+   "take": "Michael Wilson is now Arizona's unquestioned WR1 target hog with Bourne and Harrison Jr. both gone.",
+   "url": "https://x.com/AdamSchefter/status/2117388095079272923",
+   "tag": "injury",
+   "avail": {
+    "k": "season"
+   },
+   "src_type": "insider"
+  },
+  {
+   "player": "D'Andre Swift",
+   "team": "CHI",
+   "pos": "RB",
+   "date": "2026-11-02",
+   "headline": "Rushed for 3 TDs (27 car, 69 yds) in 34-17 MNF rout of Seahawks",
+   "take": "Bears' ground game and offense rolling behind Caleb Williams -- Swift is a weekly RB1 in this offense right now.",
+   "url": "https://sports.yahoo.com/articles/bears-vs-seahawks-dandre-swift-155058144.html",
+   "tag": "riser",
+   "src_type": "report"
+  },
+  {
+   "player": "Deebo Samuel",
+   "team": "SF",
+   "pos": "WR",
+   "date": "2026-10-26",
+   "headline": "Shanahan: hamstring has a chance to clear him for Week 9 vs. Raiders",
+   "take": "First real return target since the Week 6 hamstring strain -- monitor Wed/Thu practice reports before trusting him as a start.",
+   "url": "https://www.rotoballer.com/?p=1976593",
+   "tag": "injury",
+   "avail": {
+    "k": "ret",
+    "wk": 9
+   },
+   "src_type": "team"
+  },
   {
    "player": "Lamar Jackson",
    "team": "BAL",
@@ -361,7 +412,7 @@
    "pos": "K",
    "date": "2026-10-28",
    "headline": "Chiefs sign Justin Tucker to practice squad after Butker misses two kicks",
-   "take": "Not an immediate change, but a shot across the bow \u2014 watch Butker's role if the misses continue.",
+   "take": "Not an immediate change, but a shot across the bow — watch Butker's role if the misses continue.",
    "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-28/kc-inks-justin-tucker-amid-butker-struggles",
    "tag": "role",
    "src_type": "team"
@@ -525,7 +576,7 @@
    "pos": "WR",
    "date": "2026-10-20",
    "headline": "Tore patellar tendon in MNF loss to 49ers, out for the season per Schefter",
-   "take": "Correction: an earlier scan reported McLaurin played Monday night with no designation; he was actually carted off in the first quarter and is done for 2026 \u2014 treat Washington's WR room as missing its WR1 rest of season",
+   "take": "Correction: an earlier scan reported McLaurin played Monday night with no designation; he was actually carted off in the first quarter and is done for 2026 — treat Washington's WR room as missing its WR1 rest of season",
    "url": "https://x.com/AdamSchefter/status/2112621538369245562",
    "tag": "injury",
    "avail": {
@@ -539,7 +590,7 @@
    "pos": "TE",
    "date": "2026-10-23",
    "headline": "Placed on IR with season-ending knee injury suffered vs. Patriots",
-   "take": "Done for 2026 \u2014 Colston Loveland becomes the clear TE1 in Chicago's passing game, with rookie Sam Roush the No. 2.",
+   "take": "Done for 2026 — Colston Loveland becomes the clear TE1 in Chicago's passing game, with rookie Sam Roush the No. 2.",
    "url": "https://chicago.suntimes.com/bears/2026/10/23/bears-lose-te-cole-kmet-for-the-season-with-knee-injury",
    "tag": "injury",
    "avail": {
@@ -564,7 +615,7 @@
    "pos": "TE",
    "date": "2026-10-23",
    "headline": "Downgraded to DNP Friday, doubtful for Week 7 at Houston with neck injury",
-   "take": "Trending toward a second straight missed game \u2014 plan for a replacement TE vs. the Texans.",
+   "take": "Trending toward a second straight missed game — plan for a replacement TE vs. the Texans.",
    "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-23/theo-johnson-neck-doubtful-for-week-7-vs-texans",
    "tag": "injury",
    "avail": {
@@ -579,7 +630,7 @@
    "pos": "WR",
    "date": "2026-10-23",
    "headline": "Ruled out for Week 7 vs. Seahawks with hamstring injury",
-   "take": "Second straight week out \u2014 Jalen Royals and Xavier Worthy stay the top beneficiaries in Kansas City's passing game.",
+   "take": "Second straight week out — Jalen Royals and Xavier Worthy stay the top beneficiaries in Kansas City's passing game.",
    "url": "https://sports.yahoo.com/articles/chiefs-seahawks-week-7-final-194500481.html",
    "tag": "injury",
    "avail": {
@@ -609,7 +660,7 @@
    "pos": "QB",
    "date": "2026-10-23",
    "headline": "Officially questionable for Sunday vs. Bengals after a third straight limited practice",
-   "take": "Real game-time decision on the ankle \u2014 have a Cooper Rush/Josh Johnson contingency ready if you stream Ravens pieces.",
+   "take": "Real game-time decision on the ankle — have a Cooper Rush/Josh Johnson contingency ready if you stream Ravens pieces.",
    "url": "https://www.cbssports.com/nfl/news/nfl-week-7-injury-report-baker-mayfield-lamar-jackson-questionable/",
    "tag": "injury",
    "avail": {
@@ -624,7 +675,7 @@
    "pos": "QB",
    "date": "2026-10-23",
    "headline": "Listed questionable for Week 7 vs. Panthers after clearing thumb to practice",
-   "take": "No clean start/sit call yet \u2014 if he's out, Jalon Daniels starts a fourth straight game.",
+   "take": "No clean start/sit call yet — if he's out, Jalon Daniels starts a fourth straight game.",
    "url": "https://www.buccaneers.com/news/buccaneers-panthers-injury-report-oct-23-week-7-2026",
    "tag": "injury",
    "avail": {
@@ -639,7 +690,7 @@
    "pos": "WR",
    "date": "2026-10-23",
    "headline": "Ruled out for Week 7 vs. Panthers with concussion/foot injury",
-   "take": "Out again \u2014 expanded target share for whoever starts at QB to throw to among Tampa Bay's remaining WRs.",
+   "take": "Out again — expanded target share for whoever starts at QB to throw to among Tampa Bay's remaining WRs.",
    "url": "https://www.buccaneers.com/news/buccaneers-panthers-injury-report-oct-23-week-7-2026",
    "tag": "injury",
    "avail": {
@@ -1002,7 +1053,7 @@
    "pos": "WR",
    "date": "2026-10-17",
    "headline": "Ramped up to a full practice Friday and will play Week 6 vs. Panthers (hamstring/toe)",
-   "take": "Big sign of life after two straight DNPs \u2014 clears him as a confident start even with Tanner McKee at QB",
+   "take": "Big sign of life after two straight DNPs — clears him as a confident start even with Tanner McKee at QB",
    "url": "https://sports.yahoo.com/articles/eagles-panthers-final-injury-report-211315959.html",
    "tag": "injury",
    "avail": {
@@ -1028,7 +1079,7 @@
    "pos": "RB",
    "date": "2026-10-17",
    "headline": "Placed on injured reserve ahead of Week 6 vs. Panthers",
-   "take": "Eagles backfield depth behind the injured Barkley is now a real concern \u2014 watch the inactive list for a practice-squad call-up",
+   "take": "Eagles backfield depth behind the injured Barkley is now a real concern — watch the inactive list for a practice-squad call-up",
    "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/eagles-injury-update-week-6-saquon-barkley-devonta-smith-drew-kendall-jalen-hurts/759046/",
    "tag": "injury",
    "src_type": "team"
@@ -1039,7 +1090,7 @@
    "pos": "QB",
    "date": "2026-10-17",
    "headline": "Full practice Friday, officially Questionable Week 6 vs. Falcons; must pass pregame stress test",
-   "take": "Williams himself says the hamstring is actually torn, not the Grade 2 strain first reported \u2014 Schefter/Rapoport expect him to start, but treat as a real game-time gamble",
+   "take": "Williams himself says the hamstring is actually torn, not the Grade 2 strain first reported — Schefter/Rapoport expect him to start, but treat as a real game-time gamble",
    "url": "https://www.chicagobears.com/news/injury-update-caleb-williams-questionable-for-sunday-s-game-vs-falcons",
    "tag": "injury",
    "avail": {
@@ -1068,7 +1119,7 @@
    "team": "NYJ",
    "pos": "RB",
    "date": "2026-10-17",
-   "headline": "Entrenched as Jets' lead back again with Hall out \u2014 played 32 of 34 snaps last week",
+   "headline": "Entrenched as Jets' lead back again with Hall out — played 32 of 34 snaps last week",
    "take": "Full-workload RB2 value as long as Hall remains sidelined",
    "url": "https://clutchpoints.com/nfl/new-york-jets/jets-news-new-york-still-missing-breece-hall-for-week-5-clash-with-browns",
    "tag": "role",
@@ -1080,7 +1131,7 @@
    "pos": "QB",
    "date": "2026-10-17",
    "headline": "Out Week 6 vs. Steelers with dislocated thumb, expected to miss roughly 3-6 weeks total",
-   "take": "Jalon Daniels gets a third straight start \u2014 Mayfield's return is a Week 9-11 question, not a Week 6 one",
+   "take": "Jalon Daniels gets a third straight start — Mayfield's return is a Week 9-11 question, not a Week 6 one",
    "url": "https://www.tsn.ca/nfl/article/buccaneers-qb-mayfield-out-at-least-three-weeks-with-thumb-injury-n1-50052996/",
    "tag": "injury",
    "avail": {
@@ -1108,7 +1159,7 @@
    "pos": "WR",
    "date": "2026-10-17",
    "headline": "Set to sit out Week 6 vs. Chiefs with the hamstring injury suffered in Week 5",
-   "take": "Chargers have a Week 7 bye, so his next realistic game back is Week 8 vs. the Rams \u2014 Valdes-Scantling, Wease and Davis absorb the targets in the meantime",
+   "take": "Chargers have a Week 7 bye, so his next realistic game back is Week 8 vs. the Rams — Valdes-Scantling, Wease and Davis absorb the targets in the meantime",
    "url": "https://www.rotoballer.com/?p=1964898",
    "tag": "injury",
    "avail": {
@@ -1343,28 +1394,6 @@
    "src_type": "team"
   },
   {
-   "player": "Will Shipley",
-   "team": "PHI",
-   "pos": "RB",
-   "date": "2026-10-12",
-   "headline": "Schefter: partial tear of plantar fascia, could miss multiple weeks",
-   "take": "With Saquon Barkley (hamstring) also out, Philly's backfield is down to Dameon Pierce and Carson Steele -- speculative, low-confidence flex plays at best.",
-   "url": "https://www.inquirer.com/eagles/will-shipley-foot-injury-running-back-depth-chart-20261012.html",
-   "tag": "injury",
-   "src_type": "insider"
-  },
-  {
-   "player": "Quinshon Judkins",
-   "team": "CLE",
-   "pos": "RB",
-   "date": "2026-10-12",
-   "headline": "Left Week 5 loss in a boot; Monken calls ankle \"tweak\" day-to-day, hasn't ruled him out for Browns-Ravens",
-   "take": "Snap share already dipped to 53% before the injury -- worth checking Friday's report, with Raheim Sanders the direct backup if Judkins sits.",
-   "url": "https://www.rotoballer.com/?p=1963827",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
    "player": "Caleb Williams",
    "team": "CHI",
    "pos": "QB",
@@ -1372,21 +1401,6 @@
    "headline": "Rapoport: \"all signs point\" to Williams playing Week 6 vs. Falcons; Pelissero more cautious",
    "take": "Conflicting insider reads -- Rapoport bullish after a strenuous pregame workout, Pelissero says it could slip to Week 7 -- treat as truly questionable until Friday's report.",
    "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-12/all-signs-point-to-caleb-williams-playing-week-6",
-   "tag": "injury",
-   "avail": {
-    "k": "ret",
-    "wk": 6
-   },
-   "src_type": "insider"
-  },
-  {
-   "player": "Lamar Jackson",
-   "team": "BAL",
-   "pos": "QB",
-   "date": "2026-10-12",
-   "headline": "Rapoport: Jackson has a \"real chance\" to return Week 6 vs. Browns after missing Week 5 with ankle sprain",
-   "take": "Still unconfirmed, but trending positive -- don't bench Tyler Huntley as a streamer insurance play until Friday's report.",
-   "url": "https://www.newsweek.com/sports/nfl/ravens-share-ankle-injury-update-on-qb-lamar-jackson-12522959",
    "tag": "injury",
    "avail": {
     "k": "ret",
@@ -1410,50 +1424,6 @@
    "src_type": "insider"
   },
   {
-   "player": "TreVeyon Henderson",
-   "team": "NE",
-   "pos": "RB",
-   "date": "2026-10-12",
-   "headline": "Schefter: high ankle sprain from Sunday's rout of Raiders will cost him \"multiple weeks\"; no surgery needed",
-   "take": "Corey Kiner profiles as the top standalone back behind Rhamondre Stevenson in the meantime -- a streamable flex in deeper leagues.",
-   "url": "https://www.espn.com/nfl/story/_/id/50173985/sources-patriots-treveyon-henderson-high-ankle-sprain",
-   "tag": "injury",
-   "src_type": "insider"
-  },
-  {
-   "player": "Josh Allen",
-   "team": "BUF",
-   "pos": "QB",
-   "date": "2026-10-12",
-   "headline": "Throws for 3 TDs, runs for a 4th, and adds 121 rush yards in 37-34 OT win over Rams",
-   "take": "Elite dual-threat floor on display again -- locked-in weekly QB1 regardless of matchup.",
-   "url": "https://www.nfl.com/news/bills-rams-on-monday-night-football-what-we-learned-from-buffalo-s-37-34-overtime-win",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
-   "player": "Davante Adams",
-   "team": "LAR",
-   "pos": "WR",
-   "date": "2026-10-12",
-   "headline": "Catches 2 TDs in Rams' 37-34 overtime loss to Bills",
-   "take": "Bounces back from a quiet Week 4 with a multi-TD night -- still Stafford's clear top red-zone target.",
-   "url": "https://www.espn.com/nfl/game/_/gameId/401872994/bills-rams",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
-   "player": "Kyren Williams",
-   "team": "LAR",
-   "pos": "RB",
-   "date": "2026-10-12",
-   "headline": "Scores late tying TD in regulation as Rams force overtime vs. Bills before falling 37-34",
-   "take": "Continues to produce as a high-volume RB1 even in a loss -- no concerns about his workload.",
-   "url": "https://www.therams.com/news/game-recap-rams-fall-to-bills-37-34-in-overtime-on-monday-night-football",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
    "player": "Tyquan Thornton",
    "team": "KC",
    "pos": "WR",
@@ -1469,39 +1439,6 @@
     "unit": "w"
    },
    "src_type": "insider"
-  },
-  {
-   "player": "Jaylen Watson",
-   "team": "LAR",
-   "pos": "CB",
-   "date": "2026-10-12",
-   "headline": "Hopeful to play Monday night vs. Bills after shoulder injury cost him Week 4",
-   "take": "Not a fantasy-relevant position, but his return would stabilize a Rams secondary banged up behind him.",
-   "url": "https://www.therams.com/news/rams-injury-updates-bills-week-5-2026-jaylen-watson-aaron-donald-terrance-ferguson-monday-night-football",
-   "tag": "other",
-   "src_type": "team"
-  },
-  {
-   "player": "Colby Parkinson",
-   "team": "LAR",
-   "pos": "TE",
-   "date": "2026-10-12",
-   "headline": "Still working through knee/shoulder issues that cost him Week 4, ahead of MNF vs. Bills",
-   "take": "No clear word yet that he's cleared for tonight -- Rams' passing-game TE snaps remain in flux until the inactive list drops.",
-   "url": "https://www.therams.com/news/rams-injury-updates-bills-week-5-2026-jaylen-watson-aaron-donald-terrance-ferguson-monday-night-football",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
-   "player": "Terrance Ferguson",
-   "team": "LAR",
-   "pos": "TE",
-   "date": "2026-10-12",
-   "headline": "Placed on injured reserve with a medial ankle sprain McVay called severe",
-   "take": "Rookie TE's absence pushes more Rams receiving-TE work toward Colby Parkinson once he's healthy; deep-league streaming note only.",
-   "url": "https://www.therams.com/news/rams-injury-updates-bills-week-5-2026-jaylen-watson-aaron-donald-terrance-ferguson-monday-night-football",
-   "tag": "injury",
-   "src_type": "team"
   },
   {
    "player": "Tank Bigsby",
@@ -1627,7 +1564,7 @@
    "pos": "QB",
    "date": "2026-09-25",
    "headline": "Officially out for rest of regular season; surgery for MCL/PCL/meniscus damage",
-   "take": "Season is over \u2014 bench in all formats; Jameis Winston is the full-time starter",
+   "take": "Season is over — bench in all formats; Jameis Winston is the full-time starter",
    "url": "https://www.giants.com/news/jaxson-dart-to-miss-rest-of-regular-season-jameis-winston-to-start-quarterback-injury-john-harbaugh",
    "tag": "injury",
    "avail": {

@@ -76569,7 +76569,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     let html = '';
           const _liveOn = !!(live && live.scored);
           const _wkHdr = _liveOn && live.wkCol ? 'W' + live.wkCol : 'WK';
-          html += `<table style="width:100%;min-width:680px;border-collapse:collapse;font-size:.6875rem">
+          // table-layout:auto overrides the mobile `table{table-layout:fixed}`
+          // rule, which split columns evenly and let long names spill into POS.
+          html += `<table style="width:100%;min-width:680px;table-layout:auto;border-collapse:collapse;font-size:.6875rem">
             <thead><tr style="border-bottom:1px solid var(--border)">
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">RD</th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)">PICK</th>

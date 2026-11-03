@@ -119,7 +119,7 @@ JUNK_FILE_RE = re.compile(
     r'\b(logo|flag|icon|symbol|map|wordmark|seal|badge|crest|commons|wiki\w*|ambox|nuvola|crystal'
     r'|question|edit|star|check|signature|autograph|stadium|arena|trophy|ring|helmet|jersey'
     r'|stamp|cover|poster|ticket|plaque|statue|bust|grave|house|school|chart|graph|diagram'
-    r'|pictogram|disambig|padlock|speaker|sound|audio)\b', re.I)
+    r'|pictogram|disambig|padlock|speaker|sound|audio|mugshot|booking)\b', re.I)
 
 
 def canon_tm(tm, yr):
@@ -620,6 +620,7 @@ def main():
     ap.add_argument('--skip-teams', action='store_true', help='stage A only (no per-team candidates)')
     ap.add_argument('--skip-audit', action='store_true', help='skip the ESPN id sanity pass')
     ap.add_argument('--skip-file-search', action='store_true', help='skip stage C (Commons file search)')
+    ap.add_argument('--file-search', action='store_true', help='with --names: run stage C too (off by default — namesake hits)')
     ap.add_argument('--dry-run', action='store_true', help='list candidates, no requests')
     args = ap.parse_args()
 
@@ -685,7 +686,10 @@ def main():
             res = query_pages(titles)
             for n, t in zip(chunk, titles):
                 p = res.get(t)
-                if p and page_ok(p) and p.get('thumbnail', {}).get('source'):
+                # A junk lead image (a police mugshot: Kellen Winslow II, 11-02) is no photo.
+                lead_ok = p and not JUNK_FILE_RE.search(urllib.parse.unquote(
+                    p.get('thumbnail', {}).get('source', '').split('?')[0].rsplit('/', 1)[-1]).replace('_', ' '))
+                if p and page_ok(p) and p.get('thumbnail', {}).get('source') and lead_ok:
                     found[n] = p
                 else:
                     if p and vi == 1 and not page_ok(p):
@@ -711,8 +715,11 @@ def main():
 
     # ---- Stage C: Commons file search for the names stage A could not place --
     c_searched = state.setdefault('commons_searched', {})
+    # Stage C can't tell the player's file from a namesake's on common names: an 11-02 --names
+    # run matched Brent Jones's daughter, a baseball Gary Brown, the 2019 Bears' Anthony Miller
+    # and the 2022 Chiefs' Justin Watson (4 of 4 wrong), so --names runs skip it unless asked.
     if args.names:
-        todo_c = [n for n in args.names if n not in table and (args.force or n not in espn or n in suspects)]
+        todo_c = [n for n in args.names if args.file_search and n not in table and (args.force or n not in espn or n in suspects)]
     else:
         todo_c = [n for n in no_id if n not in table and n not in c_searched]
         todo_c += [n for n in sorted(suspects) if n not in table and n not in todo_c and n not in c_searched]

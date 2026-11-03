@@ -7338,6 +7338,71 @@ function _tcvTeamOutline(teamName){
 // Generic head-and-shoulders fallback for covered cards with no headshot
 const _TCV_SIL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.7 0 4.8-2.2 4.8-4.9S14.7 2.2 12 2.2 7.2 4.4 7.2 7.1 9.3 12 12 12zm0 2.2c-4 0-9 2-9 6v1.6h18v-1.6c0-4-5-6-9-6z"/></svg>';
 
+// No-photo face for the games (trivia reveal, Higher/Lower): a helmet + shoulder-pads
+// figure in the team's colors with the player's initials on the jersey (Jack 11-02:
+// photos first, a better fallback than a bare initials box). `team` = abbreviation in
+// any legacy spelling, or a full name; `yr` picks era colors the current table can't
+// show (Oilers, creamsicle Bucs, Baltimore / St. Louis teams, red Patriots, kelly-green
+// Eagles). Unknown team → slate. Returns an SVG string that fills its box.
+const _FACE_TEAM_ALIAS = {
+  ARZ: 'ARI', CRD: 'ARI', PHO: 'ARI', BLT: 'BAL', RAV: 'BAL', CLV: 'CLE', HST: 'HOU', HOI: 'HOU',
+  JAC: 'JAX', KAN: 'KC', KCC: 'KC', LA: 'LAR', RAM: 'LAR', STL: 'LAR', SDG: 'LAC', SD: 'LAC', SAN: 'LAC',
+  OAK: 'LV', OAR: 'LV', RAI: 'LV', LVR: 'LV', NEP: 'NE', NWE: 'NE', NOS: 'NO', NOR: 'NO', SFO: 'SF',
+  TAM: 'TB', TBB: 'TB', OTI: 'TEN', TENN: 'TEN', WSH: 'WAS', RED: 'WAS', GNB: 'GB'
+};
+let _faceAbbrToFull = null, _faceSvgSeq = 0;
+function _faceTeamColors(team, yr) {
+  let t = String(team || '').split('/')[0].trim();
+  if (!t) return null;
+  if (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[t]) t = TEAM_ABBR_MAP[t];
+  const raw = t.toUpperCase(), y = +yr || 0;
+  if (y) {
+    if ((raw === 'HOU' || raw === 'HOI' || raw === 'HST') && y <= 1996) return { p: '#6CACE4', s: '#C8102E' };
+    if ((raw === 'TEN' || raw === 'OTI') && y <= 1998) return { p: '#6CACE4', s: '#C8102E' };
+    if (raw === 'STL' && y <= 1987) t = 'ARI';
+    if ((raw === 'BAL' || raw === 'BLT') && y <= 1983) t = 'IND';
+    if ((raw === 'TB' || raw === 'TAM' || raw === 'TBB') && y <= 1996) return { p: '#F57F20', s: '#C8102E' };
+    if ((raw === 'NE' || raw === 'NWE' || raw === 'NEP') && y <= 1992) return { p: '#C8102E', s: '#002244' };
+    if (raw === 'PHI' && y <= 1995) return { p: '#00843D', s: '#A5ACAF' };
+  }
+  const abbr = _FACE_TEAM_ALIAS[t.toUpperCase()] || t.toUpperCase();
+  if (!_faceAbbrToFull && typeof TEAM_ABBR_MAP !== 'undefined') {
+    _faceAbbrToFull = {};
+    Object.entries(TEAM_ABBR_MAP).forEach(([full, a]) => { _faceAbbrToFull[a] = full; });
+  }
+  const full = (_faceAbbrToFull && _faceAbbrToFull[abbr]) || t;
+  return _TCV_TEAM_COLORS[full] || null;
+}
+window._mffFaceFallbackSvg = function(name, team, yr) {
+  const c = _faceTeamColors(team, yr) || { p: '#475569', s: '#E2E8F0' };
+  const p = c.p, s = c.s;
+  // Jersey/helmet = primary; stripe + initials = secondary unless it vanishes on the primary.
+  const trim = Math.abs(_tcvLum(s) - _tcvLum(p)) < 0.18 ? (_tcvLum(p) > 0.5 ? '#101820' : '#FFFFFF') : s;
+  const dark = _tcvLum(p) < 0.22;
+  const rim = dark ? trim : 'none';           // dark colors get a rim so the figure never melts into the backdrop
+  const glow = dark ? s : p;
+  const mask = dark ? '#9CA3AF' : '#E5E7EB';
+  const ini = String(name || '').replace(/\s+(Jr\.?|Sr\.?|II|III|IV)$/i, '').split(/\s+/).filter(Boolean)
+    .slice(0, 2).map(w => w.replace(/[^A-Za-z]/g, '')[0] || '').join('').toUpperCase();
+  const id = 'mffFace' + (++_faceSvgSeq);
+  return `<svg class="mff-face-fallback" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block;width:100%;height:100%">` +
+    `<defs><radialGradient id="${id}" cx=".5" cy=".38" r=".75"><stop offset="0" stop-color="${glow}" stop-opacity=".55"/><stop offset="1" stop-color="${glow}" stop-opacity="0"/></radialGradient></defs>` +
+    `<rect width="100" height="100" fill="#141C2B"/><rect width="100" height="100" fill="url(#${id})"/>` +
+    // Scaled into the middle band so a 4:3 trivia square (sliced top + bottom) keeps the
+    // helmet crown and the initials; the pads run past the bottom edge for square / round boxes.
+    `<g transform="translate(5 3) scale(.9)">` +
+    `<path d="M4 112V90C4 76 13 66 27 62L39 58H61L73 62C87 66 96 76 96 90V112Z" fill="${p}" stroke="${rim}" stroke-width="1.6"/>` +
+    `<path d="M4 90C4 76 13 66 27 62L35 59.5C27 66 22 74 21 84Z M96 90C96 76 87 66 73 62L65 59.5C73 66 78 74 79 84Z" fill="#000" opacity=".22"/>` +
+    `<path d="M41 58L50 68L59 58Z" fill="${trim}"/><path d="M43.5 58L50 65L56.5 58Z" fill="${p}"/>` +
+    `<rect x="44" y="50" width="12" height="10" fill="#000" opacity=".35"/>` +
+    `<path d="M50 12C36 12 29 22 29 34C29 43 32 50 38 54H62C68 50 71 43 71 34C71 22 64 12 50 12Z" fill="${p}" stroke="${rim}" stroke-width="1.6"/>` +
+    `<path d="M47.5 12.2H52.5V40H47.5Z" fill="${trim}"/>` +
+    `<path d="M33 30C36 22 42 17 50 16" stroke="#fff" stroke-opacity=".28" stroke-width="2.5" fill="none" stroke-linecap="round"/>` +
+    `<path d="M36 42H64M37.5 48.5H62.5M50 38V54M40 40V53M60 40V53" stroke="${mask}" stroke-width="2.4" stroke-linecap="round" fill="none"/>` +
+    (ini ? `<text x="50" y="89" text-anchor="middle" font-family="'Bebas Neue',Impact,sans-serif" font-size="21" letter-spacing="1" fill="${trim}">${ini}</text>` : '') +
+    `</g></svg>`;
+};
+
 // WEEKLY-only matchup for the active week, structured so the vertical card
 // chip, the ROW card and the PNG export all agree:
 //   null (not weekly / no schedule) | {bye:true, wk} |
@@ -29918,14 +29983,14 @@ window._mffEliteDailyTarget = function(pool, seedOffset) {
     }
     return null;
   }
-  function initials(name) { return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase(); }
   function paintPhoto(el, r) {
     const box = el.querySelector('.hl-photo');
     if (!box) return;
     const mark = box.querySelector('.hl-pick-mark');
     const old = box.querySelector('img, .hl-initials');
     if (old) old.remove();
-    const fallback = () => { const dv = document.createElement('div'); dv.className = 'hl-initials'; dv.textContent = initials(r.name); return dv; };
+    // No photo: the team-colored helmet figure with his initials (core _mffFaceFallbackSvg).
+    const fallback = () => { const dv = document.createElement('div'); dv.className = 'hl-initials'; dv.innerHTML = window._mffFaceFallbackSvg(showName(r.name), r.tm, r.yr); return dv; };
     const info = photoFor(r);
     if (!info || !info.url) { box.insertBefore(fallback(), mark); return; }
     const img = document.createElement('img');
@@ -58143,18 +58208,6 @@ window.fmtHeight = fmtHeight;
     const borderColor = (_triviaGame.active && _triviaGame.teams > 1 && teamIdx != null)
       ? _triviaTeamConfig[teamIdx].color
       : '#22c55e';
-    // Helper: hex (#RRGGBB) or color name → rgba string with alpha. Falls back
-    // to the input untouched (browsers will accept named/var colors directly).
-    const _withAlpha = (c, a) => {
-      if (typeof c === 'string' && c.charAt(0) === '#' && c.length === 7) {
-        const r = parseInt(c.substr(1, 2), 16);
-        const g = parseInt(c.substr(3, 2), 16);
-        const b = parseInt(c.substr(5, 2), 16);
-        return `rgba(${r},${g},${b},${a})`;
-      }
-      return c;
-    };
-
     cell.classList.add('revealed');
     cell.style.borderColor = borderColor;
     // No full-cell background — keep the cat strip + body neutral so the stat
@@ -58201,11 +58254,12 @@ window.fmtHeight = fmtHeight;
         box.replaceWith(img);
       }).catch(() => {});
     }
-    // No transparent silhouette to outline for the placeholder — a simple border around the
-    // initials box. It also stands in when a photo fails to load (old ESPN ids with no image:
-    // Rod Smith, Dave Brown, Irv Smith), instead of leaving the square blank.
-    const initials = answerName.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
-    const initialsBox = (shown) => `<div class="trivia-initials" style="width:100%;flex:1 1 0;min-height:0;border-radius:4px;border:2px solid ${borderColor};background:${_withAlpha(borderColor, 0.12)};display:${shown ? 'flex' : 'none'};align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:${borderColor};letter-spacing:1px;filter:none">${initials}</div>`;
+    // No-photo placeholder: the team-colored helmet figure with his initials
+    // (_mffFaceFallbackSvg, era colors from the board's year) inside a simple border. It also
+    // stands in when a photo fails to load (old ESPN ids with no image: Rod Smith, Dave Brown,
+    // Irv Smith), instead of leaving the square blank.
+    const _faceSvg = window._mffFaceFallbackSvg(answerName, item.team, _triviaYearOf(item.answer, item.yr));
+    const initialsBox = (shown) => `<div class="trivia-initials" style="width:100%;flex:1 1 0;min-height:0;border-radius:4px;border:2px solid ${borderColor};overflow:hidden;display:${shown ? 'flex' : 'none'};filter:none">${_faceSvg}</div>`;
     if (headshot) {
       revealHtml += `<img src="${headshot}" alt="" loading="lazy"${_photoAttrs(_hsInfo)} onerror="this.style.display='none';var n=this.nextElementSibling;if(n&&n.classList.contains('trivia-initials'))n.style.display='flex'">` + initialsBox(false);
     } else {

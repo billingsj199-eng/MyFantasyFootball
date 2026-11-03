@@ -3742,7 +3742,7 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
 .hl-photo{position:relative;width:104px;height:104px;border-radius:50%;background:var(--surface);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .hl-photo img{width:100%;height:100%;object-fit:cover;object-position:top}
 .hl-photo img.hl-cutout{object-fit:contain;object-position:bottom;padding-top:6px;box-sizing:border-box}
-.hl-initials{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:2px;color:var(--text2)}
+.hl-initials{width:100%;height:100%}
 .hl-pick-mark{display:none;position:absolute;right:4px;bottom:4px;width:26px;height:26px;border-radius:50%;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;color:#fff;background:var(--text3);box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .hl-picked .hl-pick-mark{display:flex}
 .hl-win .hl-pick-mark{background:var(--green)}

@@ -76623,7 +76623,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     let html = '';
           const _liveOn = !!(live && live.scored);
           const _wkHdr = _liveOn && live.wkCol ? 'W' + live.wkCol : 'WK';
-          html += `<table style="width:100%;min-width:680px;border-collapse:collapse;font-size:.6875rem">
+          // table-layout:auto overrides the mobile `table{table-layout:fixed}`
+          // rule, which split columns evenly and let long names spill into POS.
+          html += `<table style="width:100%;min-width:680px;table-layout:auto;border-collapse:collapse;font-size:.6875rem">
             <thead><tr style="border-bottom:1px solid var(--border)">
               <th style="text-align:left;padding:3px 6px;color:var(--text2)">RD</th>
               <th style="text-align:right;padding:3px 6px;color:var(--text2)">PICK</th>
@@ -77052,7 +77054,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
 
       // Outer wrapper holds both the clickable row + the (initially hidden) expand panel.
       html += `<div data-udexp-row="${safeName}"${idx > 0 ? ' style="border-top:1px solid var(--border)"' : ''}>`;
-      html += `<div onclick="window._udToggleExpRow('${safeName.replace(/'/g, '&#39;')}')" style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;transition:background .12s" onmouseover="this.style.background='rgba(255,255,255,.02)'" onmouseout="this.style.background='transparent'">`;
+      // Name comes from the wrapper's data attr, not an inline JS string: &#39;
+      // decodes back to ' before the handler parses, breaking Ja'Marr Chase etc.
+      html += `<div onclick="window._udToggleExpRow(this.parentNode.getAttribute('data-udexp-row'))" style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;transition:background .12s" onmouseover="this.style.background='rgba(255,255,255,.02)'" onmouseout="this.style.background='transparent'">`;
       html += `<div style="width:24px;text-align:center;font-size:.6875rem;color:var(--text2)"><span class="udexp-caret" style="display:inline-block;transition:transform .12s">▸</span> ${idx + 1}</div>`;
       html += headshotHtml;
       html += `<span style="font-size:.6875rem;padding:1px 4px;border-radius:3px;background:${posColors[info.pos] || 'var(--text2)'}20;color:${posColors[info.pos] || 'var(--text2)'};font-weight:600">${info.pos}</span>`;
@@ -77083,9 +77087,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   // the detail (drafts you have them in + most-common co-drafted players) on the
   // first open so we don't pay for 200+ panels up-front. Click again to collapse.
   window._udToggleExpRow = function(name) {
-    const wrap = document.querySelector(`[data-udexp-row="${name}"]`);
+    const wrap = document.querySelector(`[data-udexp-row="${CSS.escape(name)}"]`);
     if (!wrap) return;
-    const panel = wrap.querySelector(`[data-udexp-panel="${name}"]`);
+    const panel = wrap.querySelector(`[data-udexp-panel="${CSS.escape(name)}"]`);
     const caret = wrap.querySelector('.udexp-caret');
     if (!panel) return;
     const open = panel.style.display !== 'none';

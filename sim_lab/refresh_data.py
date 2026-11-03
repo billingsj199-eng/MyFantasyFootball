@@ -776,6 +776,16 @@ except Exception as e:
         with open(os.path.join(OUT, "sim_weather.js"), "w", encoding="utf-8") as f:
             f.write("window.SIM_WEATHER_2026 = {};\n")
 
+# Injury signals (build_injury_signals.py, 2026-10-01): Sleeper diagnosis + practice-sequence archive + news
+# availability reads + the lines-up log -> data/sim_injury_signals.js. Non-fatal: a failure leaves the last file.
+# Runs BEFORE the team totals (2026-11-03): the totals' quarterback mix reads these signals, and building them
+# after meant a new news timeline (Lamar's IR / season read) reached team totals one refresh late.
+try:
+    import build_injury_signals as _bis
+    _bis.build(allp if 'allp' in globals() else None)
+except Exception as e:
+    print(f"WARN sim_injury_signals.js skipped ({e}) - injury layer runs on designations alone")
+
 # OUR OWN future game totals (build_own_totals.py, 2026-10-02; Jack: the book's far-out look-ahead lines "aren't
 # necessarily true anymore"): team ratings from the preseason lines + every line posted this season + results,
 # per quarterback with start probabilities from the injury layer. Runs on the betting file copied above. If it
@@ -799,14 +809,6 @@ try:
     _bact.build()
 except Exception as e:
     print(f"WARN sim_actuals_2026.js skipped ({e})")
-
-# Injury signals (build_injury_signals.py, 2026-10-01): Sleeper diagnosis + practice-sequence archive + news
-# availability reads + the lines-up log -> data/sim_injury_signals.js. Non-fatal: a failure leaves the last file.
-try:
-    import build_injury_signals as _bis
-    _bis.build(allp if 'allp' in globals() else None)
-except Exception as e:
-    print(f"WARN sim_injury_signals.js skipped ({e}) - injury layer runs on designations alone")
 
 # Cache-bust every script tag in index.html (?v=epoch) so browsers always
 # pick up new builds — same pattern as the main site.

@@ -6,11 +6,11 @@
 <!-- DYN SIM data version (data/dynasty_sim_2026.js, lazy-loaded) — bumped by sim_lab/tuesday_stats.ps1 -->
 <meta name="mff-dyn-sim-v" content="2026-10-27">
 <!-- KTC daily value history (data/ktc_history.js, lazy-loaded by TRENDS) — bumped by scripts/build_ktc_history.py -->
-<meta name="mff-ktc-hist-v" content="2026-10-29-0945">
+<meta name="mff-ktc-hist-v" content="2026-11-02-0913">
 <!-- Dynasty SIM weekly history (player-card DYNASTY chart, lazy) — bumped by sim_lab/dynasty_sim_refresh.ps1 -->
 <meta name="mff-dyn-hist-v" content="2026-10-27">
 <!-- MFF VALUE history (player-card DYNASTY chart, lazy) — bumped by sim_lab/build_mff_value_history.py in the 9am job -->
-<meta name="mff-mffv-hist-v" content="2026-10-29">
+<meta name="mff-mffv-hist-v" content="2026-11-02">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
@@ -86,7 +86,7 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-10-30-hlmix" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-02-logos" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
@@ -97,12 +97,12 @@
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
      dynamic injection (crossOrigin='anonymous') so the preload cache is actually used. -->
 <link rel="preload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" as="script" crossorigin="anonymous" media="(min-width:601px)">
-<link rel="preload" href="data/combine_data.js?v=2026-10-19" as="script">
+<link rel="preload" href="data/combine_data.js?v=2026-11-02db3" as="script">
 <link rel="preload" href="data/ep_retired.js?v=2026-07-21" as="script" data-split-lazy="ep">
-<link rel="preload" href="data/_bundle_lookups.js?v=2026-10-29" as="script">
-<link rel="preload" href="data/d.js?v=2026-10-29" as="script">
+<link rel="preload" href="data/_bundle_lookups.js?v=2026-11-02-bd2" as="script">
+<link rel="preload" href="data/d.js?v=2026-11-02b" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-10-30-hlmix">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-02-logos">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -5301,16 +5301,16 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      bundled — they keep loading as separate script tags so the pipeline doesn't
      need to know about bundling. The 6 bbm_* tables were split into the lazy
      data/_bundle_bbm.js (2026-08-04) — see window._ensureBbmData. -->
-<script src="data/_bundle_lookups.js?v=2026-10-29" defer></script>
-<script src="data/d.js?v=2026-10-29" defer></script>
-<script src="data/injury_updates.js?v=2026-10-29-19" defer></script>
+<script src="data/_bundle_lookups.js?v=2026-11-02-bd2" defer></script>
+<script src="data/d.js?v=2026-11-02b" defer></script>
+<script src="data/injury_updates.js?v=2026-11-02-19" defer></script>
 <script src="data/injury_recent.js?v=2026-10-09" defer></script>
-<script src="data/practice_days_2026.js?v=2026-10-29-1910" defer></script>
-<script src="data/weekly_projections.js?v=2026-10-29" defer></script>
-<script src="data/weather_2026.js?v=2026-10-29-19" defer></script>
+<script src="data/practice_days_2026.js?v=2026-11-02-1948" defer></script>
+<script src="data/weekly_projections.js?v=2026-11-02" defer></script>
+<script src="data/weather_2026.js?v=2026-11-02-19" defer></script>
 <!-- Depth-chart archetypes for the player-card ROLE row (scripts/build_player_roles.py, daily 06:15) -->
-<script src="data/player_roles_2026.js?v=2026-10-29-0948" defer></script>
-<script src="data/sim_proj_2026.js?v=2026-10-29-1005" defer></script>
+<script src="data/player_roles_2026.js?v=2026-11-02-1032" defer></script>
+<script src="data/sim_proj_2026.js?v=2026-11-02-1949" defer></script>
 <!-- matchup_edges_2026 / site_projections / ownership_2026 load AFTER first paint via
      window._loadLateData() (2026-10-13 mobile perf) — card / Start/Sit only, all typeof-guarded. -->
 <script src="data/bye_weeks.js?v=2026-07-22" defer></script>
@@ -5331,7 +5331,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      _applyLegendCareerBindings on the 'mff:retireddata' event the loader dispatches. -->
 <!-- season_leaders.js (~744 KB) is lazy-loaded via window._ensureSeasonLeaders() — SEASON_LEADERS is read only by the admin Trivia generator, so regular users never fetch it. -->
 <script src="data/ldb.js?v=2026-04-21" defer></script>
-<script src="data/player_team_history.js?v=2026-07-22" defer></script>
+<script src="data/player_team_history.js?v=2026-11-02" defer></script>
 <!-- ep_players_u.js removed: its global const EP_PLAYERS_U is shadowed by a local
      `let EP_PLAYERS_U` in the Unlimited Guess-Who IIFE and never read. Dead payload. -->
 <script src="data/active_team_history.js?v=2026-10-29-0945" defer></script>
@@ -5348,7 +5348,7 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
      players are filtered out of it). _enrichFromAllPlayers + _applyRetiredBioTeam re-run on
      the 'mff:retireddata' event the loader dispatches. -->
 
-<script src="data/combine_data.js?v=2026-10-19" defer></script>
+<script src="data/combine_data.js?v=2026-11-02db3" defer></script>
 <!-- historical_draft_picks.js (~92 KB) LAZY since 2026-08-04 via window._ensureDraftPicksData()
      — HISTORICAL_DRAFT_PICKS is consumed only inside the prospect-model build
      (buildProspectData nflTeam fallback + _pmComputeRoomAdj) and admin console studies,
@@ -5375,8 +5375,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <!-- defer: window.BETTING_2026 feeds the on-demand player-card LINES tab (post-DCL) and
      a TEAM TOTAL rankings column that is hidden by default + currently stubbed. Every
      reader is window-guarded, so it degrades to '—' until parsed. No PROJ PPG dependency. -->
-<script src="data/betting_lines_2026.js?v=2026-10-29c:" defer></script>
-<script src="data/future_totals_2026.js?v=2026-10-29-1005" defer></script>
+<script src="data/betting_lines_2026.js?v=2026-11-02g:" defer></script>
+<script src="data/future_totals_2026.js?v=2026-11-02-1919" defer></script>
 <script src="data/fpa_prior_2025.js?v=2026-10-05" defer></script>
 <script src="data/headshot_espn_ids.js?v=2026-10-09qb" defer></script>
 <script src="data/headshot_framing.js?v=2026-09-03" defer></script>
@@ -5446,9 +5446,9 @@ window.clayLookup = clayLookup;
      data scripts above can be defer'd — it was the only parse-time reader. defer keeps it
      executing after combine_data.js/d.js and before app.js (document order). -->
 <script src="data/combine_d_patches.js?v=2026-10-17hoover" defer></script>
-<script src="data/devy_headshots.js?v=2026-10-17hs2" defer></script><!-- devy ESPN headshot ids + college team ids (weekly pull_devy_headshots.py) -->
-<script src="data/projected_testing.js?v=2026-10-17" defer></script>
-<script defer src="data/draft_proj.js?v=2026-10-19"></script><!-- pre-draft projected forties -> fortyProj (weekly pull_projected_testing.py + apply_projected_testing.py) -->
+<script src="data/devy_headshots.js?v=2026-11-02hs2" defer></script><!-- devy ESPN headshot ids + college team ids (weekly pull_devy_headshots.py) -->
+<script src="data/projected_testing.js?v=2026-11-02" defer></script>
+<script defer src="data/draft_proj.js?v=2026-11-02db132343"></script><!-- pre-draft projected forties -> fortyProj (weekly pull_projected_testing.py + apply_projected_testing.py) -->
 <!-- college_stats.js (1.88 MB) + 3 patch files lazy-loaded via window._ensureCollegeStatsData()
      on prospect / compare / backtest / mockdraft / dynasty / openPlayerCard activation.
      All COLLEGE_STATS consumers use typeof guards, so the page renders fine pre-load. -->
@@ -6344,7 +6344,7 @@ window._ensureCollegeStatsData = (function() {
     // In-season devy/future-class rows (weekly auto-refresh, scripts/refresh_devy_stats.py):
     // defines window._csPatchDevy (applied last, below) + this season's COLLEGE_WEEKLY game logs.
     const spz = _loadScript('data/sp_def_z.js?v=2026-09-30');  // SP+ defense z per team-season (RB schedule-adjusted production experiment)
-    const devyCs = _loadScript('data/college_stats_devy.js?v=2026-10-17dv2');
+    const devyCs = _loadScript('data/college_stats_devy.js?v=2026-11-02dv134127');
     // college_weekly_1/2/3 (~8.86 MB total) — moved here from eager `defer` script
     // tags 2026-05-18 so they no longer hit on every cold load. Files all
     // populate the same COLLEGE_WEEKLY object and have no order dependency;
@@ -6500,7 +6500,7 @@ window._ensureResearchData = (function() {
 // season per file, 2019-2026) + data/adv_stats_<yr>_w<N>.js (ADV_STATS["<yr>-w<N>"],
 // that week only), scripts/build_adv_stats.py. Loaded one file at a time when the
 // section asks for it. route_pct_daily.ps1 bumps _ADV_STATS_V.
-window._ADV_STATS_V = '2026-10-29-0948';
+window._ADV_STATS_V = '2026-11-02-1032';
 window._ensureAdvStats = (function() {
   const cache = {};
   return function _ensureAdvStats(yr, wk) {
@@ -6520,7 +6520,7 @@ window._ensureAdvStats = (function() {
 // Research page Coach Profiles: data/coach_profiles.js (window.COACH_PROFILES, one row per
 // team-season, scripts/build_coach_profiles.py), loaded when the section opens.
 // route_pct_daily.ps1 bumps _COACH_V.
-window._COACH_V = '2026-10-29-0948';
+window._COACH_V = '2026-11-02-1032';
 window._ensureCoachProfiles = (function() {
   let promise = null;
   return function _ensureCoachProfiles() {
@@ -6565,7 +6565,7 @@ window._ensureCardExtras = (function() {
 // Player-card USAGE row (everyone): data/usage_trend.js (window.USAGE_TREND, built daily by
 // scripts/build_usage_trend.py). openPlayerCard loads it on the first card open and re-renders once.
 // route_pct_daily.ps1 bumps _USAGE_TREND_V.
-window._USAGE_TREND_V = '2026-10-29-0948';
+window._USAGE_TREND_V = '2026-11-02-1032';
 window._ensureUsageTrend = (function() {
   let promise = null;
   return function _ensureUsageTrend() {
@@ -6767,7 +6767,7 @@ window._loadWeeklyCore = function(opts) {
   window._weeklyCorePromise = _injectScripts([
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer); the ACTIVE
     // merge also still listens on mff:weeklydata (idempotent).
-    'data/weekly_stats_active.js?v=2026-10-29-0946'
+    'data/weekly_stats_active.js?v=2026-11-02-1945'
   ], 'WeeklyCore', opts).then(function() {
     try { _mergeWeeklyStatsActive(); } catch (e) { console.warn('[WeeklyCore] merge failed:', e); }
   });
@@ -6780,7 +6780,7 @@ window._loadWeeklyData = function(opts) {
     // (weekly_stats_active loads first via _loadWeeklyCore above)
     // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
     // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
-    'data/fpa_2026.js?v=2026-10-29-0946',
+    'data/fpa_2026.js?v=2026-11-02-1945',
     // Full-field Best Ball Mania VII advance rate by player (scripts/bbm_field_adv.py, Tue) —
     // My Teams > Underdog > DRAFT BOARD "OVERALL ADV RATE".
     'data/bbm_field_adv.js?v=2026-10-27-0929',
@@ -6793,13 +6793,13 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-10-29-0948',
+    'data/snap_counts.js?v=2026-11-02-1945',
     // Route participation % (RT%) for the game log (scripts/pull_route_pct.py)
-    'data/route_pct.js?v=2026-10-29-0948',
+    'data/route_pct.js?v=2026-11-02-1945',
     // Team usage counts for the card TEAM tab (scripts/build_team_usage.py, nflverse pbp)
-    'data/team_usage_2026.js?v=2026-10-29-0948',
+    'data/team_usage_2026.js?v=2026-11-02-1032',
     // Defense zone heat map for the card MATCHUP tab (scripts/build_def_zones.py, nflverse pbp)
-    'data/def_zones_2026.js?v=2026-10-29-0948'
+    'data/def_zones_2026.js?v=2026-11-02-1032'
   ];
   window._weeklyDataPromise = window._loadWeeklyCore(opts).then(function() {
     return _injectScripts(files, 'WeeklyData', opts);
@@ -6882,7 +6882,9 @@ window._loadRetiredData = function(opts) {
 // initials until it lands, then upgrades the cell. Regenerate: scripts/build_legend_headshots.py.
 window._loadLegendHeadshots = function(opts) {
   if (window._legendHeadshotsPromise) return window._legendHeadshotsPromise;
-  window._legendHeadshotsPromise = _injectScripts(['data/legend_hs_local.js?v=2026-10-28-1756', 'data/legend_headshots.js?v=2026-10-28-legends2', 'data/player_cutouts.js?v=2026-10-29-cutouts2'], 'LegendHeadshots', opts);
+  // + espn_debut_years.js (11-02): ESPN id -> first season, so a same-name player's photo
+  // is refused on a board from before his debut (scripts/pull_espn_debut_years.py).
+  window._legendHeadshotsPromise = _injectScripts(['data/legend_hs_local.js?v=2026-10-28-1756', 'data/legend_headshots.js?v=2026-10-28-legends2', 'data/player_cutouts.js?v=2026-10-29-cutouts2', 'data/espn_debut_years.js?v=2026-11-02', 'data/legend_photo_birth_years.js?v=2026-11-02'], 'LegendHeadshots', opts);
   return window._legendHeadshotsPromise;
 };
 
@@ -6892,7 +6894,7 @@ window._loadLegendHeadshots = function(opts) {
 // never in the warm-up. Bump the ?v= after every rebuild.
 window._loadTriviaLibrary = function(opts) {
   if (window._triviaLibraryPromise) return window._triviaLibraryPromise;
-  window._triviaLibraryPromise = _injectScripts(['data/trivia_library.js?v=2026-10-29-lib1'], 'TriviaLibrary', opts);
+  window._triviaLibraryPromise = _injectScripts(['data/trivia_library.js?v=2026-11-02-careers'], 'TriviaLibrary', opts);
   return window._triviaLibraryPromise;
 };
 
@@ -6914,14 +6916,14 @@ window._loadSeasonTotals7098 = function(opts) {
 // (app.js repaints a K/DST board, Start/Sit or an open player card that rendered without them).
 // The ?v= strings stay in this file so the scheduled jobs' `name.js?v=` bumps still apply.
 window._LATE_DATA_FILES = [
-  'data/matchup_edges_2026.js?v=2026-10-29-1005',
-  'data/site_projections.js?v=2026-10-29',
-  'data/ownership_2026.js?v=2026-10-29',
-  'data/kicker_history.js?v=2026-10-27',
+  'data/matchup_edges_2026.js?v=2026-11-02-1949',
+  'data/site_projections.js?v=2026-11-02',
+  'data/ownership_2026.js?v=2026-11-02',
+  'data/kicker_history.js?v=2026-11-02',
   'data/kicker_splits.js?v=2026-10-21',
-  'data/dst_history.js?v=2026-10-27',
-  'data/dst_weekly.js?v=2026-10-27',
-  'data/kicker_weekly.js?v=2026-10-27',
+  'data/dst_history.js?v=2026-11-02',
+  'data/dst_weekly.js?v=2026-11-02',
+  'data/kicker_weekly.js?v=2026-11-02',
   'data/player_weekly_sigma.js?v=2026-10-27',
 ];
 window._loadLateData = function(opts) {

@@ -4941,6 +4941,158 @@ function _weeklyBookPpgCellHtml(d) {
     tip.replace(/"/g, '&quot;') + '">' + W.ppg.toFixed(1) + '</span>';
 }
 
+// === Ask Jack admin inbox: per-player rank / projection / lines (2026-11-04) ===
+// Under every player in a question Jack gets one line: position + overall rank
+// on a board he picks (Jack's / Consensus / My Ranks, THIS WEEK / ROS) and a
+// projection (OURS = site weekly projection, BOOK = the week's prop lines
+// scored, LINES = the raw prop lines) in a scoring format he picks. The
+// toggles live in the Ask Jack tab's inbox toolbar (#ajInfoBar →
+// window._ajInfoSet) and are remembered per browser (localStorage aj_info).
+// Core (not a chunk): versionBoards / adjProjPpg / the weekly line helpers
+// all live here, and the Account admin inbox renders the same lines.
+const _AJ_INFO_DEF = { ver: 'jacks', scope: 'weekly', proj: 'ours', fmt: 'ppr' };
+const _AJ_INFO_OK = { ver: ['jacks', 'consensus', 'mine'], scope: ['weekly', 'redraft'], proj: ['ours', 'book', 'lines'], fmt: ['ppr', 'half', 'std'] };
+function _ajInfoOpts() {
+  if (!window._ajInfo) {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('aj_info') || 'null'); } catch (_) {}
+    const o = Object.assign({}, _AJ_INFO_DEF);
+    if (saved && typeof saved === 'object') Object.keys(_AJ_INFO_OK).forEach(k => { if (_AJ_INFO_OK[k].includes(saved[k])) o[k] = saved[k]; });
+    window._ajInfo = o;
+  }
+  return window._ajInfo;
+}
+window._ajInfoSet = function(key, val) {
+  if (!_AJ_INFO_OK[key] || !_AJ_INFO_OK[key].includes(val)) return;
+  const o = _ajInfoOpts();
+  o[key] = val;
+  try { localStorage.setItem('aj_info', JSON.stringify(o)); } catch (_) {}
+  window._ajInfoSyncBar();
+  // Re-fill every info line in place: tapped lineup chips + typed notes survive.
+  document.querySelectorAll('.aj-pinfo[data-name]').forEach(el => { el.innerHTML = _ajInfoHtml(el.getAttribute('data-name')); });
+};
+window._ajInfoSyncBar = function() {
+  const o = _ajInfoOpts();
+  document.querySelectorAll('#ajInfoBar [data-k]').forEach(b => b.classList.toggle('on', o[b.getAttribute('data-k')] === b.getAttribute('data-v')));
+};
+// Player lookup: exact rankings name, then alias, then case-insensitive. Free
+// text ("Chuba Hubbard + 2027 2nd") is split on + , / & "and" per piece.
+function _ajFindPlayer(name) {
+  if (typeof D === 'undefined' || !Array.isArray(D)) return null;
+  const n = String(name || '').trim();
+  if (!n) return null;
+  let d = D.find(q => q && q.n === n && !q._retired && q.t);
+  if (!d && typeof _PROSPECT_ALIASES !== 'undefined' && _PROSPECT_ALIASES && _PROSPECT_ALIASES[n]) d = D.find(q => q && q.n === _PROSPECT_ALIASES[n] && !q._retired);
+  if (!d) { const low = n.toLowerCase(); d = D.find(q => q && !q._retired && q.t && q.n.toLowerCase() === low); }
+  return d || null;
+}
+function _ajPlayersIn(text) {
+  const d = _ajFindPlayer(text);
+  if (d) return [d];
+  return String(text || '').split(/\s*(?:\+|,|\/|&|\band\b)\s*/i).map(_ajFindPlayer).filter(Boolean);
+}
+// Board rank: overall slot + position rank (out-for-season players parked
+// after everyone else, the way the boards number themselves).
+const _ajRankCache = {};
+function _ajRankFor(d, ver, scope) {
+  const board = (typeof versionBoards !== 'undefined' && versionBoards[ver]) ? versionBoards[ver][scope] : null;
+  if (!Array.isArray(board) || !board.length) return null;
+  const key = ver + '|' + scope;
+  let c = _ajRankCache[key];
+  if (!c || c.src !== board || c.gen !== window._consRankGen || c.len !== board.length) {
+    const ovr = {}, pos = {}, cnt = {}, parked = [];
+    const num = i => { const q = D[i]; if (!q) return; cnt[q.s] = (cnt[q.s] || 0) + 1; pos[i] = cnt[q.s]; };
+    board.forEach((i, r) => {
+      ovr[i] = r + 1;
+      if (typeof window._irIsOut === 'function' && D[i] && window._irIsOut(D[i].n)) { parked.push(i); return; }
+      num(i);
+    });
+    parked.forEach(num);
+    c = _ajRankCache[key] = { src: board, gen: window._consRankGen, len: board.length, ovr, pos };
+  }
+  return c.ovr[d.idx] ? { ovr: c.ovr[d.idx], pos: c.pos[d.idx] || null } : null;
+}
+const _AJ_LINE_ROWS = {
+  QB: [['py', 'Pa yds', 0], ['ptd', 'Pa TD', 1], ['int', 'INT', 1], ['ry', 'Ru yds', 0], ['atd', 'ATD', 'odds']],
+  RB: [['ry', 'Ru yds', 0], ['rec', 'Rec', 1], ['rcy', 'Rec yds', 0], ['atd', 'ATD', 'odds']],
+  WR: [['rec', 'Rec', 1], ['rcy', 'Rec yds', 0], ['ry', 'Ru yds', 0], ['atd', 'ATD', 'odds']],
+  TE: [['rec', 'Rec', 1], ['rcy', 'Rec yds', 0], ['atd', 'ATD', 'odds']],
+  K:  [['kpts', 'K pts', 1], ['fgm', 'FGM', 1]],
+  DST: []
+};
+function _ajPlayerInfo(d, o) {
+  o = o || _ajInfoOpts();
+  const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+  const out = { d, wk, rank: _ajRankFor(d, o.ver, o.scope), proj: null, book: null, lines: null, books: null, opp: null, bye: false, out: false };
+  try {
+    const abbr = (typeof teamAbbr === 'function') ? teamAbbr(d.t) : d.t;
+    const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
+    const e = sched ? sched[wk] : null;
+    if (e && e.bye) out.bye = true;
+    else if (e && e.opp) out.opp = (e.home ? 'vs ' : '@ ') + e.opp;
+  } catch (_) {}
+  const prev = rankingScoringFmt;
+  rankingScoringFmt = o.fmt;
+  try {
+    const base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+    // Start/Sit's rule: Questionable plays, Doubtful / Out = 0, ASSUME OUT ignored.
+    const st = { mt: true };
+    const v = (typeof window._weeklyAdjustPpg === 'function') ? window._weeklyAdjustPpg(d, base, st) : base;
+    out.out = st.src === 'out';
+    out.proj = (typeof v === 'number' && isFinite(v)) ? Math.round(v * 10) / 10 : null;
+    const B = (typeof _weeklyBookPpgFor === 'function') ? _weeklyBookPpgFor(d) : null;
+    out.book = B ? B.ppg : null;
+    const W = (typeof _weeklyPropLinesFor === 'function') ? _weeklyPropLinesFor(d.n) : null;
+    if (W) {
+      out.lines = W.stats; out.books = W.books;
+      // Kickers: the kicking-points line IS the book projection.
+      if (out.book == null && d.s === 'K' && typeof W.stats.kpts === 'number') out.book = Math.round(W.stats.kpts * 10) / 10;
+    }
+  } catch (e) { console.warn('[AskJack info]', e); }
+  finally { rankingScoringFmt = prev; }
+  return out;
+}
+window._ajPlayerInfo = _ajPlayerInfo;
+const _ajEsc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function _ajInfoHtml(text) {
+  const o = _ajInfoOpts();
+  const ps = _ajPlayersIn(text);
+  if (!ps.length) return '<span class="aj-pi-na">no player match</span>';
+  const verLbl = { jacks: "Jack's", consensus: 'Consensus', mine: 'My Ranks' }[o.ver];
+  const scopeLbl = o.scope === 'weekly' ? 'this week' : 'ROS';
+  const fmtLbl = { ppr: 'PPR', half: 'Half', std: 'STD' }[o.fmt];
+  return ps.map(d => {
+    const i = _ajPlayerInfo(d, o);
+    const tm = (typeof teamAbbr === 'function') ? teamAbbr(d.t) : d.t;
+    const pl = d.s === 'DST' ? 'D/ST' : d.s;
+    const bits = [];
+    bits.push('<b>' + _ajEsc(ps.length > 1 ? d.n + ' · ' : '') + _ajEsc(pl) + (tm ? ' ' + _ajEsc(tm) : '') + '</b>');
+    bits.push(i.rank
+      ? '<span title="' + _ajEsc(verLbl) + ' board, ' + scopeLbl + '">' + _ajEsc(pl) + (i.rank.pos || '?') + ' · #' + i.rank.ovr + ' ' + _ajEsc(verLbl) + '</span>'
+      : '<span class="aj-pi-na">not on the ' + _ajEsc(verLbl) + ' ' + scopeLbl + ' board</span>');
+    if (i.bye) bits.push('<span class="aj-pi-bad">BYE wk ' + i.wk + '</span>');
+    else if (i.out) bits.push('<span class="aj-pi-bad">OUT</span>');
+    if (i.opp && !i.bye) bits.push(_ajEsc(i.opp));
+    if (o.proj === 'ours') {
+      bits.push(i.proj != null ? '<b>' + i.proj.toFixed(1) + '</b> proj wk ' + i.wk + ' (' + fmtLbl + ')' : '<span class="aj-pi-na">no projection</span>');
+    } else if (o.proj === 'book') {
+      bits.push(i.book != null ? '<b>' + i.book.toFixed(1) + '</b> book wk ' + i.wk + ' (' + fmtLbl + ')' : '<span class="aj-pi-na">no lines posted</span>');
+    } else {
+      const L = i.lines || {};
+      const parts = (_AJ_LINE_ROWS[d.s] || []).filter(r => typeof L[r[0]] === 'number').map(r => {
+        const v = L[r[0]];
+        const txt = r[2] === 'odds' ? ((v > 0 ? '+' : '') + Math.round(v)) : r[2] === 0 ? String(Math.round(v)) : (Math.round(v * 10) / 10).toFixed(1);
+        return r[1] + ' <b>' + txt + '</b>';
+      });
+      bits.push(parts.length
+        ? parts.join(' · ') + (i.books && i.books.length ? ' <span class="aj-pi-na">' + _ajEsc(i.books.join('/')) + '</span>' : '')
+        : '<span class="aj-pi-na">no lines posted</span>');
+    }
+    return '<div class="aj-pi-row">' + bits.join('<span class="aj-pi-sep">·</span>') + '</div>';
+  }).join('');
+}
+window._ajInfoHtml = _ajInfoHtml;
+
 // CLAY PPG: Mike Clay's 2026 stat line scored in the current format (site
 // scoring incl. receptions — Clay projects them; INTs he doesn't) ÷ 17 games,
 // same season-value semantics as Book PPG so the two columns read on one
@@ -35185,12 +35337,15 @@ window.fmtHeight = fmtHeight;
           (x.league.fmt ? ' · ' + _qaAdminEsc(x.league.fmt) : '') + '</div>';
       }
       if (x.q) html += '<div style="font-size:.72rem;color:var(--text);font-style:italic;margin-bottom:6px">"' + _qaAdminEsc(x.q) + '"</div>';
+      // Rank / projection / lines under each player (core _ajInfoHtml; the
+      // RANKS / PROJ toggles on the Ask Jack tab re-fill these in place).
+      const info = n => '<div class="aj-pinfo" data-name="' + _qaAdminEsc(n) + '">' + (typeof window._ajInfoHtml === 'function' ? window._ajInfoHtml(n) : '') + '</div>';
       (x.options || []).forEach((o, i) => {
         const picked = x.status === 'answered' && x.pick === i;
         const sideTag = x.type === 'trade' ? '<span style="font-size:.6875rem;color:var(--text2)">' + (i === 0 ? 'THEY GIVE: ' : 'THEY GET: ') + '</span>' : '';
-        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+        html += '<div class="aj-opt"><div class="aj-opt-row">' +
           '<button onclick="window._adminQaPick(\'' + safeId + '\',' + i + ')" style="flex-shrink:0;padding:5px 12px;border-radius:6px;border:1px solid ' + (picked ? '#22c55e' : 'var(--accent)') + ';background:' + (picked ? '#22c55e' : 'transparent') + ';color:' + (picked ? '#000' : 'var(--accent)') + ';font-family:\'Bebas Neue\',sans-serif;font-size:.72rem;letter-spacing:1px;cursor:pointer">' + (picked ? '⭐ PICKED' : 'PICK') + '</button>' +
-          '<span style="font-size:.76rem;color:var(--text)">' + sideTag + _qaAdminEsc(o) + '</span></div>';
+          '<span style="font-size:.76rem;color:var(--text)">' + sideTag + _qaAdminEsc(o) + '</span></div>' + info(o) + '</div>';
       });
       if (x.type === 'lineup') {
         // Ask Jack helpers live in the myteams chunk — guarded fallbacks.
@@ -35203,10 +35358,10 @@ window.fmtHeight = fmtHeight;
         html += '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:6px">' +
           (need ? '<b>Starters:</b> ' + _qaAdminEsc(slotSum(x.slots)) + ' · ' : '') +
           '<span id="adminQaCnt-' + safeId + '" data-need="' + need + '">' + chosen.length + (need ? ' of ' + need : '') + ' picked</span> · tap players to start them</div>';
-        html += '<div class="aj-roster" id="adminQaRoster-' + safeId + '">' + sortPos(roster).map(n => {
+        html += '<div class="aj-roster aj-roster-grid" id="adminQaRoster-' + safeId + '">' + sortPos(roster).map(n => {
           const pos = posOf(n);
-          return '<button type="button" class="aj-chip aj-chip-btn' + (chosen.indexOf(n) >= 0 ? ' aj-chip-start' : '') + '" data-name="' + _qaAdminEsc(n) + '" onclick="window._adminQaToggle(this,\'' + safeId + '\')">' +
-            (pos ? '<span class="aj-chip-pos">' + _qaAdminEsc(pos) + '</span>' : '') + _qaAdminEsc(n) + '</button>';
+          return '<div class="aj-rp"><button type="button" class="aj-chip aj-chip-btn' + (chosen.indexOf(n) >= 0 ? ' aj-chip-start' : '') + '" data-name="' + _qaAdminEsc(n) + '" onclick="window._adminQaToggle(this,\'' + safeId + '\')">' +
+            (pos ? '<span class="aj-chip-pos">' + _qaAdminEsc(pos) + '</span>' : '') + _qaAdminEsc(n) + '</button>' + info(n) + '</div>';
         }).join('') + '</div>';
         html += '<button onclick="window._adminQaSaveLineup(\'' + safeId + '\')" style="margin-top:4px;padding:6px 14px;border-radius:6px;border:1px solid ' + (x.status === 'answered' ? '#22c55e' : 'var(--accent)') + ';background:' + (x.status === 'answered' ? '#22c55e' : 'transparent') + ';color:' + (x.status === 'answered' ? '#000' : 'var(--accent)') + ';font-family:\'Bebas Neue\',sans-serif;font-size:.78rem;letter-spacing:1px;cursor:pointer">' + (x.status === 'answered' ? '⭐ SAVED — UPDATE LINEUP' : 'SAVE LINEUP') + '</button>';
       } else if (x.roster && x.roster.length) {
@@ -73246,6 +73401,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     status = status || window._adminQaView || 'open';
     document.querySelectorAll('#ajInbox .aj-inbox-btn[data-status]').forEach(b => b.classList.toggle('on', b.getAttribute('data-status') === status));
     list.dataset.loaded = '1';
+    if (typeof window._ajInfoSyncBar === 'function') window._ajInfoSyncBar();
     window._adminQaLoad(status, 'ajInboxList');
   }
   // Runs from every _qaRenderPanel (auth churn included): shows the toggle for

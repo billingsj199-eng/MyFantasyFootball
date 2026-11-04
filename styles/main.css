@@ -3615,8 +3615,8 @@ html.aj-onair .aj-choices.aj-choices-trade{grid-template-columns:repeat(auto-fit
 .tcv-row-light .aj-pcv-body{color:#fff}
 .aj-pcv-id{flex:1 1 0;display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:0;padding:6px 0 6px}
 .aj-pcv-name{font-size:26px;white-space:normal;line-height:.95;cursor:pointer;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
-.aj-pcv-img{flex:0 0 56%;max-width:230px;height:160px;display:flex;align-items:flex-end;justify-content:flex-end;cursor:pointer;margin-right:-4px}
-.aj-pcv-img img{width:100%;height:160px;object-fit:contain;object-position:center bottom;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
+.aj-pcv-img{flex:0 0 60%;max-width:270px;height:200px;display:flex;align-items:flex-end;justify-content:flex-end;cursor:pointer;margin-right:-4px}
+.aj-pcv-img img{width:100%;height:200px;object-fit:cover;object-position:center top;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
 .aj-pcv-body{display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px;background:rgba(0,0,0,.42);color:#fff}
 .aj-pcv-stats{margin:0;width:100%;justify-content:space-between}
 .aj-pcv-stats .aj-pcs{flex:1 1 0;min-width:0}
@@ -3630,15 +3630,15 @@ html.aj-onair .aj-choices.aj-choices-trade{grid-template-columns:repeat(auto-fit
 .aj-pcv-books{font-size:.64rem;color:rgba(255,255,255,.45);text-align:right;padding-top:2px}
 .aj-choice.aj-lose .aj-pcard-v{filter:grayscale(1)}
 html.aj-onair .aj-pcv-name{font-size:38px}
-html.aj-onair .aj-pcv-img{flex-basis:56%;max-width:300px;height:210px}
-html.aj-onair .aj-pcv-img img{height:210px}
+html.aj-onair .aj-pcv-img{flex-basis:60%;max-width:340px;height:260px}
+html.aj-onair .aj-pcv-img img{height:260px}
 html.aj-onair .aj-pcv-head{min-height:0}
 html.aj-onair .aj-pcv-wm{width:250px;height:250px}
 html.aj-onair .aj-pcv-num-v{font-size:30px}
 html.aj-onair .aj-pcv-num-l{font-size:10px}
 html.aj-onair .aj-pcv-line{font-size:1rem}
 html.aj-onair .aj-pcv-line b{font-size:1.15rem}
-@media (max-width:600px){.aj-pcv-img{height:130px;max-width:190px}.aj-pcv-img img{height:130px}.aj-pcv-name{font-size:24px}}
+@media (max-width:600px){.aj-pcv-img{height:170px;max-width:220px}.aj-pcv-img img{height:170px}.aj-pcv-name{font-size:24px}}
 /* Member view: same cards, static stamps (no replay animation), tile pickers */
 .aj-mopt{cursor:default}
 .aj-stamp.aj-static{animation:none;opacity:1;transform:rotate(-9deg)}

@@ -3388,6 +3388,50 @@ tbody td{font-size:.8125rem}
 .mt-askjack-link-title{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px}
 .mt-askjack-link-sub{font-size:.72rem;color:var(--text2);flex:1;min-width:180px}
 .mt-askjack-link-go{color:var(--accent);font-size:1.1rem;margin-left:auto}
+/* League bar (top), type picker, form bits, lineup chips (member panel + admin inbox) */
+.aj-lbl{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2);white-space:nowrap}
+.aj-league-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;margin-bottom:12px;background:var(--surface2,rgba(255,255,255,.03));border:1px solid var(--border);border-radius:10px}
+.aj-league-bar select{flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 9px;font-size:.78rem;min-height:40px}
+.aj-league-empty{font-size:.74rem;color:var(--text2)}
+.aj-league-empty a{color:var(--accent)}
+.aj-types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.aj-type{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;min-height:44px;background:var(--surface2,rgba(255,255,255,.03));border:1px solid var(--border);border-radius:10px;color:var(--text2);cursor:pointer;text-align:left;font:inherit}
+.aj-type:hover{border-color:var(--accent)}
+.aj-type.on{border-color:var(--accent);background:rgba(245,158,11,.1);color:var(--text)}
+.aj-type-name{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent)}
+.aj-type-blurb{font-size:.7rem;line-height:1.3}
+.aj-type-st{font-size:.6375rem;letter-spacing:.5px;text-transform:uppercase;color:var(--text2);margin-top:2px}
+.aj-st-sent{color:var(--accent)}
+.aj-st-done{color:var(--green)}
+.aj-st-used{color:var(--text2);opacity:.7}
+.aj-pane{background:var(--surface2,rgba(255,255,255,.03));border:1px solid var(--border);border-radius:10px;padding:12px}
+.aj-pane-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px}
+.aj-pane-st{margin-left:auto;font-size:.6875rem;letter-spacing:.5px;color:var(--text2);font-family:'DM Sans',sans-serif}
+.aj-ask,.aj-side-lbl{font-size:.6875rem;color:var(--text2);margin-bottom:6px}
+.aj-side-lbl{margin-bottom:3px}
+.aj-input{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 9px;font-size:.78rem;margin-bottom:6px}
+.aj-input-note{font-size:.72rem;margin-bottom:8px}
+.aj-add{background:none;border:none;color:var(--accent);font-size:.6875rem;cursor:pointer;padding:0;margin-bottom:6px}
+.aj-send{width:100%;padding:8px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer;min-height:40px}
+.aj-send:disabled{opacity:.6;cursor:default}
+.aj-msg{font-size:.6875rem;color:var(--red);margin-top:5px}
+.aj-need-league,.aj-used-note{font-size:.74rem;color:var(--text2);line-height:1.45;padding:8px 10px;background:var(--bg);border:1px dashed var(--border);border-radius:6px}
+.aj-used-q{margin-top:10px}
+.aj-used-q-lbl{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2);margin-bottom:6px}
+.aj-lineup-meta,.aj-bench{font-size:.6875rem;color:var(--text2);margin:0 0 6px}
+.aj-bench{margin:6px 0 0;line-height:1.5}
+.aj-lineup-lbl{font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:1.5px;color:var(--green);margin-bottom:6px}
+.aj-roster{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.aj-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:.74rem;line-height:1.2}
+.aj-chip-pos{font-size:.6rem;font-weight:700;letter-spacing:.5px;color:var(--text2)}
+.aj-chip-start{background:rgba(34,197,94,.14);border-color:var(--green);font-weight:600}
+.aj-chip-btn{cursor:pointer;font:inherit;font-size:.74rem;min-height:32px}
+.aj-chip-btn:hover{border-color:var(--accent)}
+@media (max-width:600px){
+  .aj-types{grid-template-columns:1fr}
+  .aj-type{flex-direction:row;align-items:center;flex-wrap:wrap;column-gap:8px}
+  .aj-type-st{margin-left:auto;margin-top:0}
+}
 /* === Ask Jack on phones (2026-10-09) — member panel "+ add a 3rd player" was a
    14px text link; admin inbox PICK / delete buttons ~26px (answering from a phone). === */
 @media (max-width:600px){

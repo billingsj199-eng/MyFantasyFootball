@@ -35145,8 +35145,10 @@ window.fmtHeight = fmtHeight;
 
     // ===== Ask Jack Q&A Inbox =====
     // Premium member questions from qa_questions (see the Ask Jack module for
-    // the data model). Each question renders its 2-4 options as PICK buttons —
-    // one click answers it (with whatever's in the optional note box).
+    // the data model). Start/sit + trade questions render their 2-4 options as
+    // PICK buttons — one click answers it (with whatever's in the optional note
+    // box). Lineup Optimizer questions (2026-11-04) render the member's roster
+    // as tap-to-start chips plus SAVE LINEUP, which writes a `starters` list.
     const qaRefreshBtn = document.getElementById('adminQaRefreshBtn');
     const qaAnsweredBtn = document.getElementById('adminQaAnsweredBtn');
     const qaListEl = document.getElementById('adminQaList');
@@ -35157,6 +35159,8 @@ window.fmtHeight = fmtHeight;
     function _adminQaRow(docId, x) {
       const typeChip = x.type === 'trade'
         ? '<span style="background:rgba(59,130,246,.15);color:var(--wr);padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">🔁 TRADE</span>'
+        : x.type === 'lineup'
+        ? '<span style="background:rgba(34,197,94,.15);color:var(--green);padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">📋 LINEUP</span>'
         : '<span style="background:rgba(245,158,11,.15);color:var(--accent);padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">🔀 START/SIT</span>';
       const when = x.createdAt ? new Date(x.createdAt).toLocaleString() : '';
       const safeId = _qaAdminEsc(docId);
@@ -35179,12 +35183,29 @@ window.fmtHeight = fmtHeight;
           '<button onclick="window._adminQaPick(\'' + safeId + '\',' + i + ')" style="flex-shrink:0;padding:5px 12px;border-radius:6px;border:1px solid ' + (picked ? '#22c55e' : 'var(--accent)') + ';background:' + (picked ? '#22c55e' : 'transparent') + ';color:' + (picked ? '#000' : 'var(--accent)') + ';font-family:\'Bebas Neue\',sans-serif;font-size:.72rem;letter-spacing:1px;cursor:pointer">' + (picked ? '⭐ PICKED' : 'PICK') + '</button>' +
           '<span style="font-size:.76rem;color:var(--text)">' + sideTag + _qaAdminEsc(o) + '</span></div>';
       });
-      if (x.roster && x.roster.length) {
+      if (x.type === 'lineup') {
+        // Ask Jack helpers live in the myteams chunk — guarded fallbacks.
+        const posOf = typeof window._qaPosOf === 'function' ? window._qaPosOf : () => '';
+        const sortPos = typeof window._qaSortByPos === 'function' ? window._qaSortByPos : a => a.slice();
+        const slotSum = typeof window._qaSlotSummary === 'function' ? window._qaSlotSummary : a => a.join(' · ');
+        const roster = Array.isArray(x.roster) ? x.roster : [];
+        const chosen = Array.isArray(x.starters) ? x.starters : [];
+        const need = Array.isArray(x.slots) ? x.slots.length : 0;
+        html += '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:6px">' +
+          (need ? '<b>Starters:</b> ' + _qaAdminEsc(slotSum(x.slots)) + ' · ' : '') +
+          '<span id="adminQaCnt-' + safeId + '" data-need="' + need + '">' + chosen.length + (need ? ' of ' + need : '') + ' picked</span> · tap players to start them</div>';
+        html += '<div class="aj-roster" id="adminQaRoster-' + safeId + '">' + sortPos(roster).map(n => {
+          const pos = posOf(n);
+          return '<button type="button" class="aj-chip aj-chip-btn' + (chosen.indexOf(n) >= 0 ? ' aj-chip-start' : '') + '" data-name="' + _qaAdminEsc(n) + '" onclick="window._adminQaToggle(this,\'' + safeId + '\')">' +
+            (pos ? '<span class="aj-chip-pos">' + _qaAdminEsc(pos) + '</span>' : '') + _qaAdminEsc(n) + '</button>';
+        }).join('') + '</div>';
+        html += '<button onclick="window._adminQaSaveLineup(\'' + safeId + '\')" style="margin-top:4px;padding:6px 14px;border-radius:6px;border:1px solid ' + (x.status === 'answered' ? '#22c55e' : 'var(--accent)') + ';background:' + (x.status === 'answered' ? '#22c55e' : 'transparent') + ';color:' + (x.status === 'answered' ? '#000' : 'var(--accent)') + ';font-family:\'Bebas Neue\',sans-serif;font-size:.78rem;letter-spacing:1px;cursor:pointer">' + (x.status === 'answered' ? '⭐ SAVED — UPDATE LINEUP' : 'SAVE LINEUP') + '</button>';
+      } else if (x.roster && x.roster.length) {
         html += '<details style="margin-top:4px"><summary style="cursor:pointer;font-size:.6875rem;color:var(--text2)">Their roster (' + x.roster.length + ')</summary>' +
           '<div style="font-size:.6875rem;color:var(--text2);margin-top:3px;line-height:1.6">' + x.roster.map(_qaAdminEsc).join(', ') + '</div></details>';
       }
       html += '<div style="display:flex;gap:8px;margin-top:8px;align-items:center">' +
-        '<input type="text" id="adminQaNote-' + safeId + '" placeholder="Optional note to send with your pick" maxlength="1000" value="' + _qaAdminEsc(x.answer || '') + '" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 9px;font-size:.72rem">' +
+        '<input type="text" id="adminQaNote-' + safeId + '" placeholder="' + (x.type === 'lineup' ? 'Optional note to send with your lineup' : 'Optional note to send with your pick') + '" maxlength="1000" value="' + _qaAdminEsc(x.answer || '') + '" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 9px;font-size:.72rem">' +
         '<button onclick="window._adminQaDelete(\'' + safeId + '\')" title="Delete question" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;color:var(--red);cursor:pointer;font-weight:700">✕</button>' +
         '</div>';
       html += '</div>';
@@ -35226,6 +35247,36 @@ window.fmtHeight = fmtHeight;
       db.collection('qa_questions').doc(docId).update(patch)
         .then(() => { showAdminMsg(qaMsg, 'Answered ✓', 'success'); _adminQaLoad(window._adminQaView || 'open'); })
         .catch(e => showAdminMsg(qaMsg, 'Answer error: ' + e.message, 'error'));
+    };
+
+    window._adminQaToggle = function(btn, docId) {
+      btn.classList.toggle('aj-chip-start');
+      const cnt = document.getElementById('adminQaCnt-' + docId);
+      const wrap = document.getElementById('adminQaRoster-' + docId);
+      if (!cnt || !wrap) return;
+      const n = wrap.querySelectorAll('.aj-chip-start').length;
+      const need = parseInt(cnt.getAttribute('data-need'), 10) || 0;
+      cnt.textContent = n + (need ? ' of ' + need : '') + ' picked';
+      cnt.style.color = need && n > need ? 'var(--red)' : '';
+    };
+
+    window._adminQaSaveLineup = function(docId) {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const wrap = document.getElementById('adminQaRoster-' + docId);
+      if (!db || !wrap) return;
+      const starters = Array.from(wrap.querySelectorAll('.aj-chip-start')).map(b => b.getAttribute('data-name')).filter(Boolean);
+      if (!starters.length) { showAdminMsg(qaMsg, 'Tap the players you\'d start first', 'error'); return; }
+      const noteEl = document.getElementById('adminQaNote-' + docId);
+      const note = noteEl && noteEl.value.trim();
+      const patch = {
+        starters: starters.slice(0, 30),
+        status: 'answered',
+        answeredAt: new Date().toISOString(),
+        answer: note ? note.slice(0, 1000) : firebase.firestore.FieldValue.delete()
+      };
+      db.collection('qa_questions').doc(docId).update(patch)
+        .then(() => { showAdminMsg(qaMsg, 'Lineup saved ✓', 'success'); _adminQaLoad(window._adminQaView || 'open'); })
+        .catch(e => showAdminMsg(qaMsg, 'Save error: ' + e.message, 'error'));
     };
 
     window._adminQaDelete = function(docId) {
@@ -72922,21 +72973,27 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   })();
 
   // === ASK JACK — premium weekly Q&A (#mtAskJack on the Ask Jack tab, #pageAskJack) ===
-  // Premium members get 1 start/sit + 1 trade question per week, resetting
-  // Tuesday (EST-anchored). Quota is enforced server-side by the qa_questions
-  // doc ID ({uid}_{weekIdx}_{type}: create-only for users) with weekIdx
-  // validated against request.time in firestore.rules — keep QA_WEEK_ANCHOR
-  // in sync with the anchor constant there. Premium gating stays client-side,
-  // matching Jack's Teams above. Questions are structured as options Jack
-  // picks from (start/sit: 2-4 players; trade: the two sides) plus an
-  // optional note, and can attach a synced My Teams league so Jack answers
-  // off the member's real roster.
+  // Layout (2026-11-04, Jack): league picker at the top (shared by every
+  // question type), then a START/SIT · TRADE · LINEUP OPTIMIZER picker, then
+  // the form for the picked type. Premium members get 2 questions a week,
+  // resetting Tuesday (EST-anchored): 1 trade + 1 start/sit OR lineup (those
+  // two share a slot). Quota is enforced server-side by the qa_questions doc
+  // ID ({uid}_{weekIdx}_{slot}, slot = 'trade' | 'startsit'; create-only for
+  // users) with weekIdx validated against request.time in firestore.rules —
+  // keep QA_WEEK_ANCHOR in sync with the anchor constant there. Premium gating
+  // stays client-side, matching Jack's Teams. Start/sit + trade questions are
+  // 2-4 `options` Jack picks one of; lineup questions carry the member's roster
+  // (+ the league's starting slots) and Jack answers with a `starters` list.
   const QA_WEEK_ANCHOR = 1767675600000; // Tue 2026-01-06 00:00 EST (05:00 UTC)
   const QA_WEEK_MS = 7 * 86400000;
   const QA_TYPES = {
-    startsit: { label: 'START / SIT', icon: '🔀', ask: 'Which players are you deciding between?' },
-    trade:    { label: 'TRADE',       icon: '🔁', ask: 'Lay out both sides — Jack picks the side he likes better.' }
+    startsit: { label: 'START / SIT', name: 'start/sit', icon: '🔀', slot: 'startsit', blurb: 'Which player do I start?', ask: 'Which players are you deciding between?' },
+    trade:    { label: 'TRADE',       name: 'trade',     icon: '🔁', slot: 'trade',    blurb: 'Should I take this deal?', ask: 'Lay out both sides — Jack picks the side he likes better.' },
+    lineup:   { label: 'LINEUP OPTIMIZER', name: 'lineup', icon: '📋', slot: 'startsit', blurb: 'Jack sets your whole lineup', ask: 'Jack sets your starting lineup from your synced roster.' }
   };
+  const QA_TYPE_ORDER = ['startsit', 'trade', 'lineup'];
+  const _qaType = t => QA_TYPES[t] || QA_TYPES.startsit;
+  function _qaSlotOf(type) { return type === 'trade' ? 'trade' : 'startsit'; }
   function _qaWeekIdx() { return Math.floor((Date.now() - QA_WEEK_ANCHOR) / QA_WEEK_MS); }
 
   function _qaResetLabel() {
@@ -72944,6 +73001,75 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const days = Math.max(0, Math.ceil((next.getTime() - Date.now()) / 86400000));
     return days <= 1 ? 'new questions Tuesday (tomorrow!)' : 'new questions in ' + days + ' days (Tuesday)';
   }
+
+  function _qaLsGet(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
+  function _qaLsSet(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
+
+  // Picked question type (remembered per browser).
+  function _qaSelType() {
+    const t = window._qaPicked || _qaLsGet('aj_type');
+    return QA_TYPES[t] ? t : 'startsit';
+  }
+  // Picked league: index into _mtSavedLeagues, remembered by leagueId
+  // ('none' = no league). Defaults to the first (most recently saved) league.
+  function _qaSelLeagueIdx() {
+    const leagues = window._mtSavedLeagues || [];
+    const want = window._qaLeagueId != null ? window._qaLeagueId : _qaLsGet('aj_league');
+    if (want === 'none') return -1;
+    if (want != null) {
+      const i = leagues.findIndex(l => l && String(l.leagueId) === String(want));
+      if (i >= 0) return i;
+    }
+    return leagues.length ? 0 : -1;
+  }
+  function _qaSelLeague() {
+    const i = _qaSelLeagueIdx();
+    return i >= 0 ? (window._mtSavedLeagues || [])[i] || null : null;
+  }
+  function _qaMyPlayers(lg) {
+    const my = lg && Array.isArray(lg.teams) ? lg.teams.find(t => t && t.isMyTeam) : null;
+    return my && Array.isArray(my.players)
+      ? my.players.map(p => typeof p === 'string' ? p : (p && p.name) || '').filter(Boolean)
+      : [];
+  }
+
+  // Name → position from the rankings D array (lineup chips + admin roster).
+  function _qaPosOf(name) {
+    if (!window._qaPosMap && typeof D !== 'undefined' && Array.isArray(D)) {
+      const m = {};
+      D.forEach(p => { if (p && p.n && p.s) m[p.n] = p.s; });
+      window._qaPosMap = m;
+    }
+    return (window._qaPosMap && window._qaPosMap[name]) || '';
+  }
+  window._qaPosOf = _qaPosOf;
+  const QA_POS_ORDER = { QB: 1, RB: 2, WR: 3, TE: 4, K: 5, DST: 6, DEF: 6 };
+  function _qaSortByPos(names) {
+    return names.slice().sort((a, b) => {
+      const pa = QA_POS_ORDER[_qaPosOf(a)] || 9, pb = QA_POS_ORDER[_qaPosOf(b)] || 9;
+      return pa !== pb ? pa - pb : a.localeCompare(b);
+    });
+  }
+  window._qaSortByPos = _qaSortByPos;
+
+  // Starting slots from the league's roster positions (bench / IR / taxi out).
+  function _qaStarterSlots(lg) {
+    const rp = lg && lg.format && Array.isArray(lg.format.rosterPositions) ? lg.format.rosterPositions : [];
+    return rp.map(s => String(s || '').toUpperCase())
+      .filter(s => s && !/^(BN|BE|BENCH|IR|IR\+|RES|TAXI|NA)$/.test(s))
+      .slice(0, 20);
+  }
+  const QA_SLOT_LABEL = { SUPER_FLEX: 'SUPERFLEX', REC_FLEX: 'W/T FLEX', WRRB_FLEX: 'W/R FLEX', 'W/R/T': 'FLEX', 'Q/W/R/T': 'SUPERFLEX', DST: 'DEF', 'D/ST': 'DEF' };
+  function _qaSlotSummary(slots) {
+    const order = [], cnt = {};
+    slots.forEach(s => {
+      const l = QA_SLOT_LABEL[s] || s;
+      if (!cnt[l]) { cnt[l] = 0; order.push(l); }
+      cnt[l]++;
+    });
+    return order.map(l => (cnt[l] > 1 ? cnt[l] + ' ' : '') + l).join(' · ');
+  }
+  window._qaSlotSummary = _qaSlotSummary;
 
   // Shared datalist of NFL player names for the option inputs (built from the
   // rankings D array; harmless free text if a name isn't in it).
@@ -72953,49 +73079,83 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       D.map(p => '<option value="' + _jtEsc(p.n) + '">').join('') + '</datalist>';
   }
 
+  function _qaLeagueFmt(lg, withTeams) {
+    const fmtParts = [];
+    if (lg && lg.format) {
+      if (lg.format.type) fmtParts.push(lg.format.type.charAt(0).toUpperCase() + lg.format.type.slice(1));
+      if (lg.format.sf) fmtParts.push('SF');
+      fmtParts.push(lg.format.ppr === 1 ? 'PPR' : lg.format.ppr === 0.5 ? '.5 PPR' : 'STD');
+    }
+    if (withTeams && lg && lg.teams && lg.teams.length) fmtParts.push(lg.teams.length + '-team');
+    return fmtParts.join(' · ');
+  }
+
   function _qaLeagueOptions(selectedIdx) {
     const leagues = window._mtSavedLeagues || [];
-    let html = '<option value="-1">No league attached</option>';
+    let html = '<option value="-1"' + (selectedIdx < 0 ? ' selected' : '') + '>No league attached</option>';
     leagues.forEach((lg, i) => {
-      const fmtParts = [];
-      if (lg.format) {
-        if (lg.format.type) fmtParts.push(lg.format.type.charAt(0).toUpperCase() + lg.format.type.slice(1));
-        if (lg.format.sf) fmtParts.push('SF');
-        fmtParts.push(lg.format.ppr === 1 ? 'PPR' : lg.format.ppr === 0.5 ? '.5 PPR' : 'STD');
-      }
+      const fmt = _qaLeagueFmt(lg, false);
       html += '<option value="' + i + '"' + (i === selectedIdx ? ' selected' : '') + '>' +
-        _jtEsc(lg.name || 'League') + (fmtParts.length ? ' (' + fmtParts.join(' · ') + ')' : '') + '</option>';
+        _jtEsc(lg.name || 'League') + (fmt ? ' (' + fmt + ')' : '') + '</option>';
     });
     return html;
   }
 
-  // Repopulate open league selects in place (called by _mtLoadSavedLeagues
-  // after a league import so a fresh sync shows up without nuking typed text).
+  // League bar at the top of the panel — one league for every question type.
+  function _qaLeagueBarHtml() {
+    const leagues = window._mtSavedLeagues || [];
+    if (!leagues.length) {
+      return '<div class="aj-league-bar"><span class="aj-lbl">YOUR LEAGUE</span>' +
+        '<span class="aj-league-empty">No synced leagues yet. <a href="#myteams" onclick="switchPage(\'myteams\');return false">Sync one on My Teams</a> so Jack sees your roster.</span></div>';
+    }
+    return '<div class="aj-league-bar"><label class="aj-lbl" for="qaLeague">YOUR LEAGUE</label>' +
+      '<select id="qaLeague" onchange="window._qaLeagueChanged()" title="Jack sees this league\'s roster and scoring with your question">' +
+      _qaLeagueOptions(_qaSelLeagueIdx()) + '</select></div>';
+  }
+
+  // START/SIT · TRADE · LINEUP OPTIMIZER picker. Start/sit + lineup share
+  // one weekly slot, so using one marks the other as used too.
+  function _qaTypePickerHtml(sel, mineBySlot) {
+    return '<div class="aj-types" role="tablist" aria-label="Question type">' + QA_TYPE_ORDER.map(t => {
+      const T = QA_TYPES[t];
+      const used = mineBySlot[T.slot];
+      let st, cls = '';
+      if (!used) st = '1 left this week';
+      else if (used.type === t) { st = used.status === 'answered' ? 'ANSWERED' : 'SENT'; cls = used.status === 'answered' ? ' aj-st-done' : ' aj-st-sent'; }
+      else { st = 'Used on ' + _qaType(used.type).name; cls = ' aj-st-used'; }
+      return '<button type="button" class="aj-type' + (t === sel ? ' on' : '') + '" role="tab" aria-selected="' + (t === sel) + '" onclick="window._qaPickType(\'' + t + '\')">' +
+        '<span class="aj-type-name">' + T.icon + ' ' + T.label + '</span>' +
+        '<span class="aj-type-blurb">' + T.blurb + '</span>' +
+        '<span class="aj-type-st' + cls + '">' + st + '</span>' +
+        '</button>';
+    }).join('') + '</div>';
+  }
+
+  window._qaPickType = function(t) {
+    if (!QA_TYPES[t]) return;
+    window._qaPicked = t;
+    _qaLsSet('aj_type', t);
+    window._qaRenderPanel();
+  };
+  window._qaLeagueChanged = function() {
+    const sel = document.getElementById('qaLeague');
+    if (!sel) return;
+    const idx = parseInt(sel.value, 10);
+    const lg = (!isNaN(idx) && idx >= 0) ? (window._mtSavedLeagues || [])[idx] : null;
+    window._qaLeagueId = lg ? String(lg.leagueId) : 'none';
+    _qaLsSet('aj_league', window._qaLeagueId);
+    window._qaRenderPanel();
+  };
+  // Called by _mtLoadSavedLeagues after a league sync: re-render (no-op when
+  // nothing changed — _qaRenderInner compares html) so a fresh sync shows up.
   window._qaRefreshLeagues = function() {
-    ['startsit', 'trade'].forEach(type => {
-      const sel = document.getElementById('qaLeague-' + type);
-      if (!sel) return;
-      const cur = parseInt(sel.value, 10);
-      const fresh = _qaLeagueOptions(isNaN(cur) ? -1 : cur);
-      // Idempotent: only rewrite when the option list actually changed.
-      // Rebuilding identical options closes any open dropdown mid-pick
-      // (native select/datalist popups die on any element mutation).
-      if (sel._qaOptsSig !== fresh) {
-        sel._qaOptsSig = fresh;
-        sel.innerHTML = fresh;
-      }
-      // League list may have changed under a live selection — re-scope the
-      // player suggestion datalists to whatever is selected now.
-      window._qaLeagueChanged(type);
-    });
+    if (document.getElementById('mtAskJack') && typeof window._qaRenderPanel === 'function') window._qaRenderPanel();
   };
 
-  // Roster-scoped player suggestions. With a league attached, the player
-  // inputs suggest only players from that league's synced rosters: start/sit
-  // and the trade YOU-GIVE side draw from MY roster, the trade YOU-GET side
-  // from every OTHER roster in the league. "No league attached" (or a league
-  // with no usable roster data) falls back to the full-player datalist.
-  // Free text always stays allowed — datalists are suggestions only.
+  // Roster-scoped player suggestions for the attached league: start/sit and
+  // the trade YOU-GIVE side draw from MY roster, the trade YOU-GET side from
+  // every OTHER roster. No league (or no usable roster data) falls back to the
+  // full-player datalist. Free text always stays allowed.
   function _qaEnsureDatalist(id, names) {
     let dl = document.getElementById(id);
     if (!dl) {
@@ -73011,49 +73171,30 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     dl._qaSig = sig;
     dl.innerHTML = names.map(n => '<option value="' + _jtEsc(n) + '">').join('');
   }
-  window._qaLeagueChanged = function(type) {
-    const sel = document.getElementById('qaLeague-' + type);
-    if (!sel) return;
-    const idx = parseInt(sel.value, 10);
-    const lg = (!isNaN(idx) && idx >= 0 && window._mtSavedLeagues) ? window._mtSavedLeagues[idx] : null;
+  function _qaApplyLists() {
+    const lg = _qaSelLeague();
     const teams = lg && Array.isArray(lg.teams) ? lg.teams : [];
-    const mine = teams.find(t => t && t.isMyTeam);
-    const myNames = mine && Array.isArray(mine.players) ? mine.players.slice().sort() : [];
+    const myNames = _qaMyPlayers(lg).sort();
     const otherNames = [];
     teams.forEach(t => {
       if (!t || t.isMyTeam) return;
-      (t.players || []).forEach(n => otherNames.push(n));
+      (t.players || []).forEach(n => { if (typeof n === 'string') otherNames.push(n); });
     });
     otherNames.sort();
-    const inputs = [];
-    for (let i = 0; i < 4; i++) {
-      const el = document.getElementById('qaOpt-' + type + '-' + i);
-      if (el) inputs.push({ el, i });
-    }
-    // Per-type datalist ids — start/sit and trade can attach different leagues.
+    if (myNames.length) _qaEnsureDatalist('qaRosterMine', myNames);
+    if (otherNames.length) _qaEnsureDatalist('qaRosterOthers', otherNames);
     // setAttribute is guarded (mutating the list attr of a focused input
     // closes its open suggestion dropdown, so only touch it on real change).
     const _setList = (el, listId) => { if (el.getAttribute('list') !== listId) el.setAttribute('list', listId); };
-    const mineId = 'qaRosterMine-' + type, othersId = 'qaRosterOthers-' + type;
-    if (type === 'startsit') {
-      if (myNames.length) {
-        _qaEnsureDatalist(mineId, myNames);
-        inputs.forEach(x => _setList(x.el, mineId));
-      } else {
-        inputs.forEach(x => _setList(x.el, 'qaPlayerList'));
-      }
-    } else {
-      if (myNames.length) _qaEnsureDatalist(mineId, myNames);
-      if (otherNames.length) _qaEnsureDatalist(othersId, otherNames);
-      inputs.forEach(x => {
-        const wantMine = x.i === 0; // SIDE A — YOU GIVE
-        const listId = wantMine
-          ? (myNames.length ? mineId : 'qaPlayerList')
-          : (otherNames.length ? othersId : 'qaPlayerList');
-        _setList(x.el, listId);
-      });
+    for (let i = 0; i < 4; i++) {
+      const el = document.getElementById('qaOpt-startsit-' + i);
+      if (el) _setList(el, myNames.length ? 'qaRosterMine' : 'qaPlayerList');
     }
-  };
+    const give = document.getElementById('qaOpt-trade-0');
+    const get = document.getElementById('qaOpt-trade-1');
+    if (give) _setList(give, myNames.length ? 'qaRosterMine' : 'qaPlayerList');
+    if (get) _setList(get, otherNames.length ? 'qaRosterOthers' : 'qaPlayerList');
+  }
 
   window._qaRenderPanel = function() {
     const sect = document.getElementById('mtAskJack');
@@ -73079,23 +73220,24 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">' +
         '<span class="jt-badge">PREMIUM</span>' +
         // No "ASK JACK" title here: the tab's page header already says it.
-        '<span style="font-size:.6875rem;color:var(--text2);font-style:italic">1 start/sit + 1 trade question every week</span>' +
+        '<span style="font-size:.6875rem;color:var(--text2);font-style:italic">2 questions every week: 1 trade + 1 start/sit or lineup</span>' +
       '</div>';
 
     if (!isPremNow) {
-      sect.innerHTML =
-        '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' + header +
+      const _locked =
+        '<div class="aj-card">' + header +
         '<div class="jt-locked-wrap" style="margin-top:8px">' +
           '<div class="jt-locked-content" style="filter:blur(3px);pointer-events:none;padding:18px">' +
-            '<div style="font-size:.8rem;color:var(--text2)">Who do I start — Puka Nacua or Nico Collins? &nbsp;·&nbsp; Should I take this trade?</div>' +
+            '<div style="font-size:.8rem;color:var(--text2)">Who do I start — Puka Nacua or Nico Collins? &nbsp;·&nbsp; Should I take this trade? &nbsp;·&nbsp; Set my lineup</div>' +
           '</div>' +
           '<div class="jt-locked-overlay">' +
             '<div class="jt-locked-icon">&#128274;</div>' +
             '<div class="jt-locked-label">PREMIUM FEATURE</div>' +
-            '<div class="jt-locked-desc">Send Jack 1 start/sit and 1 trade question every week — he picks the player or trade side he likes better, right from your synced roster.</div>' +
+            '<div class="jt-locked-desc">Every week, send Jack a trade plus a start/sit or a full-lineup question. He makes the call right from your synced roster.</div>' +
             '<button class="jt-locked-btn" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{const t=document.querySelector(\'[data-acct-tab=premium]\');if(t)t.click();},150)">UPGRADE TO PRO</button>' +
           '</div>' +
         '</div></div>';
+      if (sect._qaLastHtml !== _locked) { sect._qaLastHtml = _locked; sect.innerHTML = _locked; }
       sect.style.display = 'block';
       return;
     }
@@ -73125,82 +73267,94 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
 
   function _qaRenderInner(sect, header, list) {
     const wk = _qaWeekIdx();
-    let slots = '';
-    ['startsit', 'trade'].forEach(type => {
-      const mine = list.find(x => x.type === type && x.weekIdx === wk);
-      slots += '<div style="flex:1;min-width:260px;background:var(--surface2,rgba(255,255,255,.03));border:1px solid var(--border);border-radius:10px;padding:12px">' +
-        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">' +
-        QA_TYPES[type].icon + ' ' + QA_TYPES[type].label +
-        (mine ? '<span style="float:right;font-size:.6875rem;letter-spacing:.5px;color:' + (mine.status === 'answered' ? '#22c55e' : 'var(--text2)') + '">' + (mine.status === 'answered' ? 'ANSWERED' : 'SENT — WAITING ON JACK') + '</span>' : '') +
-        '</div>' +
-        (mine ? _qaSubmittedHtml(mine) : _qaFormHtml(type)) +
-        '</div>';
+    const mineBySlot = {};
+    list.forEach(x => {
+      if (x.weekIdx !== wk) return;
+      const s = _qaSlotOf(x.type);
+      if (!mineBySlot[s]) mineBySlot[s] = x;
     });
+    const sel = _qaSelType();
+    const T = QA_TYPES[sel];
+    const used = mineBySlot[T.slot];
+
+    let pane = '<div class="aj-pane" role="tabpanel">' +
+      '<div class="aj-pane-head">' + T.icon + ' ' + T.label +
+      (used && used.type === sel ? '<span class="aj-pane-st' + (used.status === 'answered' ? ' aj-st-done' : '') + '">' + (used.status === 'answered' ? 'ANSWERED' : 'SENT — WAITING ON JACK') + '</span>' : '') +
+      '</div>';
+    if (used && used.type === sel) {
+      pane += _qaSubmittedHtml(used);
+    } else if (used) {
+      pane += '<div class="aj-used-note">Start/sit and lineup share one question a week, and this week\'s went to your ' + _qaType(used.type).name + ' question. ' + _qaResetLabel().replace(/^n/, 'N') + '.</div>' +
+        '<div class="aj-used-q"><div class="aj-used-q-lbl">' + _qaType(used.type).icon + ' ' + _qaType(used.type).label + '</div>' + _qaSubmittedHtml(used) + '</div>';
+    } else {
+      pane += sel === 'lineup' ? _qaLineupFormHtml(_qaSelLeague()) : _qaFormHtml(sel);
+    }
+    pane += '</div>';
 
     // Past answers (previous weeks, answered only)
     const past = list.filter(x => x.status === 'answered' && x.weekIdx !== wk).slice(0, 6);
     let pastHtml = '';
     if (past.length) {
-      pastHtml = '<details style="margin-top:10px"><summary style="cursor:pointer;font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2)">PAST ANSWERS (' + past.length + ')</summary>' +
+      pastHtml = '<details style="margin-top:12px"><summary style="cursor:pointer;font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2)">PAST ANSWERS (' + past.length + ')</summary>' +
         '<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">' +
         past.map(x => '<div style="background:var(--surface2,rgba(255,255,255,.03));border:1px solid var(--border);border-radius:8px;padding:10px">' +
-          '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:4px">' + QA_TYPES[x.type].icon + ' ' + QA_TYPES[x.type].label + ' · ' + (x.createdAt ? new Date(x.createdAt).toLocaleDateString() : '') + '</div>' +
+          '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:4px">' + _qaType(x.type).icon + ' ' + _qaType(x.type).label + ' · ' + (x.createdAt ? new Date(x.createdAt).toLocaleDateString() : '') + '</div>' +
           _qaSubmittedHtml(x) + '</div>').join('') +
         '</div></details>';
     }
 
     const _newHtml =
-      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
+      '<div class="aj-card">' +
       header +
-      '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:10px">Jack picks the player or trade side he likes better · ' + _qaResetLabel() + '</div>' +
-      '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch">' + slots + '</div>' +
-      pastHtml + _qaDatalist() +
+      '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:12px">Jack makes the call himself · ' + _qaResetLabel() + '</div>' +
+      _qaLeagueBarHtml() +
+      _qaTypePickerHtml(sel, mineBySlot) +
+      pane + pastHtml + _qaDatalist() +
       '</div>';
-    // Idempotent render: if nothing changed (questions, leagues — the
-    // league options are baked into the form html — reset label, player
-    // pool), leave the live DOM completely alone. Any innerHTML swap kills
-    // an open suggestion dropdown and steals focus mid-typing, and this
-    // panel gets re-invoked by premium re-checks / auth churn constantly.
+    // Idempotent render: if nothing changed (questions, leagues, picked type,
+    // reset label, player pool), leave the live DOM completely alone. Any
+    // innerHTML swap kills an open suggestion dropdown and steals focus
+    // mid-typing, and this panel gets re-invoked by premium re-checks / auth
+    // churn constantly.
     if (sect._qaLastHtml === _newHtml) {
       sect.style.display = 'block';
       return;
     }
     sect._qaLastHtml = _newHtml;
-    // Preserve in-progress form state across real re-renders — without this
-    // snapshot, the league select and any typed players reset to defaults
-    // mid-composition.
-    const _prevVals = {};
-    sect.querySelectorAll('input, select').forEach(el => {
-      if (el.id && el.value) _prevVals[el.id] = el.value;
-    });
+    // Typed drafts survive real re-renders AND type switches (only the picked
+    // type's form is in the DOM), so flipping START/SIT → TRADE → back keeps
+    // what was typed.
+    const drafts = window._qaDrafts || (window._qaDrafts = {});
+    sect.querySelectorAll('input[id^="qa"]').forEach(el => { drafts[el.id] = el.value; });
     sect.innerHTML = _newHtml;
     sect.style.display = 'block';
-    window._qaRefreshLeagues();
-    Object.keys(_prevVals).forEach(id => {
+    Object.keys(drafts).forEach(id => {
+      if (!drafts[id]) return;
       let el = document.getElementById(id);
       // Extra start/sit inputs (3rd/4th player) don't exist on a fresh
       // rebuild — re-add slots until the captured id comes back.
       if (!el && /^qaOpt-startsit-[23]$/.test(id)) {
         let guard = 0;
-        while (!el && guard++ < 2) {
+        while (!el && guard++ < 2 && document.getElementById('qaExtraOpts-startsit')) {
           window._qaAddOption('startsit');
           el = document.getElementById(id);
         }
       }
-      if (!el) return;
-      el.value = _prevVals[id];
-      // League select: if the saved-league list changed and the old index
-      // no longer exists, fall back to "No league attached" over a blank.
-      if (el.tagName === 'SELECT' && el.value !== _prevVals[id]) el.value = '-1';
+      if (el && el.tagName === 'INPUT') el.value = drafts[id];
     });
-    // Re-apply roster-scoped suggestion lists for whatever league each form
-    // has selected after the restore.
-    ['startsit', 'trade'].forEach(t => window._qaLeagueChanged(t));
+    // Roster-scoped suggestion lists for the picked league.
+    _qaApplyLists();
   }
 
   function _qaOptionInput(type, idx, placeholder) {
-    return '<input type="text" list="qaPlayerList" id="qaOpt-' + type + '-' + idx + '" placeholder="' + placeholder + '" maxlength="120" ' +
-      'style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 9px;font-size:.78rem;margin-bottom:6px">';
+    return '<input type="text" list="qaPlayerList" id="qaOpt-' + type + '-' + idx + '" placeholder="' + placeholder + '" maxlength="120" class="aj-input">';
+  }
+  function _qaNoteInput(type, placeholder) {
+    return '<input type="text" id="qaNote-' + type + '" placeholder="' + placeholder + '" maxlength="1000" class="aj-input aj-input-note">';
+  }
+  function _qaSendBtn(type, disabled) {
+    return '<button onclick="window._qaSubmit(\'' + type + '\')" id="qaSendBtn-' + type + '" class="aj-send"' + (disabled ? ' disabled' : '') + '>SEND TO JACK</button>' +
+      '<div id="qaMsg-' + type + '" class="aj-msg"></div>';
   }
 
   function _qaFormHtml(type) {
@@ -73209,38 +73363,75 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       opts = _qaOptionInput(type, 0, 'Player 1 — e.g. Puka Nacua') +
              _qaOptionInput(type, 1, 'Player 2 — e.g. Nico Collins') +
              '<div id="qaExtraOpts-' + type + '"></div>' +
-             '<button onclick="window._qaAddOption(\'' + type + '\')" id="qaAddBtn-' + type + '" style="background:none;border:none;color:var(--accent);font-size:.6875rem;cursor:pointer;padding:0;margin-bottom:6px">+ add a 3rd player</button>';
+             '<button onclick="window._qaAddOption(\'' + type + '\')" id="qaAddBtn-' + type + '" class="aj-add">+ add a 3rd player</button>';
     } else {
-      opts = '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:3px">SIDE A — YOU GIVE</div>' +
+      opts = '<div class="aj-side-lbl">SIDE A — YOU GIVE</div>' +
              _qaOptionInput(type, 0, 'e.g. Chuba Hubbard + 2027 2nd') +
-             '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:3px">SIDE B — YOU GET</div>' +
+             '<div class="aj-side-lbl">SIDE B — YOU GET</div>' +
              _qaOptionInput(type, 1, 'e.g. Mark Andrews');
     }
-    return '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:6px">' + QA_TYPES[type].ask + '</div>' +
+    return '<div class="aj-ask">' + QA_TYPES[type].ask + '</div>' +
       opts +
-      '<input type="text" id="qaNote-' + type + '" placeholder="Optional context (scoring quirks, injuries, league situation…)" maxlength="1000" ' +
-        'style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 9px;font-size:.72rem;margin-bottom:6px">' +
-      '<select id="qaLeague-' + type + '" onchange="window._qaLeagueChanged(\'' + type + '\')" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text2);padding:7px 9px;font-size:.72rem;margin-bottom:8px" title="Attach a synced league so Jack sees your actual roster — player suggestions narrow to that league\'s rosters">' +
-      _qaLeagueOptions(-1) + '</select>' +
-      '<button onclick="window._qaSubmit(\'' + type + '\')" id="qaSendBtn-' + type + '" style="width:100%;padding:8px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1px;cursor:pointer">SEND TO JACK</button>' +
-      '<div id="qaMsg-' + type + '" style="font-size:.6875rem;color:var(--red);margin-top:5px"></div>';
+      _qaNoteInput(type, 'Optional context (scoring quirks, injuries, league situation…)') +
+      _qaSendBtn(type, false);
+  }
+
+  // Lineup Optimizer form: needs a league with the member's roster on it.
+  function _qaLineupFormHtml(lg) {
+    const ask = '<div class="aj-ask">' + QA_TYPES.lineup.ask + '</div>';
+    if (!lg) {
+      return ask + '<div class="aj-need-league">Pick a league at the top. Jack needs your roster to set your lineup.</div>';
+    }
+    const players = _qaSortByPos(_qaMyPlayers(lg));
+    if (!players.length) {
+      return ask + '<div class="aj-need-league">Couldn\'t find your team in ' + _jtEsc(lg.name || 'this league') + '. Re-sync it on My Teams, then come back.</div>';
+    }
+    const slots = _qaStarterSlots(lg);
+    return ask +
+      '<div class="aj-lineup-meta">' +
+        (slots.length ? '<b>Starters:</b> ' + _jtEsc(_qaSlotSummary(slots)) + ' &nbsp;·&nbsp; ' : '') +
+        players.length + ' players on your roster</div>' +
+      '<div class="aj-roster">' + players.map(n => {
+        const pos = _qaPosOf(n);
+        return '<span class="aj-chip">' + (pos ? '<span class="aj-chip-pos">' + _jtEsc(pos) + '</span>' : '') + _jtEsc(n) + '</span>';
+      }).join('') + '</div>' +
+      _qaNoteInput('lineup', 'Anything Jack should know? (injuries, matchups, who you\'re leaning toward…)') +
+      _qaSendBtn('lineup', false);
   }
 
   function _qaSubmittedHtml(x) {
-    const opts = (x.options || []).map((o, i) => {
-      const picked = x.status === 'answered' && x.pick === i;
-      const sideTag = x.type === 'trade' ? '<span style="font-size:.6875rem;color:var(--text2)">' + (i === 0 ? 'YOU GIVE: ' : 'YOU GET: ') + '</span>' : '';
-      // flex, not float: on a phone the floated label wrapped below and hung off the box
-      return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px;padding:6px 9px;border-radius:6px;margin-bottom:4px;font-size:.76rem;' +
-        (picked ? 'background:rgba(34,197,94,.12);border:1px solid var(--green);color:var(--text);font-weight:600' : 'background:var(--bg);border:1px solid var(--border);color:var(--text2)') + '">' +
-        '<span>' + (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + '</span>' + (picked ? '<span style="color:var(--green);font-size:.6875rem;margin-left:auto">JACK\'S PICK</span>' : '') +
-        '</div>';
-    }).join('');
-    return opts +
+    let body = '';
+    if (x.type === 'lineup') {
+      const roster = Array.isArray(x.roster) ? x.roster : [];
+      const starters = Array.isArray(x.starters) ? x.starters : [];
+      if (x.status === 'answered' && starters.length) {
+        const bench = roster.filter(n => starters.indexOf(n) < 0);
+        body += '<div class="aj-lineup-lbl">JACK\'S LINEUP</div>' +
+          '<div class="aj-roster">' + _qaSortByPos(starters).map(n => {
+            const pos = _qaPosOf(n);
+            return '<span class="aj-chip aj-chip-start">⭐ ' + (pos ? '<span class="aj-chip-pos">' + _jtEsc(pos) + '</span>' : '') + _jtEsc(n) + '</span>';
+          }).join('') + '</div>' +
+          (bench.length ? '<div class="aj-bench">Bench: ' + _qaSortByPos(bench).map(_jtEsc).join(', ') + '</div>' : '');
+      } else {
+        body += '<div class="aj-lineup-meta">' + (x.slots && x.slots.length ? '<b>Starters:</b> ' + _jtEsc(_qaSlotSummary(x.slots)) + ' &nbsp;·&nbsp; ' : '') +
+          roster.length + ' players sent</div>';
+      }
+    } else {
+      body = (x.options || []).map((o, i) => {
+        const picked = x.status === 'answered' && x.pick === i;
+        const sideTag = x.type === 'trade' ? '<span style="font-size:.6875rem;color:var(--text2)">' + (i === 0 ? 'YOU GIVE: ' : 'YOU GET: ') + '</span>' : '';
+        // flex, not float: on a phone the floated label wrapped below and hung off the box
+        return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px;padding:6px 9px;border-radius:6px;margin-bottom:4px;font-size:.76rem;' +
+          (picked ? 'background:rgba(34,197,94,.12);border:1px solid var(--green);color:var(--text);font-weight:600' : 'background:var(--bg);border:1px solid var(--border);color:var(--text2)') + '">' +
+          '<span>' + (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + '</span>' + (picked ? '<span style="color:var(--green);font-size:.6875rem;margin-left:auto">JACK\'S PICK</span>' : '') +
+          '</div>';
+      }).join('');
+    }
+    return body +
       (x.q ? '<div style="font-size:.6875rem;color:var(--text2);font-style:italic;margin-top:2px">"' + _jtEsc(x.q) + '"</div>' : '') +
       (x.league && x.league.name ? '<div style="font-size:.6875rem;color:var(--text2);margin-top:3px">🔗 ' + _jtEsc(x.league.name) + (x.league.fmt ? ' · ' + _jtEsc(x.league.fmt) : '') + '</div>' : '') +
       (x.status === 'answered' && x.answer ? '<div style="margin-top:6px;padding:7px 9px;background:rgba(245,158,11,.08);border-left:3px solid var(--accent);border-radius:4px;font-size:.72rem;color:var(--text)"><b>Jack:</b> ' + _jtEsc(x.answer) + '</div>' : '') +
-      (x.status !== 'answered' ? '<div style="font-size:.6875rem;color:var(--text2);font-style:italic;margin-top:4px">Jack usually answers within a day or two — his pick will show up right here.</div>' : '');
+      (x.status !== 'answered' ? '<div style="font-size:.6875rem;color:var(--text2);font-style:italic;margin-top:4px">Jack usually answers within a day or two — his ' + (x.type === 'lineup' ? 'lineup' : 'pick') + ' will show up right here.</div>' : '');
   }
 
   window._qaAddOption = function(type) {
@@ -73253,8 +73444,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     div.innerHTML = _qaOptionInput(type, idx, 'Player ' + (idx + 1));
     wrap.appendChild(div.firstChild);
     // New input ships with the full-player datalist — re-scope it to the
-    // attached league's roster if one is selected.
-    if (typeof window._qaLeagueChanged === 'function') window._qaLeagueChanged(type);
+    // picked league's roster.
+    _qaApplyLists();
     if (btn) {
       if (idx === 3) btn.style.display = 'none';
       else btn.textContent = '+ add a 4th player';
@@ -73262,6 +73453,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   };
 
   window._qaSubmit = function(type) {
+    if (!QA_TYPES[type]) return;
     const msg = document.getElementById('qaMsg-' + type);
     const say = t => { if (msg) msg.textContent = t; };
     const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
@@ -73269,65 +73461,64 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const db = (fbReady && firebase.firestore) ? firebase.firestore() : null;
     if (!user || !db) { say('Sign in first.'); return; }
 
-    const options = [];
-    for (let i = 0; i < 4; i++) {
-      const el = document.getElementById('qaOpt-' + type + '-' + i);
-      const v = el && el.value.trim();
-      if (v) options.push(v.slice(0, 120));
-    }
-    if (type === 'startsit' && options.length < 2) { say('Enter at least 2 players to choose between.'); return; }
-    if (type === 'trade' && options.length < 2) { say('Fill in both sides of the trade.'); return; }
-
     const wk = _qaWeekIdx();
+    const lg = _qaSelLeague();
     const payload = {
       uid: user.uid,
       name: (user.displayName || user.email || 'Member').slice(0, 120),
       type: type,
       weekIdx: wk,
       status: 'open',
-      createdAt: new Date().toISOString(),
-      options: options
+      createdAt: new Date().toISOString()
     };
+
+    if (type === 'lineup') {
+      const roster = _qaMyPlayers(lg).slice(0, 60);
+      if (!lg || roster.length < 2) { say('Pick a league with your roster on it first.'); return; }
+      const slots = _qaStarterSlots(lg);
+      if (slots.length) payload.slots = slots.map(s => s.slice(0, 12));
+    } else {
+      const options = [];
+      for (let i = 0; i < 4; i++) {
+        const el = document.getElementById('qaOpt-' + type + '-' + i);
+        const v = el && el.value.trim();
+        if (v) options.push(v.slice(0, 120));
+      }
+      if (type === 'startsit' && options.length < 2) { say('Enter at least 2 players to choose between.'); return; }
+      if (type === 'trade' && options.length < 2) { say('Fill in both sides of the trade.'); return; }
+      payload.options = options;
+    }
     const note = (document.getElementById('qaNote-' + type) || {}).value;
     if (note && note.trim()) payload.q = note.trim().slice(0, 1000);
 
-    const sel = document.getElementById('qaLeague-' + type);
-    const lg = (window._mtSavedLeagues || [])[parseInt(sel ? sel.value : '-1', 10)];
     if (lg) {
-      const fmtParts = [];
-      if (lg.format) {
-        if (lg.format.type) fmtParts.push(lg.format.type);
-        if (lg.format.sf) fmtParts.push('SF');
-        fmtParts.push(lg.format.ppr === 1 ? 'PPR' : lg.format.ppr === 0.5 ? '.5 PPR' : 'STD');
-      }
-      if (lg.teams && lg.teams.length) fmtParts.push(lg.teams.length + '-team');
       payload.league = {
         id: String(lg.leagueId || '').slice(0, 60),
         name: String(lg.name || 'League').slice(0, 80),
-        fmt: fmtParts.join(' · ').slice(0, 80)
+        fmt: _qaLeagueFmt(lg, true).slice(0, 80)
       };
-      const my = (lg.teams || []).find(t => t.isMyTeam);
-      if (my && my.players && my.players.length) {
-        payload.roster = my.players
-          .map(p => typeof p === 'string' ? p : (p && p.name) || '')
-          .filter(Boolean).slice(0, 60);
-      }
+      const roster = _qaMyPlayers(lg);
+      if (roster.length) payload.roster = roster.slice(0, 60);
     }
 
     const btn = document.getElementById('qaSendBtn-' + type);
     if (btn) { btn.disabled = true; btn.textContent = 'SENDING…'; }
-    // .doc().set() on a fixed uid_week_type ID: succeeds only as a CREATE —
-    // rules deny update, which is exactly the 1-per-week quota.
-    db.collection('qa_questions').doc(user.uid + '_' + wk + '_' + type).set(payload)
+    // .doc().set() on a fixed uid_week_slot ID: succeeds only as a CREATE —
+    // rules deny update, which is exactly the weekly quota. Lineup uses the
+    // start/sit slot (they share one question a week).
+    db.collection('qa_questions').doc(user.uid + '_' + wk + '_' + _qaSlotOf(type)).set(payload)
       .then(() => {
         window._qaMineCache = null;
-        if (typeof toast === 'function') toast('Sent! Jack\'s pick will show up here.');
+        // Sent: clear this type's typed drafts so they don't come back next week.
+        const drafts = window._qaDrafts || {};
+        Object.keys(drafts).forEach(id => { if (id.indexOf('-' + type) > 0) delete drafts[id]; });
+        if (typeof toast === 'function') toast('Sent! Jack\'s ' + (type === 'lineup' ? 'lineup' : 'pick') + ' will show up here.');
         window._qaRenderPanel();
       })
       .catch(e => {
         if (btn) { btn.disabled = false; btn.textContent = 'SEND TO JACK'; }
         if (e && e.code === 'permission-denied') {
-          say('Looks like this week\'s ' + (type === 'trade' ? 'trade' : 'start/sit') + ' question is already used (or the week just rolled over — refresh and try again).');
+          say('Looks like this week\'s ' + (type === 'trade' ? 'trade' : 'start/sit + lineup') + ' question is already used (or the week just rolled over — refresh and try again).');
         } else {
           say('Couldn\'t send: ' + (e && e.message || 'unknown error'));
         }

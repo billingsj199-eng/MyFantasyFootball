@@ -386,16 +386,18 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isJack();
     }
-    // qa_questions/{uid}_{weekIdx}_{type}: premium "Ask Jack" weekly Q&A.
-    // Each user gets 1 start/sit + 1 trade question per week (Tuesday reset).
+    // qa_questions/{uid}_{weekIdx}_{slot}: premium "Ask Jack" weekly Q&A.
+    // Each user gets 2 questions per week (Tuesday reset): 1 trade + 1
+    // start/sit OR lineup (2026-11-04: those two share the 'startsit' slot).
     // The quota is enforced by the doc ID itself: users can only CREATE (never
-    // update/delete), and the ID must be uid_weekIdx_type where weekIdx is
+    // update/delete), and the ID must be uid_weekIdx_slot where weekIdx is
     // validated against request.time — weekIdx = floor((now - anchor) / 7d),
     // anchor = Tue 2026-01-06 00:00 EST (1767675600000 ms). Keep the anchor in
     // sync with QA_WEEK_ANCHOR in app.js. Premium gating is client-side,
-    // matching shared/jacks_portfolio. Questions are structured as 2-4
-    // `options` Jack picks from (start/sit players, or the two trade sides);
-    // answers (pick/answer/answeredAt/status) are admin-only updates.
+    // matching shared/jacks_portfolio. Start/sit + trade questions carry 2-4
+    // `options` Jack picks one of; lineup questions carry the member's roster
+    // (+ `slots`, the league's starting positions) and no options. Answers
+    // (pick / starters / answer / answeredAt / status) are admin-only updates.
     match /qa_questions/{qId} {
       allow read: if request.auth != null
                   && (resource.data.uid == request.auth.uid
@@ -404,19 +406,27 @@ service cloud.firestore {
                     && request.resource.data.uid == request.auth.uid
                     // 2026-10-28: premium is checked here too, not only in the client.
                     && (isJack() || hasStripePremium() || hasGiftedPremium())
-                    && request.resource.data.type in ['startsit', 'trade']
+                    && request.resource.data.type in ['startsit', 'trade', 'lineup']
                     && request.resource.data.weekIdx is int
                     && request.resource.data.weekIdx == (request.time.toMillis() - 1767675600000) / 604800000
-                    && qId == (request.auth.uid + '_' + string(request.resource.data.weekIdx) + '_' + request.resource.data.type)
+                    // slot: trade → 'trade'; startsit + lineup share 'startsit'.
+                    && qId == (request.auth.uid + '_' + string(request.resource.data.weekIdx) + '_' + (request.resource.data.type == 'trade' ? 'trade' : 'startsit'))
                     && request.resource.data.status == 'open'
-                    && request.resource.data.keys().hasOnly(['uid','name','type','weekIdx','status','createdAt','options','q','league','roster'])
-                    && request.resource.data.options is list
-                    && request.resource.data.options.size() >= 2
-                    && request.resource.data.options.size() <= 4
-                    && (request.resource.data.options[0] is string && request.resource.data.options[0].size() <= 200)
-                    && (request.resource.data.options[1] is string && request.resource.data.options[1].size() <= 200)
-                    && (request.resource.data.options.size() < 3 || (request.resource.data.options[2] is string && request.resource.data.options[2].size() <= 200))
-                    && (request.resource.data.options.size() < 4 || (request.resource.data.options[3] is string && request.resource.data.options[3].size() <= 200))
+                    && request.resource.data.keys().hasOnly(['uid','name','type','weekIdx','status','createdAt','options','q','league','roster','slots'])
+                    && (request.resource.data.type == 'lineup'
+                          // Lineup: roster required (Jack picks starters from it), no options.
+                          ? (!('options' in request.resource.data)
+                             && 'roster' in request.resource.data
+                             && request.resource.data.roster.size() >= 2
+                             && (!('slots' in request.resource.data) || (request.resource.data.slots is list && request.resource.data.slots.size() <= 20)))
+                          : (!('slots' in request.resource.data)
+                             && request.resource.data.options is list
+                             && request.resource.data.options.size() >= 2
+                             && request.resource.data.options.size() <= 4
+                             && (request.resource.data.options[0] is string && request.resource.data.options[0].size() <= 200)
+                             && (request.resource.data.options[1] is string && request.resource.data.options[1].size() <= 200)
+                             && (request.resource.data.options.size() < 3 || (request.resource.data.options[2] is string && request.resource.data.options[2].size() <= 200))
+                             && (request.resource.data.options.size() < 4 || (request.resource.data.options[3] is string && request.resource.data.options[3].size() <= 200))))
                     && (request.resource.data.name is string && request.resource.data.name.size() <= 120)
                     && (request.resource.data.createdAt is string && request.resource.data.createdAt.size() <= 32)
                     && (!('q' in request.resource.data) || (request.resource.data.q is string && request.resource.data.q.size() <= 1000))

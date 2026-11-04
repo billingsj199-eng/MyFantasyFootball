@@ -3427,7 +3427,22 @@ tbody td{font-size:.8125rem}
 .aj-chip-start{background:rgba(34,197,94,.14);border-color:var(--green);font-weight:600}
 .aj-chip-btn{cursor:pointer;font:inherit;font-size:.74rem;min-height:32px}
 .aj-chip-btn:hover{border-color:var(--accent)}
+/* Admin view toggle (Jack only) + INBOX view on the Ask Jack tab */
+.aj-admin-bar{display:flex;align-items:center;gap:8px;margin-left:auto}
+.aj-seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.aj-seg-btn{background:none;border:none;color:var(--text2);padding:7px 12px;min-height:36px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;cursor:pointer}
+.aj-seg-btn+.aj-seg-btn{border-left:1px solid var(--border)}
+.aj-seg-btn.on{background:rgba(245,158,11,.15);color:var(--accent)}
+#ajInboxCount{font-family:'DM Sans',sans-serif;font-size:.72rem;letter-spacing:0}
+#ajInbox{display:none}
+#pageAskJack.aj-inbox-on #ajInbox{display:block}
+#pageAskJack.aj-inbox-on #mtAskJack,#pageAskJack.aj-inbox-on .aj-intro{display:none!important}
+.aj-inbox-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
+.aj-inbox-btn{min-height:36px;padding:.4rem .9rem}
+.aj-inbox-btn.on{border-color:var(--accent);color:var(--accent)}
+.aj-inbox-hint{font-size:.7rem;color:var(--text2);flex:1;min-width:200px}
 @media (max-width:600px){
+  .aj-admin-bar{margin-left:0;width:100%}
   .aj-types{grid-template-columns:1fr}
   .aj-type{flex-direction:row;align-items:center;flex-wrap:wrap;column-gap:8px}
   .aj-type-st{margin-left:auto;margin-top:0}

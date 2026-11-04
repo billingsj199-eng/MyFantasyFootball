@@ -24596,6 +24596,7 @@ function _pageEnterHooks(page) {
   // Ask Jack (own tab since 2026-11-04): its code rides the myteams chunk, so this
   // no-ops until the chunk lands and switchPage re-runs the hooks.
   if (page === 'askjack' && typeof window._qaRenderPanel === 'function') window._qaRenderPanel();
+  if (page === 'askjack' && typeof window._qaAdminEnter === 'function') window._qaAdminEnter();
   // Trade calc: re-price on every open so board edits made elsewhere (rankings
   // page, tier cards, Jack's live saves) show up; includes the real-trades poke.
   if (page === 'trade') {
@@ -35151,8 +35152,16 @@ window.fmtHeight = fmtHeight;
     // as tap-to-start chips plus SAVE LINEUP, which writes a `starters` list.
     const qaRefreshBtn = document.getElementById('adminQaRefreshBtn');
     const qaAnsweredBtn = document.getElementById('adminQaAnsweredBtn');
-    const qaListEl = document.getElementById('adminQaList');
-    const qaMsg = document.getElementById('adminQaMsg');
+    // The inbox renders into the Account admin panel (#adminQaList) or the
+    // Ask Jack tab's admin view (#ajInboxList, 2026-11-04) — whichever asked
+    // last (window._adminQaTargetId); answer/delete reloads follow it.
+    const _qaTargets = () => {
+      const onTab = window._adminQaTargetId === 'ajInboxList';
+      return {
+        list: document.getElementById(onTab ? 'ajInboxList' : 'adminQaList'),
+        msg: document.getElementById(onTab ? 'ajInboxMsg' : 'adminQaMsg')
+      };
+    };
     const _qaAdminEsc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
@@ -35214,24 +35223,33 @@ window.fmtHeight = fmtHeight;
 
     function _adminQaLoad(status) {
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-      if (!db || !qaListEl) { showAdminMsg(qaMsg, 'Database not available', 'error'); return; }
+      const { list: qaListEl, msg: qaMsg } = _qaTargets();
+      if (!db || !qaListEl) { showAdminMsg(_qaTargets().msg, 'Database not available', 'error'); return; }
       window._adminQaView = status;
       qaListEl.innerHTML = '<div style="font-size:.72rem;color:var(--text2)">Loading…</div>';
+      // Ask Jack tab: INBOX (n) badge on the toggle.
+      const _badge = n => { const c = document.getElementById('ajInboxCount'); if (c) c.textContent = n ? '(' + n + ')' : ''; };
       db.collection('qa_questions').where('status', '==', status).limit(status === 'open' ? 100 : 25).get()
         .then(snap => {
           const rows = [];
           snap.forEach(d => rows.push({ id: d.id, data: d.data() }));
           rows.sort((a, b) => (b.data.createdAt || '').localeCompare(a.data.createdAt || ''));
+          if (status === 'open') _badge(rows.length);
           if (!rows.length) {
             qaListEl.innerHTML = '<div style="font-size:.72rem;color:var(--text2)">' +
               (status === 'open' ? 'No open questions — inbox zero 🎉' : 'Nothing answered yet.') + '</div>';
             return;
           }
           qaListEl.innerHTML = rows.map(r => _adminQaRow(r.id, r.data)).join('');
-          showAdminMsg(qaMsg, rows.length + (status === 'open' ? ' open question(s)' : ' answered'), 'success');
+          showAdminMsg(_qaTargets().msg, rows.length + (status === 'open' ? ' open question(s)' : ' answered'), 'success');
         })
-        .catch(e => showAdminMsg(qaMsg, 'Load error: ' + e.message, 'error'));
+        .catch(e => showAdminMsg(_qaTargets().msg, 'Load error: ' + e.message, 'error'));
     }
+    // Ask Jack tab's admin view calls this with its own list id.
+    window._adminQaLoad = function(status, targetId) {
+      if (targetId) window._adminQaTargetId = targetId;
+      _adminQaLoad(status || window._adminQaView || 'open');
+    };
 
     window._adminQaPick = function(docId, idx) {
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
@@ -35245,8 +35263,8 @@ window.fmtHeight = fmtHeight;
       const note = noteEl && noteEl.value.trim();
       patch.answer = note ? note.slice(0, 1000) : firebase.firestore.FieldValue.delete();
       db.collection('qa_questions').doc(docId).update(patch)
-        .then(() => { showAdminMsg(qaMsg, 'Answered ✓', 'success'); _adminQaLoad(window._adminQaView || 'open'); })
-        .catch(e => showAdminMsg(qaMsg, 'Answer error: ' + e.message, 'error'));
+        .then(() => { showAdminMsg(_qaTargets().msg, 'Answered ✓', 'success'); _adminQaLoad(window._adminQaView || 'open'); })
+        .catch(e => showAdminMsg(_qaTargets().msg, 'Answer error: ' + e.message, 'error'));
     };
 
     window._adminQaToggle = function(btn, docId) {
@@ -35265,7 +35283,7 @@ window.fmtHeight = fmtHeight;
       const wrap = document.getElementById('adminQaRoster-' + docId);
       if (!db || !wrap) return;
       const starters = Array.from(wrap.querySelectorAll('.aj-chip-start')).map(b => b.getAttribute('data-name')).filter(Boolean);
-      if (!starters.length) { showAdminMsg(qaMsg, 'Tap the players you\'d start first', 'error'); return; }
+      if (!starters.length) { showAdminMsg(_qaTargets().msg, 'Tap the players you\'d start first', 'error'); return; }
       const noteEl = document.getElementById('adminQaNote-' + docId);
       const note = noteEl && noteEl.value.trim();
       const patch = {
@@ -35275,8 +35293,8 @@ window.fmtHeight = fmtHeight;
         answer: note ? note.slice(0, 1000) : firebase.firestore.FieldValue.delete()
       };
       db.collection('qa_questions').doc(docId).update(patch)
-        .then(() => { showAdminMsg(qaMsg, 'Lineup saved ✓', 'success'); _adminQaLoad(window._adminQaView || 'open'); })
-        .catch(e => showAdminMsg(qaMsg, 'Save error: ' + e.message, 'error'));
+        .then(() => { showAdminMsg(_qaTargets().msg, 'Lineup saved ✓', 'success'); _adminQaLoad(window._adminQaView || 'open'); })
+        .catch(e => showAdminMsg(_qaTargets().msg, 'Save error: ' + e.message, 'error'));
     };
 
     window._adminQaDelete = function(docId) {
@@ -35284,17 +35302,17 @@ window.fmtHeight = fmtHeight;
       if (!db) return;
       if (!_mffConfirm('Delete this question? Deleting frees the member\'s weekly slot (the doc ID is the quota), so they can re-ask this week.')) return;
       db.collection('qa_questions').doc(docId).delete()
-        .then(() => { showAdminMsg(qaMsg, 'Deleted', 'success'); _adminQaLoad(window._adminQaView || 'open'); })
-        .catch(e => showAdminMsg(qaMsg, 'Delete error: ' + e.message, 'error'));
+        .then(() => { showAdminMsg(_qaTargets().msg, 'Deleted', 'success'); _adminQaLoad(window._adminQaView || 'open'); })
+        .catch(e => showAdminMsg(_qaTargets().msg, 'Delete error: ' + e.message, 'error'));
     };
 
     if (qaRefreshBtn && !qaRefreshBtn._bound) {
       qaRefreshBtn._bound = true;
-      qaRefreshBtn.addEventListener('click', () => _adminQaLoad('open'));
+      qaRefreshBtn.addEventListener('click', () => { window._adminQaTargetId = 'adminQaList'; _adminQaLoad('open'); });
     }
     if (qaAnsweredBtn && !qaAnsweredBtn._bound) {
       qaAnsweredBtn._bound = true;
-      qaAnsweredBtn.addEventListener('click', () => _adminQaLoad('answered'));
+      qaAnsweredBtn.addEventListener('click', () => { window._adminQaTargetId = 'adminQaList'; _adminQaLoad('answered'); });
     }
 
     // ===== Rankings Graphic Generator =====
@@ -73196,9 +73214,71 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (get) _setList(get, otherNames.length ? 'qaRosterOthers' : 'qaPlayerList');
   }
 
+  // Admin view (2026-11-04, Jack): MEMBER VIEW / INBOX toggle on the Ask Jack
+  // tab so questions get answered without a trip to Account > Admin. The inbox
+  // is the Account admin panel's own code (_adminQaLoad) pointed at
+  // #ajInboxList; the picked view is remembered per browser (aj_admin_view).
+  // Visibility is a class on #pageAskJack (main.css .aj-inbox-on) rather than
+  // inline display on #mtAskJack, which _qaRenderPanel re-sets on every run.
+  function _qaAdminApply(view) {
+    const page = document.getElementById('pageAskJack');
+    if (!page) return;
+    const on = view === 'inbox';
+    page.classList.toggle('aj-inbox-on', on);
+    page.querySelectorAll('#ajAdminBar .aj-seg-btn').forEach(b => {
+      const sel = b.getAttribute('data-view') === view;
+      b.classList.toggle('on', sel);
+      b.setAttribute('aria-selected', sel ? 'true' : 'false');
+    });
+  }
+  function _qaAdminLoad(status) {
+    const list = document.getElementById('ajInboxList');
+    if (!list) return;
+    // Admin panel init only ran if the account resolved as admin at load —
+    // make sure its inbox functions exist before asking for the list.
+    if (typeof window._adminQaLoad !== 'function' && typeof window._initAdminPanel === 'function') {
+      try { window._initAdminPanel(); } catch (_) {}
+    }
+    if (typeof window._adminQaLoad !== 'function') {
+      list.innerHTML = '<div class="aj-loading">Admin tools are still loading. Tap REFRESH in a second.</div>';
+      return;
+    }
+    status = status || window._adminQaView || 'open';
+    document.querySelectorAll('#ajInbox .aj-inbox-btn[data-status]').forEach(b => b.classList.toggle('on', b.getAttribute('data-status') === status));
+    list.dataset.loaded = '1';
+    window._adminQaLoad(status, 'ajInboxList');
+  }
+  // Runs from every _qaRenderPanel (auth churn included): shows the toggle for
+  // admins, applies the remembered view, and loads the inbox once.
+  function _qaAdminSync() {
+    const bar = document.getElementById('ajAdminBar');
+    if (!bar) return;
+    const admin = typeof window.isAdmin === 'function' && window.isAdmin();
+    bar.style.display = admin ? '' : 'none';
+    const view = admin && _qaLsGet('aj_admin_view') === 'inbox' ? 'inbox' : 'member';
+    _qaAdminApply(view);
+    if (view === 'inbox') {
+      const list = document.getElementById('ajInboxList');
+      if (list && !list.dataset.loaded) _qaAdminLoad();
+    }
+  }
+  window._qaAdminToggle = function(view) {
+    view = view === 'inbox' ? 'inbox' : 'member';
+    _qaLsSet('aj_admin_view', view);
+    _qaAdminApply(view);
+    if (view === 'inbox') _qaAdminLoad();
+  };
+  window._qaAdminLoad = function(status) { _qaAdminLoad(status); };
+  // Page enter (switchPage hook): refresh the inbox so new questions show up.
+  window._qaAdminEnter = function() {
+    const page = document.getElementById('pageAskJack');
+    if (page && page.classList.contains('aj-inbox-on')) _qaAdminLoad();
+  };
+
   window._qaRenderPanel = function() {
     const sect = document.getElementById('mtAskJack');
     if (!sect) return;
+    _qaAdminSync();
     const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
     const user = (fbReady && firebase.auth) ? firebase.auth().currentUser : null;
     if (!user) {

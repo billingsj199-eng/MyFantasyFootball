@@ -3513,7 +3513,8 @@ html.aj-onair .aj-slot-btn.aj-slot-btn-pos{min-width:104px}
 html.aj-onair .sidebar,html.aj-onair #globalAuthBar,html.aj-onair #pageAskJack .compare-header,html.aj-onair #pageAskJack .aj-intro,html.aj-onair .aj-inbox-bar,html.aj-onair #ajInfoBar,html.aj-onair #ajInboxMsg,html.aj-onair .page-tour,html.aj-onair #globalPassBtn{display:none!important}
 html.aj-onair .main-content{margin:0!important;padding:0!important}
 html.aj-onair #pageAskJack{padding:0;background:radial-gradient(1200px 600px at 50% -10%,#1e293b 0%,#0b1120 55%,#05080f 100%)}
-html.aj-onair #pageAskJack > div{max-width:1500px;padding:18px 28px 28px}
+html.aj-onair #pageAskJack > div{max-width:none;padding:18px 28px 28px}
+@media (max-width:600px){#pageAskJack > div{padding-left:14px!important;padding-right:14px!important}}
 html.aj-onair .aj-onair-bar{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:8px 12px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);border-radius:10px;font-size:.78rem;color:var(--text2)}
 .aj-onair-dot{width:12px;height:12px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,.7);animation:ajOnAir 1.6s ease-out infinite}
 @keyframes ajOnAir{0%{box-shadow:0 0 0 0 rgba(239,68,68,.7)}100%{box-shadow:0 0 0 12px rgba(239,68,68,0)}}

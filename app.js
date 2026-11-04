@@ -5984,12 +5984,29 @@ function _updateViewOptsSummary() {
 // messages stay there); that card's status line is mirrored under the box. A short
 // run of digits is ESPN or Yahoo — the picker asks. Core, not the myteams chunk, so
 // the onclick works before the chunk lands (it waits for _mtEnsureLoaded).
+// League imports need an account (Jack 2026-11-04 "only allow imports if
+// signed in"): leagues are saved to the account, so a signed-out import would
+// be gone on the next load. Every importer (quick-add box, the three cards,
+// the extension hand-offs) checks this first; signed out = the message on the
+// card + the sign-in modal.
+window._mtRequireSignIn = function (statusEl) {
+  const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+  if (user) return true;
+  const msg = 'Sign in (free) to import — your leagues are saved to your account and sync across your devices.';
+  const show = el => { if (el) { el.textContent = msg; el.style.color = 'var(--accent)'; } };
+  show(statusEl);
+  const q = document.getElementById('mtQuickStatus');
+  if (q !== statusEl) show(q);
+  if (typeof window.openAuthModal === 'function') window.openAuthModal();
+  return false;
+};
 window._mtQuickImport = async function (force) {
   const input = document.getElementById('mtQuickInput'), st = document.getElementById('mtQuickStatus'), pick = document.getElementById('mtQuickPick');
   if (!input) return;
   const raw = input.value.trim();
   const say = (m, c) => { if (st) { st.textContent = m; st.style.color = c || ''; } };
   if (pick) pick.hidden = true;
+  if (!window._mtRequireSignIn(st)) return;
   if (!raw) { say('Paste a league ID, a league URL, or a Sleeper username.', 'var(--accent)'); return; }
   let p = force || null, value = raw;
   if (!p) {
@@ -67120,6 +67137,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (!leagueId) return;
     const status = document.getElementById('mtSleeperStatus');
     const btn = document.getElementById('mtSleeperImportBtn');
+    if (typeof window._mtRequireSignIn === 'function' && !window._mtRequireSignIn(status)) return;
     btn.disabled = true;
     btn.textContent = 'Loading…';
     status.textContent = 'Fetching league data...';
@@ -67206,6 +67224,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const name = ((input && input.value) || '').trim().replace(/^@/, '');
     const say = (msg, color) => { if (status) { status.textContent = msg; status.style.color = color || ''; } };
     if (!name) { say('Enter your Sleeper username.', '#f59e0b'); return; }
+    if (typeof window._mtRequireSignIn === 'function' && !window._mtRequireSignIn(status)) return;
     if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
     try {
       say('Looking up ' + name + ' on Sleeper…');
@@ -67572,6 +67591,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       if (status) { status.textContent = 'Paste your ESPN league ID (or the league URL).'; status.style.color = 'var(--accent)'; }
       return;
     }
+    if (typeof window._mtRequireSignIn === 'function' && !window._mtRequireSignIn(status)) return;
     if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
     if (status) { status.textContent = 'Fetching league from ESPN…'; status.style.color = 'var(--text2)'; }
     try {
@@ -67848,6 +67868,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       if (status) { status.textContent = 'Paste your Yahoo league ID (or the league URL).'; status.style.color = 'var(--accent)'; }
       return;
     }
+    if (typeof window._mtRequireSignIn === 'function' && !window._mtRequireSignIn(status)) return;
     if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
     const say = (msg) => { if (status) { status.textContent = msg; status.style.color = 'var(--text2)'; } };
     say('Fetching league from Yahoo…');

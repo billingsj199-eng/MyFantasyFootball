@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-04-mtquick2" as="script">
+<link rel="preload" href="app.js?v=2026-11-04-mtquick3" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -3705,7 +3705,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 <div id="mtQuickPick" class="mt-quick-pick" hidden><span>Which site is this league on?</span><button type="button" onclick="window._mtQuickImport('espn')">ESPN</button><button type="button" onclick="window._mtQuickImport('yahoo')">Yahoo</button></div>
 <div id="mtQuickStatus" class="mt-quick-status"></div>
-<div class="mt-quick-hint">Sleeper · ESPN · Yahoo — free. Private ESPN / Yahoo leagues use the free MFF extension (see the cards below).</div>
+<div class="mt-quick-hint">Sleeper · ESPN · Yahoo — free with an account (sign in to import; your leagues save to your account). Private ESPN / Yahoo leagues use the free MFF extension (see the cards below).</div>
 </div>
 <!-- Empty-state preview — what you unlock after importing a league. Auto-hides via JS once
      teams are loaded (the import grid stays at top until then for completion-rate reasons). -->
@@ -7077,7 +7077,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-04-mtquick2"></script>
+<script defer src="app.js?v=2026-11-04-mtquick3"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

@@ -40711,15 +40711,23 @@ window.fmtHeight = fmtHeight;
         // Prefer the new settings({ localCache: persistentLocalCache() }) API
         // (Firebase >=10.5) — enableIndexedDbPersistence is deprecated. Falls
         // back to the legacy API if the SDK on the page is older.
+        // 2026-11-04: force long-polling. On some networks the WebChannel
+        // streaming transport hangs — measured in Jack's Chrome: the first
+        // Listen/channel request sat 45 s before the SDK's auto-detect gave up
+        // and switched to long-polling, so the first read AND every queued
+        // write (Ask Jack SEND / CONFIRM) waited ~35 s per page load. Forcing
+        // long-polling skips the probe; get()/set() cost the same either way.
         try {
           if (firebase.firestore.persistentLocalCache && firebase.firestore.persistentSingleTabManager) {
             db.settings({
+              experimentalForceLongPolling: true,
               localCache: firebase.firestore.persistentLocalCache({
                 tabManager: firebase.firestore.persistentSingleTabManager()
               })
             });
             console.log('[Auth] Firestore persistence enabled (cache API)');
           } else {
+            try { db.settings({ experimentalForceLongPolling: true }); } catch (_e) {}
             db.enablePersistence({ synchronizeTabs: false }).catch(err => {
               console.warn('[Auth] Persistence failed:', err.code);
             });

@@ -35439,13 +35439,25 @@ window.fmtHeight = fmtHeight;
       _adminQaBadge(q.length);
       if (!q.length) { list.innerHTML = '<div class="aj-q-empty">No open questions — inbox zero 🎉</div>'; return; }
       const cur = q[0];
-      let html = _adminQaQueueCard(cur.id, cur.data, q.length);
-      if (q.length > 1) {
-        html += '<div class="aj-q-next"><b>Up next:</b> ' + q.slice(1, 4).map(r => _qaAdminEsc(r.data.name || 'Member') + ' (' + _adminQaTypeName(r.data.type) + ')').join(' · ') +
-          (q.length > 4 ? ' · +' + (q.length - 4) + ' more' : '') + '</div>';
-      }
-      list.innerHTML = html;
+      // Current question on the left; the whole queue (username, type, age)
+      // down the right (Jack 2026-11-04). A row click brings that one up.
+      const side = '<aside class="aj-qside"><div class="aj-qside-h">QUEUE <span>(' + q.length + ')</span></div>' +
+        q.map((r, i) => {
+          const safe = _qaAdminEsc(r.id);
+          return '<button type="button" class="aj-qrow' + (i === 0 ? ' cur' : '') + '" onclick="window._adminQaJump(\'' + safe + '\')" title="' + (i === 0 ? 'Answering now' : 'Bring this one up') + '">' +
+            '<span class="aj-qrow-name">' + (i + 1) + '. ' + _qaAdminEsc(r.data.name || 'Member') + '</span>' +
+            '<span class="aj-qrow-meta">' + _adminQaTypeChip(r.data.type) + ' <span>' + _qaAdminEsc(_adminQaAgo(r.data.createdAt)) + '</span></span>' +
+            '</button>';
+        }).join('') + '</aside>';
+      list.innerHTML = '<div class="aj-qwrap"><div class="aj-qmain">' + _adminQaQueueCard(cur.id, cur.data, q.length) + '</div>' + side + '</div>';
     }
+    window._adminQaJump = function(docId) {
+      const q = window._adminQaQueue || [];
+      const i = q.findIndex(r => r.id === docId);
+      if (i <= 0) return;
+      q.unshift(q.splice(i, 1)[0]);
+      _adminQaRenderQueue();
+    };
     window._adminQaSelect = function(docId, idx) {
       const card = document.getElementById('adminQaCard-' + docId);
       if (!card) return;

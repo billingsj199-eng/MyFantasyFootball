@@ -3562,6 +3562,55 @@ html.aj-onair .aj-slot-name{font-size:1rem}
 html.aj-onair .aj-slots-head{font-size:.9rem}
 html.aj-onair .aj-slot-picker{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
 html.aj-onair .aj-q-empty{font-size:1.4rem;padding:60px 0;text-align:center}
+/* ===== ON AIR stream stage (Jack 2026-11-04 "optimize it for streaming") =====
+   #ajInbox pins to the viewport on black; #ajInboxList is the STAGE (shape per
+   html[data-aj-aspect]); app.js _qaOnAirFit scales the stage content to fit.
+   Operator chrome shows only while html.aj-ctl (mouse moving / on a control). */
+html.aj-onair{overflow:hidden}
+html.aj-onair #ajInbox{position:fixed;inset:0;z-index:40;display:flex!important;align-items:center;justify-content:center;background:#000}
+html.aj-onair:not(.aj-ctl) #ajInbox{cursor:none}
+html.aj-onair #ajInboxList{position:relative;overflow:hidden;display:block!important;width:100vw;height:100vh;background:radial-gradient(1200px 600px at 50% -10%,#1e293b 0%,#0b1120 55%,#05080f 100%)}
+html.aj-onair[data-aj-aspect="169"] #ajInboxList{width:min(100vw,calc(100vh * 16 / 9));height:min(100vh,calc(100vw * 9 / 16))}
+html.aj-onair[data-aj-aspect="11"] #ajInboxList{width:min(100vw,100vh);height:min(100vh,100vw)}
+html.aj-onair[data-aj-aspect="45"] #ajInboxList{width:min(100vw,calc(100vh * 4 / 5));height:min(100vh,calc(100vw * 5 / 4))}
+html.aj-onair[data-aj-aspect="916"] #ajInboxList{width:min(100vw,calc(100vh * 9 / 16));height:min(100vh,calc(100vw * 16 / 9))}
+html.aj-onair.aj-ctl #ajInboxList{outline:1px dashed rgba(255,255,255,.3);outline-offset:-1px}
+html.aj-onair #ajInboxList > *{position:relative;box-sizing:border-box;transform-origin:top left;padding:18px 24px 24px}
+html.aj-onair .aj-qwrap{display:block}
+html.aj-onair .aj-qmain{min-width:0}
+@keyframes ajQIn{from{opacity:0}to{opacity:1}}
+html.aj-onair .aj-q{animation:ajQIn .4s ease;background:rgba(15,23,42,.55);border-color:rgba(255,255,255,.08)}
+html.aj-onair .aj-q-count,html.aj-onair .aj-q-when{display:none}
+html.aj-onair .aj-q-head b{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:1px;line-height:1}
+html.aj-onair .aj-q-head .aj-tier{font-size:.78rem}
+/* Operator strip: fixed top, slides away when the mouse rests */
+html.aj-onair .aj-onair-bar{position:fixed;top:0;left:0;right:0;z-index:50;margin:0;border-radius:0 0 12px 12px;border-top:0;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);transform:translateY(-110%);opacity:0;transition:transform .25s ease,opacity .25s ease;flex-wrap:wrap}
+html.aj-onair.aj-ctl .aj-onair-bar{transform:none;opacity:1}
+html.aj-onair .aj-onair-keys{font-size:.72rem}
+.aj-onair-asp .aj-seg-btn{min-height:30px;padding:4px 8px;font-size:.74rem}
+/* The note + CONFIRM / SKIP bar pins to the stage bottom and shows with the chrome */
+html.aj-onair .aj-q-bar,html.aj-onair .aj-reveal-bar{position:absolute;left:0;right:0;bottom:0;margin:0;padding:14px 24px 18px;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.9) 40%);z-index:6}
+html.aj-onair .aj-q-bar{opacity:0;pointer-events:none;transition:opacity .25s ease}
+html.aj-onair.aj-ctl .aj-q-bar{opacity:1;pointer-events:auto}
+html.aj-onair .aj-q-gift{display:none}
+html.aj-onair .aj-reveal-msg{font-size:1.2rem}
+/* Queue: a drawer over the stage (Q / QUEUE button), not a sidebar */
+html.aj-onair .aj-qside{display:none;position:absolute;top:0;right:0;bottom:0;width:min(380px,48%);z-index:7;overflow:auto;border-radius:0;border-width:0 0 0 1px;background:rgba(5,8,15,.94);backdrop-filter:blur(8px);box-shadow:-10px 0 40px rgba(0,0,0,.6)}
+html.aj-onair.aj-qopen .aj-qside{display:flex}
+/* UP NEXT strip (viewers) + empty-queue CTA: on air only */
+.aj-upnext,.aj-q-empty-cta{display:none}
+html.aj-onair .aj-upnext{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 2px 0;padding:10px 16px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);border-radius:12px;font-size:1rem;color:var(--text)}
+.aj-upnext-l{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:3px;color:var(--accent)}
+.aj-upnext-i{display:inline-flex;align-items:center;gap:6px}
+.aj-upnext-i b{color:var(--text2);font-weight:600}
+.aj-upnext-more,.aj-upnext-cta{color:var(--text2)}
+.aj-upnext-cta b{color:var(--accent)}
+html.aj-onair .aj-q-empty-cta{display:block;margin-top:14px;font-size:1.2rem;color:var(--text2)}
+.aj-q-empty-cta b{color:var(--accent)}
+/* Giveaway floats over the stage; admin toasts show top-centre */
+html.aj-onair #ajGiveaway{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:45;width:min(92vw,980px);max-height:92vh;overflow:auto;margin:0}
+html.aj-onair #ajInboxMsg{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:55;margin:0;font-size:.9rem;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+html.aj-onair #ajRosterPop{z-index:2100}
 /* Bonus question (Jack's gift): admin button + member banner */
 .aj-q-gift{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
 .aj-gift{background:none;border:1px solid rgba(245,158,11,.5);border-radius:8px;color:var(--accent);padding:8px 14px;min-height:40px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.2px;cursor:pointer}
@@ -3654,11 +3703,39 @@ html.aj-onair .aj-pcv-line b{font-size:1.15rem}
 .aj-tv-win{border-color:rgba(34,197,94,.45)}
 .aj-tv-lose{border-color:rgba(239,68,68,.4)}
 .aj-tv-src{font-size:.62rem;color:var(--text2);letter-spacing:.6px}
-.aj-tv-picks{font-size:.72rem;color:var(--text2)}
-.aj-tv-picks b{color:var(--text)}
+.aj-tv-calc{font-size:.72rem;color:var(--text2);flex-basis:100%;line-height:1.4}
+.aj-tv-calc b{color:var(--text);font-weight:700}
+.aj-tv-verdict b{color:var(--text);font-family:'DM Sans',sans-serif;font-weight:800;letter-spacing:0}
+.aj-tv-who{color:var(--accent)}
+.aj-tv-win .aj-tv-verdict b,.aj-tv-lose .aj-tv-verdict b{color:inherit}
 html.aj-onair .aj-tv-v{font-size:2.2rem}
 html.aj-onair .aj-tv-verdict{font-size:1.3rem}
-html.aj-onair .aj-tv-src,html.aj-onair .aj-tv-picks{font-size:.8rem}
+html.aj-onair .aj-tv-src,html.aj-onair .aj-tv-calc{font-size:.85rem}
+/* Flagged ESPN headshots stay hidden until the normalizer's re-framed blob lands, then fade in */
+.aj-hs{transition:opacity .25s ease}
+img.hs-wait{opacity:0}
+/* Roster popover as a starting lineup (slots from the league) with BEFORE / AFTER the trade */
+.aj-rpop-ctl{margin-left:auto}
+.aj-rpop-head{align-items:center}
+.aj-lu-tot{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+.aj-lu-tot-l{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:2px;color:var(--text2)}
+.aj-lu-tot-v{font-family:'DM Sans',sans-serif;font-size:1.5rem;font-weight:800;color:var(--accent);line-height:1}
+.aj-lu-tot-s{font-size:.72rem;color:var(--text2)}
+.aj-lu-tot-d{margin-left:auto;font-size:.78rem;font-weight:700;color:var(--text2)}
+.aj-lu-tot-d.up{color:var(--green)}
+.aj-lu-tot-d.down{color:#f87171}
+.aj-lu{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr));gap:6px 12px;margin-bottom:12px}
+.aj-lu-row{display:flex;align-items:center;gap:8px;position:relative}
+.aj-lu-row .aj-slot-pos{min-width:78px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;color:var(--accent);padding:6px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;align-self:stretch;display:flex;align-items:center;justify-content:center}
+.aj-lu-row .aj-pcard{flex:1;min-width:0}
+.aj-lu-bench{position:relative}
+.aj-lu-tag{position:absolute;top:-7px;right:8px;z-index:3;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;padding:2px 7px;border-radius:5px;border:1.5px solid;background:rgba(0,0,0,.8)}
+.aj-lu-tag.out{color:#f87171;border-color:#f87171}
+.aj-lu-tag.in{color:#4ade80;border-color:#4ade80}
+.aj-lu-out .aj-pcard{box-shadow:0 0 0 2px #ef4444,0 4px 10px rgba(0,0,0,.5);opacity:.85}
+.aj-lu-in .aj-pcard{box-shadow:0 0 0 3px var(--green),0 4px 10px rgba(0,0,0,.5)}
+.aj-lu-bench-h{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:2px;color:var(--text2);margin:4px 0 8px}
+@media (max-width:600px){.aj-rpop-ctl{order:3;flex-basis:100%}.aj-lu-row .aj-slot-pos{min-width:58px;font-size:.78rem;letter-spacing:1px}}
 .aj-team-btn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;background:none;border:0;border-radius:6px;cursor:pointer;text-align:left;padding:2px 2px 4px}
 .aj-team-btn:hover{background:rgba(255,255,255,.05)}
 .aj-team-btn .aj-team-name{font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:0;color:var(--text);text-transform:none}
@@ -3684,6 +3761,20 @@ html.aj-rpop-open{overflow:hidden}
 .aj-pick-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:8px;margin-bottom:8px}
 @media (max-width:600px){.aj-pick-tiles,.aj-roster-grid,.aj-slot-picker{grid-template-columns:1fr}.aj-pcard-img{flex-basis:64px}.aj-pcard-img img{width:64px;height:52px}.aj-pcard-name{font-size:19px}.aj-pcs{min-width:0;flex:1 1 0;padding:0 3px}.aj-pcs-opp img{width:28px;height:28px}.aj-q{padding:12px}.aj-choice-big{padding:6px}.aj-q-bar .aj-q-noteinp{flex-basis:100%}.aj-stamp{font-size:1.1rem;padding:4px 9px}.aj-qside{padding:8px}.aj-info-bar{padding:6px 8px}.aj-seg-sm .aj-seg-btn{padding:5px 7px;font-size:.72rem}}
 .aj-pick-tiles .aj-pcard.sel{box-shadow:0 0 0 3px var(--green),0 4px 10px rgba(0,0,0,.5)}
+/* Trade side: ROS note + draft-pick chips / ADD A PICK dropdown (dynasty, 11-04) */
+.aj-side-ros{font-weight:400;color:var(--text2);letter-spacing:0;text-transform:none;font-family:'DM Sans',sans-serif;font-size:.68rem}
+.aj-picks{margin:-2px 0 8px}
+.aj-pickrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.aj-pickchip{gap:6px;padding-right:4px}
+.aj-pickchip i{font-style:normal;color:#fbbf24;font-weight:700}
+.aj-pickchip-x{background:none;border:0;color:var(--text2);cursor:pointer;font-size:.72rem;padding:4px 6px;min-height:28px;border-radius:999px}
+.aj-pickchip-x:hover{color:var(--red)}
+.aj-pick-addbtn{margin:0;padding:6px 10px;min-height:32px;border:1px dashed rgba(245,158,11,.5);border-radius:999px;font-size:.72rem;letter-spacing:.5px}
+.aj-pick-addbtn:hover{background:rgba(245,158,11,.1)}
+.aj-pick-add{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px;padding:8px 10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px}
+.aj-pick-add .aj-pick-sel{flex:1 1 110px;width:auto;margin:0;min-height:36px}
+.aj-pick-add .aj-pick-go{width:auto;flex:0 0 auto;padding:8px 16px;min-height:36px}
+.aj-pick-add .aj-add{margin:0}
 .aj-slot-btn.aj-slot-static{cursor:default}
 .aj-slot-btn.aj-slot-static:hover{border-color:var(--border)}
 .aj-slotlist{display:flex;flex-direction:column;gap:3px;margin-bottom:6px}

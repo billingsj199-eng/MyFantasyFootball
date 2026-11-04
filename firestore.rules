@@ -488,7 +488,8 @@ service cloud.firestore {
                              && 'roster' in request.resource.data
                              && request.resource.data.roster.size() >= 2
                              && (!('slots' in request.resource.data) || (request.resource.data.slots is list && request.resource.data.slots.size() <= 20)))
-                          : (!('slots' in request.resource.data)
+                          // Trades may carry the league's starting slots too (lineup before/after view).
+                          : ((!('slots' in request.resource.data) || (request.resource.data.type == 'trade' && request.resource.data.slots is list && request.resource.data.slots.size() <= 20))
                              && request.resource.data.options is list
                              && request.resource.data.options.size() >= 2
                              && request.resource.data.options.size() <= 4

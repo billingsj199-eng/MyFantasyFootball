@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-11-04-askjack19" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-04-askjack20" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-04-ajtrade1" as="script">
+<link rel="preload" href="app.js?v=2026-11-04-ajstream1" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-11-04" as="script">
 <link rel="preload" href="data/d.js?v=2026-11-04-fagnano" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack19">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack20">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -3526,7 +3526,16 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <!-- ON AIR strip (html.aj-onair only): live dot, key cheatsheet, fullscreen + exit -->
 <div id="ajOnAirBar" class="aj-onair-bar" aria-hidden="true">
 <span class="aj-onair-dot"></span><span class="aj-onair-lbl">ON AIR</span>
-<span class="aj-onair-keys"><b>1-4</b> pick · <b>Enter</b> confirm · <b>N</b> next · <b>S</b> skip · <b>F</b> fullscreen · <b>Esc</b> exit</span>
+<div class="aj-seg aj-seg-sm aj-onair-asp" role="group" aria-label="Stage shape" title="Stage shape for your OBS scene — crop the window capture to the stage (A cycles)">
+<button type="button" class="aj-seg-btn" data-asp="fit" onclick="window._qaOnAirAspect('fit')">FIT</button>
+<button type="button" class="aj-seg-btn" data-asp="169" onclick="window._qaOnAirAspect('169')">16:9</button>
+<button type="button" class="aj-seg-btn" data-asp="11" onclick="window._qaOnAirAspect('11')">1:1</button>
+<button type="button" class="aj-seg-btn" data-asp="45" onclick="window._qaOnAirAspect('45')">4:5</button>
+<button type="button" class="aj-seg-btn" data-asp="916" onclick="window._qaOnAirAspect('916')">9:16</button>
+</div>
+<button type="button" class="aj-onair-x" onclick="window._qaOnAirQueue()" title="Queue drawer (Q)">QUEUE</button>
+<button type="button" class="aj-onair-x" onclick="window._qaOnAirBonus()" title="Give this member a bonus question (B)">🎁 BONUS</button>
+<span class="aj-onair-keys"><b>1-4</b> pick · <b>Enter</b> confirm · <b>N</b> next · <b>S</b> skip · <b>B</b> bonus · <b>Q</b> queue · <b>A</b> shape · <b>F</b> fullscreen · <b>Esc</b> exit · controls hide when the mouse rests</span>
 <button type="button" class="aj-onair-x" onclick="window._qaOnAirFullscreen()" title="Fullscreen (F)">⛶</button>
 <button type="button" class="aj-onair-x" onclick="window._qaOnAir(false)" title="Exit ON AIR (Esc)">EXIT</button>
 </div>
@@ -7065,7 +7074,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-04-ajtrade1"></script>
+<script defer src="app.js?v=2026-11-04-ajstream1"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

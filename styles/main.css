@@ -3780,6 +3780,8 @@ img.hs-wait{opacity:0}
 .aj-lu-out .aj-pcard{box-shadow:0 0 0 2px #ef4444,0 4px 10px rgba(0,0,0,.5);opacity:.85}
 .aj-lu-in .aj-pcard{box-shadow:0 0 0 3px var(--green),0 4px 10px rgba(0,0,0,.5)}
 .aj-lu-bench-h{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:2px;color:var(--text2);margin:4px 0 8px}
+.aj-lu-row .aj-slot-pos.aj-slot-pos-bn{color:var(--text2)}
+.aj-lu-benchrows .aj-pcard{opacity:.92}
 @media (max-width:600px){.aj-rpop-ctl{order:3;flex-basis:100%}.aj-lu-row .aj-slot-pos{min-width:58px;font-size:.78rem;letter-spacing:1px}}
 .aj-team-btn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;background:none;border:0;border-radius:6px;cursor:pointer;text-align:left;padding:2px 2px 4px}
 .aj-team-btn:hover{background:rgba(255,255,255,.05)}

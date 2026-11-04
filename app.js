@@ -5597,7 +5597,8 @@ function _ajRosterPopRender(pop) {
     '</div>' +
     '<div class="aj-lu">' + L.slots.map(o => '<div class="aj-lu-row' + (o.name ? rowCls(o.name) : '') + '"><span class="aj-slot-pos">' + _ajEsc(o.lbl) + '</span>' +
       (o.name ? tile(o.name) + tag(o.name) : '<span class="aj-slot-empty">nobody eligible</span>') + '</div>').join('') + '</div>' +
-    (L.bench.length ? '<div class="aj-lu-bench-h">BENCH (' + L.bench.length + ')</div><div class="aj-pick aj-pick-tiles aj-rpop-tiles">' + L.bench.map(n => '<div class="aj-lu-bench' + rowCls(n) + '">' + tile(n) + tag(n) + '</div>').join('') + '</div>' : '');
+    // Bench in the same rows as the starters (Jack 11-04): BN label + tile.
+    (L.bench.length ? '<div class="aj-lu-bench-h">BENCH (' + L.bench.length + ')</div><div class="aj-lu aj-lu-benchrows">' + L.bench.map(n => '<div class="aj-lu-row aj-lu-bench' + rowCls(n) + '"><span class="aj-slot-pos aj-slot-pos-bn">BN</span>' + tile(n) + tag(n) + '</div>').join('') + '</div>' : '');
 }
 window._ajRosterPopClose = function() {
   const pop = document.getElementById('ajRosterPop');

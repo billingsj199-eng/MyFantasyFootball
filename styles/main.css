@@ -3583,15 +3583,30 @@ html.aj-onair .aj-q{animation:ajQIn .4s ease;background:rgba(15,23,42,.55);borde
 html.aj-onair .aj-q-count,html.aj-onair .aj-q-when{display:none}
 html.aj-onair .aj-q-head b{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:1px;line-height:1}
 html.aj-onair .aj-q-head .aj-tier{font-size:.78rem}
-/* Operator strip: fixed top, slides away when the mouse rests */
-html.aj-onair .aj-onair-bar{position:fixed;top:0;left:0;right:0;z-index:50;margin:0;border-radius:0 0 12px 12px;border-top:0;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);transform:translateY(-110%);opacity:0;transition:transform .25s ease,opacity .25s ease;flex-wrap:wrap}
+/* Operator strip: fixed at the viewport bottom (only operator chrome lives
+   down there), slides away when the mouse rests */
+html.aj-onair .aj-onair-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;margin:0;padding:6px 12px;border-radius:12px 12px 0 0;border-bottom:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);transform:translateY(110%);opacity:0;transition:transform .25s ease,opacity .25s ease;flex-wrap:wrap}
 html.aj-onair.aj-ctl .aj-onair-bar{transform:none;opacity:1}
 html.aj-onair .aj-onair-keys{font-size:.72rem}
 .aj-onair-asp .aj-seg-btn{min-height:30px;padding:4px 8px;font-size:.74rem}
-/* The note + CONFIRM / SKIP bar pins to the stage bottom and shows with the chrome */
+/* The note + CONFIRM / SKIP bar pins to the stage bottom and shows with the
+   chrome, lifted above the strip (--aj-s = the stage scale, set by app.js) */
 html.aj-onair .aj-q-bar,html.aj-onair .aj-reveal-bar{position:absolute;left:0;right:0;bottom:0;margin:0;padding:14px 24px 18px;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.9) 40%);z-index:6}
 html.aj-onair .aj-q-bar{opacity:0;pointer-events:none;transition:opacity .25s ease}
-html.aj-onair.aj-ctl .aj-q-bar{opacity:1;pointer-events:auto}
+html.aj-onair.aj-ctl .aj-q-bar{opacity:1;pointer-events:auto;bottom:calc(52px / var(--aj-s,1))}
+/* Tall stage (Jack 11-04 "make the players smaller width so we can put them
+   next to each other"): two narrower cards side by side, compact header */
+html.aj-onair[data-aj-aspect="916"] .aj-choices.aj-choices-v,html.aj-onair[data-aj-aspect="916"] .aj-choices.aj-choices-trade{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+html.aj-onair[data-aj-aspect="916"] .aj-choice-big{padding:6px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-name{font-size:24px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-img{flex-basis:56%;max-width:220px;height:170px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-img img{height:170px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-wm{width:160px;height:160px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-num-v{font-size:22px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-line{font-size:.85rem}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-line b{font-size:.95rem}
+html.aj-onair[data-aj-aspect="916"] .aj-tv-v{font-size:1.6rem}
+html.aj-onair[data-aj-aspect="916"] .aj-tv-verdict{font-size:1rem}
 html.aj-onair .aj-q-gift{display:none}
 html.aj-onair .aj-reveal-msg{font-size:1.2rem}
 /* Queue: a drawer over the stage (Q / QUEUE button), not a sidebar */

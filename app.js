@@ -74744,19 +74744,24 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       if (!stage || !inner) return;
       const W = stage.clientWidth, H = stage.clientHeight;
       if (!W || !H) return;
-      let s = parseFloat(inner.dataset.ajScale) || 1;
-      for (let k = 0; k < 4; k++) {
+      // Shrink-only from 1: a wider (unscaled) box can reflow the cards into
+      // more columns and get SHORTER, so a naive fixed-point loop flips between
+      // "one column, too tall" and "two columns, fits" and can stop on the
+      // wrong one (Jack's 9:16 stage, 11-04). Never growing keeps it monotone.
+      let s = 1;
+      for (let k = 0; k < 5; k++) {
         inner.style.width = Math.round(W / s) + 'px';
         inner.style.transform = s === 1 ? '' : 'scale(' + s + ')';
         inner.style.minHeight = '';
         const h = inner.scrollHeight;
-        const s2 = Math.max(0.3, Math.min(1, H / Math.max(h, 1)));
-        if (Math.abs(s2 - s) < 0.004) { s = s2; break; }
+        const s2 = Math.max(0.3, Math.min(s, H / Math.max(h, 1)));
+        if (s - s2 < 0.004) { s = s2; break; }
         s = s2;
       }
       inner.style.width = Math.round(W / s) + 'px';
       inner.style.transform = s === 1 ? '' : 'scale(' + s + ')';
       inner.style.minHeight = Math.round(H / s) + 'px';
+      inner.style.setProperty('--aj-s', String(s));
       inner.dataset.ajScale = String(s);
       if (!_qaFitRO && window.ResizeObserver) _qaFitRO = new ResizeObserver(() => _qaOnAirFit());
       if (_qaFitRO && !inner._ajFitObserved) { inner._ajFitObserved = true; _qaFitRO.observe(inner); }

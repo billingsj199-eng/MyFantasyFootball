@@ -4971,6 +4971,7 @@ window._ajInfoSet = function(key, val) {
   // Re-fill every info line in place: tapped lineup chips + typed notes survive.
   document.querySelectorAll('.aj-pinfo[data-name]').forEach(el => { el.innerHTML = _ajInfoHtml(el.getAttribute('data-name')); });
   document.querySelectorAll('.aj-pstats[data-name]').forEach(el => { el.innerHTML = _ajPcardStatsHtml(el.getAttribute('data-name')); });
+  document.querySelectorAll('.aj-pbody[data-name]').forEach(el => { el.innerHTML = _ajPcardBodyHtml(el.getAttribute('data-name')); });
 };
 window._ajInfoSyncBar = function() {
   const o = _ajInfoOpts();
@@ -5189,7 +5190,74 @@ window._ajPlayerCardHtml = function(name, opts) {
 };
 // Every player found in a free-text option ("Chuba Hubbard + 2027 2nd").
 window._ajPlayerCardsHtml = function(text, opts) {
-  return _ajPlayersIn(text).map(d => window._ajPlayerCardHtml(d.n, opts)).join('');
+  return _ajPlayersIn(text).map(d => (opts && opts.big ? window._ajPlayerBigCardHtml : window._ajPlayerCardHtml)(d.n, opts)).join('');
+};
+// Big vertical card (Jack 2026-11-04, "like the Start/Sit tool"): team band
+// header with a large headshot, then the three stat cells, OURS + BOOK side
+// by side, and every posted prop line. Used for start/sit choices and the
+// two trade sides so the question fills the screen on stream.
+function _ajPcardLinesHtml(d, i) {
+  const L = i.lines || {};
+  const rows = (_AJ_LINE_ROWS[d.s] || []).filter(r => typeof L[r[0]] === 'number');
+  if (!rows.length) return '<div class="aj-pcv-line aj-pi-na">' + (i.bye ? 'Bye week' : 'No prop lines posted yet') + '</div>';
+  return rows.map(r => {
+    const v = L[r[0]];
+    const txt = r[2] === 'odds' ? ((v > 0 ? '+' : '') + Math.round(v)) : r[2] === 0 ? String(Math.round(v)) : (Math.round(v * 10) / 10).toFixed(1);
+    return '<div class="aj-pcv-line"><span>' + _ajEsc(r[1]) + '</span><b>' + txt + '</b></div>';
+  }).join('') + (i.books && i.books.length ? '<div class="aj-pcv-books">' + _ajEsc(i.books.join(' · ')) + '</div>' : '');
+}
+function _ajPcardBodyHtml(name) {
+  const d = _ajFindPlayer(name);
+  if (!d) return '';
+  const o = _ajInfoOpts();
+  const i = _ajPlayerInfo(d, o);
+  const verLbl = { jacks: "JACK'S", consensus: 'CONSENSUS', mine: 'MY RANKS' }[o.ver];
+  const scopeLbl = o.scope === 'weekly' ? 'WK ' + i.wk : 'ROS';
+  const fmtLbl = { ppr: 'PPR', half: 'HALF', std: 'STD' }[o.fmt];
+  const pl = d.s === 'DST' ? 'D/ST' : d.s;
+  const col = v => (typeof posFptsColor === 'function' && v != null) ? posFptsColor(v, d.s) : null;
+  const num = (v, l, c, title) => '<div class="aj-pcv-num" title="' + _ajEsc(title || l) + '"><span class="aj-pcv-num-v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</span><span class="aj-pcv-num-l">' + l + '</span></div>';
+  const blank = '<span class="aj-pcs-blank">—</span>';
+  const rank = i.rank
+    ? num(_ajEsc(pl) + (i.rank.pos || '?'), '#' + i.rank.ovr + ' ' + _ajEsc(verLbl) + (o.scope === 'weekly' ? '' : ' ROS'), null, verLbl + ' board (' + scopeLbl + '): ' + pl + i.rank.pos + ', #' + i.rank.ovr + ' overall')
+    : num(blank, _ajEsc(verLbl) + (o.scope === 'weekly' ? '' : ' ROS'), null, 'Not on the ' + verLbl + ' board');
+  const proj = i.proj != null ? num(i.proj.toFixed(1), 'OUR PROJ · ' + fmtLbl, col(i.proj), 'Site projection, week ' + i.wk) : num(blank, 'OUR PROJ', null, i.bye ? 'Bye week' : 'No projection');
+  const book = i.book != null ? num(i.book.toFixed(1), 'BOOK PROJ · ' + fmtLbl, col(i.book), 'This week\'s prop lines scored') : num(blank, 'BOOK PROJ', null, 'No lines posted');
+  let opp;
+  if (i.bye) opp = '<span class="aj-pcs-bad">BYE</span> week ' + i.wk;
+  else if (i.out) opp = '<span class="aj-pcs-bad">OUT</span> this week' + (i.opp ? ' · ' + _ajEsc(i.opp) : '');
+  else if (i.opp) {
+    const lu = _ajOppLogoUrl(i.opp);
+    opp = (lu ? '<img src="' + lu + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') + '<b>' + _ajEsc(i.opp) + '</b> · week ' + i.wk;
+  } else opp = '<span class="aj-pi-na">No game found this week</span>';
+  return '<div class="aj-pcv-nums">' + rank + proj + book + '</div>' +
+    '<div class="aj-pcv-opp">' + opp + '</div>' +
+    '<div class="aj-pcv-lines">' + _ajPcardLinesHtml(d, i) + '</div>';
+}
+window._ajPlayerBigCardHtml = function(name, opts) {
+  opts = opts || {};
+  const d = _ajFindPlayer(name);
+  if (!d) return '';
+  const band = (typeof _tcvRowBand === 'function') ? _tcvRowBand(d.t) : { p: '#1f2937', s: '#475569', light: false };
+  const img = d._slImg && typeof window._fixHeadshotUrl === 'function' ? window._fixHeadshotUrl(d._slImg) : (d._slImg || '');
+  const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
+  const logo = (logoId && typeof window._logoSrc === 'function') ? window._logoSrc(d, logoId) : '';
+  const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
+  const disp = (typeof _tcvDisplayName === 'function') ? _tcvDisplayName(d) : d.n;
+  const safeName = _ajEsc(d.n);
+  const open = 'event.stopPropagation();window._ajOpenCard(\'' + safeName.replace(/'/g, '&#39;') + '\')';
+  const vbg = 'linear-gradient(180deg,' + band.p + ' 0%,' + band.p + ' 42%,' + band.s + ' 100%)';
+  return '<div class="aj-pcard aj-pcard-v' + (band.light ? ' tcv-row-light' : '') + (opts.cls ? ' ' + opts.cls : '') + '" style="background:' + vbg + '"' +
+      (opts.onclick ? ' role="button" tabindex="0" onclick="' + opts.onclick + '"' : '') + ' data-name="' + safeName + '">' +
+    '<div class="aj-pcv-head">' + (logo ? '<img class="aj-pcv-wm" src="' + _ajEsc(logo) + '" alt="" loading="lazy" aria-hidden="true">' : '') +
+      '<div class="aj-pcv-id">' +
+        '<span class="aj-pcard-name aj-pcv-name" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' + _ajEsc(disp) + '</span>' +
+        '<span class="aj-pcard-sub"><span class="tcv-pos-pill ' + _ajEsc(d.s) + '">' + _ajEsc(d.s) + '</span>' + (logo ? '<img class="aj-pcard-logo" src="' + _ajEsc(logo) + '" alt="" loading="lazy">' : '') + '<span class="aj-pcard-abbr">' + _ajEsc(abbr) + '</span></span>' +
+      '</div>' +
+      '<span class="aj-pcv-img" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' + (img ? '<img src="' + _ajEsc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') + '</span>' +
+    '</div>' +
+    '<div class="aj-pcv-body aj-pbody" data-name="' + safeName + '">' + _ajPcardBodyHtml(d.n) + '</div>' +
+  '</div>';
 };
 
 // CLAY PPG: Mike Clay's 2026 stat line scored in the current format (site
@@ -35782,16 +35850,19 @@ window.fmtHeight = fmtHeight;
         html += _adminQaRosterHtml(safeId, x, docId);
         confirmLbl = 'CONFIRM LINEUP';
       } else {
-        html += '<div class="aj-choices">' + (x.options || []).map((o, i) => {
-          const sideTag = x.type === 'trade' ? '<span class="aj-choice-side">' + (i === 0 ? 'THEY GIVE' : 'THEY GET') + '</span>' : '';
-          // Player tiles (headshot, team band, stats) when the option names
-          // players we know; the raw text stays as a small caption so picks or
-          // free text still read. Text-only options keep the plain look.
-          const tiles = (typeof window._ajPlayerCardsHtml === 'function') ? window._ajPlayerCardsHtml(o) : '';
-          const single = tiles && typeof _ajFindPlayer === 'function' && !!_ajFindPlayer(o);
-          return '<div class="aj-choice' + (tiles ? ' aj-choice-tiles' : '') + '" role="button" tabindex="0" data-i="' + i + '" onclick="window._adminQaSelect(\'' + safeId + '\',' + i + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">' +
-            sideTag + (tiles
-              ? (single ? '' : '<span class="aj-choice-txt aj-choice-cap">' + _qaAdminEsc(o) + '</span>') + tiles
+        // Start/sit: one big vertical card per option across the width (Start/Sit
+        // tool look). Trade: THEY GIVE | THEY GET panels, each stacking that side's
+        // cards (Trade Calculator look). Free text (picks, unknown names) stays as a
+        // caption; options naming nobody we know keep the plain text + info line.
+        const opts = x.options || [];
+        const isTrade = x.type === 'trade';
+        html += '<div class="aj-choices ' + (isTrade ? 'aj-choices-trade' : 'aj-choices-v aj-choices-n' + Math.min(opts.length, 4)) + '">' + opts.map((o, i) => {
+          const sideTag = isTrade ? '<span class="aj-choice-side">' + (i === 0 ? 'THEY GIVE' : 'THEY GET') + '</span>' : '';
+          const cards = (typeof window._ajPlayerCardsHtml === 'function') ? window._ajPlayerCardsHtml(o, { big: true }) : '';
+          const single = cards && typeof _ajFindPlayer === 'function' && !!_ajFindPlayer(o);
+          return '<div class="aj-choice' + (cards ? ' aj-choice-tiles aj-choice-big' : '') + '" role="button" tabindex="0" data-i="' + i + '" onclick="window._adminQaSelect(\'' + safeId + '\',' + i + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">' +
+            sideTag + (cards
+              ? (single ? '' : '<span class="aj-choice-txt aj-choice-cap">' + _qaAdminEsc(o) + '</span>') + cards
               : '<span class="aj-choice-txt">' + _qaAdminEsc(o) + '</span>' + _adminQaInfo(o)) +
             '</div>';
         }).join('') + '</div>';

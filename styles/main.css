@@ -3590,6 +3590,50 @@ html.aj-onair .aj-q-gift-hint{display:none}
 html.aj-onair .aj-gw{padding:20px 24px}
 html.aj-onair .aj-gw-cycler{font-size:4rem;padding:30px}
 html.aj-onair .aj-gw-win-n{font-size:3.2rem}
+/* Big vertical player cards: start/sit choices across the width, trade = two side panels */
+.aj-choices.aj-choices-v{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.aj-choices.aj-choices-trade{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px}
+html.aj-onair .aj-choices.aj-choices-v{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+html.aj-onair .aj-choices.aj-choices-trade{grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr))}
+.aj-choice-big{padding:10px;align-items:stretch}
+.aj-choice-big .aj-choice-side{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2.5px;color:var(--accent);padding:2px 2px 4px}
+.aj-choices-trade .aj-choice-big{display:flex;flex-direction:column;gap:10px}
+.aj-pcard-v{display:flex;flex-direction:column;width:100%;min-width:0;border-radius:14px;overflow:hidden;background:var(--bg)}
+.aj-pcv-head{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;min-height:118px;padding:12px 0 0 14px;overflow:hidden}
+.aj-pcv-wm{position:absolute;right:-10px;top:-14px;width:150px;height:150px;object-fit:contain;opacity:.28;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));pointer-events:none}
+.aj-pcv-id,.aj-pcv-img{position:relative;z-index:1}
+.aj-pcv-opp{display:flex;align-items:center;gap:8px;font-size:.82rem;color:rgba(255,255,255,.85);padding:2px 2px 0}
+.aj-pcv-opp img{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
+.aj-pcv-opp b{color:#fff}
+.aj-pcv-nums{grid-template-columns:repeat(auto-fit,minmax(min(100%,86px),1fr))}
+.aj-pcv-num-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.aj-pcv-num:first-child .aj-pcv-num-v{color:#fbbf24}
+.tcv-row-light .aj-pcv-body{color:#fff}
+.aj-pcv-id{flex:1 1 0;display:flex;flex-direction:column;gap:6px;min-width:0;padding-bottom:12px}
+.aj-pcv-name{font-size:26px;white-space:normal;line-height:.95;cursor:pointer;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+.aj-pcv-img{flex:0 0 44%;max-width:150px;height:118px;display:flex;align-items:flex-end;justify-content:center;cursor:pointer}
+.aj-pcv-img img{width:100%;height:112px;object-fit:contain;object-position:center bottom;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
+.aj-pcv-body{display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px;background:rgba(0,0,0,.42);color:#fff}
+.aj-pcv-stats{margin:0;width:100%;justify-content:space-between}
+.aj-pcv-stats .aj-pcs{flex:1 1 0;min-width:0}
+.aj-pcv-nums{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.aj-pcv-num{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;background:rgba(0,0,0,.45);border-radius:8px;line-height:1}
+.aj-pcv-num-v{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:800}
+.aj-pcv-num-l{font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:.8px;color:rgba(255,255,255,.62);font-weight:600;text-align:center}
+.aj-pcv-lines{display:flex;flex-direction:column;gap:3px}
+.aj-pcv-line{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;color:rgba(255,255,255,.75);padding:3px 2px;border-bottom:1px solid rgba(255,255,255,.07)}
+.aj-pcv-line b{color:#fff;font-size:.9rem}
+.aj-pcv-books{font-size:.64rem;color:rgba(255,255,255,.45);text-align:right;padding-top:2px}
+.aj-choice.aj-lose .aj-pcard-v{filter:grayscale(1)}
+html.aj-onair .aj-pcv-name{font-size:38px}
+html.aj-onair .aj-pcv-img{flex-basis:44%;max-width:190px;height:146px}
+html.aj-onair .aj-pcv-img img{height:140px}
+html.aj-onair .aj-pcv-head{min-height:146px}
+html.aj-onair .aj-pcv-num-v{font-size:30px}
+html.aj-onair .aj-pcv-num-l{font-size:10px}
+html.aj-onair .aj-pcv-line{font-size:1rem}
+html.aj-onair .aj-pcv-line b{font-size:1.15rem}
+@media (max-width:600px){.aj-pcv-img{height:96px}.aj-pcv-img img{height:90px}.aj-pcv-head{min-height:96px}.aj-pcv-name{font-size:24px}}
 .aj-slotlist{display:flex;flex-direction:column;gap:3px;margin-bottom:6px}
 .aj-slotrow{display:flex;align-items:center;gap:10px;padding:5px 9px;border-radius:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);font-size:.78rem}
 .aj-slotrow-name{font-weight:600}

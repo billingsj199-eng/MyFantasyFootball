@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-11-04-askjack9" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-04-askjack10" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-04-askjack9" as="script">
+<link rel="preload" href="app.js?v=2026-11-04-askjack10" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-11-04" as="script">
 <link rel="preload" href="data/d.js?v=2026-11-04-fagnano" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack9">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack10">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -2204,7 +2204,7 @@ tr:hover .ao-chip,.ao-chip:focus{opacity:1}
 /* Fullscreen: still in flow right under the last tier (not pinned to the screen bottom), just bigger */
 #tierCardWrap.tcv-fullscreen .tcv-watermark{padding:14px 0 0 2px;background:none;font-size:28px;letter-spacing:3px;color:rgba(255,255,255,.78);text-shadow:0 2px 4px rgba(0,0,0,.95),0 0 10px rgba(0,0,0,.8)}
 #tierCardWrap.tcv-fullscreen{padding-bottom:24px}
-.tcv-row-wm{position:absolute;left:272px;width:136px;bottom:1px;text-align:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;line-height:1;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.9);pointer-events:none;user-select:none}
+.tcv-row-wm{position:absolute;left:272px;width:140px;bottom:1px;text-align:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;line-height:1;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.9);pointer-events:none;user-select:none}
 /* ROW CARDS layout — horizontal graphic cards (rank | headshot | name/pos | stats | matchup | team logo)
    on a team-color band. One card per line under each tier letter; sized to mirror the
    PNG export in _tcvRowCardCanvas (418×72 CSS px) so what you see is what downloads. */
@@ -2242,7 +2242,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 .tcv-move-date:disabled{opacity:.5}
 .tcv-key-move{color:var(--text1);opacity:.9}
 .tcv-row-team-mini{width:18px;height:18px;object-fit:contain;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
-.tcv-row-stats{flex:0 0 136px;height:44px;margin:0 0 0 6px;display:flex;align-items:stretch;background:rgba(0,0,0,.55);border-radius:6px;color:#fff}
+.tcv-row-stats{flex:0 0 140px;height:44px;margin:0 0 0 6px;display:flex;align-items:stretch;background:rgba(0,0,0,.55);border-radius:6px;color:#fff}
 .tcv-row-stat{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1}
 .tcv-row-stat-v{font-family:'DM Sans',system-ui,sans-serif;font-size:15px;font-weight:700}
 .tcv-row-stat-v .tcv-stat-blank{opacity:.35}
@@ -7044,7 +7044,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-04-askjack9"></script>
+<script defer src="app.js?v=2026-11-04-askjack10"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

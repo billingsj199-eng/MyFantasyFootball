@@ -4970,6 +4970,7 @@ window._ajInfoSet = function(key, val) {
   window._ajInfoSyncBar();
   // Re-fill every info line in place: tapped lineup chips + typed notes survive.
   document.querySelectorAll('.aj-pinfo[data-name]').forEach(el => { el.innerHTML = _ajInfoHtml(el.getAttribute('data-name')); });
+  document.querySelectorAll('.aj-pstats[data-name]').forEach(el => { el.innerHTML = _ajPcardStatsHtml(el.getAttribute('data-name')); });
 };
 window._ajInfoSyncBar = function() {
   const o = _ajInfoOpts();
@@ -5092,6 +5093,90 @@ function _ajInfoHtml(text) {
   }).join('');
 }
 window._ajInfoHtml = _ajInfoHtml;
+
+// Player card tiles for the inbox (2026-11-04, Jack streams while answering):
+// team-color band, ESPN headshot, name + pos pill + team logo, and three stat
+// cells (rank on the toggled board · the toggled projection · opponent).
+// Headshot / name click opens the full player card; the tile's own onclick
+// (opts.onclick) is the question action (select the winner / fill a slot).
+function _ajOppLogoUrl(oppText) {
+  const m = /(?:vs|@)\s+([A-Z]{2,4})/.exec(oppText || '');
+  if (!m) return null;
+  if (!window._tcvAbbrToLogoId && typeof TEAM_ABBR_MAP !== 'undefined' && typeof TEAM_LOGO_IDS !== 'undefined') {
+    window._tcvAbbrToLogoId = {};
+    Object.keys(TEAM_ABBR_MAP).forEach(full => { if (TEAM_LOGO_IDS[full]) window._tcvAbbrToLogoId[TEAM_ABBR_MAP[full]] = TEAM_LOGO_IDS[full]; });
+  }
+  const id = window._tcvAbbrToLogoId ? window._tcvAbbrToLogoId[m[1]] : null;
+  return id ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + id + '.png' : null;
+}
+function _ajPcardStatsHtml(name) {
+  const d = _ajFindPlayer(name);
+  if (!d) return '';
+  const o = _ajInfoOpts();
+  const i = _ajPlayerInfo(d, o);
+  const verLbl = { jacks: "Jack's", consensus: 'Cons.', mine: 'Mine' }[o.ver];
+  const fmtLbl = { ppr: 'PPR', half: 'HALF', std: 'STD' }[o.fmt];
+  const pl = d.s === 'DST' ? 'D/ST' : d.s;
+  const cell = (v, l, c, title) => '<div class="aj-pcs" title="' + _ajEsc(title || l) + '"><span class="aj-pcs-v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</span><span class="aj-pcs-l">' + l + '</span></div>';
+  const blank = '<span class="aj-pcs-blank">—</span>';
+  const cells = [];
+  cells.push(i.rank
+    ? cell(_ajEsc(pl) + (i.rank.pos || '?'), '#' + i.rank.ovr + ' ' + _ajEsc(verLbl.toUpperCase()), null, verLbl + ' board (' + (o.scope === 'weekly' ? 'this week' : 'ROS') + '): ' + pl + i.rank.pos + ', #' + i.rank.ovr + ' overall')
+    : cell(blank, _ajEsc(verLbl.toUpperCase()), null, 'Not on the ' + verLbl + ' board'));
+  const col = v => (typeof posFptsColor === 'function' && v != null) ? posFptsColor(v, d.s) : null;
+  if (o.proj === 'ours') cells.push(i.proj != null ? cell(i.proj.toFixed(1), 'PROJ ' + fmtLbl, col(i.proj), 'Site projection, week ' + i.wk + ' (' + fmtLbl + ')') : cell(blank, 'PROJ', null, i.bye ? 'Bye week' : 'No projection'));
+  else if (o.proj === 'book') cells.push(i.book != null ? cell(i.book.toFixed(1), 'BOOK ' + fmtLbl, col(i.book), 'Prop lines scored, week ' + i.wk + ' (' + fmtLbl + ')') : cell(blank, 'BOOK', null, 'No lines posted'));
+  else {
+    const L = i.lines || {};
+    const rows = (_AJ_LINE_ROWS[d.s] || []).filter(r => typeof L[r[0]] === 'number').slice(0, 2);
+    if (!rows.length) cells.push(cell(blank, 'LINES', null, 'No lines posted'));
+    rows.forEach(r => {
+      const v = L[r[0]];
+      const txt = r[2] === 'odds' ? ((v > 0 ? '+' : '') + Math.round(v)) : r[2] === 0 ? String(Math.round(v)) : (Math.round(v * 10) / 10).toFixed(1);
+      cells.push(cell(txt, _ajEsc(r[1].toUpperCase()), null, r[1] + ' line (' + (i.books || []).join('/') + ')'));
+    });
+  }
+  if (i.bye) cells.push(cell('<span class="aj-pcs-bad">BYE</span>', 'WK ' + i.wk, null, 'On bye this week'));
+  else if (i.out) cells.push(cell('<span class="aj-pcs-bad">OUT</span>', 'WK ' + i.wk, null, 'Ruled out'));
+  else if (i.opp) {
+    const lu = _ajOppLogoUrl(i.opp);
+    const pre = i.opp.indexOf('@') === 0 ? '@' : 'vs';
+    cells.push('<div class="aj-pcs aj-pcs-opp" title="' + _ajEsc(i.opp) + ' this week"><span class="aj-pcs-pre">' + pre + '</span>' + (lu ? '<img src="' + lu + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<span class="aj-pcs-v">' + _ajEsc(i.opp.replace(/^(vs|@)\s*/, '')) + '</span>') + '</div>');
+  }
+  return cells.join('');
+}
+window._ajOpenCard = function(name) {
+  const d = _ajFindPlayer(name);
+  if (d && typeof window.openPlayerCard === 'function') window.openPlayerCard(d);
+};
+window._ajPlayerCardHtml = function(name, opts) {
+  opts = opts || {};
+  const d = _ajFindPlayer(name);
+  if (!d) return '';
+  const band = (typeof _tcvRowBand === 'function') ? _tcvRowBand(d.t) : { p: '#1f2937', s: '#475569', light: false };
+  const bg = (typeof _tcvRowBandCss === 'function') ? _tcvRowBandCss(band) : band.p;
+  const img = d._slImg && typeof window._thumbHeadshotUrl === 'function' ? window._thumbHeadshotUrl(d._slImg) : (d._slImg || '');
+  const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
+  const logo = (logoId && typeof window._logoSrc === 'function') ? window._logoSrc(d, logoId) : '';
+  const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
+  const disp = (typeof _tcvDisplayName === 'function') ? _tcvDisplayName(d) : d.n;
+  const safeName = _ajEsc(d.n);
+  const open = 'event.stopPropagation();window._ajOpenCard(\'' + safeName.replace(/'/g, '&#39;') + '\')';
+  return '<div class="aj-pcard' + (band.light ? ' tcv-row-light' : '') + (opts.cls ? ' ' + opts.cls : '') + '" style="background:' + bg + '"' +
+      (opts.onclick ? ' role="button" tabindex="0" onclick="' + opts.onclick + '"' : '') + ' data-name="' + safeName + '">' +
+    '<span class="aj-pcard-img" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' +
+      (img ? '<img src="' + _ajEsc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<span class="aj-pcard-noimg">' + _ajEsc((d.s || '?')) + '</span>') + '</span>' +
+    '<span class="aj-pcard-id">' +
+      '<span class="aj-pcard-name" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' + _ajEsc(disp) + '</span>' +
+      '<span class="aj-pcard-sub"><span class="tcv-pos-pill ' + _ajEsc(d.s) + '">' + _ajEsc(d.s) + '</span>' + (logo ? '<img class="aj-pcard-logo" src="' + _ajEsc(logo) + '" alt="" loading="lazy">' : '') + '<span class="aj-pcard-abbr">' + _ajEsc(abbr) + '</span></span>' +
+    '</span>' +
+    '<span class="aj-pcard-stats aj-pstats" data-name="' + safeName + '">' + _ajPcardStatsHtml(d.n) + '</span>' +
+  '</div>';
+};
+// Every player found in a free-text option ("Chuba Hubbard + 2027 2nd").
+window._ajPlayerCardsHtml = function(text, opts) {
+  return _ajPlayersIn(text).map(d => window._ajPlayerCardHtml(d.n, opts)).join('');
+};
 
 // CLAY PPG: Mike Clay's 2026 stat line scored in the current format (site
 // scoring incl. receptions — Clay projects them; INTs he doesn't) ÷ 17 games,
@@ -8450,7 +8535,7 @@ async function _tcvMoveLoadDate(dateStr) {
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
-const _TCV_ROW = { MV_IMG_DX: 14, W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 42, STATS_X: 272, STATS_W: 136, STATS_H: 44, RNG_STATS_X: 308 };
+const _TCV_ROW = { MV_IMG_DX: 14, W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 42, STATS_X: 272, STATS_W: 140, STATS_H: 44, RNG_STATS_X: 308 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
   const c = _tcvTC(teamName) || { p: '#1f2937', s: '#475569' };
@@ -8602,6 +8687,10 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRa
   const seasonBye = (opp || _rng) ? null : _tcvSeasonBye(d);
   if (seasonBye != null) {
     oppHtml = '<div class="tcv-row-opp tcv-row-bye" title="Bye week ' + seasonBye + '"><span class="tcv-row-bye-l">BYE</span><span class="tcv-row-bye-n">' + seasonBye + '</span></div>';
+  } else if (!opp && !_rng) {
+    // Season board, bye already passed: keep the slot so the stats box sits at
+    // the same x as the BYE rows (Jack 2026-11-04 — rows looked shifted).
+    oppHtml = '<div class="tcv-row-opp tcv-row-opp-empty" aria-hidden="true"></div>';
   } else if (opp) {
     oppHtml = (opp.bye || opp.out)
       ? '<div class="tcv-row-opp tcv-opp-bye' + (opp.out ? ' tcv-opp-out' : '') + '" title="' + _tcvOppTitle(opp) + '">' + (opp.out || 'BYE') + '</div>'
@@ -35390,13 +35479,16 @@ window.fmtHeight = fmtHeight;
           '</button>' +
           (name ? '<button type="button" class="aj-slot-x" onclick="window._adminQaSlotClear(\'' + safeId + '\',' + i + ')" title="Clear slot">✕</button>' : '') +
           '</div>';
-        if (name) row += '<div class="aj-slot-info">' + _adminQaInfo(name) + '</div>';
+        if (name) row += '<div class="aj-slot-info">' + ((typeof window._ajPlayerCardHtml === 'function' && window._ajPlayerCardHtml(name)) || _adminQaInfo(name)) + '</div>';
         if (open) {
           const used = st.filter((n, j) => n && j !== i);
           const elig = sortPos(roster.filter(n => _adminQaSlotAllows(sl, posOf(n)) && used.indexOf(n) < 0));
           row += '<div class="aj-slot-picker">' + (elig.length ? elig.map(n => {
             const pos = posOf(n);
-            return '<div class="aj-rp"><button type="button" class="aj-chip aj-chip-btn' + (n === name ? ' aj-chip-start' : '') + '" data-name="' + _qaAdminEsc(n) + '" onclick="window._adminQaSlotFill(\'' + safeId + '\',' + i + ',this.getAttribute(\'data-name\'))">' +
+            const fill = 'window._adminQaSlotFill(\'' + safeId + '\',' + i + ',this.getAttribute(\'data-name\'))';
+            const tile = (typeof window._ajPlayerCardHtml === 'function') ? window._ajPlayerCardHtml(n, { onclick: fill, cls: n === name ? 'sel' : '' }) : '';
+            if (tile) return tile;
+            return '<div class="aj-rp"><button type="button" class="aj-chip aj-chip-btn' + (n === name ? ' aj-chip-start' : '') + '" data-name="' + _qaAdminEsc(n) + '" onclick="' + fill + '">' +
               (pos ? '<span class="aj-chip-pos">' + _qaAdminEsc(pos) + '</span>' : '') + _qaAdminEsc(n) + '</button>' + _adminQaInfo(n) + '</div>';
           }).join('') : '<div class="aj-pi-na">Nobody eligible left on their roster for this slot.</div>') + '</div>';
         }
@@ -35534,8 +35626,16 @@ window.fmtHeight = fmtHeight;
       } else {
         html += '<div class="aj-choices">' + (x.options || []).map((o, i) => {
           const sideTag = x.type === 'trade' ? '<span class="aj-choice-side">' + (i === 0 ? 'THEY GIVE' : 'THEY GET') + '</span>' : '';
-          return '<button type="button" class="aj-choice" data-i="' + i + '" onclick="window._adminQaSelect(\'' + safeId + '\',' + i + ')">' +
-            sideTag + '<span class="aj-choice-txt">' + _qaAdminEsc(o) + '</span>' + _adminQaInfo(o) + '</button>';
+          // Player tiles (headshot, team band, stats) when the option names
+          // players we know; the raw text stays as a small caption so picks or
+          // free text still read. Text-only options keep the plain look.
+          const tiles = (typeof window._ajPlayerCardsHtml === 'function') ? window._ajPlayerCardsHtml(o) : '';
+          const single = tiles && typeof _ajFindPlayer === 'function' && !!_ajFindPlayer(o);
+          return '<div class="aj-choice' + (tiles ? ' aj-choice-tiles' : '') + '" role="button" tabindex="0" data-i="' + i + '" onclick="window._adminQaSelect(\'' + safeId + '\',' + i + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">' +
+            sideTag + (tiles
+              ? (single ? '' : '<span class="aj-choice-txt aj-choice-cap">' + _qaAdminEsc(o) + '</span>') + tiles
+              : '<span class="aj-choice-txt">' + _qaAdminEsc(o) + '</span>' + _adminQaInfo(o)) +
+            '</div>';
         }).join('') + '</div>';
         confirmLbl = 'CONFIRM PICK';
       }
@@ -35582,7 +35682,7 @@ window.fmtHeight = fmtHeight;
         const on = b.getAttribute('data-i') === String(idx);
         b.classList.toggle('sel', on);
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
-        if (on) picked = b.querySelector('.aj-choice-txt');
+        if (on) picked = b.querySelector('.aj-choice-txt') || b.querySelector('.aj-pcard-name');
       });
       const btn = document.getElementById('adminQaConfirm-' + docId);
       if (btn) {

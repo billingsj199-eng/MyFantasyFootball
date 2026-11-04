@@ -73431,15 +73431,43 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const next = !(cur && cur.freeOpen);
     const b = document.getElementById('ajFreeToggle');
     if (b) b.disabled = true;
-    db.collection('shared').doc('askjack_settings').set({ freeOpen: next, updatedAt: new Date().toISOString() }, { merge: true })
-      .then(() => {
+    // Promise-based site dialog (window.mffConfirm); _mffConfirm is the
+    // replay-style sync wrapper and doesn't fit a promise chain.
+    const ask = msg => (typeof window.mffConfirm === 'function') ? window.mffConfirm(msg) : Promise.resolve(window.confirm(msg));
+    // Closing (Jack 2026-11-04): the unanswered free-line questions go with it.
+    // Paid line skips (tier 'skip'), premium questions and anything already
+    // answered stay. Count first so the confirm says what it's about to do.
+    const sweep = () => {
+      if (next) return Promise.resolve(0);
+      return db.collection('qa_questions').where('status', '==', 'open').limit(300).get().then(snap => {
+        const refs = [];
+        snap.forEach(d => { const x = d.data() || {}; if (x.tier === 'free') refs.push(d.ref); });
+        if (!refs.length) return 0;
+        return ask('Close free questions and remove ' + refs.length + ' unanswered free question' + (refs.length === 1 ? '' : 's') + ' from the queue?\n\nPaid line skips and premium questions stay.').then(okay => {
+          if (!okay) throw new Error('cancelled');
+          const batch = db.batch();
+          refs.forEach(r => batch.delete(r));
+          return batch.commit().then(() => refs.length);
+        });
+      });
+    };
+    sweep()
+      .then(removed => db.collection('shared').doc('askjack_settings').set({ freeOpen: next, updatedAt: new Date().toISOString() }, { merge: true }).then(() => removed))
+      .then(removed => {
         window._qaSettingsCache = { at: Date.now(), data: { freeOpen: next } };
         if (b) b.disabled = false;
         _qaAdminFreeSync();
-        if (typeof toast === 'function') toast(next ? 'Free questions OPEN — 1 per member per day' : 'Free questions closed');
+        if (typeof toast === 'function') toast(next ? 'Free questions OPEN — 1 per member per day' : 'Free questions closed' + (removed ? ' — ' + removed + ' free question' + (removed === 1 ? '' : 's') + ' removed' : ''));
         window._qaRenderPanel();
+        // Inbox open: reload the queue so the removed ones drop out.
+        const page = document.getElementById('pageAskJack');
+        if (removed && page && page.classList.contains('aj-inbox-on')) _qaAdminLoad();
       })
-      .catch(e => { if (b) b.disabled = false; if (typeof toast === 'function') toast('Couldn\'t save: ' + (e && e.message || e)); });
+      .catch(e => {
+        if (b) b.disabled = false;
+        if (e && e.message === 'cancelled') { if (typeof toast === 'function') toast('Left open — nothing changed'); return; }
+        if (typeof toast === 'function') toast('Couldn\'t save: ' + (e && e.message || e));
+      });
   };
   window._qaViewAs = _qaLsGet('aj_viewas') === 'free' ? 'free' : 'premium';
   window._qaAdminViewAs = function(v) {

@@ -3450,6 +3450,19 @@ select.aj-input{min-height:40px;color:var(--text)}
 .aj-slot.has-tile .aj-slot-tile{flex:1;min-width:0}
 .aj-slot.has-tile .aj-slot-x{align-self:stretch}
 html.aj-onair .aj-slot-btn.aj-slot-btn-pos{min-width:104px}
+/* Lineup slot tiles = one fixed-height row each (Jack 11-04 "every position
+   the same size"): the stats strip stays beside the name even in a narrow
+   stage (the name clamps instead of the strip dropping under it), and empty
+   slots match the filled height so nothing shifts as the lineup fills in */
+.aj-slot-tile.aj-pcard{flex-wrap:nowrap}
+.aj-slot-tile .aj-pcard-id{flex:1 1 0;min-width:0}
+.aj-slot-tile .aj-pcard-stats{flex:0 0 auto;margin:0 6px 0 auto}
+@container (max-width:400px){.aj-slot-tile .aj-pcard-stats{flex:0 0 auto;margin:0 6px 0 auto}.aj-slot-tile .aj-pcard-id{flex:1 1 0}.aj-slot-tile .aj-pcard-name{font-size:17px}.aj-slot-tile .aj-pcs{min-width:46px;padding:0 4px}}
+.aj-slot-tile.aj-pcard{height:64px;min-height:64px}
+.aj-slot:not(.has-tile) .aj-slot-btn{min-height:64px}
+html.aj-onair .aj-slot-tile.aj-pcard{height:92px;min-height:92px}
+html.aj-onair .aj-slot:not(.has-tile) .aj-slot-btn{min-height:92px}
+html.aj-onair .aj-slot{margin:3px 0}
 .aj-slot-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:6px 10px;padding:8px 10px;margin:2px 0 6px;background:var(--surface2,rgba(255,255,255,.03));border:1px dashed var(--border);border-radius:8px}
 /* Inbox player tiles (tier-row look): team band, headshot, name, three stat cells */
 .aj-pcard{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:64px;border-radius:8px;color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.25),0 4px 10px rgba(0,0,0,.5);overflow:hidden;cursor:default}

@@ -12449,7 +12449,7 @@ document.getElementById('helpOverlay').addEventListener('click', e => {
 (function _initKeyboardShortcuts() {
   const NAV_KEYS = {
     r: 'rankings', c: 'compare', s: 'startsit', g: 'games', t: 'trade', m: 'mockdraft',
-    p: 'prospect', y: 'myteams', a: 'account', v: 'trivia', b: 'backtest'
+    p: 'prospect', y: 'myteams', j: 'askjack', a: 'account', v: 'trivia', b: 'backtest'
   };
   let pendingG = false;
   let gTimer = null;
@@ -24417,7 +24417,7 @@ render();
 
 // Pages whose code lives in lazy app chunks (loader at the top of this file).
 // Mock + Research read the prospect model (_pmBuiltData / _attachJmScores), so they pull it too.
-const PAGE_CHUNKS = { research: ['prospect', 'research'], draftstrategy: ['draftstrategy'], trivia: ['trivia'], mockdraft: ['prospect', 'mock'], prospect: ['prospect'], backtest: ['prospect'], games: ['games'], trade: ['trade'], myteams: ['trade', 'myteams'] };
+const PAGE_CHUNKS = { research: ['prospect', 'research'], draftstrategy: ['draftstrategy'], trivia: ['trivia'], mockdraft: ['prospect', 'mock'], prospect: ['prospect'], backtest: ['prospect'], games: ['games'], trade: ['trade'], myteams: ['trade', 'myteams'], askjack: ['trade', 'myteams'] };
 
 // === My Teams + Trade outside their pages (split build only) =================
 // The My Teams module does background work on every page for people who use it:
@@ -24475,8 +24475,8 @@ const PAGE_CHUNKS = { research: ['prospect', 'research'], draftstrategy: ['draft
 })();
 
 // === Page Navigation ===
-const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', startsit: 'pageStartSit', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', backtest: 'pageBacktest', draftstrategy: 'pageDraftStrategy', research: 'pageResearch' };
-const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', startsit: 'authAnchorStartSit', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', backtest: 'authAnchorBacktest', draftstrategy: 'authAnchorDraftStrategy', research: 'authAnchorResearch' };
+const pageMap = { rankings: 'pageRankings', compare: 'pageCompare', startsit: 'pageStartSit', games: 'pageGames', trade: 'pageTrade', mockdraft: 'pageMockdraft', account: 'pageAccount', prospect: 'pageProspect', trivia: 'pageTrivia', myteams: 'pageMyTeams', askjack: 'pageAskJack', backtest: 'pageBacktest', draftstrategy: 'pageDraftStrategy', research: 'pageResearch' };
+const anchorMap = { home: 'authAnchorHome', rankings: 'authAnchorRankings', compare: 'authAnchorCompare', startsit: 'authAnchorStartSit', games: 'authAnchorGames', trade: 'authAnchorTrade', mockdraft: 'authAnchorMockdraft', account: 'authAnchorAccount', prospect: 'authAnchorProspect', trivia: 'authAnchorTrivia', myteams: 'authAnchorMyTeams', askjack: 'authAnchorAskJack', backtest: 'authAnchorBacktest', draftstrategy: 'authAnchorDraftStrategy', research: 'authAnchorResearch' };
 function switchPage(page) {
   // Admin-only pages — silently redirect non-admins to home. Trivia is public
   // since 2026-10-28: players get the daily board, the builder controls carry
@@ -24593,6 +24593,9 @@ function _pageEnterHooks(page) {
   if (page === 'compare') renderCompareGrid();
   // Start/Sit: render on every open — week / lines / sim data may have landed since.
   if (page === 'startsit' && typeof window._sstRender === 'function') window._sstRender();
+  // Ask Jack (own tab since 2026-11-04): its code rides the myteams chunk, so this
+  // no-ops until the chunk lands and switchPage re-runs the hooks.
+  if (page === 'askjack' && typeof window._qaRenderPanel === 'function') window._qaRenderPanel();
   // Trade calc: re-price on every open so board edits made elsewhere (rankings
   // page, tier cards, Jack's live saves) show up; includes the real-trades poke.
   if (page === 'trade') {
@@ -72918,7 +72921,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     }, 300);
   })();
 
-  // === ASK JACK — premium weekly Q&A (#mtAskJack, under Jack's Teams) ===
+  // === ASK JACK — premium weekly Q&A (#mtAskJack on the Ask Jack tab, #pageAskJack) ===
   // Premium members get 1 start/sit + 1 trade question per week, resetting
   // Tuesday (EST-anchored). Quota is enforced server-side by the qa_questions
   // doc ID ({uid}_{weekIdx}_{type}: create-only for users) with weekIdx
@@ -73057,13 +73060,25 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (!sect) return;
     const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
     const user = (fbReady && firebase.auth) ? firebase.auth().currentUser : null;
-    if (!user) { sect.style.display = 'none'; return; }
+    if (!user) {
+      // Own tab (2026-11-04): a blank page reads as broken, so signed-out
+      // visitors get a sign-in prompt instead of a hidden panel.
+      const _signedOut =
+        '<div class="aj-card aj-signin">' +
+          '<div class="aj-signin-title">Sign in to ask Jack</div>' +
+          '<div class="aj-signin-sub">Ask Jack is part of Premium. Sign in to send your questions or to unlock it.</div>' +
+          '<button type="button" class="jt-locked-btn" onclick="if(typeof window.openAuthModal===\'function\')window.openAuthModal()">SIGN IN</button>' +
+        '</div>';
+      if (sect._qaLastHtml !== _signedOut) { sect._qaLastHtml = _signedOut; sect.innerHTML = _signedOut; }
+      sect.style.display = 'block';
+      return;
+    }
     const isPremNow = (typeof window.hasPremium === 'function') && window.hasPremium();
 
     const header =
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">' +
         '<span class="jt-badge">PREMIUM</span>' +
-        '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.2rem;letter-spacing:2px;color:var(--text)">ASK JACK</span>' +
+        // No "ASK JACK" title here: the tab's page header already says it.
         '<span style="font-size:.6875rem;color:var(--text2);font-style:italic">1 start/sit + 1 trade question every week</span>' +
       '</div>';
 
@@ -73099,7 +73114,13 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
       window._qaMineCache = { uid: user.uid, at: Date.now(), list: list };
       _qaRenderInner(sect, header, list);
-    }).catch(e => { console.warn('[AskJack] load error:', e); sect.style.display = 'none'; });
+    }).catch(e => {
+      console.warn('[AskJack] load error:', e);
+      // Own tab: say so instead of leaving the page blank.
+      sect._qaLastHtml = null;
+      sect.innerHTML = '<div class="aj-card aj-signin"><div class="aj-signin-sub">Couldn\'t load your questions. Check your connection and reopen this tab.</div></div>';
+      sect.style.display = 'block';
+    });
   };
 
   function _qaRenderInner(sect, header, list) {

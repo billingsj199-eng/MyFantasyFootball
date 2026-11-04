@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-11-02-facefb" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-04-askjack" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-03-facefb" as="script">
+<link rel="preload" href="app.js?v=2026-11-04-askjack" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-11-03" as="script">
 <link rel="preload" href="data/d.js?v=2026-11-03" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-11-02-facefb">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -406,6 +406,13 @@ Continue with Google
 <button class="nav-btn" data-page="startsit" data-navgrp="inseason" title="Start/Sit" aria-label="Start / Sit">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h7l-3 10H3z"/><path d="M14 7h7v10h-7z"/><path d="M5.5 12l1.5 1.5 3-3"/><path d="M16 10l3 4M19 10l-3 4"/></svg>
 <span class="nav-label">Start/Sit</span>
+</button>
+<!-- Ask Jack (2026-11-04): premium weekly Q&A as its own tab (was a panel at the
+     bottom of My Teams > LEAGUES). Full weight on desktop; on phones it lives in
+     the MORE sheet (main.css ≤600px block) so the bottom bar stays five tabs. -->
+<button class="nav-btn" data-page="askjack" data-navgrp="inseason" id="navAskJackBtn" title="Ask Jack" aria-label="Ask Jack">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9.5 8.2a2.5 2.5 0 0 1 4.9.7c0 1.6-2.4 2.1-2.4 3.3"/><circle cx="12" cy="14.2" r=".6" fill="currentColor" stroke="none"/></svg>
+<span class="nav-label">Ask Jack</span>
 </button>
 <div class="nav-divider" data-navgrp="draft" role="separator" aria-label="Draft"><span>Draft</span></div>
 <button class="nav-btn" data-nav-tier="2" data-page="mockdraft" data-navgrp="draft" title="Mock Draft" aria-label="Mock Draft">
@@ -3451,6 +3458,21 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 
 <!-- MY TEAMS PAGE -->
+<!-- ASK JACK page (2026-11-04) — premium weekly Q&A (1 start/sit + 1 trade per
+     week, Tuesday reset). #mtAskJack is populated by _qaRenderPanel (myteams app
+     chunk; PAGE_CHUNKS.askjack loads it): sign-in prompt for anonymous visitors,
+     locked teaser for signed-in free users, forms/answers for premium. -->
+<div class="page" id="pageAskJack" style="padding:0;overflow:auto">
+<div class="auth-anchor" id="authAnchorAskJack"></div>
+<div style="width:100%;max-width:1000px;margin:0 auto;padding:20px 16px;min-width:0;box-sizing:border-box">
+<div class="compare-header" style="margin-bottom:.35rem;flex-wrap:wrap;gap:.5rem">
+<span class="compare-title">ASK JACK</span>
+</div>
+<p class="aj-intro">Stuck on a lineup call or a trade offer? Premium members send Jack one start/sit and one trade question every week. He picks the player or the side he likes better, and his pick shows up right here.</p>
+<div id="mtAskJack"><div class="aj-loading">Loading…</div></div>
+</div>
+</div>
+
 <div class="page" id="pageMyTeams" style="padding:0;overflow:auto">
 <div class="auth-anchor" id="authAnchorMyTeams"></div>
 <div style="width:100%;max-width:1200px;margin:0 auto;padding:20px 16px;min-width:0;box-sizing:border-box">
@@ -3684,13 +3706,14 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div><!-- /mtSetupBody -->
 </div><!-- /mtSetup -->
 
-<!-- ASK JACK — premium weekly Q&A (1 start/sit + 1 trade per week, Tuesday
-     reset). Populated by _qaRenderPanel at runtime: locked teaser for
-     signed-in free users, forms/answers for premium. Hidden for anonymous.
-     Lives INSIDE the leagues section (2026-08-11, Jack's request) so it only
-     shows on the LEAGUES source view, below the synced teams — the Underdog
-     portfolio view hides it along with the rest of this section. -->
-<div id="mtAskJack" style="display:none;margin-top:20px;margin-bottom:20px"></div>
+<!-- ASK JACK moved to its own tab (#pageAskJack, 2026-11-04). This pointer keeps
+     the old spot discoverable for members used to finding it here. -->
+<button type="button" class="mt-askjack-link" data-goto="askjack">
+<span class="jt-badge">PREMIUM</span>
+<span class="mt-askjack-link-title">ASK JACK</span>
+<span class="mt-askjack-link-sub">Send Jack your start/sit + trade questions — now on its own tab</span>
+<span class="mt-askjack-link-go" aria-hidden="true">&rarr;</span>
+</button>
 
 </div><!-- end mtSectionSleeper -->
 
@@ -6968,7 +6991,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-03-facefb"></script>
+<script defer src="app.js?v=2026-11-04-askjack"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">
@@ -7125,6 +7148,7 @@ window.addEventListener('load', function() {
     { kind: 'page', label: 'Compare',        page: 'compare',   hint: 'Side-by-side player view' },
     { kind: 'page', label: 'Start / Sit',    page: 'startsit',  hint: 'Weekly proj · matchup · Vegas lines' },
     { kind: 'page', label: 'Trade Calculator', page: 'trade',   hint: 'Evaluate trades' },
+    { kind: 'page', label: 'Ask Jack',       page: 'askjack',   hint: 'Premium · weekly start/sit + trade question' },
     { kind: 'page', label: 'Mock Draft',     page: 'mockdraft', hint: 'CPU draft simulator' },
     { kind: 'page', label: 'Draft Strategy', page: 'draftstrategy', hint: 'Rules + historical ADP value' },
     { kind: 'page', label: 'Prospect Model', page: 'prospect',  hint: 'JM Score · 2026 class' },

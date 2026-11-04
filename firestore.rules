@@ -415,29 +415,30 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/shared/askjack_settings)
              && get(/databases/$(database)/documents/shared/askjack_settings).data.get('freeOpen', false) == true;
     }
-    function qaPremiumCreate() {
-      return request.resource.data.tier == 'premium'
-             && (isJack() || hasStripePremium() || hasGiftedPremium())
-             && !('dayIdx' in request.resource.data)
-             // slot: trade → 'trade'; startsit + lineup share 'startsit'.
-             && qId == (request.auth.uid + '_' + string(request.resource.data.weekIdx) + '_' + (request.resource.data.type == 'trade' ? 'trade' : 'startsit'));
-    }
-    function qaFreeCreate() {
-      return request.resource.data.tier == 'free'
-             && qaFreeOpen()
-             && request.resource.data.dayIdx is int
-             && request.resource.data.dayIdx == (request.time.toMillis() - 1767675600000) / 86400000
-             && qId == (request.auth.uid + '_d' + string(request.resource.data.dayIdx));
-    }
-    // Jack practices on his own tab: unlimited questions, either tier, id
-    // {uid}_t{testN} (testN = client ms timestamp) so nothing collides.
-    function qaAdminCreate() {
-      return isJack()
-             && request.resource.data.tier in ['premium', 'free']
-             && request.resource.data.testN is int
-             && qId == (request.auth.uid + '_t' + string(request.resource.data.testN));
-    }
     match /qa_questions/{qId} {
+      // The three create paths live INSIDE the match so they can see qId.
+      function qaPremiumCreate() {
+        return request.resource.data.tier == 'premium'
+               && (isJack() || hasStripePremium() || hasGiftedPremium())
+               && !('dayIdx' in request.resource.data)
+               // slot: trade → 'trade'; startsit + lineup share 'startsit'.
+               && qId == (request.auth.uid + '_' + string(request.resource.data.weekIdx) + '_' + (request.resource.data.type == 'trade' ? 'trade' : 'startsit'));
+      }
+      function qaFreeCreate() {
+        return request.resource.data.tier == 'free'
+               && qaFreeOpen()
+               && request.resource.data.dayIdx is int
+               && request.resource.data.dayIdx == (request.time.toMillis() - 1767675600000) / 86400000
+               && qId == (request.auth.uid + '_d' + string(request.resource.data.dayIdx));
+      }
+      // Jack practices on his own tab: unlimited questions, either tier, id
+      // {uid}_t{testN} (testN = client ms timestamp) so nothing collides.
+      function qaAdminCreate() {
+        return isJack()
+               && request.resource.data.tier in ['premium', 'free']
+               && request.resource.data.testN is int
+               && qId == (request.auth.uid + '_t' + string(request.resource.data.testN));
+      }
       allow read: if request.auth != null
                   && (resource.data.uid == request.auth.uid
                       || isJack());

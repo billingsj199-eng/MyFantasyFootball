@@ -48,6 +48,16 @@ const SITE_URL = "https://myfantasyfootball.co";
 const SUCCESS_URL = SITE_URL + "/?premium_success=1&session_id={CHECKOUT_SESSION_ID}";
 const CANCEL_URL  = SITE_URL + "/?premium_cancel=1";
 
+// === Ask Jack line skip (2026-11-04) ===
+// A free member's open Ask Jack question can jump ahead of every other free
+// question in Jack's queue for a one-off $4.99 (premium questions still go
+// first). The price is created inline on the Checkout Session (no dashboard
+// Price needed); after Stripe confirms, applyLineSkip marks the question
+// tier 'skip' — the client can't write that field (firestore.rules).
+const LINE_SKIP_CENTS = 499;
+const LINE_SKIP_SUCCESS_URL = SITE_URL + "/?skip_success=1&session_id={CHECKOUT_SESSION_ID}#askjack";
+const LINE_SKIP_CANCEL_URL  = SITE_URL + "/?skip_cancel=1#askjack";
+
 // Helper: pick plan name from a Stripe Price ID
 function planFromPriceId(priceId) {
   if (priceId === PRICE_IDS.monthly) return "monthly";
@@ -102,8 +112,32 @@ exports.createCheckoutSession = onCall(
     }
 
     const plan = (request.data && request.data.plan) || "yearly";
-    if (plan !== "season" && !PRICE_IDS[plan]) {
+    if (plan !== "season" && plan !== "lineskip" && !PRICE_IDS[plan]) {
       throw new HttpsError("invalid-argument", "Invalid plan: " + plan);
+    }
+    // Ask Jack line skip: the question must be the caller's, still open, and
+    // a free-line question (premium ones are already ahead of the skips).
+    let qaDoc = null;
+    if (plan === "lineskip") {
+      const raw = request.data && request.data.qaDoc;
+      qaDoc = typeof raw === "string" ? raw.trim() : "";
+      if (!qaDoc || qaDoc.length > 160 || !/^[A-Za-z0-9_-]+$/.test(qaDoc)) {
+        throw new HttpsError("invalid-argument", "Invalid question id.");
+      }
+      const qSnap = await getFirestore().collection("qa_questions").doc(qaDoc).get();
+      const q = qSnap.exists ? qSnap.data() : null;
+      if (!q || q.uid !== request.auth.uid) {
+        throw new HttpsError("not-found", "That question isn't yours or no longer exists.");
+      }
+      if (q.status !== "open") {
+        throw new HttpsError("failed-precondition", "Jack already answered that one.");
+      }
+      if (q.tier === "skip") {
+        throw new HttpsError("failed-precondition", "That question already has a line skip.");
+      }
+      if (q.tier !== "free") {
+        throw new HttpsError("failed-precondition", "Premium questions already go to the front of the line.");
+      }
     }
     if (plan === "season") {
       if (SEASON_PASS_PRICE_ID.indexOf("PASTE") === 0) {
@@ -131,6 +165,29 @@ exports.createCheckoutSession = onCall(
       });
       customerId = customer.id;
       await userRef.set({ stripeCustomerId: customerId }, { merge: true });
+    }
+
+    if (plan === "lineskip") {
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        customer: customerId,
+        line_items: [{
+          price_data: {
+            currency: "usd",
+            unit_amount: LINE_SKIP_CENTS,
+            product_data: {
+              name: "Ask Jack — Skip the Line",
+              description: "Moves your question ahead of every free question in Jack's queue (premium members' questions still go first).",
+            },
+          },
+          quantity: 1,
+        }],
+        client_reference_id: uid,
+        metadata: { plan: "lineskip", firebaseUid: uid, qaDoc: qaDoc },
+        success_url: LINE_SKIP_SUCCESS_URL,
+        cancel_url: LINE_SKIP_CANCEL_URL,
+      });
+      return { url: session.url };
     }
 
     // Season Pass = one-time payment; Monthly/Yearly = recurring subscription.
@@ -327,6 +384,11 @@ async function activateFromCheckoutSession(db, stripe, session, source) {
     ? session.customer
     : (session.customer && session.customer.id) || null;
 
+  // Ask Jack line skip — not premium at all: mark the question and stop.
+  if (session.mode === "payment" && session.metadata && session.metadata.plan === "lineskip") {
+    return applyLineSkip(db, session, source);
+  }
+
   // Season Pass — one-time payment, no subscription object. Grant premium
   // with the fixed season end date regardless of purchase date.
   const isSeasonPass = session.mode === "payment" &&
@@ -394,6 +456,48 @@ async function activateFromCheckoutSession(db, stripe, session, source) {
 }
 
 // ============================================================
+// applyLineSkip
+// A paid "Ask Jack — Skip the Line" Checkout Session (metadata.plan
+// 'lineskip', metadata.qaDoc = the question id): mark that question tier
+// 'skip' so it sorts ahead of every free question in Jack's queue. Shared by
+// the webhook and verifyCheckoutSession; idempotent (a second call keeps it).
+// ============================================================
+async function applyLineSkip(db, session, source) {
+  const uid = session.client_reference_id;
+  const qaDoc = session.metadata && session.metadata.qaDoc;
+  if (!uid || !qaDoc || typeof qaDoc !== "string" || !/^[A-Za-z0-9_-]{1,160}$/.test(qaDoc)) {
+    console.warn(source + ": line skip session missing uid/qaDoc:", session.id);
+    return { ok: false, reason: "incomplete" };
+  }
+  if (session.payment_status !== "paid") {
+    console.warn(source + ": line skip session not paid:", session.id, session.payment_status);
+    return { ok: false, reason: "unpaid" };
+  }
+  const ref = db.collection("qa_questions").doc(qaDoc);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    console.warn(source + ": line skip for a missing question:", qaDoc, "by", uid);
+    return { ok: false, reason: "missing" };
+  }
+  const q = snap.data() || {};
+  if (q.uid !== uid) {
+    console.warn(source + ": line skip uid mismatch:", qaDoc, q.uid, "vs", uid);
+    return { ok: false, reason: "mismatch" };
+  }
+  if (q.tier === "skip") {
+    return { ok: true, plan: "lineskip", qaDoc: qaDoc, kept: true };
+  }
+  await ref.update({
+    tier: "skip",
+    skipPaidAt: FieldValue.serverTimestamp(),
+    skipSession: session.id,
+    skipAmount: typeof session.amount_total === "number" ? session.amount_total : LINE_SKIP_CENTS,
+  });
+  console.log(source + ": line skip applied to", qaDoc, "for", uid);
+  return { ok: true, plan: "lineskip", qaDoc: qaDoc };
+}
+
+// ============================================================
 // verifyCheckoutSession
 // Webhook-independent activation. Stripe sends the buyer back to
 // /?premium_success=1&session_id=cs_… and the client calls this right away,
@@ -439,7 +543,7 @@ exports.verifyCheckoutSession = onCall(
     if (!result.ok) {
       throw new HttpsError("failed-precondition", "Checkout session is incomplete.");
     }
-    return { ok: true, plan: result.plan, currentPeriodEnd: result.currentPeriodEnd, kept: !!result.kept };
+    return { ok: true, plan: result.plan, currentPeriodEnd: result.currentPeriodEnd || null, qaDoc: result.qaDoc || null, kept: !!result.kept };
   }
 );
 
@@ -854,5 +958,96 @@ exports.lockTriviaDaily = onRequest(
       console.error("lockTriviaDaily error:", err);
       res.status(500).json({ error: "internal" });
     }
+  }
+);
+
+// ============================================================================
+// triviaResult — pooled Daily Trivia results (2026-10-29, survey R11/R13).
+//
+// Callable. Records ONE completed daily run per player per date and folds it
+// into the public aggregate trivia_results/{date}:
+//   { date, total, count, scoreSum, timeSum,
+//     hist:    { s0..s40: n }          exact-score histogram
+//     buckets: { b0..b4: n }           0-4 / 5-9 / 10-14 / 15-19 / 20+
+//     found:   { i0..i39: n }          players who found each square
+//     updatedAt }
+// The run itself lives in trivia_runs/{date}_{who}. Rules deny every client
+// read/write on trivia_runs and every client write on trivia_results, so the
+// admin SDK here is the only writer and the aggregate the only client read.
+//
+// Identity: the signed-in uid, else "anon:" + a device id the page keeps in
+// localStorage, so an anonymous player still counts once per date.
+//
+// Payload: { date, timeMs, results: ['correct'|'wrong'|null, ...], deviceId? }.
+// The score is recomputed from results. The date must be today or yesterday
+// in ET (a run that straddles midnight still counts).
+// Response: { ok, recorded, already, yourScore, agg }. A second call for the
+// same date just returns the aggregate (replays never re-count).
+// ============================================================================
+const TRIVIA_RESULT_MAX_SQUARES = 40;
+function triviaBucket(score) {
+  return score >= 20 ? 4 : Math.floor(score / 5);
+}
+function triviaEtDate(offsetDays) {
+  const d = new Date(Date.now() + (offsetDays || 0) * 86400000);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+exports.triviaResult = onCall(
+  { memory: "256MiB", timeoutSeconds: 30 },
+  async (request) => {
+    const data = request.data || {};
+    const date = String(data.date || "");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new HttpsError("invalid-argument", "bad date");
+    if (date !== triviaEtDate(0) && date !== triviaEtDate(-1)) throw new HttpsError("failed-precondition", "not today");
+    const results = Array.isArray(data.results) ? data.results : null;
+    if (!results || results.length < 4 || results.length > TRIVIA_RESULT_MAX_SQUARES) throw new HttpsError("invalid-argument", "bad results");
+    const total = results.length;
+    const found = results.map((r) => (r === "correct" ? 1 : 0));
+    const score = found.reduce((s, v) => s + v, 0);
+    let timeMs = Number(data.timeMs);
+    if (!Number.isFinite(timeMs) || timeMs < 0) timeMs = 0;
+    timeMs = Math.min(Math.round(timeMs), 6 * 3600 * 1000);
+
+    let who;
+    if (request.auth && request.auth.uid) {
+      who = "u:" + request.auth.uid;
+    } else {
+      const dev = String(data.deviceId || "");
+      if (!/^[a-z0-9]{8,40}$/.test(dev)) throw new HttpsError("unauthenticated", "sign in or send a device id");
+      who = "anon:" + dev;
+    }
+
+    const db = getFirestore();
+    const runRef = db.collection("trivia_runs").doc(date + "_" + who.replace(/[^A-Za-z0-9_:-]/g, ""));
+    const aggRef = db.collection("trivia_results").doc(date);
+    const out = await db.runTransaction(async (tx) => {
+      const [runSnap, aggSnap] = await Promise.all([tx.get(runRef), tx.get(aggRef)]);
+      if (runSnap.exists) {
+        const prev = runSnap.data() || {};
+        return { recorded: false, already: true, yourScore: prev.score, agg: aggSnap.exists ? aggSnap.data() : null };
+      }
+      const now = new Date().toISOString();
+      tx.set(runRef, { date, who, score, total, timeMs, results: found, createdAt: now });
+      const inc = FieldValue.increment;
+      const nested = { date, total, count: inc(1), scoreSum: inc(score), timeSum: inc(timeMs), updatedAt: now, hist: {}, buckets: {}, found: {} };
+      nested.hist["s" + score] = inc(1);
+      nested.buckets["b" + triviaBucket(score)] = inc(1);
+      found.forEach((v, i) => { if (v) nested.found["i" + i] = inc(1); });
+      tx.set(aggRef, nested, { merge: true });
+      // Return the post-write aggregate without a second read: apply the same
+      // increments to what the transaction read.
+      const agg = aggSnap.exists ? aggSnap.data() : { date, total, count: 0, scoreSum: 0, timeSum: 0, hist: {}, buckets: {}, found: {} };
+      agg.count = (agg.count || 0) + 1;
+      agg.scoreSum = (agg.scoreSum || 0) + score;
+      agg.timeSum = (agg.timeSum || 0) + timeMs;
+      agg.hist = Object.assign({}, agg.hist); agg.hist["s" + score] = (agg.hist["s" + score] || 0) + 1;
+      agg.buckets = Object.assign({}, agg.buckets); agg.buckets["b" + triviaBucket(score)] = (agg.buckets["b" + triviaBucket(score)] || 0) + 1;
+      agg.found = Object.assign({}, agg.found);
+      found.forEach((v, i) => { if (v) agg.found["i" + i] = (agg.found["i" + i] || 0) + 1; });
+      agg.total = agg.total || total;
+      agg.updatedAt = now;
+      return { recorded: true, already: false, yourScore: score, agg };
+    });
+    return Object.assign({ ok: true }, out);
   }
 );

@@ -5498,6 +5498,22 @@ function _ajBestLineup(names, slots) {
   });
   return { slots: out, bench: ps.filter(p => !used[p.n]).map(p => p.n), total: Math.round(out.reduce((s, o) => s + o.v, 0) * 10) / 10 };
 }
+// Starting slots for a trade question: the ones sent with it (trades since
+// 2026-11-04), else the synced league's roster positions when it's one of
+// Jack's own leagues, else a standard lineup (+ SUPERFLEX for SF formats).
+function _ajSlotsFor(x) {
+  if (Array.isArray(x.slots) && x.slots.length) return { slots: x.slots, src: 'league' };
+  const id = x.league && x.league.id;
+  const saved = window._mtSavedLeagues || null;
+  const lg = (id && Array.isArray(saved)) ? saved.find(l => l && String(l.leagueId) === String(id)) : null;
+  const rp = (lg && lg.format && Array.isArray(lg.format.rosterPositions))
+    ? lg.format.rosterPositions.map(s => String(s || '').toUpperCase()).filter(s => s && !/^(BN|BE|BENCH|IR|IR\+|RES|TAXI|NA)$/.test(s)).slice(0, 20) : [];
+  if (rp.length) return { slots: rp, src: 'synced' };
+  const f = String((x.league && x.league.fmt) || '').toLowerCase();
+  const std = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'K', 'DST'];
+  if (/\bsf\b|superflex|2qb/.test(f)) std.splice(7, 0, 'SUPER_FLEX');
+  return { slots: std, src: 'assumed' };
+}
 // Roster popover. t = {title, roster, marks (this team gives), gets (it
 // receives), slots, fmt, sub}; with slots it renders the starting lineup
 // with a BEFORE / AFTER THE TRADE toggle (projected starter PPG for each),
@@ -5558,7 +5574,8 @@ function _ajRosterPopRender(pop) {
     ? (t.gets.indexOf(n) >= 0 ? '<span class="aj-lu-tag in">IN</span>' : '')
     : (t.marks.indexOf(n) >= 0 ? '<span class="aj-lu-tag out">OUT IN DEAL</span>' : '');
   const rowCls = n => after ? (t.gets.indexOf(n) >= 0 ? ' aj-lu-in' : '') : (t.marks.indexOf(n) >= 0 ? ' aj-lu-out' : '');
-  sub.textContent = (after ? 'After the trade: ' : 'Before the trade: ') + (after ? afterNames.length : beforeNames.length) + ' players · best lineup by ROS projection (' + fmtLbl + ')';
+  sub.textContent = (after ? 'After the trade: ' : 'Before the trade: ') + (after ? afterNames.length : beforeNames.length) + ' players · best lineup by ROS projection (' + fmtLbl + ')' +
+    (t.slotsSrc === 'assumed' ? ' · standard lineup assumed (this question didn\'t carry the league\'s slots)' : '');
   body.innerHTML =
     '<div class="aj-lu-tot"><span class="aj-lu-tot-l">STARTERS</span><span class="aj-lu-tot-v">' + L.total.toFixed(1) + '</span><span class="aj-lu-tot-s">proj PPG · ' + fmtLbl + '</span>' +
       ((t.marks.length || t.gets.length) ? '<span class="aj-lu-tot-d ' + (delta > 0 ? 'up' : delta < 0 ? 'down' : '') + '">' + (after ? 'vs ' + L0.total.toFixed(1) + ' before' : 'after the deal ' + L1.total.toFixed(1)) + ' (' + (delta > 0 ? '+' : '') + delta.toFixed(1) + ')</span>' : '') +
@@ -5586,7 +5603,8 @@ window._ajTradeTeamBtn = function(x, i, whoLbl) {
   const gets = _ajPlayersIn(opts[i === 0 ? 1 : 0] || '').map(d => d.n);
   const key = 'ajTeam_' + Math.random().toString(36).slice(2, 9);
   window._ajTeamData = window._ajTeamData || {};
-  window._ajTeamData[key] = { title: label, roster, marks, gets, slots: Array.isArray(x.slots) ? x.slots : [], fmt: (x.league && x.league.fmt) || '' };
+  const sl = _ajSlotsFor(x);
+  window._ajTeamData[key] = { title: label, roster, marks, gets, slots: sl.slots, slotsSrc: sl.src, fmt: (x.league && x.league.fmt) || '' };
   return '<button type="button" class="aj-choice-side aj-team-btn" onclick="event.stopPropagation();window._ajRosterPop(window._ajTeamData[\'' + key + '\'])" title="Open ' + _ajEsc(label) + '\'s lineup before / after this deal">' +
     whoLbl + ' <span class="aj-team-name">' + _ajEsc(label) + '</span><span class="aj-team-open">LINEUP ▸</span></button>';
 };
@@ -74726,7 +74744,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       _qaOnAirAspectApply(_qaLsGet('aj_onair_aspect') || 'fit');
       _qaOnAirCtl(true);
     } else {
-      document.documentElement.classList.remove('aj-ctl', 'aj-qopen', 'aj-qdock');
+      document.documentElement.classList.remove('aj-ctl', 'aj-qopen', 'aj-qdock', 'aj-qhide');
       document.documentElement.removeAttribute('data-aj-aspect');
       const list = document.getElementById('ajInboxList');
       if (list) Array.from(list.children).forEach(el => { el.style.width = ''; el.style.minHeight = ''; el.style.transform = ''; delete el.dataset.ajScale; });
@@ -74758,18 +74776,22 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const stage = document.getElementById('ajInboxList');
       const inner = stage ? stage.firstElementChild : null;
       if (!stage || !inner) return;
-      const W = stage.clientWidth, H = stage.clientHeight;
-      if (!W || !H) return;
-      // Queue dock: room beside the stage (letterboxed shapes on a wide
-      // monitor) → the queue list sits out there, outside the capture.
-      const free = (window.innerWidth - W) / 2;
-      const dock = free >= 250;
+      // Queue column (Jack 11-04 "I don't want the queue blocking"): the queue
+      // is a fixed-width column on the right, OUTSIDE the stage; the stage is
+      // sized to the space left of it (--aj-aw × --aj-ah, main.css), so the
+      // OBS crop never sees the list. Q hides the column (the stage then grows
+      // into the space — re-crop if you do that mid-stream).
       const h = document.documentElement;
-      h.style.setProperty('--aj-dock-w', Math.round(Math.min(360, free - 28)) + 'px');
-      if (dock !== h.classList.contains('aj-qdock')) {
-        h.classList.toggle('aj-qdock', dock);
+      const dockW = h.classList.contains('aj-qhide') ? 0 : (window.innerWidth >= 1100 ? 300 : window.innerWidth >= 700 ? 240 : 0);
+      h.style.setProperty('--aj-dock-w', dockW + 'px');
+      h.style.setProperty('--aj-aw', Math.max(0, window.innerWidth - dockW) + 'px');
+      h.style.setProperty('--aj-ah', window.innerHeight + 'px');
+      if ((dockW > 0) !== h.classList.contains('aj-qdock')) {
+        h.classList.toggle('aj-qdock', dockW > 0);
         if (typeof window._adminQaRenderQueue === 'function' && document.querySelector('#ajInboxList .aj-qwrap')) { window._adminQaRenderQueue(); return; } // re-render moves the queue and re-fits
       }
+      const W = stage.clientWidth, H = stage.clientHeight;
+      if (!W || !H) return;
       // Shrink-only from 1: a wider (unscaled) box can reflow the cards into
       // more columns and get SHORTER, so a naive fixed-point loop flips between
       // "one column, too tall" and "two columns, fits" and can stop on the
@@ -74815,7 +74837,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   ['mousemove', 'pointerdown', 'wheel'].forEach(ev => document.addEventListener(ev, () => { if (document.documentElement.classList.contains('aj-onair')) _qaOnAirCtl(true); }, { passive: true }));
   window._qaOnAirQueue = function(open) {
     const h = document.documentElement;
-    h.classList.toggle('aj-qopen', open == null ? !h.classList.contains('aj-qopen') : !!open);
+    // open = show the queue column; hiding it hands its width to the stage.
+    h.classList.toggle('aj-qhide', open == null ? !h.classList.contains('aj-qhide') : !open);
+    _qaOnAirFit();
   };
   window._qaOnAirBonus = function() {
     const cur = (window._adminQaQueue || [])[0];
@@ -74856,7 +74880,6 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (key === 'Escape') {
       e.preventDefault();
       if (document.documentElement.classList.contains('aj-rpop-open')) return; // the roster popover's own Escape
-      if (document.documentElement.classList.contains('aj-qopen')) { window._qaOnAirQueue(false); return; }
       window._qaOnAir(false); return;
     }
     if (key === 'f' || key === 'F') { e.preventDefault(); window._qaOnAirFullscreen(); return; }

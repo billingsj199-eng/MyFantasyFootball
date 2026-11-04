@@ -3567,13 +3567,14 @@ html.aj-onair .aj-q-empty{font-size:1.4rem;padding:60px 0;text-align:center}
    html[data-aj-aspect]); app.js _qaOnAirFit scales the stage content to fit.
    Operator chrome shows only while html.aj-ctl (mouse moving / on a control). */
 html.aj-onair{overflow:hidden}
-html.aj-onair #ajInbox{position:fixed;inset:0;z-index:40;display:flex!important;align-items:center;justify-content:center;background:#000}
+html.aj-onair #ajInbox{position:fixed;inset:0;z-index:40;display:flex!important;align-items:stretch;justify-content:flex-start;background:#000}
 html.aj-onair:not(.aj-ctl) #ajInbox{cursor:none}
-html.aj-onair #ajInboxList{position:relative;overflow:hidden;display:block!important;width:100vw;height:100vh;background:radial-gradient(1200px 600px at 50% -10%,#1e293b 0%,#0b1120 55%,#05080f 100%)}
-html.aj-onair[data-aj-aspect="169"] #ajInboxList{width:min(100vw,calc(100vh * 16 / 9));height:min(100vh,calc(100vw * 9 / 16))}
-html.aj-onair[data-aj-aspect="11"] #ajInboxList{width:min(100vw,100vh);height:min(100vh,100vw)}
-html.aj-onair[data-aj-aspect="45"] #ajInboxList{width:min(100vw,calc(100vh * 4 / 5));height:min(100vh,calc(100vw * 5 / 4))}
-html.aj-onair[data-aj-aspect="916"] #ajInboxList{width:min(100vw,calc(100vh * 9 / 16));height:min(100vh,calc(100vw * 16 / 9))}
+/* Stage area = the window minus the queue column (--aj-aw × --aj-ah, set by app.js); the stage centres in it */
+html.aj-onair #ajInboxList{position:relative;overflow:hidden;display:block!important;flex:0 0 auto;margin:auto;width:var(--aj-aw,100vw);height:var(--aj-ah,100vh);background:radial-gradient(1200px 600px at 50% -10%,#1e293b 0%,#0b1120 55%,#05080f 100%)}
+html.aj-onair[data-aj-aspect="169"] #ajInboxList{width:min(var(--aj-aw,100vw),calc(var(--aj-ah,100vh) * 16 / 9));height:min(var(--aj-ah,100vh),calc(var(--aj-aw,100vw) * 9 / 16))}
+html.aj-onair[data-aj-aspect="11"] #ajInboxList{width:min(var(--aj-aw,100vw),var(--aj-ah,100vh));height:min(var(--aj-ah,100vh),var(--aj-aw,100vw))}
+html.aj-onair[data-aj-aspect="45"] #ajInboxList{width:min(var(--aj-aw,100vw),calc(var(--aj-ah,100vh) * 4 / 5));height:min(var(--aj-ah,100vh),calc(var(--aj-aw,100vw) * 5 / 4))}
+html.aj-onair[data-aj-aspect="916"] #ajInboxList{width:min(var(--aj-aw,100vw),calc(var(--aj-ah,100vh) * 9 / 16));height:min(var(--aj-ah,100vh),calc(var(--aj-aw,100vw) * 16 / 9))}
 html.aj-onair.aj-ctl #ajInboxList{outline:1px dashed rgba(255,255,255,.3);outline-offset:-1px}
 html.aj-onair #ajInboxList > *{position:relative;box-sizing:border-box;transform-origin:top left;padding:18px 24px 24px}
 html.aj-onair .aj-qwrap{display:block}
@@ -3612,10 +3613,11 @@ html.aj-onair .aj-reveal-msg{font-size:1.2rem}
 /* Queue: a drawer over the stage (Q / QUEUE button), not a sidebar */
 html.aj-onair #ajInboxList .aj-qside{display:none;position:absolute;top:0;right:0;bottom:0;width:min(380px,48%);z-index:7;overflow:auto;border-radius:0;border-width:0 0 0 1px;background:rgba(5,8,15,.94);backdrop-filter:blur(8px);box-shadow:-10px 0 40px rgba(0,0,0,.6)}
 html.aj-onair.aj-qopen #ajInboxList .aj-qside{display:flex}
-/* Queue DOCK (Jack 11-04): with room beside a letterboxed stage the queue sits
-   out there, fixed, outside the capture — click a row to bring it up, ↑↓ keys */
+/* Queue COLUMN (Jack 11-04 "I don't want the queue blocking"): a fixed-width
+   column on the right, outside the stage (the stage is sized to the space
+   left of it) — click a row to bring it up, ↑↓ keys; Q hides the column */
 .aj-onair-queue{display:none}
-html.aj-onair.aj-qdock .aj-onair-queue{display:block;position:fixed;top:50%;right:14px;transform:translateY(-50%);width:var(--aj-dock-w,320px);max-height:94vh;overflow:auto;z-index:48}
+html.aj-onair.aj-qdock .aj-onair-queue{display:block;flex:0 0 var(--aj-dock-w,300px);width:var(--aj-dock-w,300px);height:100vh;overflow:auto;box-sizing:border-box;padding:14px 10px 60px;background:#000;border-left:1px solid rgba(255,255,255,.08);z-index:48;order:2}
 html.aj-onair.aj-qdock .aj-onair-queue::before{content:'YOUR EYES ONLY · outside the stage';display:block;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--text2);padding:0 6px 6px}
 .aj-onair-queue .aj-qside{padding:12px;border-radius:14px}
 .aj-onair-queue .aj-qside-h{font-size:1.15rem}

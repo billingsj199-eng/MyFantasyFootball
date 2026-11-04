@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-11-04-askjack6" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-04-askjack7" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-04-askjack6" as="script">
+<link rel="preload" href="app.js?v=2026-11-04-askjack7" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-11-04" as="script">
 <link rel="preload" href="data/d.js?v=2026-11-04-fagnano" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack6">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack7">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -3471,13 +3471,20 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
      shows it for admins only and remembers the pick (localStorage aj_admin_view). -->
 <div id="ajAdminBar" class="aj-admin-bar" style="display:none">
 <span class="aj-lbl">ADMIN</span>
+<!-- FREE Q'S: opens 1-a-day free questions for every signed-in member while Jack is live
+     (shared/askjack_settings.freeOpen). VIEW AS: preview the member panel as premium or free. -->
+<button type="button" id="ajFreeToggle" class="aj-free-toggle" onclick="window._qaAdminFreeToggle()">FREE Q'S: …</button>
+<div class="aj-seg" id="ajViewAs" role="group" aria-label="Preview member view as">
+<button type="button" class="aj-seg-btn" data-viewas="premium" onclick="window._qaAdminViewAs('premium')" title="Preview the panel as a premium member">AS PREMIUM</button>
+<button type="button" class="aj-seg-btn" data-viewas="free" onclick="window._qaAdminViewAs('free')" title="Preview the panel as a free member">AS FREE</button>
+</div>
 <div class="aj-seg" role="tablist" aria-label="Ask Jack view">
 <button type="button" class="aj-seg-btn" role="tab" data-view="member" onclick="window._qaAdminToggle('member')">MEMBER VIEW</button>
 <button type="button" class="aj-seg-btn" role="tab" data-view="inbox" onclick="window._qaAdminToggle('inbox')">INBOX <span id="ajInboxCount"></span></button>
 </div>
 </div>
 </div>
-<p class="aj-intro">Stuck on a lineup call or a trade offer? Premium members send Jack two questions a week: one trade, plus either a start/sit or a full Lineup Optimizer. Pick your league, pick the question type, and his answer shows up right here.</p>
+<p class="aj-intro">Stuck on a lineup call or a trade offer? Premium members send Jack two questions a week: one trade, plus either a start/sit or a full Lineup Optimizer. Pick your league, pick the question type, and his answer shows up right here. When Jack is live streaming, free members get one question a day too.</p>
 <div id="mtAskJack"><div class="aj-loading">Loading…</div></div>
 <!-- Admin INBOX view (admins only, shown by #pageAskJack.aj-inbox-on): the Account
      admin panel's inbox code (_adminQaLoad) renders questions into #ajInboxList. -->
@@ -7037,7 +7044,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-04-askjack6"></script>
+<script defer src="app.js?v=2026-11-04-askjack7"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

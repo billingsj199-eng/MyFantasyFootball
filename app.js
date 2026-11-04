@@ -35325,6 +35325,15 @@ window.fmtHeight = fmtHeight;
         : '<span style="background:rgba(245,158,11,.15);color:var(--accent);padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">🔀 START/SIT</span>';
     }
     const _adminQaTypeName = t => t === 'trade' ? 'trade' : t === 'lineup' ? 'lineup' : 'start/sit';
+    // Queue tier: premium (or legacy docs with no tier) → paid line skips → free.
+    const _adminQaTierRank = x => x.tier === 'free' ? 2 : x.tier === 'skip' ? 1 : 0;
+    function _adminQaTierChip(tier) {
+      return tier === 'free'
+        ? '<span class="aj-tier aj-tier-free">FREE</span>'
+        : tier === 'skip'
+        ? '<span class="aj-tier aj-tier-skip">⚡ SKIP $4.99</span>'
+        : '<span class="aj-tier aj-tier-prem">★ PREMIUM</span>';
+    }
     // Open-question count on the Ask Jack tab's INBOX toggle.
     const _adminQaBadge = n => { const c = document.getElementById('ajInboxCount'); if (c) c.textContent = n ? '(' + n + ')' : ''; };
     const _adminQaInfo = n => '<div class="aj-pinfo" data-name="' + _qaAdminEsc(n) + '">' + (typeof window._ajInfoHtml === 'function' ? window._ajInfoHtml(n) : '') + '</div>';
@@ -35354,7 +35363,7 @@ window.fmtHeight = fmtHeight;
       const safeId = _qaAdminEsc(docId);
 
       let html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px">';
-      html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">' + typeChip +
+      html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">' + _adminQaTierChip(x.tier) + typeChip +
         '<b style="font-size:.8rem">' + _qaAdminEsc(x.name || 'Member') + '</b>' +
         '<span style="font-size:.6875rem;color:var(--text2)">' + _qaAdminEsc(when) + ' · week ' + _qaAdminEsc(x.weekIdx) + '</span>' +
         (x.status === 'answered' ? '<span style="font-size:.6875rem;color:var(--green);font-weight:700">ANSWERED</span>' : '') +
@@ -35404,7 +35413,7 @@ window.fmtHeight = fmtHeight;
     function _adminQaQueueCard(docId, x, total) {
       const safeId = _qaAdminEsc(docId);
       let html = '<div class="aj-q" id="adminQaCard-' + safeId + '">';
-      html += '<div class="aj-q-head"><span class="aj-q-count">' + total + ' IN QUEUE · OLDEST FIRST</span>' + _adminQaTypeChip(x.type) +
+      html += '<div class="aj-q-head"><span class="aj-q-count">' + total + ' IN QUEUE</span>' + _adminQaTierChip(x.tier) + _adminQaTypeChip(x.type) +
         '<b>' + _qaAdminEsc(x.name || 'Member') + '</b>' +
         '<span class="aj-q-when">' + _qaAdminEsc(_adminQaAgo(x.createdAt)) + ' · week ' + _qaAdminEsc(x.weekIdx) + '</span></div>';
       if (x.league && x.league.name) {
@@ -35446,7 +35455,7 @@ window.fmtHeight = fmtHeight;
           const safe = _qaAdminEsc(r.id);
           return '<button type="button" class="aj-qrow' + (i === 0 ? ' cur' : '') + '" onclick="window._adminQaJump(\'' + safe + '\')" title="' + (i === 0 ? 'Answering now' : 'Bring this one up') + '">' +
             '<span class="aj-qrow-name">' + (i + 1) + '. ' + _qaAdminEsc(r.data.name || 'Member') + '</span>' +
-            '<span class="aj-qrow-meta">' + _adminQaTypeChip(r.data.type) + ' <span>' + _qaAdminEsc(_adminQaAgo(r.data.createdAt)) + '</span></span>' +
+            '<span class="aj-qrow-meta">' + _adminQaTierChip(r.data.tier) + _adminQaTypeChip(r.data.type) + ' <span>' + _qaAdminEsc(_adminQaAgo(r.data.createdAt)) + '</span></span>' +
             '</button>';
         }).join('') + '</aside>';
       list.innerHTML = '<div class="aj-qwrap"><div class="aj-qmain">' + _adminQaQueueCard(cur.id, cur.data, q.length) + '</div>' + side + '</div>';
@@ -35526,11 +35535,11 @@ window.fmtHeight = fmtHeight;
           snap.forEach(d => rows.push({ id: d.id, data: d.data() }));
           rows.sort((a, b) => (b.data.createdAt || '').localeCompare(a.data.createdAt || ''));
           if (status === 'open') {
-            // QUEUE: oldest first, one at a time.
-            rows.reverse();
+            // QUEUE: premium → line skips → free, oldest first within each.
+            rows.sort((a, b) => (_adminQaTierRank(a.data) - _adminQaTierRank(b.data)) || (a.data.createdAt || '').localeCompare(b.data.createdAt || ''));
             window._adminQaQueue = rows;
             _adminQaRenderQueue();
-            if (rows.length) showAdminMsg(qaMsg, rows.length + ' in the queue — oldest first', 'success');
+            if (rows.length) showAdminMsg(qaMsg, rows.length + ' in the queue — premium first, then line skips, then free (oldest first)', 'success');
             return;
           }
           if (!rows.length) {
@@ -73310,6 +73319,135 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   const _qaType = t => QA_TYPES[t] || QA_TYPES.startsit;
   function _qaSlotOf(type) { return type === 'trade' ? 'trade' : 'startsit'; }
   function _qaWeekIdx() { return Math.floor((Date.now() - QA_WEEK_ANCHOR) / QA_WEEK_MS); }
+  function _qaDayIdx() { return Math.floor((Date.now() - QA_WEEK_ANCHOR) / 86400000); }
+  function _qaIsAdmin() { return typeof window.isAdmin === 'function' && window.isAdmin(); }
+  // FREE QUESTIONS (2026-11-04, Jack): while he's live streaming he flips
+  // shared/askjack_settings.freeOpen on from the admin bar and any signed-in
+  // free member gets 1 question a day (doc {uid}_d{dayIdx}, tier 'free').
+  // Premium questions carry tier 'premium' and sort first in his queue; a
+  // free member can pay $4.99 (createCheckoutSession plan 'lineskip') to move
+  // ahead of every free question — tier 'skip', written by the Cloud Function
+  // after Stripe confirms, never by the client. Admins (Jack) get unlimited
+  // questions ({uid}_t{ms}, either tier) to practice. Rules mirror all of it.
+  function _qaSettings() { return (window._qaSettingsCache && (Date.now() - window._qaSettingsCache.at) < 60000) ? window._qaSettingsCache.data : null; }
+  function _qaLoadSettings(cb) {
+    const cur = _qaSettings();
+    if (cur) { cb(cur); return; }
+    const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
+    const db = fbReady && firebase.firestore ? firebase.firestore() : null;
+    if (!db) { cb({ freeOpen: false }); return; }
+    if (window._qaSettingsPending) { window._qaSettingsPending.push(cb); return; }
+    window._qaSettingsPending = [cb];
+    db.collection('shared').doc('askjack_settings').get().then(doc => {
+      const data = doc.exists ? (doc.data() || {}) : {};
+      window._qaSettingsCache = { at: Date.now(), data: { freeOpen: data.freeOpen === true } };
+    }).catch(e => {
+      console.warn('[AskJack] settings load error:', e);
+      window._qaSettingsCache = { at: Date.now() - 50000, data: { freeOpen: false } }; // retry in ~10s
+    }).then(() => {
+      const cbs = window._qaSettingsPending || []; window._qaSettingsPending = null;
+      cbs.forEach(f => { try { f(window._qaSettingsCache.data); } catch (_) {} });
+    });
+  }
+  function _qaFreeResetLabel() { return 'new free question tomorrow (midnight ET)'; }
+  // Line-skip CTA / badge under a member's open free question.
+  function _qaSkipHtml(x) {
+    if (x.tier === 'skip') return '<div class="aj-skip-done">⚡ Line skip paid — you\'re ahead of every free question in Jack\'s queue.</div>';
+    if (x.tier !== 'free' || x.status === 'answered' || !x._id) return '';
+    return '<div class="aj-skip-cta"><span>Jack answers premium questions first, then line skips, then the free line.</span>' +
+      '<button type="button" class="aj-skip-btn" onclick="window._qaBuySkip(\'' + _jtEsc(x._id) + '\')">⚡ SKIP THE LINE · $4.99</button></div>';
+  }
+  window._qaBuySkip = function(docId) {
+    const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
+    const user = (fbReady && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!user) { if (typeof window.openAuthModal === 'function') window.openAuthModal(); return; }
+    if (!fbReady || !firebase.functions) { if (typeof toast === 'function') toast('Checkout isn\'t available right now — try again in a minute.'); return; }
+    const btn = document.querySelector('.aj-skip-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'LOADING…'; }
+    let call;
+    try { call = firebase.app().functions('us-central1').httpsCallable('createCheckoutSession')({ plan: 'lineskip', qaDoc: docId }); }
+    catch (e) { call = Promise.reject(e); }
+    call.then(r => {
+      const url = r && r.data && r.data.url;
+      if (!url) throw new Error('No checkout URL returned.');
+      window.location.href = url;
+    }).catch(e => {
+      console.warn('[AskJack] line skip checkout error:', e);
+      if (typeof toast === 'function') toast('Couldn\'t start checkout: ' + (e && e.message || 'try again'));
+      if (btn) { btn.disabled = false; btn.textContent = '⚡ SKIP THE LINE · $4.99'; }
+    });
+  };
+  // Back from Stripe (?skip_success=1&session_id=… / ?skip_cancel=1): verify
+  // through the same callable premium uses; the webhook is the fallback. The
+  // session id is stashed so a signed-out return gets verified after sign-in.
+  function _qaSkipReturn(user) {
+    if (window._qaSkipHandled) return;
+    let sessionId = '', canceled = false;
+    try {
+      const params = new URLSearchParams(location.search);
+      if (params.get('skip_success') === '1') sessionId = params.get('session_id') || '';
+      canceled = params.get('skip_cancel') === '1';
+      if (sessionId || canceled) history.replaceState({}, '', location.pathname + (location.hash || '#askjack'));
+    } catch (_) {}
+    if (sessionId) { try { sessionStorage.setItem('mff_pending_skip', JSON.stringify({ sessionId: sessionId, at: Date.now() })); } catch (_) {} }
+    if (!sessionId && !canceled) {
+      try { const sp = JSON.parse(sessionStorage.getItem('mff_pending_skip') || 'null'); if (sp && sp.sessionId && Date.now() - (sp.at || 0) < 3600000) sessionId = sp.sessionId; } catch (_) {}
+    }
+    if (canceled) { window._qaSkipHandled = true; if (typeof toast === 'function') toast('No charge — your question is still in the free line.'); return; }
+    if (!sessionId) return;
+    if (!user) return; // retried on the next render once they sign in
+    window._qaSkipHandled = true;
+    if (typeof toast === 'function') toast('Payment received — moving you up the line…');
+    const done = () => { try { sessionStorage.removeItem('mff_pending_skip'); } catch (_) {} window._qaMineCache = null; window._qaRenderPanel(); };
+    let call;
+    try { call = firebase.app().functions('us-central1').httpsCallable('verifyCheckoutSession')({ sessionId: sessionId }); }
+    catch (e) { call = Promise.reject(e); }
+    call.then(r => {
+      const d = r && r.data;
+      if (typeof toast === 'function') toast(d && d.ok ? '⚡ Line skip paid — you\'re ahead of every free question.' : 'Payment received — your spot updates in a minute.');
+      done();
+    }).catch(e => {
+      console.warn('[AskJack] line skip verify failed:', e && e.code, e && e.message);
+      if (typeof toast === 'function') toast('Payment received — your spot updates in a minute. Email support if it doesn\'t.');
+      setTimeout(done, 8000);
+    });
+  }
+  // Admin bar: FREE Q'S ON/OFF (writes the settings doc) + VIEW AS premium/free.
+  function _qaAdminFreeSync() {
+    const b = document.getElementById('ajFreeToggle');
+    if (!b) return;
+    const st = _qaSettings();
+    if (!st) { b.textContent = 'FREE Q\'S: …'; _qaLoadSettings(() => _qaAdminFreeSync()); return; }
+    b.classList.toggle('on', !!st.freeOpen);
+    b.textContent = 'FREE Q\'S: ' + (st.freeOpen ? 'ON' : 'OFF');
+    b.title = st.freeOpen ? 'Free members can send 1 question a day right now — click to close' : 'Free questions are closed — click to open them (1 per member per day) while you\'re live';
+    document.querySelectorAll('#ajViewAs [data-viewas]').forEach(x => x.classList.toggle('on', x.getAttribute('data-viewas') === (window._qaViewAs || 'premium')));
+  }
+  window._qaAdminFreeToggle = function() {
+    const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
+    const db = fbReady && firebase.firestore ? firebase.firestore() : null;
+    if (!db || !_qaIsAdmin()) return;
+    const cur = _qaSettings();
+    const next = !(cur && cur.freeOpen);
+    const b = document.getElementById('ajFreeToggle');
+    if (b) b.disabled = true;
+    db.collection('shared').doc('askjack_settings').set({ freeOpen: next, updatedAt: new Date().toISOString() }, { merge: true })
+      .then(() => {
+        window._qaSettingsCache = { at: Date.now(), data: { freeOpen: next } };
+        if (b) b.disabled = false;
+        _qaAdminFreeSync();
+        if (typeof toast === 'function') toast(next ? 'Free questions OPEN — 1 per member per day' : 'Free questions closed');
+        window._qaRenderPanel();
+      })
+      .catch(e => { if (b) b.disabled = false; if (typeof toast === 'function') toast('Couldn\'t save: ' + (e && e.message || e)); });
+  };
+  window._qaViewAs = _qaLsGet('aj_viewas') === 'free' ? 'free' : 'premium';
+  window._qaAdminViewAs = function(v) {
+    window._qaViewAs = v === 'free' ? 'free' : 'premium';
+    _qaLsSet('aj_viewas', window._qaViewAs);
+    _qaAdminFreeSync();
+    window._qaRenderPanel();
+  };
 
   function _qaResetLabel() {
     const next = new Date(QA_WEEK_ANCHOR + (_qaWeekIdx() + 1) * QA_WEEK_MS);
@@ -73430,12 +73568,12 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
 
   // START/SIT · TRADE · LINEUP OPTIMIZER picker. Start/sit + lineup share
   // one weekly slot, so using one marks the other as used too.
-  function _qaTypePickerHtml(sel, mineBySlot) {
+  function _qaTypePickerHtml(sel, mineBySlot, mode) {
     return '<div class="aj-types" role="tablist" aria-label="Question type">' + QA_TYPE_ORDER.map(t => {
       const T = QA_TYPES[t];
       const used = mineBySlot[T.slot];
       let st, cls = '';
-      if (!used) st = '1 left this week';
+      if (!used) st = mode === 'admin' ? 'Unlimited (admin)' : mode === 'free' ? '1 free today' : '1 left this week';
       else if (used.type === t) { st = used.status === 'answered' ? 'ANSWERED' : 'SENT'; cls = used.status === 'answered' ? ' aj-st-done' : ' aj-st-sent'; }
       else { st = 'Used on ' + _qaType(used.type).name; cls = ' aj-st-used'; }
       return '<button type="button" class="aj-type' + (t === sel ? ' on' : '') + '" role="tab" aria-selected="' + (t === sel) + '" onclick="window._qaPickType(\'' + t + '\')">' +
@@ -73553,6 +73691,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (!bar) return;
     const admin = typeof window.isAdmin === 'function' && window.isAdmin();
     bar.style.display = admin ? '' : 'none';
+    if (admin) _qaAdminFreeSync();
     const view = admin && _qaLsGet('aj_admin_view') === 'inbox' ? 'inbox' : 'member';
     _qaAdminApply(view);
     if (view === 'inbox') {
@@ -73579,6 +73718,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     _qaAdminSync();
     const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
     const user = (fbReady && firebase.auth) ? firebase.auth().currentUser : null;
+    _qaSkipReturn(user);
     if (!user) {
       // Own tab (2026-11-04): a blank page reads as broken, so signed-out
       // visitors get a sign-in prompt instead of a hidden panel.
@@ -73593,17 +73733,44 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       return;
     }
     const isPremNow = (typeof window.hasPremium === 'function') && window.hasPremium();
+    const admin = _qaIsAdmin();
 
-    const header =
+    const premHeader =
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">' +
         '<span class="jt-badge">PREMIUM</span>' +
         // No "ASK JACK" title here: the tab's page header already says it.
         '<span style="font-size:.6875rem;color:var(--text2);font-style:italic">2 questions every week: 1 trade + 1 start/sit or lineup</span>' +
       '</div>';
+    const freeHeader =
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">' +
+        '<span class="jt-badge aj-badge-free">FREE</span>' +
+        '<span style="font-size:.6875rem;color:var(--text2);font-style:italic">Jack\'s live — free members get 1 question today</span>' +
+      '</div>';
+
+    // Admin (Jack): unlimited practice questions; VIEW AS flips the member view.
+    if (admin) {
+      const asFree = window._qaViewAs === 'free';
+      window._qaMode = asFree ? 'adminfree' : 'admin';
+      _qaLoadMine(sect, user, list => _qaRenderInner(sect, asFree ? freeHeader : premHeader, list, 'admin', asFree));
+      return;
+    }
 
     if (!isPremNow) {
+      const st = _qaSettings();
+      if (!st) {
+        if (sect._qaLastHtml !== 'loading') { sect._qaLastHtml = 'loading'; sect.innerHTML = '<div class="aj-loading">Loading…</div>'; }
+        sect.style.display = 'block';
+        _qaLoadSettings(() => window._qaRenderPanel());
+        return;
+      }
+      if (st.freeOpen) {
+        window._qaMode = 'free';
+        _qaLoadMine(sect, user, list => _qaRenderInner(sect, freeHeader, list, 'free', true));
+        return;
+      }
+      window._qaMode = 'locked';
       const _locked =
-        '<div class="aj-card">' + header +
+        '<div class="aj-card">' + premHeader +
         '<div class="jt-locked-wrap" style="margin-top:8px">' +
           '<div class="jt-locked-content" style="filter:blur(3px);pointer-events:none;padding:18px">' +
             '<div style="font-size:.8rem;color:var(--text2)">Who do I start — Puka Nacua or Nico Collins? &nbsp;·&nbsp; Should I take this trade? &nbsp;·&nbsp; Set my lineup</div>' +
@@ -73613,6 +73780,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
             '<div class="jt-locked-label">PREMIUM FEATURE</div>' +
             '<div class="jt-locked-desc">Every week, send Jack a trade plus a start/sit or a full-lineup question. He makes the call right from your synced roster.</div>' +
             '<button class="jt-locked-btn" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{const t=document.querySelector(\'[data-acct-tab=premium]\');if(t)t.click();},150)">UPGRADE TO PRO</button>' +
+            '<div class="aj-locked-free">Not premium? When Jack is live streaming he opens free questions — 1 a day — right here.</div>' +
           '</div>' +
         '</div></div>';
       if (sect._qaLastHtml !== _locked) { sect._qaLastHtml = _locked; sect.innerHTML = _locked; }
@@ -73620,20 +73788,24 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       return;
     }
 
-    // Premium: load my questions (60s cache so auth churn doesn't re-hit Firestore)
+    window._qaMode = 'premium';
+    _qaLoadMine(sect, user, list => _qaRenderInner(sect, premHeader, list, 'premium', false));
+  };
+
+  // My questions (60s cache so auth churn doesn't re-hit Firestore). Each
+  // row carries its doc id as _id (the line-skip checkout needs it).
+  function _qaLoadMine(sect, user, cb) {
     const cached = window._qaMineCache;
-    if (cached && cached.uid === user.uid && (Date.now() - cached.at) < 60000) {
-      _qaRenderInner(sect, header, cached.list);
-      return;
-    }
+    if (cached && cached.uid === user.uid && (Date.now() - cached.at) < 60000) { cb(cached.list); return; }
+    const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
     const db = fbReady && firebase.firestore ? firebase.firestore() : null;
     if (!db) { sect.style.display = 'none'; return; }
     db.collection('qa_questions').where('uid', '==', user.uid).get().then(snap => {
       const list = [];
-      snap.forEach(d => list.push(d.data()));
+      snap.forEach(d => list.push(Object.assign({ _id: d.id }, d.data())));
       list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
       window._qaMineCache = { uid: user.uid, at: Date.now(), list: list };
-      _qaRenderInner(sect, header, list);
+      cb(list);
     }).catch(e => {
       console.warn('[AskJack] load error:', e);
       // Own tab: say so instead of leaving the page blank.
@@ -73641,16 +73813,26 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       sect.innerHTML = '<div class="aj-card aj-signin"><div class="aj-signin-sub">Couldn\'t load your questions. Check your connection and reopen this tab.</div></div>';
       sect.style.display = 'block';
     });
-  };
+  }
 
-  function _qaRenderInner(sect, header, list) {
-    const wk = _qaWeekIdx();
+  // mode: 'premium' (2 weekly slots) | 'free' (1 a day) | 'admin' (unlimited;
+  // freeLook flips the labels to the free member's view for practice).
+  function _qaRenderInner(sect, header, list, mode, freeLook) {
+    mode = mode || 'premium';
+    const wk = _qaWeekIdx(), day = _qaDayIdx();
+    const lblMode = mode === 'admin' ? 'admin' : (freeLook ? 'free' : 'premium');
     const mineBySlot = {};
-    list.forEach(x => {
-      if (x.weekIdx !== wk) return;
-      const s = _qaSlotOf(x.type);
-      if (!mineBySlot[s]) mineBySlot[s] = x;
-    });
+    if (mode === 'free') {
+      // A paid line skip flips tier free → skip; it's still today's free question.
+      const today = list.find(x => (x.tier === 'free' || x.tier === 'skip') && x.dayIdx === day && !x.testN) || null;
+      if (today) { mineBySlot.startsit = today; mineBySlot.trade = today; }
+    } else if (mode === 'premium') {
+      list.forEach(x => {
+        if (x.weekIdx !== wk || x.tier === 'free' || x.testN) return;
+        const s = _qaSlotOf(x.type);
+        if (!mineBySlot[s]) mineBySlot[s] = x;
+      });
+    }
     const sel = _qaSelType();
     const T = QA_TYPES[sel];
     const used = mineBySlot[T.slot];
@@ -73662,18 +73844,23 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (used && used.type === sel) {
       pane += _qaSubmittedHtml(used);
     } else if (used) {
-      pane += '<div class="aj-used-note">Start/sit and lineup share one question a week, and this week\'s went to your ' + _qaType(used.type).name + ' question. ' + _qaResetLabel().replace(/^n/, 'N') + '.</div>' +
+      pane += '<div class="aj-used-note">' + (mode === 'free'
+          ? 'You get one free question a day, and today\'s went to your ' + _qaType(used.type).name + ' question. New free question tomorrow (midnight ET).'
+          : 'Start/sit and lineup share one question a week, and this week\'s went to your ' + _qaType(used.type).name + ' question. ' + _qaResetLabel().replace(/^n/, 'N') + '.') + '</div>' +
         '<div class="aj-used-q"><div class="aj-used-q-lbl">' + _qaType(used.type).icon + ' ' + _qaType(used.type).label + '</div>' + _qaSubmittedHtml(used) + '</div>';
     } else {
       pane += sel === 'lineup' ? _qaLineupFormHtml(_qaSelLeague()) : _qaFormHtml(sel);
     }
     pane += '</div>';
 
-    // Past answers (previous weeks, answered only)
-    const past = list.filter(x => x.status === 'answered' && x.weekIdx !== wk).slice(0, 6);
+    // Past answers (previous weeks, answered only). Admin practice: the last
+    // 8 of Jack's own questions, any status, so he can see every state.
+    const past = mode === 'admin'
+      ? list.slice(0, 8)
+      : list.filter(x => x.status === 'answered' && !(mode === 'free' ? ((x.tier === 'free' || x.tier === 'skip') && x.dayIdx === day) : x.weekIdx === wk)).slice(0, 6);
     let pastHtml = '';
     if (past.length) {
-      pastHtml = '<details style="margin-top:12px"><summary style="cursor:pointer;font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2)">PAST ANSWERS (' + past.length + ')</summary>' +
+      pastHtml = '<details style="margin-top:12px"' + (mode === 'admin' ? ' open' : '') + '><summary style="cursor:pointer;font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2)">' + (mode === 'admin' ? 'YOUR RECENT QUESTIONS (' : 'PAST ANSWERS (') + past.length + ')</summary>' +
         '<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">' +
         past.map(x => '<div style="background:var(--surface2,rgba(255,255,255,.03));border:1px solid var(--border);border-radius:8px;padding:10px">' +
           '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:4px">' + _qaType(x.type).icon + ' ' + _qaType(x.type).label + ' · ' + (x.createdAt ? new Date(x.createdAt).toLocaleDateString() : '') + '</div>' +
@@ -73684,9 +73871,10 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const _newHtml =
       '<div class="aj-card">' +
       header +
-      '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:12px">Jack makes the call himself · ' + _qaResetLabel() + '</div>' +
+      '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:12px">Jack makes the call himself · ' +
+        (mode === 'admin' ? 'admin: unlimited practice questions (' + (freeLook ? 'free' : 'premium') + ' view)' : freeLook ? _qaFreeResetLabel() : _qaResetLabel()) + '</div>' +
       _qaLeagueBarHtml() +
-      _qaTypePickerHtml(sel, mineBySlot) +
+      _qaTypePickerHtml(sel, mineBySlot, lblMode) +
       pane + pastHtml + _qaDatalist() +
       '</div>';
     // Idempotent render: if nothing changed (questions, leagues, picked type,
@@ -73809,7 +73997,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       (x.q ? '<div style="font-size:.6875rem;color:var(--text2);font-style:italic;margin-top:2px">"' + _jtEsc(x.q) + '"</div>' : '') +
       (x.league && x.league.name ? '<div style="font-size:.6875rem;color:var(--text2);margin-top:3px">🔗 ' + _jtEsc(x.league.name) + (x.league.fmt ? ' · ' + _jtEsc(x.league.fmt) : '') + '</div>' : '') +
       (x.status === 'answered' && x.answer ? '<div style="margin-top:6px;padding:7px 9px;background:rgba(245,158,11,.08);border-left:3px solid var(--accent);border-radius:4px;font-size:.72rem;color:var(--text)"><b>Jack:</b> ' + _jtEsc(x.answer) + '</div>' : '') +
-      (x.status !== 'answered' ? '<div style="font-size:.6875rem;color:var(--text2);font-style:italic;margin-top:4px">Jack usually answers within a day or two — his ' + (x.type === 'lineup' ? 'lineup' : 'pick') + ' will show up right here.</div>' : '');
+      (x.status !== 'answered' ? '<div style="font-size:.6875rem;color:var(--text2);font-style:italic;margin-top:4px">Jack usually answers within a day or two — his ' + (x.type === 'lineup' ? 'lineup' : 'pick') + ' will show up right here.</div>' : '') +
+      _qaSkipHtml(x);
   }
 
   window._qaAddOption = function(type) {
@@ -73841,14 +74030,20 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
 
     const wk = _qaWeekIdx();
     const lg = _qaSelLeague();
+    const mode = window._qaMode || 'premium';
     const payload = {
       uid: user.uid,
       name: (user.displayName || user.email || 'Member').slice(0, 120),
       type: type,
       weekIdx: wk,
       status: 'open',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      tier: (mode === 'free' || mode === 'adminfree') ? 'free' : 'premium'
     };
+    // Doc id IS the quota (rules): premium {uid}_{wk}_{slot}, free {uid}_d{day}, admin {uid}_t{ms} (unlimited).
+    let docId = user.uid + '_' + wk + '_' + _qaSlotOf(type);
+    if (mode === 'free') { payload.dayIdx = _qaDayIdx(); docId = user.uid + '_d' + payload.dayIdx; }
+    else if (mode === 'admin' || mode === 'adminfree') { payload.testN = Date.now(); docId = user.uid + '_t' + payload.testN; }
 
     if (type === 'lineup') {
       const roster = _qaMyPlayers(lg).slice(0, 60);
@@ -73884,7 +74079,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     // .doc().set() on a fixed uid_week_slot ID: succeeds only as a CREATE —
     // rules deny update, which is exactly the weekly quota. Lineup uses the
     // start/sit slot (they share one question a week).
-    db.collection('qa_questions').doc(user.uid + '_' + wk + '_' + _qaSlotOf(type)).set(payload)
+    db.collection('qa_questions').doc(docId).set(payload)
       .then(() => {
         window._qaMineCache = null;
         // Sent: clear this type's typed drafts so they don't come back next week.
@@ -73896,7 +74091,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       .catch(e => {
         if (btn) { btn.disabled = false; btn.textContent = 'SEND TO JACK'; }
         if (e && e.code === 'permission-denied') {
-          say('Looks like this week\'s ' + (type === 'trade' ? 'trade' : 'start/sit + lineup') + ' question is already used (or the week just rolled over — refresh and try again).');
+          say(mode === 'free'
+            ? 'Looks like today\'s free question is already used, or Jack just closed free questions. New one tomorrow at midnight ET.'
+            : 'Looks like this week\'s ' + (type === 'trade' ? 'trade' : 'start/sit + lineup') + ' question is already used (or the week just rolled over — refresh and try again).');
         } else {
           say('Couldn\'t send: ' + (e && e.message || 'unknown error'));
         }

@@ -3434,6 +3434,23 @@ tbody td{font-size:.8125rem}
 .aj-seg-btn+.aj-seg-btn{border-left:1px solid var(--border)}
 .aj-seg-btn.on{background:rgba(245,158,11,.15);color:var(--accent)}
 #ajInboxCount{font-family:'DM Sans',sans-serif;font-size:.72rem;letter-spacing:0}
+/* FREE Q'S toggle + VIEW AS (admin bar), free-member badge, line-skip CTA, queue tier chips */
+.aj-free-toggle{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:7px 12px;min-height:36px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;cursor:pointer}
+.aj-free-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.aj-free-toggle.on{border-color:var(--green);background:rgba(34,197,94,.15);color:var(--green)}
+.aj-free-toggle:disabled{opacity:.5;cursor:default}
+#pageAskJack.aj-inbox-on #ajViewAs{display:none}
+.aj-badge-free{background:var(--green)}
+.aj-locked-free{font-size:.72rem;color:var(--text2);margin-top:10px;max-width:360px;line-height:1.4}
+.aj-skip-cta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding:8px 10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:.7rem;color:var(--text2)}
+.aj-skip-cta span{flex:1;min-width:180px}
+.aj-skip-btn{background:var(--green);color:#000;border:none;border-radius:8px;padding:8px 14px;min-height:40px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.2px;cursor:pointer;font-weight:700;white-space:nowrap}
+.aj-skip-btn:disabled{opacity:.6;cursor:default}
+.aj-skip-done{margin-top:8px;font-size:.72rem;color:var(--green);font-weight:600}
+.aj-tier{padding:2px 7px;border-radius:4px;font-size:.6375rem;font-weight:800;letter-spacing:.5px;white-space:nowrap}
+.aj-tier-prem{background:rgba(245,158,11,.15);color:var(--accent)}
+.aj-tier-skip{background:rgba(34,197,94,.18);color:var(--green)}
+.aj-tier-free{background:rgba(255,255,255,.06);color:var(--text2)}
 #ajInbox{display:none}
 #pageAskJack.aj-inbox-on #ajInbox{display:block}
 #pageAskJack.aj-inbox-on #mtAskJack,#pageAskJack.aj-inbox-on .aj-intro{display:none!important}

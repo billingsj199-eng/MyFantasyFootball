@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-11-04-askjack4" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-04-askjack5" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-04-askjack4" as="script">
+<link rel="preload" href="app.js?v=2026-11-04-askjack5" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-11-04" as="script">
 <link rel="preload" href="data/d.js?v=2026-11-04" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack4">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack5">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -882,7 +882,7 @@ PREMIUM ACTIVE
 
 <div class="acct-section">
 <div class="acct-section-title">💬 Ask Jack — Q&amp;A Inbox</div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">Premium member questions (per user per week, resets Tuesday: 1 trade + 1 start/sit or lineup). Click the player or trade side you like; for LINEUP questions tap the starters, then SAVE LINEUP. Your answer appears on the member's Ask Jack tab.</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">Premium member questions (per user per week, resets Tuesday: 1 trade + 1 start/sit or lineup). LOAD OPEN QUESTIONS runs the queue, oldest first: click the winner (or tap the starters), then CONFIRM. Your answer appears on the member's Ask Jack tab.</div>
 <div style="display:flex;gap:8px;margin-bottom:.5rem">
 <button class="acct-btn acct-btn-primary" id="adminQaRefreshBtn">LOAD OPEN QUESTIONS</button>
 <button class="acct-btn acct-btn-outline" id="adminQaAnsweredBtn">RECENTLY ANSWERED</button>
@@ -3483,10 +3483,10 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
      admin panel's inbox code (_adminQaLoad) renders questions into #ajInboxList. -->
 <div id="ajInbox">
 <div class="aj-inbox-bar">
-<button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" data-status="open" onclick="window._qaAdminLoad('open')">OPEN</button>
+<button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" data-status="open" onclick="window._qaAdminLoad('open')">QUEUE</button>
 <button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" data-status="answered" onclick="window._qaAdminLoad('answered')">ANSWERED</button>
-<button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" onclick="window._qaAdminLoad()" title="Reload the list">↻ REFRESH</button>
-<span class="aj-inbox-hint">Click the player or trade side you like. For lineups, tap the starters, then SAVE LINEUP.</span>
+<button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" onclick="window._qaAdminLoad()" title="Reload">↻ REFRESH</button>
+<span class="aj-inbox-hint">Oldest question first. Click the winner (or tap the starters), then CONFIRM. The next one loads.</span>
 </div>
 <!-- Per-player info toggles (2026-11-04): which board the rank comes from and which
      projection shows under each player. app.js _ajInfoSet re-fills the lines in place. -->
@@ -7037,7 +7037,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-04-askjack4"></script>
+<script defer src="app.js?v=2026-11-04-askjack5"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

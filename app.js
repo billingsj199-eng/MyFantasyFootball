@@ -35317,12 +35317,39 @@ window.fmtHeight = fmtHeight;
     const _qaAdminEsc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-    function _adminQaRow(docId, x) {
-      const typeChip = x.type === 'trade'
+    function _adminQaTypeChip(type) {
+      return type === 'trade'
         ? '<span style="background:rgba(59,130,246,.15);color:var(--wr);padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">🔁 TRADE</span>'
-        : x.type === 'lineup'
+        : type === 'lineup'
         ? '<span style="background:rgba(34,197,94,.15);color:var(--green);padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">📋 LINEUP</span>'
         : '<span style="background:rgba(245,158,11,.15);color:var(--accent);padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">🔀 START/SIT</span>';
+    }
+    const _adminQaTypeName = t => t === 'trade' ? 'trade' : t === 'lineup' ? 'lineup' : 'start/sit';
+    // Open-question count on the Ask Jack tab's INBOX toggle.
+    const _adminQaBadge = n => { const c = document.getElementById('ajInboxCount'); if (c) c.textContent = n ? '(' + n + ')' : ''; };
+    const _adminQaInfo = n => '<div class="aj-pinfo" data-name="' + _qaAdminEsc(n) + '">' + (typeof window._ajInfoHtml === 'function' ? window._ajInfoHtml(n) : '') + '</div>';
+    // Lineup roster as tap-to-start chips (+ info line each); shared by the
+    // answered-list row and the queue card. Ids feed _adminQaToggle.
+    function _adminQaRosterHtml(safeId, x) {
+      const posOf = typeof window._qaPosOf === 'function' ? window._qaPosOf : () => '';
+      const sortPos = typeof window._qaSortByPos === 'function' ? window._qaSortByPos : a => a.slice();
+      const slotSum = typeof window._qaSlotSummary === 'function' ? window._qaSlotSummary : a => a.join(' · ');
+      const roster = Array.isArray(x.roster) ? x.roster : [];
+      const chosen = Array.isArray(x.starters) ? x.starters : [];
+      const need = Array.isArray(x.slots) ? x.slots.length : 0;
+      let html = '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:6px">' +
+        (need ? '<b>Starters:</b> ' + _qaAdminEsc(slotSum(x.slots)) + ' · ' : '') +
+        '<span id="adminQaCnt-' + safeId + '" data-need="' + need + '">' + chosen.length + (need ? ' of ' + need : '') + ' picked</span> · tap players to start them</div>';
+      html += '<div class="aj-roster aj-roster-grid" id="adminQaRoster-' + safeId + '">' + sortPos(roster).map(n => {
+        const pos = posOf(n);
+        return '<div class="aj-rp"><button type="button" class="aj-chip aj-chip-btn' + (chosen.indexOf(n) >= 0 ? ' aj-chip-start' : '') + '" data-name="' + _qaAdminEsc(n) + '" onclick="window._adminQaToggle(this,\'' + safeId + '\')">' +
+          (pos ? '<span class="aj-chip-pos">' + _qaAdminEsc(pos) + '</span>' : '') + _qaAdminEsc(n) + '</button>' + _adminQaInfo(n) + '</div>';
+      }).join('') + '</div>';
+      return html;
+    }
+
+    function _adminQaRow(docId, x) {
+      const typeChip = _adminQaTypeChip(x.type);
       const when = x.createdAt ? new Date(x.createdAt).toLocaleString() : '';
       const safeId = _qaAdminEsc(docId);
 
@@ -35339,7 +35366,7 @@ window.fmtHeight = fmtHeight;
       if (x.q) html += '<div style="font-size:.72rem;color:var(--text);font-style:italic;margin-bottom:6px">"' + _qaAdminEsc(x.q) + '"</div>';
       // Rank / projection / lines under each player (core _ajInfoHtml; the
       // RANKS / PROJ toggles on the Ask Jack tab re-fill these in place).
-      const info = n => '<div class="aj-pinfo" data-name="' + _qaAdminEsc(n) + '">' + (typeof window._ajInfoHtml === 'function' ? window._ajInfoHtml(n) : '') + '</div>';
+      const info = _adminQaInfo;
       (x.options || []).forEach((o, i) => {
         const picked = x.status === 'answered' && x.pick === i;
         const sideTag = x.type === 'trade' ? '<span style="font-size:.6875rem;color:var(--text2)">' + (i === 0 ? 'THEY GIVE: ' : 'THEY GET: ') + '</span>' : '';
@@ -35348,21 +35375,7 @@ window.fmtHeight = fmtHeight;
           '<span style="font-size:.76rem;color:var(--text)">' + sideTag + _qaAdminEsc(o) + '</span></div>' + info(o) + '</div>';
       });
       if (x.type === 'lineup') {
-        // Ask Jack helpers live in the myteams chunk — guarded fallbacks.
-        const posOf = typeof window._qaPosOf === 'function' ? window._qaPosOf : () => '';
-        const sortPos = typeof window._qaSortByPos === 'function' ? window._qaSortByPos : a => a.slice();
-        const slotSum = typeof window._qaSlotSummary === 'function' ? window._qaSlotSummary : a => a.join(' · ');
-        const roster = Array.isArray(x.roster) ? x.roster : [];
-        const chosen = Array.isArray(x.starters) ? x.starters : [];
-        const need = Array.isArray(x.slots) ? x.slots.length : 0;
-        html += '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:6px">' +
-          (need ? '<b>Starters:</b> ' + _qaAdminEsc(slotSum(x.slots)) + ' · ' : '') +
-          '<span id="adminQaCnt-' + safeId + '" data-need="' + need + '">' + chosen.length + (need ? ' of ' + need : '') + ' picked</span> · tap players to start them</div>';
-        html += '<div class="aj-roster aj-roster-grid" id="adminQaRoster-' + safeId + '">' + sortPos(roster).map(n => {
-          const pos = posOf(n);
-          return '<div class="aj-rp"><button type="button" class="aj-chip aj-chip-btn' + (chosen.indexOf(n) >= 0 ? ' aj-chip-start' : '') + '" data-name="' + _qaAdminEsc(n) + '" onclick="window._adminQaToggle(this,\'' + safeId + '\')">' +
-            (pos ? '<span class="aj-chip-pos">' + _qaAdminEsc(pos) + '</span>' : '') + _qaAdminEsc(n) + '</button>' + info(n) + '</div>';
-        }).join('') + '</div>';
+        html += _adminQaRosterHtml(safeId, x);
         html += '<button onclick="window._adminQaSaveLineup(\'' + safeId + '\')" style="margin-top:4px;padding:6px 14px;border-radius:6px;border:1px solid ' + (x.status === 'answered' ? '#22c55e' : 'var(--accent)') + ';background:' + (x.status === 'answered' ? '#22c55e' : 'transparent') + ';color:' + (x.status === 'answered' ? '#000' : 'var(--accent)') + ';font-family:\'Bebas Neue\',sans-serif;font-size:.78rem;letter-spacing:1px;cursor:pointer">' + (x.status === 'answered' ? '⭐ SAVED — UPDATE LINEUP' : 'SAVE LINEUP') + '</button>';
       } else if (x.roster && x.roster.length) {
         html += '<details style="margin-top:4px"><summary style="cursor:pointer;font-size:.6875rem;color:var(--text2)">Their roster (' + x.roster.length + ')</summary>' +
@@ -35376,27 +35389,144 @@ window.fmtHeight = fmtHeight;
       return html;
     }
 
+    // ===== QUEUE (Jack 2026-11-04): open questions one at a time, oldest first.
+    // Click the winner (or tap the starters), CONFIRM, and the next one loads.
+    // SKIP sends the current one to the back of the queue for this sitting. =====
+    function _adminQaAgo(iso) {
+      const t = iso ? Date.parse(iso) : NaN;
+      if (!isFinite(t)) return '';
+      const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+      if (m < 60) return m + 'm ago';
+      const h = Math.round(m / 60);
+      if (h < 48) return h + 'h ago';
+      return Math.round(h / 24) + 'd ago';
+    }
+    function _adminQaQueueCard(docId, x, total) {
+      const safeId = _qaAdminEsc(docId);
+      let html = '<div class="aj-q" id="adminQaCard-' + safeId + '">';
+      html += '<div class="aj-q-head"><span class="aj-q-count">' + total + ' IN QUEUE · OLDEST FIRST</span>' + _adminQaTypeChip(x.type) +
+        '<b>' + _qaAdminEsc(x.name || 'Member') + '</b>' +
+        '<span class="aj-q-when">' + _qaAdminEsc(_adminQaAgo(x.createdAt)) + ' · week ' + _qaAdminEsc(x.weekIdx) + '</span></div>';
+      if (x.league && x.league.name) {
+        html += '<div class="aj-q-league">🔗 ' + _qaAdminEsc(x.league.name) + (x.league.fmt ? ' · ' + _qaAdminEsc(x.league.fmt) : '') + '</div>';
+      }
+      if (x.q) html += '<div class="aj-q-note">"' + _qaAdminEsc(x.q) + '"</div>';
+      let confirmLbl;
+      if (x.type === 'lineup') {
+        html += _adminQaRosterHtml(safeId, x);
+        confirmLbl = 'CONFIRM LINEUP';
+      } else {
+        html += '<div class="aj-choices">' + (x.options || []).map((o, i) => {
+          const sideTag = x.type === 'trade' ? '<span class="aj-choice-side">' + (i === 0 ? 'THEY GIVE' : 'THEY GET') + '</span>' : '';
+          return '<button type="button" class="aj-choice" data-i="' + i + '" onclick="window._adminQaSelect(\'' + safeId + '\',' + i + ')">' +
+            sideTag + '<span class="aj-choice-txt">' + _qaAdminEsc(o) + '</span>' + _adminQaInfo(o) + '</button>';
+        }).join('') + '</div>';
+        confirmLbl = 'CONFIRM PICK';
+      }
+      html += '<div class="aj-q-bar">' +
+        '<input type="text" id="adminQaNote-' + safeId + '" class="aj-input aj-q-noteinp" placeholder="Optional note to send with your ' + (x.type === 'lineup' ? 'lineup' : 'pick') + '" maxlength="1000">' +
+        '<button type="button" id="adminQaConfirm-' + safeId + '" class="aj-q-confirm" onclick="window._adminQaConfirm(\'' + safeId + '\')"' + (x.type === 'lineup' ? '' : ' disabled') + '>' + confirmLbl + '</button>' +
+        '<button type="button" class="aj-q-skip" onclick="window._adminQaSkip(\'' + safeId + '\')" title="Move this one to the back of the queue">SKIP</button>' +
+        '<button type="button" class="aj-q-del" onclick="window._adminQaDelete(\'' + safeId + '\')" title="Delete question (frees the member\'s weekly slot)">✕</button>' +
+        '</div>';
+      html += '</div>';
+      return html;
+    }
+    function _adminQaRenderQueue() {
+      const { list } = _qaTargets();
+      if (!list) return;
+      const q = window._adminQaQueue || [];
+      _adminQaBadge(q.length);
+      if (!q.length) { list.innerHTML = '<div class="aj-q-empty">No open questions — inbox zero 🎉</div>'; return; }
+      const cur = q[0];
+      let html = _adminQaQueueCard(cur.id, cur.data, q.length);
+      if (q.length > 1) {
+        html += '<div class="aj-q-next"><b>Up next:</b> ' + q.slice(1, 4).map(r => _qaAdminEsc(r.data.name || 'Member') + ' (' + _adminQaTypeName(r.data.type) + ')').join(' · ') +
+          (q.length > 4 ? ' · +' + (q.length - 4) + ' more' : '') + '</div>';
+      }
+      list.innerHTML = html;
+    }
+    window._adminQaSelect = function(docId, idx) {
+      const card = document.getElementById('adminQaCard-' + docId);
+      if (!card) return;
+      let picked = null;
+      card.querySelectorAll('.aj-choice').forEach(b => {
+        const on = b.getAttribute('data-i') === String(idx);
+        b.classList.toggle('sel', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        if (on) picked = b.querySelector('.aj-choice-txt');
+      });
+      const btn = document.getElementById('adminQaConfirm-' + docId);
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'CONFIRM: ' + (picked ? picked.textContent.slice(0, 40) : 'PICK');
+      }
+    };
+    window._adminQaConfirm = function(docId) {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const q = window._adminQaQueue || [];
+      const entry = q.find(r => r.id === docId);
+      if (!db || !entry) return;
+      const patch = { status: 'answered', answeredAt: new Date().toISOString() };
+      if (entry.data.type === 'lineup') {
+        const wrap = document.getElementById('adminQaRoster-' + docId);
+        const starters = wrap ? Array.from(wrap.querySelectorAll('.aj-chip-start')).map(b => b.getAttribute('data-name')).filter(Boolean) : [];
+        if (!starters.length) { showAdminMsg(_qaTargets().msg, 'Tap the players you\'d start first', 'error'); return; }
+        patch.starters = starters.slice(0, 30);
+      } else {
+        const sel = document.querySelector('#adminQaCard-' + CSS.escape(docId) + ' .aj-choice.sel');
+        if (!sel) { showAdminMsg(_qaTargets().msg, 'Click the winner first', 'error'); return; }
+        patch.pick = parseInt(sel.getAttribute('data-i'), 10);
+      }
+      const noteEl = document.getElementById('adminQaNote-' + docId);
+      const note = noteEl && noteEl.value.trim();
+      patch.answer = note ? note.slice(0, 1000) : firebase.firestore.FieldValue.delete();
+      const btn = document.getElementById('adminQaConfirm-' + docId);
+      if (btn) { btn.disabled = true; btn.textContent = 'SAVING…'; }
+      db.collection('qa_questions').doc(docId).update(patch)
+        .then(() => {
+          window._adminQaQueue = q.filter(r => r.id !== docId);
+          showAdminMsg(_qaTargets().msg, 'Answered ✓' + (window._adminQaQueue.length ? ' — next one up' : ' — queue clear'), 'success');
+          _adminQaRenderQueue();
+        })
+        .catch(e => {
+          if (btn) { btn.disabled = false; btn.textContent = entry.data.type === 'lineup' ? 'CONFIRM LINEUP' : 'CONFIRM PICK'; }
+          showAdminMsg(_qaTargets().msg, 'Answer error: ' + e.message, 'error');
+        });
+    };
+    window._adminQaSkip = function(docId) {
+      const q = window._adminQaQueue || [];
+      const i = q.findIndex(r => r.id === docId);
+      if (i < 0 || q.length < 2) return;
+      q.push(q.splice(i, 1)[0]);
+      _adminQaRenderQueue();
+    };
+
     function _adminQaLoad(status) {
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
       const { list: qaListEl, msg: qaMsg } = _qaTargets();
       if (!db || !qaListEl) { showAdminMsg(_qaTargets().msg, 'Database not available', 'error'); return; }
       window._adminQaView = status;
       qaListEl.innerHTML = '<div style="font-size:.72rem;color:var(--text2)">Loading…</div>';
-      // Ask Jack tab: INBOX (n) badge on the toggle.
-      const _badge = n => { const c = document.getElementById('ajInboxCount'); if (c) c.textContent = n ? '(' + n + ')' : ''; };
       db.collection('qa_questions').where('status', '==', status).limit(status === 'open' ? 100 : 25).get()
         .then(snap => {
           const rows = [];
           snap.forEach(d => rows.push({ id: d.id, data: d.data() }));
           rows.sort((a, b) => (b.data.createdAt || '').localeCompare(a.data.createdAt || ''));
-          if (status === 'open') _badge(rows.length);
+          if (status === 'open') {
+            // QUEUE: oldest first, one at a time.
+            rows.reverse();
+            window._adminQaQueue = rows;
+            _adminQaRenderQueue();
+            if (rows.length) showAdminMsg(qaMsg, rows.length + ' in the queue — oldest first', 'success');
+            return;
+          }
           if (!rows.length) {
-            qaListEl.innerHTML = '<div style="font-size:.72rem;color:var(--text2)">' +
-              (status === 'open' ? 'No open questions — inbox zero 🎉' : 'Nothing answered yet.') + '</div>';
+            qaListEl.innerHTML = '<div style="font-size:.72rem;color:var(--text2)">Nothing answered yet.</div>';
             return;
           }
           qaListEl.innerHTML = rows.map(r => _adminQaRow(r.id, r.data)).join('');
-          showAdminMsg(_qaTargets().msg, rows.length + (status === 'open' ? ' open question(s)' : ' answered'), 'success');
+          showAdminMsg(qaMsg, rows.length + ' answered', 'success');
         })
         .catch(e => showAdminMsg(_qaTargets().msg, 'Load error: ' + e.message, 'error'));
     }

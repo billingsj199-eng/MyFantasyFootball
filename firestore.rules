@@ -472,7 +472,16 @@ service cloud.firestore {
                     && request.resource.data.weekIdx == (request.time.toMillis() - 1767675600000) / 604800000
                     && (qaPremiumCreate() || qaFreeCreate() || qaAdminCreate() || qaCreditCreate())
                     && request.resource.data.status == 'open'
-                    && request.resource.data.keys().hasOnly(['uid','name','type','weekIdx','status','createdAt','options','q','league','roster','slots','tier','dayIdx','testN','credit'])
+                    && request.resource.data.keys().hasOnly(['uid','name','type','weekIdx','status','createdAt','options','q','league','roster','slots','tier','dayIdx','testN','credit','team','partner'])
+                    // Trades: team = the asker's team label, partner = the other team + its roster (both optional).
+                    && (!('team' in request.resource.data) || (request.resource.data.team is string && request.resource.data.team.size() <= 80))
+                    && (!('partner' in request.resource.data) || (
+                          request.resource.data.type == 'trade'
+                          && request.resource.data.partner is map
+                          && request.resource.data.partner.keys().hasOnly(['name','roster'])
+                          && request.resource.data.partner.name is string && request.resource.data.partner.name.size() <= 80
+                          && request.resource.data.partner.roster is list && request.resource.data.partner.roster.size() <= 60
+                       ))
                     && (request.resource.data.type == 'lineup'
                           // Lineup: roster required (Jack picks starters from it), no options.
                           ? (!('options' in request.resource.data)

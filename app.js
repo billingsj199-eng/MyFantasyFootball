@@ -4971,7 +4971,10 @@ window._ajInfoSet = function(key, val) {
   // Re-fill every info line in place: tapped lineup chips + typed notes survive.
   document.querySelectorAll('.aj-pinfo[data-name]').forEach(el => { el.innerHTML = _ajInfoHtml(el.getAttribute('data-name')); });
   document.querySelectorAll('.aj-pstats[data-name]').forEach(el => { el.innerHTML = _ajPcardStatsHtml(el.getAttribute('data-name')); });
-  document.querySelectorAll('.aj-pbody[data-name]').forEach(el => { el.innerHTML = _ajPcardBodyHtml(el.getAttribute('data-name')); });
+  document.querySelectorAll('.aj-pbody[data-name]').forEach(el => {
+    el.innerHTML = el.hasAttribute('data-ros') ? _ajPcardRosBodyHtml(el.getAttribute('data-name'), el.getAttribute('data-ros') || '') : _ajPcardBodyHtml(el.getAttribute('data-name'));
+  });
+  if (typeof window._ajTradeFooterRefresh === 'function') window._ajTradeFooterRefresh();
 };
 window._ajInfoSyncBar = function() {
   const o = _ajInfoOpts();
@@ -5234,6 +5237,192 @@ function _ajPcardBodyHtml(name) {
     '<div class="aj-pcv-opp">' + opp + '</div>' +
     '<div class="aj-pcv-lines">' + _ajPcardLinesHtml(d, i) + '</div>';
 }
+
+// ===== TRADE questions = rest-of-season view (Jack 2026-11-04) =====
+// A trade is a season decision, so trade cards swap this week's lines for
+// ROS rank (the chosen RANKS board, ROS scope), season projection, PPG to
+// date, ROS + playoff SOS, bye ahead, and the trade-calc value of each piece;
+// each side then totals through _packageAdjustedTotal — the Trade Calculator's
+// own formula — with the calc's FAIR / WINS verdict across the two panels.
+// The league's format string ("Dynasty · SF · PPR · 12-team") picks the calc
+// mode; the RANKS toggle (Jack's / consensus / my ranks) picks the source.
+function _ajTradeMode(fmt) {
+  const f = String(fmt || '').toLowerCase();
+  const sf = /\bsf\b|superflex|2qb/.test(f);
+  if (/dynasty|keeper/.test(f)) return sf ? 'dynastysf' : 'dynasty';
+  return sf ? 'superflex' : 'redraft';
+}
+function _ajTradeSrc() { const v = _ajInfoOpts().ver; return v === 'mine' ? 'mine' : v; }
+function _ajPlayerTradeValue(d, fmt) {
+  if (!d || typeof window._getTradeValue !== 'function') return null;
+  try { return window._getTradeValue(d, _ajTradeSrc(), _ajTradeMode(fmt)); } catch (_) { return null; }
+}
+// Pick tokens typed into a side ("2027 1st", "2nd 2028", "1st") priced like the calc.
+function _ajPickValuesIn(text, fmt) {
+  const out = [];
+  const pickVal = window._getPickValue || null; // trade chunk; absent until it loads
+  if (typeof pickVal !== 'function') return out;
+  const mode = _ajTradeMode(fmt);
+  const re = /\b(?:(20\d\d)\s*(1st|2nd|3rd|4th)|(1st|2nd|3rd|4th)(?:\s*(?:round|rd)?\s*(?:pick)?)(?:\s*(20\d\d))?)\b/gi;
+  let m;
+  while ((m = re.exec(String(text || '')))) {
+    const round = (m[2] || m[3]).toLowerCase();
+    const year = m[1] || m[4] || String(new Date().getFullYear() + 1);
+    let v = null;
+    try { v = pickVal(round, year, 'Mid', mode, null, _ajTradeSrc()); } catch (_) {}
+    if (typeof v === 'number' && isFinite(v) && v > 0) out.push({ label: year + ' ' + round, v: Math.round(v) });
+  }
+  return out;
+}
+function _ajSideValue(text, fmt, vsCount) {
+  const ps = _ajPlayersIn(text);
+  const vals = ps.map(d => _ajPlayerTradeValue(d, fmt)).filter(v => typeof v === 'number');
+  const picks = _ajPickValuesIn(text, fmt);
+  picks.forEach(p => vals.push(p.v));
+  const total = (vals.length && typeof window._packageAdjustedTotal === 'function')
+    ? window._packageAdjustedTotal(vals, _ajTradeMode(fmt), vsCount) : vals.reduce((a, b) => a + b, 0);
+  return { total: Math.round(total), n: vals.length, picks, unpriced: Math.max(ps.length - (vals.length - picks.length), 0) };
+}
+// Footer under each trade side: that side's adjusted total + the verdict.
+// opts = the question's options array, i = this side (0 = they give).
+window._ajTradeFooterHtml = function(opts, i, fmt) {
+  opts = Array.isArray(opts) ? opts : [];
+  if (opts.length < 2 || typeof window._packageAdjustedTotal !== 'function') return '';
+  const count = t => _ajPlayersIn(t).length + _ajPickValuesIn(t, fmt).length;
+  const a = _ajSideValue(opts[0], fmt, count(opts[1]));
+  const b = _ajSideValue(opts[1], fmt, count(opts[0]));
+  const mine = i === 0 ? a : b, other = i === 0 ? b : a;
+  const srcLbl = { jacks: "JACK'S", consensus: 'CONSENSUS', mine: 'MY RANKS' }[_ajInfoOpts().ver] || '';
+  const modeLbl = { redraft: 'REDRAFT', superflex: 'SUPERFLEX', dynasty: 'DYNASTY', dynastysf: 'DYNASTY SF' }[_ajTradeMode(fmt)];
+  let verdict = '', cls = 'even';
+  if (a.total && b.total) {
+    const diff = Math.abs(a.total - b.total), pct = Math.round(diff / Math.max(a.total, b.total) * 100);
+    if (pct <= 5) verdict = 'FAIR TRADE';
+    else {
+      // Calc framing: the side that RECEIVES more value wins. Side 0 receives b.
+      const win0 = b.total > a.total;
+      const iWins = (i === 0) === win0;
+      verdict = (iWins ? 'THIS SIDE WINS' : 'OTHER SIDE WINS') + ' +' + pct + '%';
+      cls = iWins ? 'win' : 'lose';
+    }
+  } else verdict = 'UNPRICED';
+  const picks = mine.picks.length ? '<div class="aj-tv-picks">' + mine.picks.map(p => _ajEsc(p.label) + ' <b>' + p.v + '</b>').join(' · ') + '</div>' : '';
+  return '<div class="aj-tv aj-tv-' + cls + '" data-tv-i="' + i + '" title="Trade Calculator value: ' + srcLbl + ' board, ' + modeLbl + ' curve, package-adjusted (' + (mine.n) + ' piece' + (mine.n === 1 ? '' : 's') + ')">' +
+    '<div class="aj-tv-main"><span class="aj-tv-l">VALUE</span><span class="aj-tv-v">' + (mine.total || '—') + '</span>' +
+    '<span class="aj-tv-vs">vs ' + (other.total || '—') + '</span></div>' +
+    '<div class="aj-tv-verdict">' + verdict + '</div>' +
+    '<div class="aj-tv-src">' + srcLbl + ' · ' + modeLbl + ' · trade calc formula</div>' + picks + '</div>';
+};
+window._ajTradeFooterRefresh = function() {
+  document.querySelectorAll('.aj-tv-wrap[data-opts]').forEach(w => {
+    let opts = null;
+    try { opts = JSON.parse(w.getAttribute('data-opts') || 'null'); } catch (_) {}
+    w.innerHTML = window._ajTradeFooterHtml(opts, parseInt(w.getAttribute('data-i'), 10) || 0, w.getAttribute('data-fmt') || '');
+  });
+};
+function _ajSosCell(d, weeks, lbl, title) {
+  if (typeof window._mtGetPlayoffSos !== 'function' || !weeks.length) return null;
+  let ps = null;
+  try { ps = window._mtGetPlayoffSos(d.t, d.s, weeks); } catch (_) {}
+  if (!ps || !ps.rank) return null;
+  return '<div class="aj-pcv-line" title="' + _ajEsc((ps.title || title || '').replace(/"/g, '')) + '"><span>' + lbl + '</span><b style="color:' + _ajEsc(ps.color || '#fff') + '">#' + ps.rank + ' <span class="aj-sos-tag">' + _ajEsc(ps.label || '') + '</span></b></div>';
+}
+function _ajPcardRosBodyHtml(name, fmt) {
+  const d = _ajFindPlayer(name);
+  if (!d) return '';
+  const o = _ajInfoOpts();
+  const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+  const verLbl = { jacks: "JACK'S", consensus: 'CONSENSUS', mine: 'MY RANKS' }[o.ver];
+  const fmtLbl = { ppr: 'PPR', half: 'HALF', std: 'STD' }[o.fmt];
+  const pl = d.s === 'DST' ? 'D/ST' : d.s;
+  const col = v => (typeof posFptsColor === 'function' && v != null) ? posFptsColor(v, d.s) : null;
+  const num = (v, l, c, title) => '<div class="aj-pcv-num" title="' + _ajEsc(title || l) + '"><span class="aj-pcv-num-v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</span><span class="aj-pcv-num-l">' + l + '</span></div>';
+  const blank = '<span class="aj-pcs-blank">—</span>';
+  const rk = _ajRankFor(d, o.ver, 'redraft');
+  const rank = rk
+    ? num(_ajEsc(pl) + (rk.pos || '?'), '#' + rk.ovr + ' ' + _ajEsc(verLbl) + ' ROS', null, verLbl + ' rest-of-season board: ' + pl + rk.pos + ', #' + rk.ovr + ' overall')
+    : num(blank, _ajEsc(verLbl) + ' ROS', null, 'Not on the ' + verLbl + ' ROS board');
+  let proj = null, ppg = null;
+  const prev = rankingScoringFmt;
+  rankingScoringFmt = o.fmt;
+  try {
+    const base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+    proj = (typeof base === 'number' && isFinite(base)) ? Math.round(base * 10) / 10 : null;
+    ppg = (typeof adjSeasonPpg === 'function') ? adjSeasonPpg(d) : null;
+  } catch (_) {} finally { rankingScoringFmt = prev; }
+  const projC = proj != null ? num(proj.toFixed(1), 'ROS PROJ · ' + fmtLbl, col(proj), 'Season projection per game (' + fmtLbl + ')') : num(blank, 'ROS PROJ', null, 'No projection');
+  const ppgC = (ppg && ppg.v != null) ? num(ppg.v.toFixed(1), "'" + ppg.yr + ' PPG' + (ppg.gp ? ' · ' + ppg.gp + ' GP' : ''), col(ppg.v), 'Fantasy points per game' + (ppg.yr === 26 ? ' this season' : ' last season') + ' (' + fmtLbl + ')') : num(blank, 'PPG', null, 'No games yet');
+  const tv = _ajPlayerTradeValue(d, fmt);
+  const tvC = tv != null ? num(tv, 'TRADE VALUE', '#fbbf24', 'Trade Calculator value (' + verLbl + ' board, ' + _ajTradeMode(fmt).toUpperCase() + ')') : num(blank, 'TRADE VALUE', null, 'Unpriced');
+  // Schedule ahead: bye still to come, games left, SOS windows.
+  const rows = [];
+  try {
+    const abbr = (typeof teamAbbr === 'function') ? teamAbbr(d.t) : d.t;
+    const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
+    let byeWk = null, left = 0;
+    if (sched) for (let w = wk; w <= 18; w++) { const e = sched[w]; if (!e) continue; if (e.bye) { if (byeWk == null && w >= wk) byeWk = w; } else if (e.opp) left++; }
+    if (sched) rows.push('<div class="aj-pcv-line"><span>Bye</span><b>' + (byeWk != null ? (byeWk === wk ? '<span class="aj-pcs-bad">THIS WEEK</span>' : 'week ' + byeWk) : 'done') + '</b></div>');
+    if (left) rows.push('<div class="aj-pcv-line"><span>Games left</span><b>' + left + '</b></div>');
+    const ros = []; for (let w = wk; w <= 17; w++) ros.push(w);
+    const rosC = _ajSosCell(d, ros, 'ROS SOS · W' + wk + '-17', 'Rest-of-season schedule, 1 = easiest');
+    if (rosC) rows.push(rosC);
+    const pC = _ajSosCell(d, [15, 16, 17], 'Playoff SOS · W15-17', 'Playoff schedule, 1 = easiest');
+    if (pC) rows.push(pC);
+  } catch (_) {}
+  if (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) rows.unshift('<div class="aj-pcv-line"><span class="aj-pcs-bad">OUT FOR SEASON</span><b></b></div>');
+  return '<div class="aj-pcv-nums aj-pcv-nums-ros">' + rank + projC + ppgC + tvC + '</div>' +
+    '<div class="aj-pcv-lines">' + (rows.join('') || '<div class="aj-pcv-line aj-pi-na">No schedule data</div>') + '</div>';
+}
+window._ajPcardRosBodyHtml = _ajPcardRosBodyHtml;
+
+// Roster popover: a team's whole roster as tiles, best first, with the pieces
+// in the trade marked. Opened from the team names on a trade question.
+window._ajRosterPop = function(title, names, marks, sub) {
+  let pop = document.getElementById('ajRosterPop');
+  if (!pop) {
+    pop = document.createElement('div');
+    pop.id = 'ajRosterPop';
+    pop.className = 'aj-rpop';
+    pop.innerHTML = '<div class="aj-rpop-box" role="dialog" aria-modal="true"><div class="aj-rpop-head"><div><div class="aj-rpop-title"></div><div class="aj-rpop-sub"></div></div><button type="button" class="aj-rpop-x" onclick="window._ajRosterPopClose()" aria-label="Close">✕</button></div><div class="aj-rpop-body"></div></div>';
+    pop.addEventListener('click', e => { if (e.target === pop) window._ajRosterPopClose(); });
+    document.body.appendChild(pop);
+  }
+  names = Array.isArray(names) ? names.filter(Boolean) : [];
+  marks = Array.isArray(marks) ? marks : [];
+  const order = (typeof window._ajSortByRank === 'function') ? window._ajSortByRank(names) : names;
+  pop.querySelector('.aj-rpop-title').textContent = title || 'Roster';
+  pop.querySelector('.aj-rpop-sub').textContent = sub || (names.length + ' players' + (marks.length ? ' · ' + marks.length + ' in this trade' : ''));
+  pop.querySelector('.aj-rpop-body').innerHTML = names.length
+    ? '<div class="aj-pick aj-pick-tiles aj-rpop-tiles">' + order.map(n => {
+        const on = marks.indexOf(n) >= 0;
+        return (typeof window._ajPlayerCardHtml === 'function' && window._ajPlayerCardHtml(n, { cls: on ? 'sel aj-rpop-in' : '' }))
+          || '<div class="aj-chip' + (on ? ' aj-chip-start' : '') + '">' + _ajEsc(n) + '</div>';
+      }).join('') + '</div>'
+    : '<div class="aj-pi-na">No roster was attached to this question.</div>';
+  pop.classList.add('open');
+  document.documentElement.classList.add('aj-rpop-open');
+};
+window._ajRosterPopClose = function() {
+  const pop = document.getElementById('ajRosterPop');
+  if (pop) pop.classList.remove('open');
+  document.documentElement.classList.remove('aj-rpop-open');
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.documentElement.classList.contains('aj-rpop-open')) window._ajRosterPopClose(); });
+// Team buttons for a trade question: x.team / x.roster = the asker's side,
+// x.partner = {name, roster} the other team (both stored at submit time).
+window._ajTradeTeamBtn = function(x, i, whoLbl) {
+  const side = i === 0 ? { name: x.team, roster: x.roster } : (x.partner || {});
+  const roster = Array.isArray(side.roster) ? side.roster : [];
+  const label = side.name ? String(side.name) : (i === 0 ? (x.name || 'Their team') : 'Other team');
+  if (!roster.length) return '<span class="aj-choice-side">' + whoLbl + '</span>';
+  const opts = Array.isArray(x.options) ? x.options : [];
+  const marks = _ajPlayersIn(opts[i] || '').map(d => d.n);
+  const key = 'ajTeam_' + Math.random().toString(36).slice(2, 9);
+  window._ajTeamData = window._ajTeamData || {};
+  window._ajTeamData[key] = { title: label, roster, marks, sub: roster.length + ' players · gives ' + (marks.length || 'none') + ' in this deal (marked)' };
+  return '<button type="button" class="aj-choice-side aj-team-btn" onclick="event.stopPropagation();var t=window._ajTeamData[\'' + key + '\'];window._ajRosterPop(t.title,t.roster,t.marks,t.sub)" title="Open ' + _ajEsc(label) + '\'s full roster">' +
+    whoLbl + ' <span class="aj-team-name">' + _ajEsc(label) + '</span><span class="aj-team-open">ROSTER ▸</span></button>';
+};
 window._ajPlayerBigCardHtml = function(name, opts) {
   opts = opts || {};
   const d = _ajFindPlayer(name);
@@ -5256,7 +5445,9 @@ window._ajPlayerBigCardHtml = function(name, opts) {
       '</div>' +
       '<span class="aj-pcv-img" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' + (img ? '<img src="' + _ajEsc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') + '</span>' +
     '</div>' +
-    '<div class="aj-pcv-body aj-pbody" data-name="' + safeName + '">' + _ajPcardBodyHtml(d.n) + '</div>' +
+    (opts.ros != null
+      ? '<div class="aj-pcv-body aj-pbody" data-name="' + safeName + '" data-ros="' + _ajEsc(opts.ros === true ? '' : opts.ros) + '">' + _ajPcardRosBodyHtml(d.n, opts.ros === true ? '' : opts.ros) + '</div>'
+      : '<div class="aj-pcv-body aj-pbody" data-name="' + safeName + '">' + _ajPcardBodyHtml(d.n) + '</div>') +
   '</div>';
 };
 
@@ -35886,15 +36077,23 @@ window.fmtHeight = fmtHeight;
         // caption; options naming nobody we know keep the plain text + info line.
         const opts = x.options || [];
         const isTrade = x.type === 'trade';
+        // Trades: rest-of-season cards + the trade-calc value footer per side,
+        // team names open that roster (Jack 2026-11-04).
+        const fmt = (x.league && x.league.fmt) || '';
+        const optsJson = _qaAdminEsc(JSON.stringify(opts.slice(0, 2)));
         html += '<div class="aj-choices ' + (isTrade ? 'aj-choices-trade' : 'aj-choices-v aj-choices-n' + Math.min(opts.length, 4)) + '">' + opts.map((o, i) => {
-          const sideTag = isTrade ? '<span class="aj-choice-side">' + (i === 0 ? 'THEY GIVE' : 'THEY GET') + '</span>' : '';
-          const cards = (typeof window._ajPlayerCardsHtml === 'function') ? window._ajPlayerCardsHtml(o, { big: true }) : '';
+          const sideTag = isTrade
+            ? (typeof window._ajTradeTeamBtn === 'function' ? window._ajTradeTeamBtn(x, i, i === 0 ? 'THEY GIVE' : 'THEY GET') : '<span class="aj-choice-side">' + (i === 0 ? 'THEY GIVE' : 'THEY GET') + '</span>')
+            : '';
+          const cards = (typeof window._ajPlayerCardsHtml === 'function') ? window._ajPlayerCardsHtml(o, isTrade ? { big: true, ros: fmt } : { big: true }) : '';
           const single = cards && typeof _ajFindPlayer === 'function' && !!_ajFindPlayer(o);
+          const footer = (isTrade && typeof window._ajTradeFooterHtml === 'function')
+            ? '<div class="aj-tv-wrap" data-opts="' + optsJson + '" data-i="' + i + '" data-fmt="' + _qaAdminEsc(fmt) + '">' + window._ajTradeFooterHtml(opts, i, fmt) + '</div>' : '';
           return '<div class="aj-choice' + (cards ? ' aj-choice-tiles aj-choice-big' : '') + '" role="button" tabindex="0" data-i="' + i + '" onclick="window._adminQaSelect(\'' + safeId + '\',' + i + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">' +
             sideTag + (cards
               ? (single ? '' : '<span class="aj-choice-txt aj-choice-cap">' + _qaAdminEsc(o) + '</span>') + cards
               : '<span class="aj-choice-txt">' + _qaAdminEsc(o) + '</span>' + _adminQaInfo(o)) +
-            '</div>';
+            footer + '</div>';
         }).join('') + '</div>';
         confirmLbl = 'CONFIRM PICK';
       }
@@ -74812,13 +75011,20 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const opts = x.options || [];
     const isTrade = x.type === 'trade';
     const stamp = i => !answered ? '' : '<span class="aj-stamp aj-static ' + (x.pick === i ? 'aj-stamp-win' : 'aj-stamp-lose') + '">' + (isTrade ? (x.pick === i ? 'WINNER' : 'LOSER') : (x.pick === i ? 'START' : 'SIT')) + '</span>';
+    const fmt = (x.league && x.league.fmt) || '';
+    const optsJson = _jtEsc(JSON.stringify(opts.slice(0, 2)));
     return '<div class="aj-choices ' + (isTrade ? 'aj-choices-trade' : 'aj-choices-v') + '">' + opts.map((o, i) => {
-      const cards = window._ajPlayerCardsHtml(o, { big: true });
+      const cards = window._ajPlayerCardsHtml(o, isTrade ? { big: true, ros: fmt } : { big: true });
       const single = cards && _ajFindPlayer(o);
+      const sideTag = isTrade
+        ? (typeof window._ajTradeTeamBtn === 'function' ? window._ajTradeTeamBtn(x, i, i === 0 ? 'YOU GIVE' : 'YOU GET') : '<span class="aj-choice-side">' + (i === 0 ? 'YOU GIVE' : 'YOU GET') + '</span>')
+        : '';
+      const footer = (isTrade && typeof window._ajTradeFooterHtml === 'function')
+        ? '<div class="aj-tv-wrap" data-opts="' + optsJson + '" data-i="' + i + '" data-fmt="' + _jtEsc(fmt) + '">' + window._ajTradeFooterHtml(opts, i, fmt) + '</div>' : '';
       return '<div class="aj-choice aj-choice-big aj-choice-tiles aj-mopt' + (answered ? (x.pick === i ? ' aj-win' : ' aj-lose aj-static') : '') + '">' +
-        (isTrade ? '<span class="aj-choice-side">' + (i === 0 ? 'YOU GIVE' : 'YOU GET') + '</span>' : '') +
+        sideTag +
         (cards ? (single ? '' : '<span class="aj-choice-txt aj-choice-cap">' + _jtEsc(o) + '</span>') + cards : '<span class="aj-choice-txt">' + _jtEsc(o) + '</span>') +
-        stamp(i) + '</div>';
+        footer + stamp(i) + '</div>';
     }).join('') + '</div>';
   }
 
@@ -74954,6 +75160,17 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       };
       const roster = _qaMyPlayers(lg);
       if (roster.length) payload.roster = roster.slice(0, 60);
+      // Trades carry both teams so Jack can pop either roster open and see
+      // the deal in context (team = the asker's, partner = the other side).
+      if (type === 'trade') {
+        const teams = Array.isArray(lg.teams) ? lg.teams : [];
+        const myIdx = teams.findIndex(t => t && t.isMyTeam);
+        if (myIdx >= 0) payload.team = _qaTeamLabel(teams[myIdx], myIdx).slice(0, 80);
+        const ti = _qaTradeTeamIdx(lg);
+        const other = ti >= 0 ? teams[ti] : null;
+        const theirs = other ? _qaTeamPlayers(other) : [];
+        if (other && theirs.length) payload.partner = { name: _qaTeamLabel(other, ti).slice(0, 80), roster: theirs.slice(0, 60) };
+      }
     }
 
     const btn = document.getElementById('qaSendBtn-' + type);

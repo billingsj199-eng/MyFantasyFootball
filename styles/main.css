@@ -3639,6 +3639,43 @@ html.aj-onair .aj-pcv-num-l{font-size:10px}
 html.aj-onair .aj-pcv-line{font-size:1rem}
 html.aj-onair .aj-pcv-line b{font-size:1.15rem}
 @media (max-width:600px){.aj-pcv-img{height:170px;max-width:220px}.aj-pcv-img img{height:170px}.aj-pcv-name{font-size:24px}}
+/* Trade questions: ROS cards + trade-calc value footer + team roster popover (11-04) */
+.aj-pcv-nums.aj-pcv-nums-ros{grid-template-columns:repeat(auto-fit,minmax(min(100%,80px),1fr))}
+.aj-sos-tag{font-size:.62rem;font-weight:800;letter-spacing:.5px;opacity:.85}
+.aj-tv-wrap{display:block;width:100%}
+.aj-tv{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:3px;color:var(--text)}
+.aj-tv-main{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.aj-tv-l{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:2px;color:var(--text2)}
+.aj-tv-v{font-family:'DM Sans',sans-serif;font-size:1.6rem;font-weight:800;color:#fbbf24;line-height:1}
+.aj-tv-vs{font-size:.76rem;color:var(--text2)}
+.aj-tv-verdict{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text2)}
+.aj-tv-win .aj-tv-verdict{color:var(--green)}
+.aj-tv-lose .aj-tv-verdict{color:#ef4444}
+.aj-tv-win{border-color:rgba(34,197,94,.45)}
+.aj-tv-lose{border-color:rgba(239,68,68,.4)}
+.aj-tv-src{font-size:.62rem;color:var(--text2);letter-spacing:.6px}
+.aj-tv-picks{font-size:.72rem;color:var(--text2)}
+.aj-tv-picks b{color:var(--text)}
+html.aj-onair .aj-tv-v{font-size:2.2rem}
+html.aj-onair .aj-tv-verdict{font-size:1.3rem}
+html.aj-onair .aj-tv-src,html.aj-onair .aj-tv-picks{font-size:.8rem}
+.aj-team-btn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;background:none;border:0;border-radius:6px;cursor:pointer;text-align:left;padding:2px 2px 4px}
+.aj-team-btn:hover{background:rgba(255,255,255,.05)}
+.aj-team-btn .aj-team-name{font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:0;color:var(--text);text-transform:none}
+.aj-team-btn .aj-team-open{margin-left:auto;font-size:.62rem;letter-spacing:1px;color:var(--accent);border:1px solid rgba(245,158,11,.5);border-radius:4px;padding:2px 6px}
+html.aj-onair .aj-team-btn .aj-team-name{font-size:1rem}
+.aj-rpop{position:fixed;inset:0;z-index:2100;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px}
+.aj-rpop.open{display:flex}
+.aj-rpop-box{width:min(1000px,100%);max-height:92vh;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6);overflow:hidden}
+.aj-rpop-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.aj-rpop-title{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--accent)}
+.aj-rpop-sub{font-size:.74rem;color:var(--text2)}
+.aj-rpop-x{background:none;border:1px solid var(--border);color:var(--text);border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:1rem;flex-shrink:0}
+.aj-rpop-x:hover{border-color:var(--accent);color:var(--accent)}
+.aj-rpop-body{padding:14px 16px;overflow:auto}
+.aj-rpop-tiles{margin-bottom:0}
+html.aj-rpop-open{overflow:hidden}
+@media (max-width:600px){.aj-rpop{padding:0}.aj-rpop-box{max-height:100vh;height:100%;border-radius:0}.aj-tv-v{font-size:1.4rem}}
 /* Member view: same cards, static stamps (no replay animation), tile pickers */
 .aj-mopt{cursor:default}
 .aj-stamp.aj-static{animation:none;opacity:1;transform:rotate(-9deg)}

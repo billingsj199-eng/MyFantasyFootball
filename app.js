@@ -39879,8 +39879,12 @@ window.fmtHeight = fmtHeight;
         const r = await fetch('data/real_trades_redraft.json?d=' + stamp);
         const j = r && r.ok ? await r.json() : null;
         if (!j || !Array.isArray(j.trades)) return;
+        // 2026-11-04: file now comes from scripts/pull_trade_trends.py — `trades`
+        // = trades detected in users' synced My Teams leagues (src 'lg'), `hot` =
+        // Yahoo + CBS most-traded counts. Older crawl files (no `hot`) still work.
+        const isLg = !!j.hot;
         const list = j.trades.map(t => ({ id: t.id, date: t.date, dyn: false, qbs: +t.qbs || 1, ppr: t.ppr == null ? 1 : +t.ppr, tep: +t.tep || 0,
-          teams: +t.teams || 12, s1: t.s1 || [], s2: t.s2 || [], diff: null, src: 'sl' }));
+          teams: +t.teams || 12, s1: t.s1 || [], s2: t.s2 || [], diff: null, src: isLg ? 'lg' : 'sl' }));
         const byIdMap = {};
         list.forEach(t => { byIdMap[t.id] = t; });
         // Player trade counts since MNF (players only; a player appears once per trade)
@@ -39894,8 +39898,15 @@ window.fmtHeight = fmtHeight;
             (cnt[a.n] = cnt[a.n] || { n: a.n, p: a.p, c: 0 }).c++;
           });
         });
-        const top = Object.values(cnt).sort((a, b) => b.c - a.c).slice(0, 15);
-        _rt.sl = { list, byId: byIdMap, top, gen: j.generated || null, leagues: +j.leagues || 0,
+        let top = Object.values(cnt).sort((a, b) => b.c - a.c).slice(0, 15);
+        let hot = null;
+        // Yahoo + CBS counts — only while their window is this week's (a file
+        // left over from before the latest MNF would show last week's names).
+        if (j.hot && Array.isArray(j.hot.players) && Date.parse(j.hot.since) >= cut) {
+          top = j.hot.players.slice(0, 15).map(p => ({ n: p.n, p: p.p, c: (+p.y || 0) + (+p.c || 0), y: +p.y || 0, cb: +p.c || 0 }));
+          hot = { total: j.hot.players.reduce((s, p) => s + (+p.y || 0) + (+p.c || 0), 0) };
+        }
+        _rt.sl = { list, byId: byIdMap, top, hot, isLg, gen: j.generated || null, leagues: +j.leagues || 0,
           sinceMnf: list.filter(t => Date.parse(t.date) >= cut).length };
       } catch (_) {}
       finally { render(); }
@@ -39997,7 +40008,9 @@ window.fmtHeight = fmtHeight;
       const names = [...inCalc].map(i => D[i] && D[i].n).filter(Boolean);
       let html = '<div class="rt-head"><div><div class="rt-title">RECENT REAL TRADES</div>'
         + '<div class="rt-sub">' + (sl
-          ? 'Sleeper · ' + sl.list.length.toLocaleString() + ' redraft trades from ' + sl.leagues.toLocaleString() + ' public leagues' + (sl.gen ? ' (scanned ' + _esc(ago(sl.gen)) + ')' : '') + ' + FantasyCalc live feed'
+          ? (sl.isLg
+            ? (sl.list.length ? sl.list.length.toLocaleString() + (sl.list.length === 1 ? ' trade' : ' trades') + ' from leagues synced to MFF' + (sl.gen ? ' (checked ' + _esc(ago(sl.gen)) + ')' : '') + ' + ' : '') + 'FantasyCalc live feed'
+            : 'Sleeper · ' + sl.list.length.toLocaleString() + ' redraft trades from ' + sl.leagues.toLocaleString() + ' public leagues' + (sl.gen ? ' (scanned ' + _esc(ago(sl.gen)) + ')' : '') + ' + FantasyCalc live feed')
           : 'FantasyCalc · live Sleeper-league trades')
         + ' · priced with <b>' + _esc(tradeSource) + '</b> values · ' + all.length.toLocaleString() + ' trades'
         + (_rt.at ? ' · updated ' + _esc(ago(new Date(_rt.at).toISOString())) : '') + '</div></div>'
@@ -40006,9 +40019,12 @@ window.fmtHeight = fmtHeight;
             + '<button class="rt-btn' + (!showInvolving ? ' active' : '') + '" data-rt="all">All recent</button>' : '')
         + '<button class="rt-btn rt-refresh" data-rt="refresh" title="Fetch the newest trades">' + (_rt.busy ? '…' : '↻') + '</button></div></div>';
       if (sl && sl.top.length) {
-        html += '<div class="rt-hot"><div class="rt-hot-lbl">MOST TRADED SINCE MNF <span class="rt-n">' + sl.sinceMnf.toLocaleString() + ' trades</span></div><div class="rt-hot-chips">'
-          + sl.top.map(p => '<button class="rt-btn rt-hot-chip' + (player === p.n ? ' active' : '') + '" data-rt="player" data-rtp="' + _esc(p.n) + '" title="Show trades involving ' + _esc(p.n) + '">'
-            + _esc(p.n) + ' <span class="rt-n">' + p.c + '</span></button>').join('')
+        const kFmt = n => n >= 10000 ? Math.round(n / 1000) + 'k' : n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
+        html += '<div class="rt-hot"><div class="rt-hot-lbl">MOST TRADED SINCE MNF <span class="rt-n">'
+          + (sl.hot ? 'Yahoo + CBS · ' + kFmt(sl.hot.total) + ' player trades' : sl.sinceMnf.toLocaleString() + ' trades') + '</span></div><div class="rt-hot-chips">'
+          + sl.top.map(p => '<button class="rt-btn rt-hot-chip' + (player === p.n ? ' active' : '') + '" data-rt="player" data-rtp="' + _esc(p.n) + '" title="'
+            + (sl.hot ? _esc(p.n) + ' — traded ' + p.y.toLocaleString() + 'x on Yahoo since MNF, ' + p.cb.toLocaleString() + 'x on CBS. Tap for real trades with him.' : 'Show trades involving ' + _esc(p.n)) + '">'
+            + _esc(p.n) + ' <span class="rt-n">' + kFmt(p.c) + '</span></button>').join('')
           + '</div></div>';
       }
       if (player) {
@@ -40035,7 +40051,7 @@ window.fmtHeight = fmtHeight;
           const fcNote = t.diff != null ? '<span class="rt-fc" title="FantasyCalc\'s own value gap for this trade (positive = side 1 received more by their numbers)">FC ' + (t.diff > 0 ? '+' : '') + t.diff + '</span>' : '';
           const exact = t.dyn === f.dyn && t.qbs === f.qbs;
           return '<div class="rt-row' + (exact ? '' : ' rt-other-fmt') + '" data-rtid="' + _esc(t.id) + '">'
-            + '<div class="rt-meta"><span class="rt-ago">' + _esc(ago(t.date)) + '</span><span class="rt-fmt" title="League format the trade happened in">' + _esc(fmtLbl(t)) + '</span>' + (t.src === 'sl' ? '<span class="rt-src" title="From our scan of public Sleeper redraft leagues">SLEEPER</span>' : '') + fcNote + '</div>'
+            + '<div class="rt-meta"><span class="rt-ago">' + _esc(ago(t.date)) + '</span><span class="rt-fmt" title="League format the trade happened in">' + _esc(fmtLbl(t)) + '</span>' + (t.src === 'sl' ? '<span class="rt-src" title="From our scan of public Sleeper redraft leagues">SLEEPER</span>' : t.src === 'lg' ? '<span class="rt-src" title="A real trade from a league synced to MFF (spotted on its next sync)">MFF LEAGUE</span>' : '') + fcNote + '</div>'
             + '<div class="rt-sides">'
             + '<div class="rt-side"><div class="rt-side-lbl">Side 1 gives <span class="rt-tot">' + (s1.total || '—') + '</span></div>' + s1.assets.map(chip).join('') + '</div>'
             + '<div class="rt-arrow">⇄</div>'

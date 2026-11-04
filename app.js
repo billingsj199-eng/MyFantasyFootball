@@ -36009,14 +36009,30 @@ window.fmtHeight = fmtHeight;
       patch.answer = note ? note.slice(0, 1000) : firebase.firestore.FieldValue.delete();
       const btn = document.getElementById('adminQaConfirm-' + docId);
       if (btn) { btn.disabled = true; btn.textContent = 'SAVING…'; }
+      // Stall watchdog: after a long idle the Firestore stream can sit in
+      // reconnect backoff and a write queues silently for 30-60 s. At 6 s we
+      // bounce the network (forces an immediate reconnect; the queued write
+      // is resent) and say so; at 25 s we say the pick is queued safely.
+      let settled = false;
+      const t1 = setTimeout(() => {
+        if (settled) return;
+        if (btn) btn.textContent = 'RECONNECTING…';
+        showAdminMsg(_qaTargets().msg, 'Slow connection — reconnecting to save your pick…', 'error');
+        try { db.disableNetwork().then(() => db.enableNetwork()).catch(() => {}); } catch (e) {}
+      }, 6000);
+      const t2 = setTimeout(() => {
+        if (settled) return;
+        showAdminMsg(_qaTargets().msg, 'Still saving — the pick is queued and will land as soon as the connection returns. You can keep waiting or reload; it won\'t be lost.', 'error');
+      }, 25000);
       db.collection('qa_questions').doc(docId).update(patch)
-        .then(() => _adminQaReveal(docId, entry.data, patch))
+        .then(() => { settled = true; clearTimeout(t1); clearTimeout(t2); return _adminQaReveal(docId, entry.data, patch); })
         .then(() => {
           window._adminQaQueue = q.filter(r => r.id !== docId);
           showAdminMsg(_qaTargets().msg, 'Answered ✓' + (window._adminQaQueue.length ? ' — next one up' : ' — queue clear'), 'success');
           _adminQaRenderQueue();
         })
         .catch(e => {
+          settled = true; clearTimeout(t1); clearTimeout(t2);
           if (btn) { btn.disabled = false; btn.textContent = entry.data.type === 'lineup' ? 'CONFIRM LINEUP' : 'CONFIRM PICK'; }
           showAdminMsg(_qaTargets().msg, 'Answer error: ' + e.message, 'error');
         });

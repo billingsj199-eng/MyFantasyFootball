@@ -66864,11 +66864,23 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         const key = 'espn_' + lg.leagueId;
         const sv = saved.find(l => l && String(l.leagueId) === key);
         if (!sv) return;                                            // never saved — IMPORT decides
-        if (String(_mtActiveEspnId) === String(lg.leagueId)) return; // active league saves on import
         if (_mtAutoCommittedAt[key] === (lg.syncedAt || 'once')) return;
         if (lg.syncedAt && sv.savedAt && lg.syncedAt <= Date.parse(sv.savedAt)) return; // save is newer
-        const fmt = _mtNormalizedFormat(lg);
         const savedMine = (sv.teams || []).find(t => t && t.isMyTeam);
+        // The league on screen (usually the one the page auto-opened from its
+        // OLD snapshot): re-import it so the page AND the save both take the
+        // fresh sync. It used to be skipped here, which meant the league you
+        // land on never auto-updated (Jack 2026-11-04 had to click IMPORT).
+        if (_mtActiveSource === 'espn' && String(_mtActiveEspnId) === String(lg.leagueId)) {
+          _mtAutoCommittedAt[key] = lg.syncedAt || 'once';
+          if (savedMine && !lg.teams.some(t => t && t.isMine)) {
+            lg.teams.forEach(t => { if (t) t.isMine = String(t.teamId) === String(savedMine.id); });
+          }
+          window._mtImportEspn(lg.leagueId);
+          console.log('[MyTeams] Re-imported open league from fresh extension sync:', lg.name || key);
+          return;
+        }
+        const fmt = _mtNormalizedFormat(lg);
         const teams = _mtNormalizedSaveTeams(lg, savedMine);
         _mtAutoCommittedAt[key] = lg.syncedAt || 'once';
         _mtSaveLeagueToCloud(key, _mtNormalizedLeagueMeta(lg), teams, fmt);
@@ -70200,14 +70212,26 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   // FIRESTORE TEAM PERSISTENCE
   // ═══════════════════════════════════════════════════════════
 
+  // Every league save read-modify-writes the same user doc, so two saves in
+  // flight at once write each other's league back stale (2026-11-04: the
+  // extension auto-commit fired one save per fresh league in parallel).
+  // All saves now run one at a time through this queue.
+  let _mtSaveQueue = Promise.resolve();
   function _mtSaveLeagueToCloud(leagueId, league, teams, fmtOverride) {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
+    // Snapshot the format NOW: a queued save runs later, when the _mtFormat
+    // global may already belong to another league.
+    const fmtSnap = { ...(fmtOverride || _mtFormat) };
+    const p = _mtSaveQueue.then(() => _mtSaveLeagueNow(db, user, leagueId, league, teams, fmtSnap));
+    _mtSaveQueue = p.catch(() => {});
+    return p;
+  }
 
+  function _mtSaveLeagueNow(db, user, leagueId, league, teams, fmtSnap) {
     // Load existing saved leagues first, then add/update this one.
-    // Returns the promise so the background refresh can await each save —
-    // parallel saves read-modify-write the same doc and drop each other.
+    // Returns the promise so the background refresh can await each save.
     const docRef = db.collection('user_game_data').doc(user.uid);
     return docRef.get().then(doc => {
       const existing = doc.exists && doc.data().savedLeagues ? doc.data().savedLeagues : {};
@@ -70238,10 +70262,10 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         // Value history (daily points written by _mtRecordHistoryPoint) —
         // never wiped by a roster re-save.
         history: (existing[leagueId] && Array.isArray(existing[leagueId].history)) ? existing[leagueId].history : null,
-        // fmtOverride: background auto-commits pass the league's own format —
-        // this callback runs async, so the _mtFormat global may belong to
-        // whichever league is active by then.
-        format: { ...(fmtOverride || _mtFormat) },
+        // fmtSnap: taken when the save was requested (background auto-commits
+        // pass the league's own format) — this callback runs async, so the
+        // _mtFormat global may belong to whichever league is active by then.
+        format: fmtSnap,
         teams: teams.map(t => ({
           id: t.id,
           owner: t.owner,

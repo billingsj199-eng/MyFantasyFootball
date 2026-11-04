@@ -117,6 +117,23 @@ async function loadSleeper() {
   return { sidFor, seasonRow };
 }
 
+// [start, end) of the top-level D row whose name is `name` — brace scan of the array literal, strings skipped.
+function rowSpan(src, name) {
+  const open = src.indexOf('[', src.indexOf('D'));
+  const spans = [];
+  let depth = 0, start = -1, inStr = false;
+  for (let i = open + 1; i < src.length; i++) {
+    const c = src[i];
+    if (inStr) { if (c === '\\') i++; else if (c === '"') inStr = false; continue; }
+    if (c === '"') inStr = true;
+    else if (c === '{' || c === '[') { if (depth++ === 0 && c === '{') start = i; }
+    else if (c === '}' || c === ']') { if (--depth === 0 && c === '}') spans.push([start, i + 1]); if (depth < 0) break; }
+  }
+  const hits = spans.filter(([s, e]) => vm.runInNewContext('(' + src.slice(s, e) + ')').n === name);
+  if (hits.length !== 1) throw new Error('d.js: ' + hits.length + ' rows named ' + name);
+  return hits[0];
+}
+
 const CAREER_KEYS = ['yr', 'gp', 'fpts', 'ppg', 'py', 'ptd', 'int', 'ra', 'ry', 'rtd', 'rc', 'rcy', 'rctd', 'fl'];
 
 function suggest(D, rosters) {
@@ -200,7 +217,10 @@ async function main() {
   const added = [];
   for (const raw of targets) {
     const key = bare(raw);
-    if (have.has(key)) { console.log('SKIP (already in pool): ' + raw); continue; }
+    // A player named on the command line can already sit in D as an unranked stub (no r / a / p,
+    // e.g. the contracts-only Joe Fagnano row 11-04): fill that row in place instead of skipping.
+    const stub = names.length ? D.find((d) => bare(d.n) === key && !d.r && !d._retired) : null;
+    if (have.has(key) && !stub) { console.log('SKIP (already in pool): ' + raw); continue; }
     const hits = rosters[key] || [];
     if (hits.length !== 1) { console.log('SKIP (' + (hits.length ? 'ambiguous on' : 'not on') + ' ESPN rosters): ' + raw); continue; }
     const e = hits[0];
@@ -223,19 +243,30 @@ async function main() {
       dr: await draftRound(e.id), exp: e.exp, role: null, inj: null,
       s25: Object.assign({}, s25), career, da: null, sa: null, slDy: null, slDsf: null,
     };
-    added.push({ row, id: e.id, bio: e });
+    added.push({ row, id: e.id, bio: e, stub });
     have.add(key);
-    console.log('ADD ' + row.n.padEnd(24) + row.r.padEnd(6) + e.abbr.padEnd(4) + 'age ' + row.age + '  exp ' + row.exp + '  dr ' + row.dr +
+    console.log((stub ? 'FILL ' : 'ADD ') + row.n.padEnd(24) + row.r.padEnd(6) + e.abbr.padEnd(4) + 'age ' + row.age + '  exp ' + row.exp + '  dr ' + row.dr +
       '  clay ' + row.p + '  career ' + (career.length ? career[0].yr + '-' + career[career.length - 1].yr : 'none') + '  espn ' + e.id);
   }
   if (!added.length) { console.log('Nothing to add.'); return; }
   if (flag('--dry-run')) { console.log('--dry-run: ' + added.length + ' rows not written'); return; }
 
   // d.js: splice the new objects in front of the closing `];` — every other byte is untouched.
-  const end = dRaw.lastIndexOf('}];');
+  // Stub rows are rewritten in place first: the stub's non-null fields (contract, ADP ranks, image)
+  // win and the new row fills the blanks. The row's span is found by a brace scan (stub rows can carry
+  // duplicate keys, so their JSON never byte-matches).
+  let dCur = dRaw;
+  for (const a of added.filter((x) => x.stub)) {
+    const span = rowSpan(dCur, a.stub.n);
+    const merged = Object.assign({}, a.stub);
+    for (const [k, v] of Object.entries(a.row)) if (merged[k] == null || (k === 'career' && !merged[k].length)) merged[k] = v;
+    dCur = dCur.slice(0, span[0]) + JSON.stringify(merged) + dCur.slice(span[1]);
+  }
+  const fresh = added.filter((x) => !x.stub);
+  const end = dCur.lastIndexOf('}];');
   if (end < 0) throw new Error('d.js: closing }]; not found');
-  const dNew = dRaw.slice(0, end + 1) + added.map((a) => ',' + JSON.stringify(a.row)).join('') + dRaw.slice(end + 1);
-  if (vm.runInNewContext(dNew + '\n;D', { window: {} }).length !== D.length + added.length) throw new Error('d.js: row count mismatch after splice');
+  const dNew = dCur.slice(0, end + 1) + fresh.map((a) => ',' + JSON.stringify(a.row)).join('') + dCur.slice(end + 1);
+  if (vm.runInNewContext(dNew + '\n;D', { window: {} }).length !== D.length + fresh.length) throw new Error('d.js: row count mismatch after splice');
   fs.writeFileSync(path.join(ROOT, 'data/d.js'), dNew);
 
   const hsFile = 'data/headshot_espn_ids.js';

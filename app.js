@@ -5993,8 +5993,14 @@ window._mtQuickImport = async function (force) {
   if (!raw) { say('Paste a league ID, a league URL, or a Sleeper username.', 'var(--accent)'); return; }
   let p = force || null, value = raw;
   if (!p) {
+    // Sleeper league URLs (sleeper.com/leagues/<id>, sleeper.app/..., with or
+    // without /team etc.) carry the 15+ digit league id — pull it out
+    // (2026-11-04: the placeholder promised URLs but only bare ids worked).
+    const slUrl = /sleeper\.(com|app)/i.test(raw) ? (raw.match(/\d{15,}/) || [])[0] : null;
     if (/espn\.com/i.test(raw) || /leagueId=\d+/i.test(raw)) p = 'espn';
     else if (/yahoo\.com/i.test(raw) || /^\d+\.l\.\d+$/i.test(raw)) p = 'yahoo';
+    else if (slUrl) { p = 'sleeper'; value = slUrl; }
+    else if (/sleeper\.(com|app)/i.test(raw)) { say('That Sleeper link has no league ID in it — open the league in Sleeper and copy its URL, or paste your Sleeper username.', 'var(--accent)'); return; }
     else if (/^\d{15,}$/.test(raw)) p = 'sleeper';
     else if (/^\d+$/.test(raw)) { if (pick) pick.hidden = false; say(''); return; }
     else if (/^@?[A-Za-z0-9_.-]{2,32}$/.test(raw)) p = 'sleeperUser';

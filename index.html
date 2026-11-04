@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-04-ajstream8" as="script">
+<link rel="preload" href="app.js?v=2026-11-04-mtquick2" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -5301,8 +5301,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <div class="help-sections">
 <div class="help-section">
 <div class="help-section-icon">📥</div>
-<div class="help-section-title">IMPORTING YOUR PORTFOLIO</div>
-<div class="help-section-desc"><b style="color:var(--accent)">Sleeper:</b> paste a league ID to pull every team in that league. <b style="color:var(--accent)">Underdog:</b> upload your Underdog CSV export (Account → Best Ball → Export). Every draft, every pick, every entry fee — synced in one click.</div>
+<div class="help-section-title">IMPORTING YOUR LEAGUES</div>
+<div class="help-section-desc"><b style="color:var(--accent)">Fastest:</b> paste your <b>Sleeper username</b> in the box at the top of the Leagues tab — every league you're in comes over at once. <b style="color:var(--accent)">One league:</b> paste its link or ID — Sleeper, ESPN (<i>leagueId=…</i> in the URL) or Yahoo (<i>football.fantasysports.yahoo.com/f1/…</i>); the box works out which site it is. <b style="color:var(--accent)">Private ESPN / Yahoo leagues:</b> install the free MFF extension in desktop Chrome and click <b>Export league to MFF</b> on your league page (phones can't run extensions, so do that part on a computer). <b style="color:var(--accent)">Keep them:</b> sign in before you import so your leagues are saved to your account and sync across devices. <b style="color:var(--accent)">Underdog:</b> upload your CSV export (Account → Best Ball → Export) on the Underdog tab.</div>
 </div>
 
 <div class="help-section">
@@ -7077,7 +7077,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-04-ajstream8"></script>
+<script defer src="app.js?v=2026-11-04-mtquick2"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

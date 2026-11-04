@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-11-04-askjack11" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-04-askjack13" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-04-askjack11" as="script">
+<link rel="preload" href="app.js?v=2026-11-04-askjack13" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-11-04" as="script">
 <link rel="preload" href="data/d.js?v=2026-11-04-fagnano" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack11">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack13">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -3493,6 +3493,8 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" data-status="open" onclick="window._qaAdminLoad('open')">QUEUE</button>
 <button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" data-status="answered" onclick="window._qaAdminLoad('answered')">ANSWERED</button>
 <button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" onclick="window._qaAdminLoad()" title="Reload">↻ REFRESH</button>
+<button type="button" class="acct-btn acct-btn-outline aj-inbox-btn aj-onair-btn" onclick="window._qaOnAir()" title="Stream view: hides everything but the question and the queue. Keys: 1-4 pick · Enter confirm · N next · S skip · F fullscreen · Esc exit">⚫ ON AIR</button>
+<button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" onclick="window._adminQaGiveaway()" title="End-of-stream premium giveaway drawn from today's free askers">🎉 GIVEAWAY</button>
 <span class="aj-inbox-hint">Oldest question first. Click the winner (or tap the starters), then CONFIRM. The next one loads.</span>
 </div>
 <!-- Per-player info toggles (2026-11-04): which board the rank comes from and which
@@ -3521,6 +3523,25 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 </div>
 <div class="acct-msg" id="ajInboxMsg"></div>
+<!-- ON AIR strip (html.aj-onair only): live dot, key cheatsheet, fullscreen + exit -->
+<div id="ajOnAirBar" class="aj-onair-bar" aria-hidden="true">
+<span class="aj-onair-dot"></span><span class="aj-onair-lbl">ON AIR</span>
+<span class="aj-onair-keys"><b>1-4</b> pick · <b>Enter</b> confirm · <b>N</b> next · <b>S</b> skip · <b>F</b> fullscreen · <b>Esc</b> exit</span>
+<button type="button" class="aj-onair-x" onclick="window._qaOnAirFullscreen()" title="Fullscreen (F)">⛶</button>
+<button type="button" class="aj-onair-x" onclick="window._qaOnAir(false)" title="Exit ON AIR (Esc)">EXIT</button>
+</div>
+<!-- Premium GIVEAWAY (admin): pool = free askers today (never premium), randomizer, gift -->
+<div id="ajGiveaway" class="aj-gw" style="display:none">
+<div class="aj-gw-head"><span class="aj-gw-title">🎉 PREMIUM GIVEAWAY</span><span class="aj-gw-sub">Pool: everyone who asked a free question <select id="ajGwScope" class="aj-gw-sel" onchange="window._adminQaGiveawayPool()"><option value="today">today</option><option value="week">this week</option></select> · <span id="ajGwCount">…</span></span><button type="button" class="aj-onair-x" onclick="window._adminQaGiveaway(false)" title="Close">✕</button></div>
+<div id="ajGwPool" class="aj-gw-pool"></div>
+<div class="aj-gw-ctl">
+<label class="aj-gw-lbl">WINNERS <input id="ajGwN" type="number" min="1" max="20" value="1" class="aj-gw-in"></label>
+<label class="aj-gw-lbl">DAYS <input id="ajGwDays" type="number" min="1" max="365" value="30" class="aj-gw-in"></label>
+<button type="button" id="ajGwDraw" class="aj-q-confirm" onclick="window._adminQaGiveawayDraw()">🎲 DRAW</button>
+<button type="button" id="ajGwGift" class="aj-gift" style="display:none" onclick="window._adminQaGiveawayGift()">🎁 GIFT</button>
+</div>
+<div id="ajGwStage" class="aj-gw-stage"></div>
+</div>
 <div id="ajInboxList" style="display:flex;flex-direction:column;gap:.6rem"></div>
 </div>
 </div>
@@ -7044,7 +7065,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-04-askjack11"></script>
+<script defer src="app.js?v=2026-11-04-askjack13"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

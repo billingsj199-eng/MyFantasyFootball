@@ -3444,6 +3444,12 @@ select.aj-input{min-height:40px;color:var(--text)}
 .aj-slot-empty{font-size:.72rem;color:var(--text2);font-style:italic}
 .aj-slot-x{background:var(--surface2,rgba(255,255,255,.03));border:1px solid var(--border);border-radius:8px;color:var(--red);padding:0 10px;cursor:pointer;font-weight:700}
 .aj-slot-info{padding:0 0 4px 12px}
+/* Filled slot = label + tile on one row */
+.aj-slot.has-tile{align-items:center;gap:8px;margin:2px 0}
+.aj-slot-btn.aj-slot-btn-pos{flex:0 0 auto;min-width:84px;justify-content:center;padding:6px 10px;align-self:stretch}
+.aj-slot.has-tile .aj-slot-tile{flex:1;min-width:0}
+.aj-slot.has-tile .aj-slot-x{align-self:stretch}
+html.aj-onair .aj-slot-btn.aj-slot-btn-pos{min-width:104px}
 .aj-slot-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:6px 10px;padding:8px 10px;margin:2px 0 6px;background:var(--surface2,rgba(255,255,255,.03));border:1px dashed var(--border);border-radius:8px}
 /* Inbox player tiles (tier-row look): team band, headshot, name, three stat cells */
 .aj-pcard{position:relative;display:flex;align-items:center;gap:6px;min-height:64px;border-radius:8px;color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.25),0 4px 10px rgba(0,0,0,.5);overflow:hidden;cursor:default}
@@ -3498,6 +3504,92 @@ select.aj-input{min-height:40px;color:var(--text)}
 .aj-verdict-win{color:#4ade80;border-color:#4ade80}
 .aj-verdict-lose{color:#f87171;border-color:rgba(248,113,113,.7);opacity:.85}
 @media (prefers-reduced-motion:reduce){.aj-choice.aj-win,.aj-choice.aj-lose,.aj-stamp,.aj-slot.aj-win .aj-slot-btn{animation-duration:.01s;animation-delay:0s}.aj-stamp{opacity:1}}
+/* ON AIR (html.aj-onair): stream capture view — only the question + queue, scaled up */
+.aj-onair-btn.on{border-color:#ef4444;color:#fca5a5;background:rgba(239,68,68,.12)}
+.aj-onair-bar{display:none}
+html.aj-onair .sidebar,html.aj-onair #globalAuthBar,html.aj-onair #pageAskJack .compare-header,html.aj-onair #pageAskJack .aj-intro,html.aj-onair .aj-inbox-bar,html.aj-onair #ajInfoBar,html.aj-onair #ajInboxMsg,html.aj-onair .page-tour,html.aj-onair #globalPassBtn{display:none!important}
+html.aj-onair .main-content{margin:0!important;padding:0!important}
+html.aj-onair #pageAskJack{padding:0;background:radial-gradient(1200px 600px at 50% -10%,#1e293b 0%,#0b1120 55%,#05080f 100%)}
+html.aj-onair #pageAskJack > div{max-width:1500px;padding:18px 28px 28px}
+html.aj-onair .aj-onair-bar{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:8px 12px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);border-radius:10px;font-size:.78rem;color:var(--text2)}
+.aj-onair-dot{width:12px;height:12px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,.7);animation:ajOnAir 1.6s ease-out infinite}
+@keyframes ajOnAir{0%{box-shadow:0 0 0 0 rgba(239,68,68,.7)}100%{box-shadow:0 0 0 12px rgba(239,68,68,0)}}
+.aj-onair-lbl{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:3px;color:#fca5a5}
+.aj-onair-keys{flex:1;min-width:200px}
+.aj-onair-keys b{color:var(--text);font-weight:700}
+.aj-onair-x{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:6px 12px;min-height:34px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;cursor:pointer}
+.aj-onair-x:hover{border-color:var(--accent);color:var(--accent)}
+html.aj-onair .aj-qwrap{grid-template-columns:minmax(0,1fr) 320px;gap:18px}
+html.aj-onair .aj-q{padding:22px 26px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+html.aj-onair .aj-q-head{font-size:1.05rem;gap:12px}
+html.aj-onair .aj-q-count{font-size:1.15rem}
+html.aj-onair .aj-q-note{font-size:1rem}
+html.aj-onair .aj-q-league{font-size:.85rem}
+html.aj-onair .aj-choices{grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:14px}
+html.aj-onair .aj-choice{padding:12px;border-width:3px;border-radius:14px}
+html.aj-onair .aj-choice-side{font-size:.8rem}
+html.aj-onair .aj-pcard{min-height:92px;gap:10px;border-radius:12px}
+html.aj-onair .aj-pcard-img{flex-basis:104px;height:92px}
+html.aj-onair .aj-pcard-img img{width:104px;height:84px}
+html.aj-onair .aj-pcard-name{font-size:32px}
+html.aj-onair .aj-pcard-sub{font-size:13px}
+html.aj-onair .aj-pcard-sub .tcv-pos-pill{font-size:12px;padding:2px 7px}
+html.aj-onair .aj-pcard-logo{width:24px;height:24px}
+html.aj-onair .aj-pcard-stats{height:60px;margin-right:10px}
+html.aj-onair .aj-pcs{min-width:62px;padding:0 8px}
+html.aj-onair .aj-pcs-v{font-size:21px}
+html.aj-onair .aj-pcs-l{font-size:10px}
+html.aj-onair .aj-pcs-opp img{width:46px;height:46px}
+html.aj-onair .aj-pcs-pre{font-size:16px}
+html.aj-onair .aj-stamp{font-size:2.1rem;padding:8px 18px;border-width:4px;top:12px;right:16px}
+html.aj-onair .aj-q-bar{margin-top:18px}
+html.aj-onair .aj-q-confirm{font-size:1.2rem;padding:14px 26px;min-height:54px}
+html.aj-onair .aj-q-skip,html.aj-onair .aj-q-del{min-height:54px}
+html.aj-onair .aj-q-noteinp{font-size:.95rem;min-height:54px}
+html.aj-onair .aj-reveal-msg{font-size:1rem}
+html.aj-onair .aj-qside{padding:14px;border-radius:16px}
+html.aj-onair .aj-qside-h{font-size:1.2rem}
+html.aj-onair .aj-qrow{padding:12px 12px;min-height:56px}
+html.aj-onair .aj-qrow-name{font-size:1.05rem}
+html.aj-onair .aj-qrow-meta{font-size:.78rem}
+html.aj-onair .aj-slot-btn{min-height:50px;font-size:1rem}
+html.aj-onair .aj-slot-pos{font-size:1.15rem;min-width:84px}
+html.aj-onair .aj-slot-name{font-size:1rem}
+html.aj-onair .aj-slots-head{font-size:.9rem}
+html.aj-onair .aj-slot-picker{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
+html.aj-onair .aj-q-empty{font-size:1.4rem;padding:60px 0;text-align:center}
+/* Bonus question (Jack's gift): admin button + member banner */
+.aj-q-gift{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+.aj-gift{background:none;border:1px solid rgba(245,158,11,.5);border-radius:8px;color:var(--accent);padding:8px 14px;min-height:40px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.2px;cursor:pointer}
+.aj-gift:hover{background:rgba(245,158,11,.1)}
+.aj-gift.on{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.1)}
+.aj-gift:disabled{opacity:.6;cursor:default}
+.aj-q-gift-hint{font-size:.7rem;color:var(--text2);flex:1;min-width:200px}
+.aj-credit-banner{margin-bottom:12px;padding:9px 12px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);border-radius:8px;font-size:.78rem;color:var(--text);font-weight:600}
+html.aj-onair .aj-q-gift-hint{display:none}
+/* Premium giveaway panel + on-air name cycler */
+.aj-gw{margin:0 0 12px;padding:14px 16px;background:var(--surface);border:1px solid rgba(245,158,11,.4);border-radius:12px}
+.aj-gw-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.aj-gw-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;color:var(--accent)}
+.aj-gw-sub{flex:1;min-width:220px;font-size:.74rem;color:var(--text2)}
+.aj-gw-sel{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 6px;font-size:.74rem}
+.aj-gw-pool{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;max-height:120px;overflow:auto}
+.aj-gw-chip{padding:4px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--border);font-size:.74rem}
+.aj-gw-chip i{font-style:normal;color:var(--text2)}
+.aj-gw-ctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.aj-gw-lbl{display:flex;align-items:center;gap:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2)}
+.aj-gw-in{width:64px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 8px;font-size:.85rem;min-height:40px;font-family:'DM Sans',sans-serif}
+.aj-gw-stage{margin-top:12px}
+.aj-gw-cycler{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:2px;text-align:center;padding:18px;color:var(--text);background:var(--bg);border:1px dashed var(--border);border-radius:12px}
+.aj-gw-winners{display:flex;flex-direction:column;gap:8px}
+@keyframes ajGwIn{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+.aj-gw-win{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 18px;border-radius:12px;background:rgba(34,197,94,.12);border:2px solid var(--green);box-shadow:0 0 26px rgba(34,197,94,.35);opacity:0;animation:ajGwIn .6s cubic-bezier(.2,1.3,.4,1) forwards}
+.aj-gw-win-k{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;color:#4ade80}
+.aj-gw-win-n{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:1.5px;color:var(--text);line-height:1}
+.aj-gw-win-warn{font-size:.72rem;color:#fca5a5}
+html.aj-onair .aj-gw{padding:20px 24px}
+html.aj-onair .aj-gw-cycler{font-size:4rem;padding:30px}
+html.aj-onair .aj-gw-win-n{font-size:3.2rem}
 .aj-slotlist{display:flex;flex-direction:column;gap:3px;margin-bottom:6px}
 .aj-slotrow{display:flex;align-items:center;gap:10px;padding:5px 9px;border-radius:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);font-size:.78rem}
 .aj-slotrow-name{font-weight:600}

@@ -5145,6 +5145,20 @@ function _ajPcardStatsHtml(name) {
   }
   return cells.join('');
 }
+// Lineup picker order (Jack 2026-11-04): best first by the RANKS toggle's
+// board (Jack's / this week by default); unranked players sink, position
+// order breaks ties.
+window._ajSortByRank = function(names) {
+  const o = _ajInfoOpts();
+  const key = {};
+  (names || []).forEach(n => {
+    const d = _ajFindPlayer(n);
+    const r = d ? _ajRankFor(d, o.ver, o.scope) : null;
+    key[n] = r && r.ovr ? r.ovr : 99999;
+  });
+  const posSorted = (typeof window._qaSortByPos === 'function') ? window._qaSortByPos(names) : names.slice();
+  return posSorted.slice().sort((a, b) => key[a] - key[b] || posSorted.indexOf(a) - posSorted.indexOf(b));
+};
 window._ajOpenCard = function(name) {
   const d = _ajFindPlayer(name);
   if (d && typeof window.openPlayerCard === 'function') window.openPlayerCard(d);
@@ -35416,7 +35430,146 @@ window.fmtHeight = fmtHeight;
     const _adminQaTypeName = t => t === 'trade' ? 'trade' : t === 'lineup' ? 'lineup' : 'start/sit';
     // Queue tier: premium (or legacy docs with no tier) → paid line skips → free.
     const _adminQaTierRank = x => x.tier === 'free' ? 2 : x.tier === 'skip' ? 1 : 0;
-    function _adminQaTierChip(tier) {
+    window._adminQaGiveCredit = function(docId) {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const row = (window._adminQaQueue || []).find(r => r.id === docId) || (window._adminQaRows || []).find(r => r.id === docId);
+      if (!db || !row || !row.data.uid) return;
+      const x = row.data;
+      const ticket = x.uid + '_c' + Date.now();
+      const btn = document.getElementById('adminQaGift-' + docId);
+      if (btn) { btn.disabled = true; btn.textContent = 'GIVING…'; }
+      db.collection('qa_credits').doc(ticket).set({ uid: x.uid, name: (x.name || 'Member').slice(0, 120), grantedAt: new Date().toISOString(), by: 'jack', fromQ: docId, fromType: x.type || null })
+        .then(() => {
+          x.bonusGiven = (x.bonusGiven || 0) + 1;
+          if (btn) { btn.disabled = false; btn.textContent = '🎁 BONUS GIVEN' + (x.bonusGiven > 1 ? ' ×' + x.bonusGiven : '') + ' · GIVE ANOTHER'; btn.classList.add('on'); }
+          showAdminMsg(_qaTargets().msg, '🎁 Bonus question given to ' + (x.name || 'the member') + ' — any type, never expires', 'success');
+        })
+        .catch(e => { if (btn) { btn.disabled = false; btn.textContent = '🎁 GIVE A BONUS QUESTION'; } showAdminMsg(_qaTargets().msg, 'Couldn\'t give the bonus: ' + e.message, 'error'); });
+    };
+    const _adminQaGiftBtn = (docId, x) => '<button type="button" id="adminQaGift-' + _qaAdminEsc(docId) + '" class="aj-gift' + (x.bonusGiven ? ' on' : '') + '" onclick="window._adminQaGiveCredit(\'' + _qaAdminEsc(docId) + '\')" title="Hand this member a free premium question for later — any type, never expires (e.g. you couldn\'t fully answer, or a player is hurt and they should re-ask)">' + (x.bonusGiven ? '🎁 BONUS GIVEN · GIVE ANOTHER' : '🎁 GIVE A BONUS QUESTION') + '</button>';
+    // ===== END-OF-STREAM GIVEAWAY (Jack 2026-11-04) =====
+    // Pool = everyone who asked a FREE-line question today (tier free / skip —
+    // premium members never land there; Jack's own practice questions and
+    // anyone already holding gifted premium are dropped). DRAW cycles names
+    // on screen and settles on N winners; GIFT writes gifted_premium like the
+    // Account > Admin grant (never shortening a longer existing grant) and
+    // logs qa_giveaways/{ms}.
+    const _QA_DAY_MS = 86400000, _QA_ANCHOR = 1767675600000;
+    window._adminQaGiveaway = function(open) {
+      const box = document.getElementById('ajGiveaway');
+      if (!box) return;
+      const on = open == null ? box.style.display === 'none' || !box.style.display : !!open;
+      box.style.display = on ? '' : 'none';
+      if (on) window._adminQaGiveawayPool();
+    };
+    window._adminQaGiveawayPool = function() {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const list = document.getElementById('ajGwPool');
+      const scope = (document.getElementById('ajGwScope') || {}).value || 'today';
+      if (!db || !list) return;
+      list.innerHTML = '<span class="aj-pi-na">Loading the pool…</span>';
+      const me = (firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.uid : '';
+      const day = Math.floor((Date.now() - _QA_ANCHOR) / _QA_DAY_MS), wk = Math.floor((Date.now() - _QA_ANCHOR) / (7 * _QA_DAY_MS));
+      db.collection('qa_questions').where('tier', 'in', ['free', 'skip']).limit(500).get().then(snap => {
+        const byUid = {};
+        snap.forEach(d => {
+          const x = d.data() || {};
+          if (!x.uid || x.uid === me || x.testN) return;
+          if (scope === 'today' ? x.dayIdx !== day : x.weekIdx !== wk) return;
+          if (!byUid[x.uid]) byUid[x.uid] = { uid: x.uid, name: x.name || 'Member', n: 0, skip: false };
+          byUid[x.uid].n++;
+          if (x.tier === 'skip') byUid[x.uid].skip = true;
+        });
+        const pool = Object.values(byUid).sort((a, b) => a.name.localeCompare(b.name));
+        window._adminQaGwPool = pool;
+        window._adminQaGwWinners = null;
+        const cnt = document.getElementById('ajGwCount');
+        if (cnt) cnt.textContent = pool.length + (pool.length === 1 ? ' entrant' : ' entrants');
+        list.innerHTML = pool.length
+          ? pool.map(e => '<span class="aj-gw-chip">' + _qaAdminEsc(e.name) + (e.n > 1 ? ' <i>×' + e.n + '</i>' : '') + '</span>').join('')
+          : '<span class="aj-pi-na">Nobody asked a free question ' + (scope === 'today' ? 'today' : 'this week') + ' yet.</span>';
+        const stage = document.getElementById('ajGwStage');
+        if (stage) stage.innerHTML = '';
+        const gift = document.getElementById('ajGwGift');
+        if (gift) gift.style.display = 'none';
+      }).catch(e => { list.innerHTML = '<span class="aj-pi-na">Couldn\'t load the pool: ' + _qaAdminEsc(e.message) + '</span>'; });
+    };
+    // Email + current gifted-premium state for an entrant (Jack can read user_index + gifted_premium).
+    function _adminQaEntrantInfo(db, e) {
+      return db.collection('user_index').doc(e.uid).get().then(d => {
+        const email = (d.exists && d.data() && d.data().email) ? String(d.data().email).toLowerCase() : (e.name && e.name.indexOf('@') > 0 ? e.name.toLowerCase() : '');
+        if (!email) return Object.assign({}, e, { email: '', giftExpires: 0 });
+        return db.collection('gifted_premium').doc(email.replace(/[^a-z0-9]/g, '_')).get()
+          .then(g => Object.assign({}, e, { email, giftExpires: (g.exists && g.data() && g.data().expires) || 0 }))
+          .catch(() => Object.assign({}, e, { email, giftExpires: 0 }));
+      }).catch(() => Object.assign({}, e, { email: '', giftExpires: 0 }));
+    }
+    window._adminQaGiveawayDraw = function() {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const pool = window._adminQaGwPool || [];
+      const stage = document.getElementById('ajGwStage');
+      const nWin = Math.max(1, Math.min(20, parseInt((document.getElementById('ajGwN') || {}).value, 10) || 1));
+      if (!db || !stage) return;
+      if (!pool.length) { showAdminMsg(_qaTargets().msg, 'The pool is empty', 'error'); return; }
+      const drawBtn = document.getElementById('ajGwDraw');
+      if (drawBtn) { drawBtn.disabled = true; drawBtn.textContent = 'DRAWING…'; }
+      stage.innerHTML = '<div class="aj-gw-cycler" id="ajGwCycler">…</div>';
+      // Resolve emails + drop anyone already on gifted premium, then draw.
+      Promise.all(pool.map(e => _adminQaEntrantInfo(db, e))).then(infos => {
+        const eligible = infos.filter(e => !(e.giftExpires > Date.now()));
+        if (!eligible.length) { stage.innerHTML = '<div class="aj-pi-na">Everyone in the pool already has gifted premium.</div>'; if (drawBtn) { drawBtn.disabled = false; drawBtn.textContent = '🎲 DRAW'; } return; }
+        // Fisher–Yates with crypto randomness
+        const arr = eligible.slice();
+        const rnd = n => { const u = new Uint32Array(1); (window.crypto || {}).getRandomValues ? crypto.getRandomValues(u) : (u[0] = Math.floor(Math.random() * 4294967296)); return u[0] % n; };
+        for (let i = arr.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+        const winners = arr.slice(0, Math.min(nWin, arr.length));
+        window._adminQaGwWinners = winners;
+        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const cyc = document.getElementById('ajGwCycler');
+        let tick = 0;
+        const spin = setInterval(() => { if (cyc) cyc.textContent = eligible[tick++ % eligible.length].name; }, 70);
+        setTimeout(() => {
+          clearInterval(spin);
+          stage.innerHTML = '<div class="aj-gw-winners">' + winners.map((w, i) =>
+            '<div class="aj-gw-win" style="animation-delay:' + (reduced ? 0 : i * 0.45) + 's"><span class="aj-gw-win-k">🎉 WINNER' + (winners.length > 1 ? ' ' + (i + 1) : '') + '</span><span class="aj-gw-win-n">' + _qaAdminEsc(w.name) + '</span>' + (w.email ? '' : '<span class="aj-gw-win-warn">no email on file — gift by hand</span>') + '</div>').join('') + '</div>' +
+            (eligible.length < infos.length ? '<div class="aj-pi-na" style="margin-top:6px">' + (infos.length - eligible.length) + ' entrant' + (infos.length - eligible.length === 1 ? '' : 's') + ' skipped — already on gifted premium.</div>' : '');
+          if (drawBtn) { drawBtn.disabled = false; drawBtn.textContent = '🎲 DRAW AGAIN'; }
+          const gift = document.getElementById('ajGwGift');
+          const days = Math.max(1, parseInt((document.getElementById('ajGwDays') || {}).value, 10) || 30);
+          if (gift) { gift.style.display = ''; gift.disabled = false; gift.textContent = '🎁 GIFT ' + days + ' DAYS TO ' + winners.length + ' WINNER' + (winners.length === 1 ? '' : 'S'); }
+        }, reduced ? 300 : 2600);
+      });
+    };
+    window._adminQaGiveawayGift = function() {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const winners = window._adminQaGwWinners || [];
+      const days = Math.max(1, parseInt((document.getElementById('ajGwDays') || {}).value, 10) || 30);
+      const gift = document.getElementById('ajGwGift');
+      if (!db || !winners.length) return;
+      if (gift) { gift.disabled = true; gift.textContent = 'GIFTING…'; }
+      const adminEmail = (firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : 'admin';
+      const labels = { 7: '1 Week', 30: '1 Month', 365: 'Yearly Pass' };
+      const label = labels[days] || days + ' days';
+      const now = Date.now();
+      const writes = winners.filter(w => w.email).map(w => {
+        // Never shorten a longer existing grant.
+        const expires = Math.max(w.giftExpires || 0, now + days * _QA_DAY_MS);
+        return db.collection('gifted_premium').doc(w.email.replace(/[^a-z0-9]/g, '_')).set({
+          email: w.email, expires: expires, days: days, label: label + ' (stream giveaway)', grantedBy: adminEmail, grantedAt: new Date().toISOString(), source: 'giveaway', uid: w.uid
+        });
+      });
+      Promise.all(writes)
+        .then(() => db.collection('qa_giveaways').doc(String(now)).set({ at: new Date().toISOString(), days: days, pool: (window._adminQaGwPool || []).length, winners: winners.map(w => ({ uid: w.uid, name: w.name, email: w.email || null })) }).catch(e => console.warn('[Giveaway] log failed', e)))
+        .then(() => {
+          const gifted = winners.filter(w => w.email).length;
+          if (gift) gift.textContent = '✅ GIFTED ' + label.toUpperCase() + ' TO ' + gifted + (gifted === 1 ? ' WINNER' : ' WINNERS');
+          showAdminMsg(_qaTargets().msg, '🎉 ' + label + ' premium gifted to ' + winners.filter(w => w.email).map(w => w.name).join(', '), 'success');
+        })
+        .catch(e => { if (gift) { gift.disabled = false; gift.textContent = '🎁 RETRY GIFT'; } showAdminMsg(_qaTargets().msg, 'Gift error: ' + e.message, 'error'); });
+    };
+
+    function _adminQaTierChip(tier, x) {
+      if (x && x.credit) return '<span class="aj-tier aj-tier-prem" title="Bonus question Jack gave them">🎁 BONUS</span>';
       return tier === 'free'
         ? '<span class="aj-tier aj-tier-free">FREE</span>'
         : tier === 'skip'
@@ -35472,17 +35625,21 @@ window.fmtHeight = fmtHeight;
       html += '<div class="aj-slots" id="adminQaSlots-' + safeId + '">' + slots.map((sl, i) => {
         const name = st[i];
         const open = openIdx === i;
-        let row = '<div class="aj-slot' + (name ? ' filled' : '') + (open ? ' open' : '') + '">' +
-          '<button type="button" class="aj-slot-btn" onclick="window._adminQaSlotOpen(\'' + safeId + '\',' + i + ')" title="' + (name ? 'Change this slot' : 'Fill this slot') + '">' +
+        const openJs = 'window._adminQaSlotOpen(\'' + safeId + '\',' + i + ')';
+        const tile = name && typeof window._ajPlayerCardHtml === 'function' ? window._ajPlayerCardHtml(name, { onclick: openJs, cls: 'aj-slot-tile' }) : '';
+        let row = '<div class="aj-slot' + (name ? ' filled' : '') + (open ? ' open' : '') + (tile ? ' has-tile' : '') + '">' +
+          '<button type="button" class="aj-slot-btn' + (tile ? ' aj-slot-btn-pos' : '') + '" onclick="' + openJs + '" title="' + (name ? 'Change this slot' : 'Fill this slot') + '">' +
             '<span class="aj-slot-pos">' + _qaAdminEsc(_adminQaSlotLabel(sl)) + '</span>' +
-            (name ? '<span class="aj-slot-name">' + _qaAdminEsc(name) + '</span>' : '<span class="aj-slot-empty">tap to fill</span>') +
+            (tile ? '' : name ? '<span class="aj-slot-name">' + _qaAdminEsc(name) + '</span>' : '<span class="aj-slot-empty">tap to fill</span>') +
           '</button>' +
+          tile +
           (name ? '<button type="button" class="aj-slot-x" onclick="window._adminQaSlotClear(\'' + safeId + '\',' + i + ')" title="Clear slot">✕</button>' : '') +
           '</div>';
-        if (name) row += '<div class="aj-slot-info">' + ((typeof window._ajPlayerCardHtml === 'function' && window._ajPlayerCardHtml(name)) || _adminQaInfo(name)) + '</div>';
+        if (name && !tile) row += '<div class="aj-slot-info">' + _adminQaInfo(name) + '</div>';
         if (open) {
           const used = st.filter((n, j) => n && j !== i);
-          const elig = sortPos(roster.filter(n => _adminQaSlotAllows(sl, posOf(n)) && used.indexOf(n) < 0));
+          const byRank = typeof window._ajSortByRank === 'function' ? window._ajSortByRank : sortPos;
+          const elig = byRank(roster.filter(n => _adminQaSlotAllows(sl, posOf(n)) && used.indexOf(n) < 0));
           row += '<div class="aj-slot-picker">' + (elig.length ? elig.map(n => {
             const pos = posOf(n);
             const fill = 'window._adminQaSlotFill(\'' + safeId + '\',' + i + ',this.getAttribute(\'data-name\'))';
@@ -35562,7 +35719,7 @@ window.fmtHeight = fmtHeight;
       const safeId = _qaAdminEsc(docId);
 
       let html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px">';
-      html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">' + _adminQaTierChip(x.tier) + typeChip +
+      html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">' + _adminQaTierChip(x.tier, x) + typeChip +
         '<b style="font-size:.8rem">' + _qaAdminEsc(x.name || 'Member') + '</b>' +
         '<span style="font-size:.6875rem;color:var(--text2)">' + _qaAdminEsc(when) + ' · week ' + _qaAdminEsc(x.weekIdx) + '</span>' +
         (x.status === 'answered' ? '<span style="font-size:.6875rem;color:var(--green);font-weight:700">ANSWERED</span>' : '') +
@@ -35592,7 +35749,8 @@ window.fmtHeight = fmtHeight;
       html += '<div style="display:flex;gap:8px;margin-top:8px;align-items:center">' +
         '<input type="text" id="adminQaNote-' + safeId + '" placeholder="' + (x.type === 'lineup' ? 'Optional note to send with your lineup' : 'Optional note to send with your pick') + '" maxlength="1000" value="' + _qaAdminEsc(x.answer || '') + '" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 9px;font-size:.72rem">' +
         '<button onclick="window._adminQaDelete(\'' + safeId + '\')" title="Delete question" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;color:var(--red);cursor:pointer;font-weight:700">✕</button>' +
-        '</div>';
+        '</div>' +
+        '<div class="aj-q-gift">' + _adminQaGiftBtn(docId, x) + '</div>';
       html += '</div>';
       return html;
     }
@@ -35612,7 +35770,7 @@ window.fmtHeight = fmtHeight;
     function _adminQaQueueCard(docId, x, total) {
       const safeId = _qaAdminEsc(docId);
       let html = '<div class="aj-q" id="adminQaCard-' + safeId + '">';
-      html += '<div class="aj-q-head"><span class="aj-q-count">' + total + ' IN QUEUE</span>' + _adminQaTierChip(x.tier) + _adminQaTypeChip(x.type) +
+      html += '<div class="aj-q-head"><span class="aj-q-count">' + total + ' IN QUEUE</span>' + _adminQaTierChip(x.tier, x) + _adminQaTypeChip(x.type) +
         '<b>' + _qaAdminEsc(x.name || 'Member') + '</b>' +
         '<span class="aj-q-when">' + _qaAdminEsc(_adminQaAgo(x.createdAt)) + ' · week ' + _qaAdminEsc(x.weekIdx) + '</span></div>';
       if (x.league && x.league.name) {
@@ -35644,7 +35802,8 @@ window.fmtHeight = fmtHeight;
         '<button type="button" id="adminQaConfirm-' + safeId + '" class="aj-q-confirm" onclick="window._adminQaConfirm(\'' + safeId + '\')"' + (x.type === 'lineup' ? '' : ' disabled') + '>' + confirmLbl + '</button>' +
         '<button type="button" class="aj-q-skip" onclick="window._adminQaSkip(\'' + safeId + '\')" title="Move this one to the back of the queue">SKIP</button>' +
         '<button type="button" class="aj-q-del" onclick="window._adminQaDelete(\'' + safeId + '\')" title="Delete question (frees the member\'s weekly slot)">✕</button>' +
-        '</div>';
+        '</div>' +
+        '<div class="aj-q-gift">' + _adminQaGiftBtn(docId, x) + '<span class="aj-q-gift-hint">Didn\'t fully answer, or they should re-ask later? Give them a free premium question.</span></div>';
       html += '</div>';
       return html;
     }
@@ -35662,7 +35821,7 @@ window.fmtHeight = fmtHeight;
           const safe = _qaAdminEsc(r.id);
           return '<button type="button" class="aj-qrow' + (i === 0 ? ' cur' : '') + '" onclick="window._adminQaJump(\'' + safe + '\')" title="' + (i === 0 ? 'Answering now' : 'Bring this one up') + '">' +
             '<span class="aj-qrow-name">' + (i + 1) + '. ' + _qaAdminEsc(r.data.name || 'Member') + '</span>' +
-            '<span class="aj-qrow-meta">' + _adminQaTierChip(r.data.tier) + _adminQaTypeChip(r.data.type) + ' <span>' + _qaAdminEsc(_adminQaAgo(r.data.createdAt)) + '</span></span>' +
+            '<span class="aj-qrow-meta">' + _adminQaTierChip(r.data.tier, r.data) + _adminQaTypeChip(r.data.type) + ' <span>' + _qaAdminEsc(_adminQaAgo(r.data.createdAt)) + '</span></span>' +
             '</button>';
         }).join('') + '</aside>';
       list.innerHTML = '<div class="aj-qwrap"><div class="aj-qmain">' + _adminQaQueueCard(cur.id, cur.data, q.length) + '</div>' + side + '</div>';
@@ -73850,7 +74009,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const T = QA_TYPES[t];
       const used = mineBySlot[T.slot];
       let st, cls = '';
-      if (!used) st = mode === 'admin' ? 'Unlimited (admin)' : mode === 'free' ? '1 free today' : '1 left this week';
+      if (!used) st = mode === 'admin' ? 'Unlimited (admin)' : mode === 'free' ? '1 free today' : mode === 'credit' ? 'Bonus available' : '1 left this week';
+      else if (mode === 'credit') { st = '🎁 Bonus available'; cls = ' aj-st-done'; }
       else if (used.type === t) { st = used.status === 'answered' ? 'ANSWERED' : 'SENT'; cls = used.status === 'answered' ? ' aj-st-done' : ' aj-st-sent'; }
       else { st = 'Used on ' + _qaType(used.type).name; cls = ' aj-st-used'; }
       return '<button type="button" class="aj-type' + (t === sel ? ' on' : '') + '" role="tab" aria-selected="' + (t === sel) + '" onclick="window._qaPickType(\'' + t + '\')">' +
@@ -73969,7 +74129,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (!bar) return;
     const admin = typeof window.isAdmin === 'function' && window.isAdmin();
     bar.style.display = admin ? '' : 'none';
-    if (admin) _qaAdminFreeSync();
+    if (admin) { _qaAdminFreeSync(); _qaOnAirRestore(); _qaOnAirApply(document.documentElement.classList.contains('aj-onair')); }
+    else if (document.documentElement.classList.contains('aj-onair')) _qaOnAirApply(false);
     const view = admin && _qaLsGet('aj_admin_view') === 'inbox' ? 'inbox' : 'member';
     _qaAdminApply(view);
     if (view === 'inbox') {
@@ -73984,6 +74145,69 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (view === 'inbox') _qaAdminLoad();
   };
   window._qaAdminLoad = function(status) { _qaAdminLoad(status); };
+  // ON AIR: html.aj-onair hides the sidebar / header / toolbars and scales the
+  // current question + queue up for an OBS window capture (main.css). Keys
+  // while on air: 1-4 pick a tile (or open slot N on a lineup), Enter confirm
+  // (or NEXT during the reveal), N next, S skip, F fullscreen, Esc exit.
+  // Remembered (localStorage aj_onair) so a refresh mid-stream stays on air.
+  function _qaOnAirApply(on) {
+    document.documentElement.classList.toggle('aj-onair', on);
+    const b = document.querySelector('.aj-onair-btn');
+    if (b) { b.classList.toggle('on', on); b.textContent = on ? '🔴 ON AIR' : '⚫ ON AIR'; }
+  }
+  window._qaOnAir = function(on) {
+    if (!_qaIsAdmin()) return;
+    if (on == null) on = !document.documentElement.classList.contains('aj-onair');
+    _qaLsSet('aj_onair', on ? '1' : '0');
+    _qaOnAirApply(on);
+    if (on) {
+      _qaLsSet('aj_admin_view', 'inbox');
+      _qaAdminApply('inbox');
+      _qaAdminLoad();
+      if (typeof window.switchPage === 'function' && !document.getElementById('pageAskJack').classList.contains('active')) window.switchPage('askjack');
+    } else if (document.fullscreenElement) {
+      try { document.exitFullscreen(); } catch (_) {}
+    }
+  };
+  window._qaOnAirFullscreen = function() {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen();
+    } catch (_) {}
+  };
+  // Restore on load (admin only — _qaAdminSync runs once the account resolves).
+  const _qaOnAirRestore = () => { if (_qaIsAdmin() && _qaLsGet('aj_onair') === '1' && !document.documentElement.classList.contains('aj-onair')) window._qaOnAir(true); };
+  document.addEventListener('keydown', e => {
+    if (!document.documentElement.classList.contains('aj-onair')) return;
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target;
+    const typing = t && (t.tagName === 'TEXTAREA' || t.isContentEditable || (t.tagName === 'INPUT' && !t.classList.contains('aj-q-noteinp')));
+    if (typing) return;
+    const q = window._adminQaQueue || [];
+    const cur = q[0];
+    const revealing = typeof window._adminQaRevealResolve === 'function';
+    const key = e.key;
+    if (key === 'Escape') { e.preventDefault(); window._qaOnAir(false); return; }
+    if (key === 'f' || key === 'F') { e.preventDefault(); window._qaOnAirFullscreen(); return; }
+    if (!cur) return;
+    if (revealing) {
+      if (key === 'Enter' || key === 'n' || key === 'N' || key === ' ') { e.preventDefault(); window._adminQaRevealNext(); }
+      return;
+    }
+    if (/^[1-9]$/.test(key)) {
+      e.preventDefault();
+      const n = parseInt(key, 10) - 1;
+      if (cur.data.type === 'lineup') { if (typeof window._adminQaSlotOpen === 'function') window._adminQaSlotOpen(cur.id, n); }
+      else if (typeof window._adminQaSelect === 'function' && document.querySelector('#adminQaCard-' + CSS.escape(cur.id) + ' .aj-choice[data-i="' + n + '"]')) window._adminQaSelect(cur.id, n);
+      return;
+    }
+    if (key === 'Enter') {
+      const btn = document.getElementById('adminQaConfirm-' + cur.id);
+      if (btn && !btn.disabled) { e.preventDefault(); btn.click(); }
+      return;
+    }
+    if ((key === 's' || key === 'S') && typeof window._adminQaSkip === 'function') { e.preventDefault(); window._adminQaSkip(cur.id); }
+  });
   // Page enter (switchPage hook): refresh the inbox so new questions show up.
   window._qaAdminEnter = function() {
     const page = document.getElementById('pageAskJack');
@@ -74046,6 +74270,18 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         _qaLoadMine(sect, user, list => _qaRenderInner(sect, freeHeader, list, 'free', true));
         return;
       }
+      // Free member holding a bonus ticket from Jack: the premium panel, where
+      // every slot reads as used except the bonus (mode 'credit').
+      const cachedC = window._qaMineCache;
+      if (!cachedC || cachedC.uid !== user.uid || (Date.now() - cachedC.at) >= 60000) {
+        _qaLoadMine(sect, user, () => window._qaRenderPanel());
+        return;
+      }
+      if ((cachedC.credits || []).length) {
+        window._qaMode = 'credit';
+        _qaRenderInner(sect, premHeader, cachedC.list, 'credit', false);
+        return;
+      }
       window._qaMode = 'locked';
       const _locked =
         '<div class="aj-card">' + premHeader +
@@ -74072,17 +74308,28 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
 
   // My questions (60s cache so auth churn doesn't re-hit Firestore). Each
   // row carries its doc id as _id (the line-skip checkout needs it).
+  // Bonus tickets (qa_credits, handed out by Jack from the inbox): unused =
+  // no question created under the ticket's id yet. Loaded with my questions.
   function _qaLoadMine(sect, user, cb) {
     const cached = window._qaMineCache;
-    if (cached && cached.uid === user.uid && (Date.now() - cached.at) < 60000) { cb(cached.list); return; }
+    if (cached && cached.uid === user.uid && (Date.now() - cached.at) < 60000) { window._qaCreditIds = cached.credits || []; cb(cached.list); return; }
     const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
     const db = fbReady && firebase.firestore ? firebase.firestore() : null;
     if (!db) { sect.style.display = 'none'; return; }
-    db.collection('qa_questions').where('uid', '==', user.uid).get().then(snap => {
+    Promise.all([
+      db.collection('qa_questions').where('uid', '==', user.uid).get(),
+      db.collection('qa_credits').where('uid', '==', user.uid).get().catch(e => { console.warn('[AskJack] credits load error:', e); return null; })
+    ]).then(([snap, csnap]) => {
       const list = [];
       snap.forEach(d => list.push(Object.assign({ _id: d.id }, d.data())));
       list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-      window._qaMineCache = { uid: user.uid, at: Date.now(), list: list };
+      const usedIds = {};
+      list.forEach(x => { usedIds[x._id] = true; });
+      const credits = [];
+      if (csnap) csnap.forEach(d => { if (!usedIds[d.id]) credits.push(d.id); });
+      credits.sort();
+      window._qaCreditIds = credits;
+      window._qaMineCache = { uid: user.uid, at: Date.now(), list: list, credits: credits };
       cb(list);
     }).catch(e => {
       console.warn('[AskJack] load error:', e);
@@ -74113,13 +74360,29 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     }
     const sel = _qaSelType();
     const T = QA_TYPES[sel];
-    const used = mineBySlot[T.slot];
+    let used = mineBySlot[T.slot];
+    const credits = window._qaCreditIds || [];
+    // mode 'credit' (free member, questions closed): only the bonus is usable.
+    if (mode === 'credit') { mineBySlot.startsit = mineBySlot.startsit || { _lockedSlot: true }; mineBySlot.trade = mineBySlot.trade || { _lockedSlot: true }; used = mineBySlot[T.slot]; }
+    // A held bonus ticket reopens a used slot — the form comes back with a
+    // banner and the send goes out under the ticket (premium, never expires).
+    const useCredit = !!(used && credits.length && mode !== 'admin');
+    window._qaUseCredit = useCredit;
+    window._qaSlotUsed = { startsit: !!mineBySlot.startsit, trade: !!mineBySlot.trade };
+    const creditBanner = credits.length
+      ? '<div class="aj-credit-banner">🎁 Jack gave you ' + (credits.length === 1 ? 'a bonus question' : credits.length + ' bonus questions') + ' — any type, never expires' + (useCredit ? '. This one uses it.' : '. It kicks in once your regular slot is used.') + '</div>'
+      : '';
 
     let pane = '<div class="aj-pane" role="tabpanel">' +
       '<div class="aj-pane-head">' + T.icon + ' ' + T.label +
-      (used && used.type === sel ? '<span class="aj-pane-st' + (used.status === 'answered' ? ' aj-st-done' : '') + '">' + (used.status === 'answered' ? 'ANSWERED' : 'SENT — WAITING ON JACK') + '</span>' : '') +
+      (used && !useCredit && used.type === sel ? '<span class="aj-pane-st' + (used.status === 'answered' ? ' aj-st-done' : '') + '">' + (used.status === 'answered' ? 'ANSWERED' : 'SENT — WAITING ON JACK') + '</span>' : '') +
+      (useCredit ? '<span class="aj-pane-st aj-st-done">🎁 BONUS QUESTION</span>' : '') +
       '</div>';
-    if (used && used.type === sel) {
+    if (useCredit) {
+      pane += (sel === 'lineup' ? _qaLineupFormHtml(_qaSelLeague()) : _qaFormHtml(sel));
+    } else if (used && used._lockedSlot) {
+      pane += '<div class="aj-used-note">Premium questions are part of the Season Pass. Your bonus question from Jack is used up — upgrade for 2 questions every week.</div>';
+    } else if (used && used.type === sel) {
       pane += _qaSubmittedHtml(used);
     } else if (used) {
       pane += '<div class="aj-used-note">' + (mode === 'free'
@@ -74151,8 +74414,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       header +
       '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:12px">Jack makes the call himself · ' +
         (mode === 'admin' ? 'admin: unlimited practice questions (' + (freeLook ? 'free' : 'premium') + ' view)' : freeLook ? _qaFreeResetLabel() : _qaResetLabel()) + '</div>' +
+      creditBanner +
       _qaLeagueBarHtml() +
-      _qaTypePickerHtml(sel, mineBySlot, lblMode) +
+      _qaTypePickerHtml(sel, mineBySlot, credits.length && mode !== 'admin' ? 'credit' : lblMode) +
       pane + pastHtml + _qaDatalist() +
       '</div>';
     // Idempotent render: if nothing changed (questions, leagues, picked type,
@@ -74429,9 +74693,17 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       createdAt: new Date().toISOString(),
       tier: (mode === 'free' || mode === 'adminfree') ? 'free' : 'premium'
     };
-    // Doc id IS the quota (rules): premium {uid}_{wk}_{slot}, free {uid}_d{day}, admin {uid}_t{ms} (unlimited).
+    // Doc id IS the quota (rules): premium {uid}_{wk}_{slot}, free {uid}_d{day}, admin {uid}_t{ms} (unlimited),
+    // bonus ticket {uid}_c{ms} (the ticket's own id — single-use by construction).
     let docId = user.uid + '_' + wk + '_' + _qaSlotOf(type);
-    if (mode === 'free') { payload.dayIdx = _qaDayIdx(); docId = user.uid + '_d' + payload.dayIdx; }
+    const credits = window._qaCreditIds || [];
+    const slotUsed = (window._qaSlotUsed || {})[_qaSlotOf(type)];
+    if (mode !== 'admin' && mode !== 'adminfree' && credits.length && (window._qaUseCredit || slotUsed || mode === 'credit')) {
+      payload.tier = 'premium';
+      payload.credit = credits[0];
+      docId = credits[0];
+    }
+    else if (mode === 'free') { payload.dayIdx = _qaDayIdx(); docId = user.uid + '_d' + payload.dayIdx; }
     else if (mode === 'admin' || mode === 'adminfree') { payload.testN = Date.now(); docId = user.uid + '_t' + payload.testN; }
 
     if (type === 'lineup') {

@@ -415,8 +415,31 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/shared/askjack_settings)
              && get(/databases/$(database)/documents/shared/askjack_settings).data.get('freeOpen', false) == true;
     }
+    // qa_credits/{uid}_c{ms}: a bonus question Jack hands a member from the
+    // inbox ("didn't fully answer" / "re-ask when he's back"). Never expires,
+    // any type, counts as premium. One ticket = one question: the question is
+    // created under the TICKET's id, so create-only on qa_questions makes it
+    // single-use with no counter to race.
+    match /qa_credits/{cId} {
+      allow read: if request.auth != null
+                  && (resource.data.uid == request.auth.uid || isJack());
+      allow write: if isJack();
+    }
+    // qa_giveaways/{ms}: log of end-of-stream premium giveaways (winners +
+    // pool size). Admin-only both ways.
+    match /qa_giveaways/{gId} {
+      allow read, write: if isJack();
+    }
     match /qa_questions/{qId} {
       // The three create paths live INSIDE the match so they can see qId.
+      function qaCreditCreate() {
+        return request.resource.data.tier == 'premium'
+               && request.resource.data.credit == qId
+               && qId.matches('^' + request.auth.uid + '_c[0-9]+$')
+               && !('dayIdx' in request.resource.data)
+               && exists(/databases/$(database)/documents/qa_credits/$(qId))
+               && get(/databases/$(database)/documents/qa_credits/$(qId)).data.uid == request.auth.uid;
+      }
       function qaPremiumCreate() {
         return request.resource.data.tier == 'premium'
                && (isJack() || hasStripePremium() || hasGiftedPremium())
@@ -447,9 +470,9 @@ service cloud.firestore {
                     && request.resource.data.type in ['startsit', 'trade', 'lineup']
                     && request.resource.data.weekIdx is int
                     && request.resource.data.weekIdx == (request.time.toMillis() - 1767675600000) / 604800000
-                    && (qaPremiumCreate() || qaFreeCreate() || qaAdminCreate())
+                    && (qaPremiumCreate() || qaFreeCreate() || qaAdminCreate() || qaCreditCreate())
                     && request.resource.data.status == 'open'
-                    && request.resource.data.keys().hasOnly(['uid','name','type','weekIdx','status','createdAt','options','q','league','roster','slots','tier','dayIdx','testN'])
+                    && request.resource.data.keys().hasOnly(['uid','name','type','weekIdx','status','createdAt','options','q','league','roster','slots','tier','dayIdx','testN','credit'])
                     && (request.resource.data.type == 'lineup'
                           // Lineup: roster required (Jack picks starters from it), no options.
                           ? (!('options' in request.resource.data)

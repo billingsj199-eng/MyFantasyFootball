@@ -7799,13 +7799,30 @@ window._weeklyAssumeOutApply = function(map) {
   }
   return true;
 };
-window._weeklyAssumeOutSave = function(next) {
+// PER-NAME WRITES (Jack 2026-11-04, week 9: "it moved players into the injury/out when I already took them out").
+// The list used to be saved by rewriting the WHOLE assumeOut map from this tab's copy, so any tab / device holding an
+// older copy (a laptop or phone tab woken from sleep, the IndexedDB-cached first snapshot on load, a tab whose
+// listener lagged) put every name Jack had already moved back in straight back into BYE / OUT on its next click.
+// Now each click sends only its own change — arrayUnion / arrayRemove on assumeOut.<wk> (activated.<wk>) — so a
+// stale copy can never resurrect a name removed elsewhere.
+window._weeklyListDelta = function(field, wk, names, add) {
+  names = (names || []).filter(Boolean);
+  if (!names.length) return Promise.resolve(false);
   try {
     if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.firestore) {
-      firebase.firestore().collection('settings').doc('active_week').set({ assumeOut: next }, { merge: true })
-        .catch(e => console.warn('[Weekly] assume-out sync failed:', e));
+      const FV = firebase.firestore.FieldValue, patch = {};
+      patch[field] = {};
+      patch[field][String(wk)] = add ? FV.arrayUnion.apply(FV, names) : FV.arrayRemove.apply(FV, names);
+      return firebase.firestore().collection('settings').doc('active_week').set(patch, { merge: true })
+        .then(() => true)
+        .catch(e => {
+          console.warn('[Weekly] ' + field + ' sync failed:', e);
+          if (typeof toast === 'function') toast('Could not save the Week ' + wk + ' change (' + (e.code || e.message) + ') — sign in again and retry');
+          return false;
+        });
     }
-  } catch(e) { console.warn('[Weekly] assume-out sync failed:', e); }
+  } catch(e) { console.warn('[Weekly] ' + field + ' sync failed:', e); }
+  return Promise.resolve(false);
 };
 window._weeklyAssumeOutToggle = function(name, wk) {
   if (typeof window.isAdmin !== 'function' || !window.isAdmin()) { toast('Only admins can assume a player out'); return false; }
@@ -7815,9 +7832,9 @@ window._weeklyAssumeOutToggle = function(name, wk) {
   const i = cur.indexOf(name);
   if (i >= 0) cur.splice(i, 1); else cur.push(name);
   const next = Object.assign({}, map);
-  next[k] = cur;   // always written (an empty array clears the week under a merge write)
+  next[k] = cur;
   window._weeklyAssumeOutApply(next);
-  window._weeklyAssumeOutSave(next);
+  window._weeklyListDelta('assumeOut', wk, [name], i < 0);
   if (typeof toast === 'function') toast(i >= 0 ? name + ' back in the Week ' + wk + ' rankings' : name + ' assumed OUT for Week ' + wk);
   if (typeof render === 'function' && typeof currentMode !== 'undefined' && currentMode === 'weekly') { try { render(); } catch(_e) {} }
   if (typeof window._sstRefresh === 'function') { try { window._sstRefresh(); } catch(_e) {} }
@@ -7903,14 +7920,9 @@ window._weeklyActivateToggle = function(name, wk) {
   const i = cur.indexOf(name);
   if (i >= 0) cur.splice(i, 1); else cur.push(name);
   const next = Object.assign({}, map);
-  next[k] = cur;   // always written (an empty array clears the week under a merge write)
+  next[k] = cur;
   window._weeklyActivatedApply(next);
-  try {
-    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.firestore) {
-      firebase.firestore().collection('settings').doc('active_week').set({ activated: next }, { merge: true })
-        .catch(e => console.warn('[Weekly] activate sync failed:', e));
-    }
-  } catch(e) { console.warn('[Weekly] activate sync failed:', e); }
+  window._weeklyListDelta('activated', wk, [name], i < 0);   // per-name write, never the whole map (see _weeklyListDelta)
   window._weeklyActivatedSync();
   if (typeof toast === 'function') toast(i >= 0 ? name + ' back out for Week ' + wk : name + ' activated for Week ' + wk + ' — back in the rankings pool');
   try {
@@ -14334,21 +14346,39 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
         if (_list) {   // null = boards not loaded yet — the 60 s re-check retries
           window._weeklySeedWritten = wk;
           window._weeklyFrozenLocal = wk;
-          const _aoMap = Object.assign({}, window._weeklyAssumeOutMap || {});
-          const _cur = _aoMap[String(wk)] || [];
-          const _seed = _list.filter(n => _cur.indexOf(n) < 0);
-          _aoMap[String(wk)] = _cur.concat(_seed);
-          window._weeklyAssumeOutApply(_aoMap);
-          const _now = new Date().toISOString();
-          const _w = { assumeOut: _aoMap, assumeOutFrozenWeek: wk, assumeOutFrozenAt: _now };
-          if (!_seeded) { _w.assumeOutSeededWeek = wk; _w.assumeOutSeededAt = _now; }
           const _what = _seeded ? 'Out / under-50%' : 'Questionable / Doubtful / Out';
           let _sdb = null;
           try { _sdb = (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length) ? firebase.firestore() : null; } catch (_e) {}
           if (_sdb) {
-            _sdb.collection('settings').doc('active_week').set(_w, { merge: true })
-              .then(() => { console.log('[Weekly] week ' + wk + ' seed: ' + _seed.length + ' ' + _what + ' players parked in the BYE / OUT row; week frozen', _seed); if (_seed.length && typeof toast === 'function') toast('Week ' + wk + ': ' + _seed.length + ' ' + _what + ' player' + (_seed.length === 1 ? '' : 's') + ' parked in the BYE / OUT row — from here only you move players out'); })
-              .catch(e => { console.warn('[Weekly] assume-out seed write failed:', e); window._weeklySeedWritten = null; window._weeklyFrozenLocal = null; });
+            // 2026-11-04 (week 9 re-park): the seed runs inside a transaction that re-reads the SERVER doc. A tab
+            // working from a stale snapshot (IndexedDB cache on load, a laptop / phone tab waking up after the
+            // Tuesday roll) used to seed again and rewrite the week's whole list over Jack's UNDOs; now it sees the
+            // week is already frozen and writes nothing. New names are added with arrayUnion — never a full list.
+            const _ref = _sdb.collection('settings').doc('active_week');
+            _sdb.runTransaction(tx => tx.get(_ref).then(snap => {
+              const s = (snap.exists && snap.data()) || {};
+              if ((parseInt(s.assumeOutFrozenWeek, 10) || 0) >= wk) return null;   // another tab already ran it
+              const sSeeded = (parseInt(s.assumeOutSeededWeek, 10) || 0) >= wk;
+              const srvCur = (s.assumeOut && s.assumeOut[String(wk)]) || [];
+              // seeded on the server since this tab built its list: only the Out / under-50% catch-up applies
+              const want = (sSeeded && !_seeded) ? (window._weeklyAssumeOutSeed(wk, { outsOnly: true }) || []) : _list;
+              const add = want.filter(n => srvCur.indexOf(n) < 0);
+              const now = new Date().toISOString();
+              const w = { assumeOutFrozenWeek: wk, assumeOutFrozenAt: now };
+              if (!sSeeded) { w.assumeOutSeededWeek = wk; w.assumeOutSeededAt = now; }
+              if (add.length) {
+                const FV = firebase.firestore.FieldValue;
+                w.assumeOut = {}; w.assumeOut[String(wk)] = FV.arrayUnion.apply(FV, add);
+              }
+              tx.set(_ref, w, { merge: true });
+              return { add: add, what: sSeeded ? 'Out / under-50%' : 'Questionable / Doubtful / Out' };
+            }))
+              .then(r => {
+                if (!r) { console.log('[Weekly] week ' + wk + ' already seeded + frozen on the server — this tab wrote nothing'); return; }
+                console.log('[Weekly] week ' + wk + ' seed: ' + r.add.length + ' ' + r.what + ' players parked in the BYE / OUT row; week frozen', r.add);
+                if (r.add.length && typeof toast === 'function') toast('Week ' + wk + ': ' + r.add.length + ' ' + r.what + ' player' + (r.add.length === 1 ? '' : 's') + ' parked in the BYE / OUT row — from here only you move players out');
+              })
+              .catch(e => { console.warn('[Weekly] assume-out seed write failed (' + _what + '):', e); window._weeklySeedWritten = null; window._weeklyFrozenLocal = null; });
           } else { window._weeklySeedWritten = null; window._weeklyFrozenLocal = null; }
         }
       } catch (_e) { console.warn('[Weekly] assume-out seed failed:', _e); window._weeklySeedWritten = null; window._weeklyFrozenLocal = null; }
@@ -14476,7 +14506,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       const next = Object.assign({}, window._weeklyAssumeOutMap || {});
       next[String(wk)] = cur.concat(add);
       window._weeklyAssumeOutApply(next);
-      window._weeklyAssumeOutSave(next);
+      window._weeklyListDelta('assumeOut', wk, add, true);   // only the new names (arrayUnion), never the whole list
       if (typeof render === 'function') render();
       if (typeof window._sstRefresh === 'function') { try { window._sstRefresh(); } catch(_e) {} }
       if (typeof toast === 'function') toast(add.length + ' player' + (add.length === 1 ? '' : 's') + ' parked in the Week ' + wk + ' BYE / OUT row');

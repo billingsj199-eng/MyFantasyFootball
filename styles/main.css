@@ -3610,8 +3610,18 @@ html.aj-onair[data-aj-aspect="916"] .aj-tv-verdict{font-size:1rem}
 html.aj-onair .aj-q-gift{display:none}
 html.aj-onair .aj-reveal-msg{font-size:1.2rem}
 /* Queue: a drawer over the stage (Q / QUEUE button), not a sidebar */
-html.aj-onair .aj-qside{display:none;position:absolute;top:0;right:0;bottom:0;width:min(380px,48%);z-index:7;overflow:auto;border-radius:0;border-width:0 0 0 1px;background:rgba(5,8,15,.94);backdrop-filter:blur(8px);box-shadow:-10px 0 40px rgba(0,0,0,.6)}
-html.aj-onair.aj-qopen .aj-qside{display:flex}
+html.aj-onair #ajInboxList .aj-qside{display:none;position:absolute;top:0;right:0;bottom:0;width:min(380px,48%);z-index:7;overflow:auto;border-radius:0;border-width:0 0 0 1px;background:rgba(5,8,15,.94);backdrop-filter:blur(8px);box-shadow:-10px 0 40px rgba(0,0,0,.6)}
+html.aj-onair.aj-qopen #ajInboxList .aj-qside{display:flex}
+/* Queue DOCK (Jack 11-04): with room beside a letterboxed stage the queue sits
+   out there, fixed, outside the capture — click a row to bring it up, ↑↓ keys */
+.aj-onair-queue{display:none}
+html.aj-onair.aj-qdock .aj-onair-queue{display:block;position:fixed;top:50%;right:14px;transform:translateY(-50%);width:var(--aj-dock-w,320px);max-height:94vh;overflow:auto;z-index:48}
+html.aj-onair.aj-qdock .aj-onair-queue::before{content:'YOUR EYES ONLY · outside the stage';display:block;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--text2);padding:0 6px 6px}
+.aj-onair-queue .aj-qside{padding:12px;border-radius:14px}
+.aj-onair-queue .aj-qside-h{font-size:1.15rem}
+.aj-onair-queue .aj-qrow{padding:10px 12px;min-height:50px}
+.aj-onair-queue .aj-qrow-name{font-size:1rem}
+.aj-onair-queue .aj-qrow-meta{font-size:.74rem}
 /* UP NEXT strip (viewers) + empty-queue CTA: on air only */
 .aj-upnext,.aj-q-empty-cta{display:none}
 html.aj-onair .aj-upnext{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 2px 0;padding:10px 16px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);border-radius:12px;font-size:1rem;color:var(--text)}

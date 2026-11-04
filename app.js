@@ -36303,9 +36303,23 @@ window.fmtHeight = fmtHeight;
         ? '<span class="aj-upnext-l">UP NEXT</span>' + q.slice(1, 4).map((r, i) => '<span class="aj-upnext-i"><b>' + (i + 2) + '.</b> ' + _qaAdminEsc(r.data.name || 'Member') + ' ' + _adminQaTypeChip(r.data.type) + '</span>').join('') +
           (q.length > 4 ? '<span class="aj-upnext-more">+' + (q.length - 4) + ' more</span>' : '')
         : '<span class="aj-upnext-l">LAST ONE IN THE QUEUE</span><span class="aj-upnext-cta">Ask yours at <b>myfantasyfootball.co</b> › ASK JACK</span>') + '</div>';
-      list.innerHTML = '<div class="aj-qwrap"><div class="aj-qmain">' + _adminQaQueueCard(cur.id, cur.data, q.length) + upnext + '</div>' + side + '</div>';
+      // ON AIR with room beside the stage (html.aj-qdock, set by _qaOnAirFit):
+      // the queue docks OUTSIDE the stage in #ajOnAirQueue — Jack's eyes only,
+      // never in the OBS crop. Otherwise it stays in the stage as the Q drawer.
+      const dock = document.getElementById('ajOnAirQueue');
+      const docked = !!dock && document.documentElement.classList.contains('aj-onair') && document.documentElement.classList.contains('aj-qdock');
+      if (dock) dock.innerHTML = docked ? side : '';
+      list.innerHTML = '<div class="aj-qwrap"><div class="aj-qmain">' + _adminQaQueueCard(cur.id, cur.data, q.length) + upnext + '</div>' + (docked ? '' : side) + '</div>';
       fit();
     }
+    window._adminQaRenderQueue = _adminQaRenderQueue;
+    // ↑ / ↓ on air: +1 brings the next one up, −1 brings the last one back up.
+    window._adminQaRotate = function(dir) {
+      const q = window._adminQaQueue || [];
+      if (q.length < 2) return;
+      if (dir > 0) q.push(q.shift()); else q.unshift(q.pop());
+      _adminQaRenderQueue();
+    };
     window._adminQaJump = function(docId) {
       const q = window._adminQaQueue || [];
       const i = q.findIndex(r => r.id === docId);
@@ -74712,10 +74726,12 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       _qaOnAirAspectApply(_qaLsGet('aj_onair_aspect') || 'fit');
       _qaOnAirCtl(true);
     } else {
-      document.documentElement.classList.remove('aj-ctl', 'aj-qopen');
+      document.documentElement.classList.remove('aj-ctl', 'aj-qopen', 'aj-qdock');
       document.documentElement.removeAttribute('data-aj-aspect');
       const list = document.getElementById('ajInboxList');
       if (list) Array.from(list.children).forEach(el => { el.style.width = ''; el.style.minHeight = ''; el.style.transform = ''; delete el.dataset.ajScale; });
+      // Put a docked queue back into the page layout.
+      if (typeof window._adminQaRenderQueue === 'function' && list && list.querySelector('.aj-qwrap')) window._adminQaRenderQueue();
     }
   }
   function _qaOnAirAspectApply(a) {
@@ -74744,6 +74760,16 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       if (!stage || !inner) return;
       const W = stage.clientWidth, H = stage.clientHeight;
       if (!W || !H) return;
+      // Queue dock: room beside the stage (letterboxed shapes on a wide
+      // monitor) → the queue list sits out there, outside the capture.
+      const free = (window.innerWidth - W) / 2;
+      const dock = free >= 250;
+      const h = document.documentElement;
+      h.style.setProperty('--aj-dock-w', Math.round(Math.min(360, free - 28)) + 'px');
+      if (dock !== h.classList.contains('aj-qdock')) {
+        h.classList.toggle('aj-qdock', dock);
+        if (typeof window._adminQaRenderQueue === 'function' && document.querySelector('#ajInboxList .aj-qwrap')) { window._adminQaRenderQueue(); return; } // re-render moves the queue and re-fits
+      }
       // Shrink-only from 1: a wider (unscaled) box can reflow the cards into
       // more columns and get SHORTER, so a naive fixed-point loop flips between
       // "one column, too tall" and "two columns, fits" and can stop on the
@@ -74838,6 +74864,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (key === 'a' || key === 'A') { e.preventDefault(); window._qaOnAirAspect(); return; }
     if (!cur) return;
     if (key === 'b' || key === 'B') { e.preventDefault(); window._qaOnAirBonus(); return; }
+    if ((key === 'ArrowDown' || key === 'ArrowRight' || key === ']') && !revealing) { e.preventDefault(); if (typeof window._adminQaRotate === 'function') window._adminQaRotate(1); return; }
+    if ((key === 'ArrowUp' || key === 'ArrowLeft' || key === '[') && !revealing) { e.preventDefault(); if (typeof window._adminQaRotate === 'function') window._adminQaRotate(-1); return; }
     if (revealing) {
       if (key === 'Enter' || key === 'n' || key === 'N' || key === ' ') { e.preventDefault(); window._adminQaRevealNext(); }
       return;

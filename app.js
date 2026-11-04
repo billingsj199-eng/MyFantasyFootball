@@ -36326,7 +36326,7 @@ window.fmtHeight = fmtHeight;
       html += '<div class="aj-q-bar">' +
         '<input type="text" id="adminQaNote-' + safeId + '" class="aj-input aj-q-noteinp" placeholder="Optional note to send with your ' + (x.type === 'lineup' ? 'lineup' : 'pick') + '" maxlength="1000">' +
         '<button type="button" id="adminQaConfirm-' + safeId + '" class="aj-q-confirm" onclick="window._adminQaConfirm(\'' + safeId + '\')"' + (x.type === 'lineup' ? '' : ' disabled') + '>' + confirmLbl + '</button>' +
-        '<button type="button" class="aj-q-skip" onclick="window._adminQaSkip(\'' + safeId + '\')" title="Move this one to the back of the queue">SKIP</button>' +
+        '<button type="button" class="aj-q-skip" onclick="window._adminQaSkip(\'' + safeId + '\')" title="Show the next question — this one keeps its place in the queue">SKIP</button>' +
         '<button type="button" class="aj-q-del" onclick="window._adminQaDelete(\'' + safeId + '\')" title="Delete question (frees the member\'s weekly slot)">✕</button>' +
         '</div>' +
         '<div class="aj-q-gift">' + _adminQaGiftBtn(docId, x) + '<span class="aj-q-gift-hint">Didn\'t fully answer, or they should re-ask later? Give them a free premium question.</span></div>';
@@ -36345,21 +36345,26 @@ window.fmtHeight = fmtHeight;
         fit();
         return;
       }
-      const cur = q[0];
-      // Current question on the left; the whole queue (username, type, age)
-      // down the right (Jack 2026-11-04). A row click brings that one up.
+      // The queue order is fixed (premium → line skips → free, oldest first);
+      // a separate pointer says which one is on screen (Jack 2026-11-04:
+      // "don't change the order of the queue"). Click / ↑↓ / SKIP move the
+      // pointer only; CONFIRM removes the answered one and stays in place.
+      const ci = _adminQaCurIdx();
+      const cur = q[ci];
       const side = '<aside class="aj-qside"><div class="aj-qside-h">QUEUE <span>(' + q.length + ')</span></div>' +
         q.map((r, i) => {
           const safe = _qaAdminEsc(r.id);
-          return '<button type="button" class="aj-qrow' + (i === 0 ? ' cur' : '') + '" onclick="window._adminQaJump(\'' + safe + '\')" title="' + (i === 0 ? 'Answering now' : 'Bring this one up') + '">' +
+          return '<button type="button" class="aj-qrow' + (i === ci ? ' cur' : '') + '" onclick="window._adminQaJump(\'' + safe + '\')" title="' + (i === ci ? 'On screen now' : 'Show this one (the order stays)') + '">' +
             '<span class="aj-qrow-name">' + (i + 1) + '. ' + _qaAdminEsc(r.data.name || 'Member') + '</span>' +
             '<span class="aj-qrow-meta">' + _adminQaTierChip(r.data.tier, r.data) + _adminQaTypeChip(r.data.type) + ' <span>' + _qaAdminEsc(_adminQaAgo(r.data.createdAt)) + '</span></span>' +
             '</button>';
         }).join('') + '</aside>';
-      // ON AIR only (main.css): who's up next, for the stream.
-      const upnext = '<div class="aj-upnext">' + (q.length > 1
-        ? '<span class="aj-upnext-l">UP NEXT</span>' + q.slice(1, 4).map((r, i) => '<span class="aj-upnext-i"><b>' + (i + 2) + '.</b> ' + _qaAdminEsc(r.data.name || 'Member') + ' ' + _adminQaTypeChip(r.data.type) + '</span>').join('') +
-          (q.length > 4 ? '<span class="aj-upnext-more">+' + (q.length - 4) + ' more</span>' : '')
+      // ON AIR only (main.css): who's up next, for the stream — the rows after
+      // the one on screen (wrapping to the top), with their queue numbers.
+      const rest = q.slice(ci + 1).concat(q.slice(0, ci));
+      const upnext = '<div class="aj-upnext">' + (rest.length
+        ? '<span class="aj-upnext-l">UP NEXT</span>' + rest.slice(0, 3).map(r => '<span class="aj-upnext-i"><b>' + (q.indexOf(r) + 1) + '.</b> ' + _qaAdminEsc(r.data.name || 'Member') + ' ' + _adminQaTypeChip(r.data.type) + '</span>').join('') +
+          (rest.length > 3 ? '<span class="aj-upnext-more">+' + (rest.length - 3) + ' more</span>' : '')
         : '<span class="aj-upnext-l">LAST ONE IN THE QUEUE</span><span class="aj-upnext-cta">Ask yours at <b>myfantasyfootball.co</b> › ASK JACK</span>') + '</div>';
       // ON AIR with room beside the stage (html.aj-qdock, set by _qaOnAirFit):
       // the queue docks OUTSIDE the stage in #ajOnAirQueue — Jack's eyes only,
@@ -36371,18 +36376,26 @@ window.fmtHeight = fmtHeight;
       fit();
     }
     window._adminQaRenderQueue = _adminQaRenderQueue;
-    // ↑ / ↓ on air: +1 brings the next one up, −1 brings the last one back up.
+    // Pointer into the fixed-order queue (window._adminQaCur = doc id).
+    function _adminQaCurIdx() {
+      const q = window._adminQaQueue || [];
+      let i = q.findIndex(r => r.id === window._adminQaCur);
+      if (i < 0) { i = 0; window._adminQaCur = q[0] ? q[0].id : null; }
+      return i;
+    }
+    window._adminQaCurrent = function() { const q = window._adminQaQueue || []; return q[_adminQaCurIdx()] || null; };
+    // ↑ / ↓ on air (and SKIP): step the pointer, wrapping; the order never moves.
     window._adminQaRotate = function(dir) {
       const q = window._adminQaQueue || [];
       if (q.length < 2) return;
-      if (dir > 0) q.push(q.shift()); else q.unshift(q.pop());
+      const i = (_adminQaCurIdx() + (dir > 0 ? 1 : -1) + q.length) % q.length;
+      window._adminQaCur = q[i].id;
       _adminQaRenderQueue();
     };
     window._adminQaJump = function(docId) {
       const q = window._adminQaQueue || [];
-      const i = q.findIndex(r => r.id === docId);
-      if (i <= 0) return;
-      q.unshift(q.splice(i, 1)[0]);
+      if (!q.some(r => r.id === docId) || window._adminQaCur === docId) return;
+      window._adminQaCur = docId;
       _adminQaRenderQueue();
     };
     window._adminQaSelect = function(docId, idx) {
@@ -36478,8 +36491,13 @@ window.fmtHeight = fmtHeight;
       db.collection('qa_questions').doc(docId).update(patch)
         .then(() => { settled = true; clearTimeout(t1); clearTimeout(t2); return _adminQaReveal(docId, entry.data, patch); })
         .then(() => {
+          // Drop the answered one; the pointer stays at the same spot, i.e.
+          // moves on to whatever was next in line.
+          const at = q.findIndex(r => r.id === docId);
           window._adminQaQueue = q.filter(r => r.id !== docId);
-          showAdminMsg(_qaTargets().msg, 'Answered ✓' + (window._adminQaQueue.length ? ' — next one up' : ' — queue clear'), 'success');
+          const nq = window._adminQaQueue;
+          window._adminQaCur = (nq[at] || nq[0] || {}).id || null;
+          showAdminMsg(_qaTargets().msg, 'Answered ✓' + (nq.length ? ' — next one up' : ' — queue clear'), 'success');
           _adminQaRenderQueue();
         })
         .catch(e => {
@@ -36489,11 +36507,11 @@ window.fmtHeight = fmtHeight;
         });
     };
     window._adminQaSkip = function(docId) {
+      // SKIP = show the next one; nothing moves in the order.
       const q = window._adminQaQueue || [];
-      const i = q.findIndex(r => r.id === docId);
-      if (i < 0 || q.length < 2) return;
-      q.push(q.splice(i, 1)[0]);
-      _adminQaRenderQueue();
+      if (!q.some(r => r.id === docId) || q.length < 2) return;
+      window._adminQaCur = docId;
+      window._adminQaRotate(1);
     };
 
     function _adminQaLoad(status) {
@@ -74915,7 +74933,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     _qaOnAirFit();
   };
   window._qaOnAirBonus = function() {
-    const cur = (window._adminQaQueue || [])[0];
+    const cur = (typeof window._adminQaCurrent === 'function') ? window._adminQaCurrent() : (window._adminQaQueue || [])[0];
     if (cur && typeof window._adminQaGiveCredit === 'function') window._adminQaGiveCredit(cur.id);
   };
   // Pop-ups on air (Jack 11-04 "all the pop ups in these restrictions too"):
@@ -74974,7 +74992,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const typing = t && (t.tagName === 'TEXTAREA' || t.isContentEditable || (t.tagName === 'INPUT' && !t.classList.contains('aj-q-noteinp')));
     if (typing) return;
     const q = window._adminQaQueue || [];
-    const cur = q[0];
+    const cur = (typeof window._adminQaCurrent === 'function') ? window._adminQaCurrent() : q[0];
     const revealing = typeof window._adminQaRevealResolve === 'function';
     const key = e.key;
     if (key === 'Escape') {

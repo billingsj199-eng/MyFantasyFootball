@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-04-mtquick3" as="script">
+<link rel="preload" href="app.js?v=2026-11-04-ajqueue1" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -3495,7 +3495,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" onclick="window._qaAdminLoad()" title="Reload">↻ REFRESH</button>
 <button type="button" class="acct-btn acct-btn-outline aj-inbox-btn aj-onair-btn" onclick="window._qaOnAir()" title="Stream view: hides everything but the question and the queue. Keys: 1-4 pick · Enter confirm · N next · S skip · F fullscreen · Esc exit">⚫ ON AIR</button>
 <button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" onclick="window._adminQaGiveaway()" title="End-of-stream premium giveaway drawn from today's free askers">🎉 GIVEAWAY</button>
-<span class="aj-inbox-hint">Oldest question first. Click the winner (or tap the starters), then CONFIRM. The next one loads.</span>
+<span class="aj-inbox-hint">Premium first, then line skips, then free — oldest first. Click the winner (or tap the starters), then CONFIRM. Clicking a queue row just shows it; the order never changes.</span>
 </div>
 <!-- Per-player info toggles (2026-11-04): which board the rank comes from and which
      projection shows under each player. app.js _ajInfoSet re-fills the lines in place. -->
@@ -7077,7 +7077,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-04-mtquick3"></script>
+<script defer src="app.js?v=2026-11-04-ajqueue1"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

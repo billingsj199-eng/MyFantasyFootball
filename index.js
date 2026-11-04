@@ -1051,3 +1051,78 @@ exports.triviaResult = onCall(
     return Object.assign({ ok: true }, out);
   }
 );
+
+// === exportLeagueTrades: trades detected in users' synced leagues ===
+// (2026-11-04) Replaces the Sleeper snowball crawl as the "real trades" source
+// for the Trade Calc. The site's My Teams save path already diffs every league
+// snapshot and logs trades in savedLeagues[*].changeLog[*].trades; this reads
+// every user's saved leagues server-side and returns ONLY the traded player
+// names + league format. No uids, league ids, league or team names leave here:
+// the trade id is a hash, and a trade synced by several leaguemates collapses
+// to one (earliest detection wins). Gated by EXPORT_FEED_KEY like the other
+// feed endpoints; called by scripts/pull_trade_trends.py (Task "MFF Real Trades").
+//   GET ?days=8  -> { generated, users, leagues, trades:[{id,date,type,qbs,ppr,teams,src,s1:[names],s2:[names]}] }
+// Only diff entries whose snapshot gap is <= 72h count: across a longer gap a
+// player dropped by team A and later claimed by team B looks like an A->B flow.
+exports.exportLeagueTrades = onRequest(
+  { secrets: [EXPORT_FEED_KEY], memory: "512MiB", timeoutSeconds: 120 },
+  async (req, res) => {
+    try {
+      const supplied = req.get("x-export-key") || "";
+      if (!supplied || supplied !== EXPORT_FEED_KEY.value()) {
+        res.status(403).json({ error: "forbidden" });
+        return;
+      }
+      const days = Math.min(Math.max(parseFloat(req.query.days) || 8, 1), 21);
+      const cutoff = Date.now() - days * 86400000;
+      const MAX_GAP = 72 * 3600000;
+      const crypto = require("crypto");
+      const snap = await getFirestore().collection("user_game_data").select("savedLeagues").get();
+      const out = new Map();
+      const leagueKeys = new Set();
+      let users = 0;
+      snap.forEach((doc) => {
+        const saved = (doc.data() || {}).savedLeagues;
+        if (!saved || typeof saved !== "object") return;
+        users++;
+        Object.keys(saved).forEach((key) => {
+          const lg = saved[key];
+          if (!lg || typeof lg !== "object") return;
+          leagueKeys.add(key);
+          const log = Array.isArray(lg.changeLog) ? lg.changeLog : [];
+          const fmt = lg.format || {};
+          const src = key.indexOf("espn_") === 0 ? "espn" : key.indexOf("yahoo_") === 0 ? "yahoo" : "sleeper";
+          log.forEach((e) => {
+            if (!e || !Array.isArray(e.trades) || !e.trades.length) return;
+            const at = Date.parse(e.at || "");
+            if (!isFinite(at) || at < cutoff) return;
+            const since = Date.parse(e.since || "");
+            if (!isFinite(since) || at - since > MAX_GAP) return;
+            e.trades.forEach((t) => {
+              const s1 = (Array.isArray(t.aToB) ? t.aToB : []).filter((n) => typeof n === "string" && n);
+              const s2 = (Array.isArray(t.bToA) ? t.bToA : []).filter((n) => typeof n === "string" && n);
+              if (!s1.length || !s2.length) return;
+              const sig = [s1.slice().sort().join("|"), s2.slice().sort().join("|")].sort().join("||");
+              const id = "lg" + crypto.createHash("sha1").update(key + "#" + sig).digest("hex").slice(0, 12);
+              const prev = out.get(id);
+              if (prev && Date.parse(prev.date) <= at) return;
+              out.set(id, {
+                id, date: new Date(at).toISOString(),
+                type: fmt.type || "redraft",
+                qbs: fmt.sf ? 2 : 1,
+                ppr: fmt.ppr == null ? 1 : +fmt.ppr,
+                teams: Array.isArray(lg.teams) ? lg.teams.length : 12,
+                src, s1, s2,
+              });
+            });
+          });
+        });
+      });
+      const trades = [...out.values()].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+      res.json({ generated: new Date().toISOString(), days, users, leagues: leagueKeys.size, trades });
+    } catch (err) {
+      console.error("exportLeagueTrades error:", err);
+      res.status(500).json({ error: "internal" });
+    }
+  }
+);

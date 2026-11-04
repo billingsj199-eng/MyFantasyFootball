@@ -35690,6 +35690,44 @@ window.fmtHeight = fmtHeight;
         btn.textContent = 'CONFIRM: ' + (picked ? picked.textContent.slice(0, 40) : 'PICK');
       }
     };
+    const _QA_REVEAL_MS = 3000;
+    function _adminQaStamp(type, win) {
+      if (type === 'startsit') return win ? 'START' : 'SIT';
+      if (type === 'trade') return win ? 'WINNER' : 'LOSER';
+      return win ? 'STARTER' : '';
+    }
+    function _adminQaReveal(docId, x, patch) {
+      const card = document.getElementById('adminQaCard-' + docId);
+      if (!card) return Promise.resolve();
+      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      card.classList.add('aj-revealing');
+      if (x.type === 'lineup') {
+        const rows = Array.from(card.querySelectorAll('.aj-slot.filled'));
+        rows.forEach((r, i) => setTimeout(() => r.classList.add('aj-win'), reduced ? 0 : 90 * i));
+        const head = card.querySelector('.aj-slots-head');
+        if (head) head.insertAdjacentHTML('beforeend', '<span class="aj-stamp aj-stamp-win aj-stamp-inline">LINEUP SET</span>');
+      } else {
+        card.querySelectorAll('.aj-choice').forEach(ch => {
+          const win = parseInt(ch.getAttribute('data-i'), 10) === patch.pick;
+          ch.classList.add(win ? 'aj-win' : 'aj-lose');
+          ch.insertAdjacentHTML('beforeend', '<span class="aj-stamp ' + (win ? 'aj-stamp-win' : 'aj-stamp-lose') + '">' + _adminQaStamp(x.type, win) + '</span>');
+        });
+      }
+      const bar = card.querySelector('.aj-q-bar');
+      if (bar) {
+        bar.style.display = 'none';
+        bar.insertAdjacentHTML('afterend', '<div class="aj-reveal-bar"><span class="aj-reveal-msg">Answered ✓ · next question in a moment</span>' +
+          '<button type="button" class="aj-q-confirm" onclick="window._adminQaRevealNext()">NEXT ▶</button></div>');
+      }
+      return new Promise(resolve => {
+        let done = false;
+        const fin = () => { if (done) return; done = true; window._adminQaRevealResolve = null; resolve(); };
+        window._adminQaRevealResolve = fin;
+        setTimeout(fin, reduced ? 600 : _QA_REVEAL_MS);
+      });
+    }
+    window._adminQaRevealNext = function() { if (typeof window._adminQaRevealResolve === 'function') window._adminQaRevealResolve(); };
+
     window._adminQaConfirm = function(docId) {
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
       const q = window._adminQaQueue || [];
@@ -35712,6 +35750,7 @@ window.fmtHeight = fmtHeight;
       const btn = document.getElementById('adminQaConfirm-' + docId);
       if (btn) { btn.disabled = true; btn.textContent = 'SAVING…'; }
       db.collection('qa_questions').doc(docId).update(patch)
+        .then(() => _adminQaReveal(docId, entry.data, patch))
         .then(() => {
           window._adminQaQueue = q.filter(r => r.id !== docId);
           showAdminMsg(_qaTargets().msg, 'Answered ✓' + (window._adminQaQueue.length ? ' — next one up' : ' — queue clear'), 'success');
@@ -74332,11 +74371,14 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     } else {
       body = (x.options || []).map((o, i) => {
         const picked = x.status === 'answered' && x.pick === i;
+        const answered = x.status === 'answered';
         const sideTag = x.type === 'trade' ? '<span style="font-size:.6875rem;color:var(--text2)">' + (i === 0 ? 'YOU GIVE: ' : 'YOU GET: ') + '</span>' : '';
+        const verdict = !answered ? '' : x.type === 'startsit' ? (picked ? 'START' : 'SIT') : x.type === 'trade' ? (picked ? 'WINNER' : 'LOSER') : (picked ? 'JACK\'S PICK' : '');
         // flex, not float: on a phone the floated label wrapped below and hung off the box
         return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px;padding:6px 9px;border-radius:6px;margin-bottom:4px;font-size:.76rem;' +
           (picked ? 'background:rgba(34,197,94,.12);border:1px solid var(--green);color:var(--text);font-weight:600' : 'background:var(--bg);border:1px solid var(--border);color:var(--text2)') + '">' +
-          '<span>' + (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + '</span>' + (picked ? '<span style="color:var(--green);font-size:.6875rem;margin-left:auto">JACK\'S PICK</span>' : '') +
+          '<span>' + (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + '</span>' +
+          (verdict ? '<span class="aj-verdict ' + (picked ? 'aj-verdict-win' : 'aj-verdict-lose') + '">' + verdict + '</span>' : '') +
           '</div>';
       }).join('');
     }

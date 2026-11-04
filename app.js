@@ -553,6 +553,7 @@ window._HS_NORM = (function() {
       i.src = src;
     });
   }
+  const readyUrl = new Map();           // rawSrc -> blob url | null, once settled
   function normalizedUrl(src) {
     if (blobCache.has(src)) return blobCache.get(src);
     const p = (async () => {
@@ -566,7 +567,17 @@ window._HS_NORM = (function() {
       } catch (e) { return null; }   // tainted canvas → CSS fallback
     })();
     blobCache.set(src, p);
+    p.then(url => readyUrl.set(src, url), () => readyUrl.set(src, null));
     return p;
+  }
+  // What to render for a headshot right now (Jack 2026-11-04, "why do the
+  // headshots flicker"): once a flagged headshot has been re-framed, surfaces
+  // that rebuild their cards use the finished blob straight away — no raw
+  // paint, no hide-and-fade, no swap — so only a player's first appearance in
+  // the session fades in. {src, wait} — wait = ' hs-wait' while it's unknown.
+  function renderSrc(src) {
+    if (readyUrl.has(src)) { const u = readyUrl.get(src); return { src: u || src, wait: '' }; }
+    return { src, wait: waitClass(src) };
   }
   function settled(img) {
     return new Promise(r => {
@@ -629,7 +640,8 @@ window._HS_NORM = (function() {
   window._hsNormImage = normImage;
   window._hsNormalizeAll = normalizeAll;
   window._hsWaitClass = waitClass;
-  return { check, normImage, normalizeAll, isHeadshot, framing, waitClass, _blobCache: blobCache };
+  window._hsRenderSrc = renderSrc;
+  return { check, normImage, normalizeAll, isHeadshot, framing, waitClass, renderSrc, _blobCache: blobCache };
 })();
 
 // === FUTURE DRAFT PICKS (dynasty/SF rankings) ===
@@ -5228,6 +5240,9 @@ window._ajOpenCard = function(name) {
   const d = _ajFindPlayer(name);
   if (d && typeof window.openPlayerCard === 'function') window.openPlayerCard(d);
 };
+// Headshot to render: the normalizer's finished re-frame when it has one
+// (no blink on re-renders), else the raw URL hidden until it lands.
+const _ajHs = src => (typeof window._hsRenderSrc === 'function') ? window._hsRenderSrc(src) : { src, wait: '' };
 window._ajPlayerCardHtml = function(name, opts) {
   opts = opts || {};
   const d = _ajFindPlayer(name);
@@ -5244,7 +5259,7 @@ window._ajPlayerCardHtml = function(name, opts) {
   return '<div class="aj-pcard' + (band.light ? ' tcv-row-light' : '') + (opts.cls ? ' ' + opts.cls : '') + '" style="background:' + bg + '"' +
       (opts.onclick ? ' role="button" tabindex="0" onclick="' + opts.onclick + '"' : '') + ' data-name="' + safeName + '">' +
     '<span class="aj-pcard-img" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' +
-      (img ? '<img src="' + _ajEsc(img) + '" class="aj-hs' + (typeof window._hsWaitClass === 'function' ? window._hsWaitClass(img) : '') + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<span class="aj-pcard-noimg">' + _ajEsc((d.s || '?')) + '</span>') + '</span>' +
+      (img ? '<img src="' + _ajEsc(_ajHs(img).src) + '" class="aj-hs' + _ajHs(img).wait + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<span class="aj-pcard-noimg">' + _ajEsc((d.s || '?')) + '</span>') + '</span>' +
     '<span class="aj-pcard-id">' +
       '<span class="aj-pcard-name" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' + _ajEsc(disp) + '</span>' +
       '<span class="aj-pcard-sub"><span class="tcv-pos-pill ' + _ajEsc(d.s) + '">' + _ajEsc(d.s) + '</span>' + (logo ? '<img class="aj-pcard-logo" src="' + _ajEsc(logo) + '" alt="" loading="lazy">' : '') + '<span class="aj-pcard-abbr">' + _ajEsc(abbr) + '</span></span>' +
@@ -5628,7 +5643,7 @@ window._ajPlayerBigCardHtml = function(name, opts) {
         '<span class="aj-pcard-name aj-pcv-name" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' + _ajEsc(disp) + '</span>' +
         '<span class="aj-pcard-sub"><span class="tcv-pos-pill ' + _ajEsc(d.s) + '">' + _ajEsc(d.s) + '</span>' + (logo ? '<img class="aj-pcard-logo" src="' + _ajEsc(logo) + '" alt="" loading="lazy">' : '') + '<span class="aj-pcard-abbr">' + _ajEsc(abbr) + '</span></span>' +
       '</div>' +
-      '<span class="aj-pcv-img" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' + (img ? '<img src="' + _ajEsc(img) + '" class="aj-hs' + (typeof window._hsWaitClass === 'function' ? window._hsWaitClass(img) : '') + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') + '</span>' +
+      '<span class="aj-pcv-img" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' + (img ? '<img src="' + _ajEsc(_ajHs(img).src) + '" class="aj-hs' + _ajHs(img).wait + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') + '</span>' +
     '</div>' +
     (opts.ros != null
       ? '<div class="aj-pcv-body aj-pbody" data-name="' + safeName + '" data-ros="' + _ajEsc(opts.ros === true ? '' : opts.ros) + '">' + _ajPcardRosBodyHtml(d.n, opts.ros === true ? '' : opts.ros) + '</div>'

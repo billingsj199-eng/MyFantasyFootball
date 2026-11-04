@@ -74559,6 +74559,15 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   }
   function _qaChipsHtml(key, names, max) {
     const picked = _qaPicks(key);
+    const order = (typeof window._ajSortByRank === 'function') ? window._ajSortByRank(names) : _qaSortByPos(names);
+    if (typeof window._ajPlayerCardHtml === 'function') {
+      // Player tiles (headshot, team band, rank / proj / opp), best first.
+      return '<div class="aj-pick aj-pick-tiles" id="qaPick-' + key + '" data-max="' + (max || 0) + '">' + order.map(n => {
+        const on = picked.indexOf(n) >= 0;
+        return window._ajPlayerCardHtml(n, { onclick: 'window._qaChipToggle(\'' + key + '\', this)', cls: 'aj-chip-btn' + (on ? ' sel aj-chip-start' : '') })
+          || '<button type="button" class="aj-chip aj-chip-btn' + (on ? ' aj-chip-start' : '') + '" data-name="' + _jtEsc(n) + '" onclick="window._qaChipToggle(\'' + key + '\', this)">' + _jtEsc(n) + '</button>';
+      }).join('') + '</div>';
+    }
     return '<div class="aj-roster aj-pick" id="qaPick-' + key + '" data-max="' + (max || 0) + '">' + _qaSortByPos(names).map(n => {
       const pos = _qaPosOf(n);
       const on = picked.indexOf(n) >= 0;
@@ -74582,6 +74591,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       picks.push(name);
     }
     btn.classList.toggle('aj-chip-start', i < 0);
+    btn.classList.toggle('sel', i < 0);
     btn.setAttribute('aria-pressed', i < 0 ? 'true' : 'false');
     const cnt = document.getElementById('qaPickCnt-' + key);
     if (cnt) cnt.textContent = picks.length + (max ? ' of ' + max : '') + ' ' + (cnt.getAttribute('data-what') || 'picked');
@@ -74680,9 +74690,49 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       _qaSendBtn('lineup', false);
   }
 
-  function _qaSubmittedHtml(x) {
-    let body = '';
+  // Member view of a sent/answered question in the admin's look (Jack
+  // 2026-11-04): big team-color cards with START / SIT or WINNER / LOSER
+  // stamps, trade as YOU GIVE | YOU GET panels, lineup as slot rows with
+  // tiles. Falls back to the plain rows when the card helpers aren't loaded.
+  function _qaSubmittedCardsHtml(x) {
+    if (typeof window._ajPlayerCardsHtml !== 'function' || typeof window._ajPlayerCardHtml !== 'function') return null;
+    const answered = x.status === 'answered';
     if (x.type === 'lineup') {
+      const roster = Array.isArray(x.roster) ? x.roster : [];
+      const starters = Array.isArray(x.starters) ? x.starters : [];
+      if (answered && Array.isArray(x.lineup) && x.lineup.length) {
+        const bench = roster.filter(n => starters.indexOf(n) < 0);
+        return '<div class="aj-lineup-lbl">JACK\'S LINEUP</div><div class="aj-slots">' +
+          x.lineup.map(r => '<div class="aj-slot' + (r.name ? ' filled has-tile' : '') + '"><span class="aj-slot-btn aj-slot-btn-pos aj-slot-static"><span class="aj-slot-pos">' + _jtEsc(r.slot || '') + '</span></span>' +
+            (r.name ? (window._ajPlayerCardHtml(r.name, { cls: 'aj-slot-tile' }) || '<span class="aj-slot-name">' + _jtEsc(r.name) + '</span>') : '<span class="aj-slot-empty">left open</span>') + '</div>').join('') +
+          '</div>' + (bench.length ? '<div class="aj-bench">Bench: ' + _qaSortByPos(bench).map(_jtEsc).join(', ') + '</div>' : '');
+      }
+      if (answered && starters.length) {
+        const bench = roster.filter(n => starters.indexOf(n) < 0);
+        return '<div class="aj-lineup-lbl">JACK\'S LINEUP</div><div class="aj-pick aj-pick-tiles">' + _qaSortByPos(starters).map(n => window._ajPlayerCardHtml(n, { cls: 'sel' })).join('') + '</div>' +
+          (bench.length ? '<div class="aj-bench">Bench: ' + _qaSortByPos(bench).map(_jtEsc).join(', ') + '</div>' : '');
+      }
+      return '<div class="aj-lineup-meta">' + (x.slots && x.slots.length ? '<b>Starters:</b> ' + _jtEsc(_qaSlotSummary(x.slots)) + ' &nbsp;·&nbsp; ' : '') + roster.length + ' players sent</div>' +
+        '<div class="aj-pick aj-pick-tiles">' + _qaSortByPos(roster).map(n => window._ajPlayerCardHtml(n)).join('') + '</div>';
+    }
+    const opts = x.options || [];
+    const isTrade = x.type === 'trade';
+    const stamp = i => !answered ? '' : '<span class="aj-stamp aj-static ' + (x.pick === i ? 'aj-stamp-win' : 'aj-stamp-lose') + '">' + (isTrade ? (x.pick === i ? 'WINNER' : 'LOSER') : (x.pick === i ? 'START' : 'SIT')) + '</span>';
+    return '<div class="aj-choices ' + (isTrade ? 'aj-choices-trade' : 'aj-choices-v') + '">' + opts.map((o, i) => {
+      const cards = window._ajPlayerCardsHtml(o, { big: true });
+      const single = cards && _ajFindPlayer(o);
+      return '<div class="aj-choice aj-choice-big aj-choice-tiles aj-mopt' + (answered ? (x.pick === i ? ' aj-win' : ' aj-lose aj-static') : '') + '">' +
+        (isTrade ? '<span class="aj-choice-side">' + (i === 0 ? 'YOU GIVE' : 'YOU GET') + '</span>' : '') +
+        (cards ? (single ? '' : '<span class="aj-choice-txt aj-choice-cap">' + _jtEsc(o) + '</span>') + cards : '<span class="aj-choice-txt">' + _jtEsc(o) + '</span>') +
+        stamp(i) + '</div>';
+    }).join('') + '</div>';
+  }
+
+  function _qaSubmittedHtml(x) {
+    let body = _qaSubmittedCardsHtml(x) || '';
+    if (body) {
+      // card view built above — only the trailing lines follow
+    } else if (x.type === 'lineup') {
       const roster = Array.isArray(x.roster) ? x.roster : [];
       const starters = Array.isArray(x.starters) ? x.starters : [];
       if (x.status === 'answered' && Array.isArray(x.lineup) && x.lineup.length) {

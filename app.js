@@ -74767,10 +74767,16 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       if (typeof window._adminQaRenderQueue === 'function' && list && list.querySelector('.aj-qwrap')) window._adminQaRenderQueue();
     }
   }
+  // A new stage shape or window size re-measures (drops the per-card scale lock).
+  function _qaOnAirUnlock() {
+    const list = document.getElementById('ajInboxList');
+    if (list) Array.from(list.children).forEach(el => { delete el.dataset.ajLock; });
+  }
   function _qaOnAirAspectApply(a) {
     if (_QA_ASPECTS.indexOf(a) < 0) a = 'fit';
     document.documentElement.setAttribute('data-aj-aspect', a);
     document.querySelectorAll('.aj-onair-asp [data-asp]').forEach(b => b.classList.toggle('on', b.getAttribute('data-asp') === a));
+    _qaOnAirUnlock();
     _qaOnAirFit();
   }
   window._qaOnAirAspect = function(a) {
@@ -74807,6 +74813,24 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       }
       const W = stage.clientWidth, H = stage.clientHeight;
       if (!W || !H) return;
+      inner.style.setProperty('--aj-sh', H + 'px');
+      // Lineup builder: a slot picker open or closed changes the content
+      // height, which used to rescale the whole stage on every slot click
+      // (Jack 11-04 "make it always the same size"). The scale is computed
+      // once per question card (with headroom for the rows filling in) and
+      // held while that card is on stage; pickers scroll inside a bounded
+      // box (main.css) and the stage scrolls if one still runs past the end.
+      const card = inner.querySelector('.aj-q');
+      const cardId = card ? card.id : '';
+      h.classList.toggle('aj-pick-open', !!inner.querySelector('.aj-slot.open'));
+      if (cardId && inner.dataset.ajLock === cardId && inner.dataset.ajScale) {
+        const s = parseFloat(inner.dataset.ajScale) || 1;
+        inner.style.width = Math.round(W / s) + 'px';
+        inner.style.transform = s === 1 ? '' : 'scale(' + s + ')';
+        inner.style.minHeight = Math.round(H / s) + 'px';
+        return;
+      }
+      const headroom = (card && card.querySelector('.aj-slots')) ? 1.15 : 1;
       // Shrink-only from 1: a wider (unscaled) box can reflow the cards into
       // more columns and get SHORTER, so a naive fixed-point loop flips between
       // "one column, too tall" and "two columns, fits" and can stop on the
@@ -74816,8 +74840,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         inner.style.width = Math.round(W / s) + 'px';
         inner.style.transform = s === 1 ? '' : 'scale(' + s + ')';
         inner.style.minHeight = '';
-        const h = inner.scrollHeight;
-        const s2 = Math.max(0.3, Math.min(s, H / Math.max(h, 1)));
+        const ch = inner.scrollHeight * headroom;
+        const s2 = Math.max(0.3, Math.min(s, H / Math.max(ch, 1)));
         if (s - s2 < 0.004) { s = s2; break; }
         s = s2;
       }
@@ -74826,12 +74850,13 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       inner.style.minHeight = Math.round(H / s) + 'px';
       inner.style.setProperty('--aj-s', String(s));
       inner.dataset.ajScale = String(s);
+      if (cardId) inner.dataset.ajLock = cardId;
       if (!_qaFitRO && window.ResizeObserver) _qaFitRO = new ResizeObserver(() => _qaOnAirFit());
       if (_qaFitRO && !inner._ajFitObserved) { inner._ajFitObserved = true; _qaFitRO.observe(inner); }
     });
   }
   window._qaOnAirFit = _qaOnAirFit;
-  window.addEventListener('resize', () => _qaOnAirFit());
+  window.addEventListener('resize', () => { _qaOnAirUnlock(); _qaOnAirFit(); });
   // Operator chrome: shown on mouse movement, gone 3 s after it rests (kept
   // while the pointer or focus is on a control, e.g. typing a note).
   let _qaCtlTimer = 0;
@@ -74854,6 +74879,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const h = document.documentElement;
     // open = show the queue column; hiding it hands its width to the stage.
     h.classList.toggle('aj-qhide', open == null ? !h.classList.contains('aj-qhide') : !open);
+    _qaOnAirUnlock();
     _qaOnAirFit();
   };
   window._qaOnAirBonus = function() {

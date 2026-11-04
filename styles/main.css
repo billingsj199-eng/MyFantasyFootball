@@ -3576,6 +3576,11 @@ html.aj-onair[data-aj-aspect="11"] #ajInboxList{width:min(var(--aj-aw,100vw),var
 html.aj-onair[data-aj-aspect="45"] #ajInboxList{width:min(var(--aj-aw,100vw),calc(var(--aj-ah,100vh) * 4 / 5));height:min(var(--aj-ah,100vh),calc(var(--aj-aw,100vw) * 5 / 4))}
 html.aj-onair[data-aj-aspect="916"] #ajInboxList{width:min(var(--aj-aw,100vw),calc(var(--aj-ah,100vh) * 9 / 16));height:min(var(--aj-ah,100vh),calc(var(--aj-aw,100vw) * 16 / 9))}
 html.aj-onair.aj-ctl #ajInboxList{outline:1px dashed rgba(255,255,255,.3);outline-offset:-1px}
+/* Lineup builder on air: the stage scale is locked per question (app.js); the
+   slot picker scrolls inside a box ≤ 40% of the stage, and the stage itself
+   scrolls while a picker is open in case it still runs past the bottom */
+html.aj-onair .aj-slot-picker{max-height:calc(var(--aj-sh,900px) * .4 / var(--aj-s,1));overflow:auto}
+html.aj-onair.aj-pick-open #ajInboxList{overflow-y:auto}
 html.aj-onair #ajInboxList > *{position:relative;box-sizing:border-box;transform-origin:top left;padding:18px 24px 24px}
 html.aj-onair .aj-qwrap{display:block}
 html.aj-onair .aj-qmain{min-width:0}

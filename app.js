@@ -5558,6 +5558,7 @@ window._ajRosterPop = function(t, names, marks, sub, fmt) {
   _ajRosterPopRender(pop);
   pop.classList.add('open');
   document.documentElement.classList.add('aj-rpop-open');
+  if (typeof window._qaOnAirPin === 'function') window._qaOnAirPin();   // on air: inside the stage box
 };
 window._ajRosterPopView = function(v) {
   const pop = document.getElementById('ajRosterPop');
@@ -74764,8 +74765,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       document.documentElement.removeAttribute('data-aj-aspect');
       const list = document.getElementById('ajInboxList');
       if (list) Array.from(list.children).forEach(el => { el.style.width = ''; el.style.minHeight = ''; el.style.transform = ''; delete el.dataset.ajScale; });
-      // Put a docked queue back into the page layout.
+      // Put a docked queue back into the page layout; unpin the pop-ups.
       if (typeof window._adminQaRenderQueue === 'function' && list && list.querySelector('.aj-qwrap')) window._adminQaRenderQueue();
+      if (typeof window._qaOnAirPin === 'function') window._qaOnAirPin();
     }
   }
   // A new stage shape or window size re-measures (drops the per-card scale lock).
@@ -74829,6 +74831,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         inner.style.width = Math.round(W / s) + 'px';
         inner.style.transform = s === 1 ? '' : 'scale(' + s + ')';
         inner.style.minHeight = Math.round(H / s) + 'px';
+        window._qaOnAirPin();
         return;
       }
       const headroom = (card && card.querySelector('.aj-slots')) ? 1.15 : 1;
@@ -74852,6 +74855,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       inner.style.setProperty('--aj-s', String(s));
       inner.dataset.ajScale = String(s);
       if (cardId) inner.dataset.ajLock = cardId;
+      window._qaOnAirPin();
       if (!_qaFitRO && window.ResizeObserver) _qaFitRO = new ResizeObserver(() => _qaOnAirFit());
       if (_qaFitRO && !inner._ajFitObserved) { inner._ajFitObserved = true; _qaFitRO.observe(inner); }
     });
@@ -74887,6 +74891,33 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const cur = (window._adminQaQueue || [])[0];
     if (cur && typeof window._adminQaGiveCredit === 'function') window._adminQaGiveCredit(cur.id);
   };
+  // Pop-ups on air (Jack 11-04 "all the pop ups in these restrictions too"):
+  // the lineup / roster popover, the player card modal and the giveaway panel
+  // are pinned to the stage's own box instead of the whole window, so the
+  // OBS crop shows them whole. Re-pinned on every fit, popover open and
+  // player-card open; cleared when ON AIR ends.
+  const _QA_PIN_IDS = ['ajRosterPop', 'modal', 'ajGiveaway'];
+  window._qaOnAirPin = function() {
+    const on = document.documentElement.classList.contains('aj-onair');
+    const stage = document.getElementById('ajInboxList');
+    const r = (on && stage) ? stage.getBoundingClientRect() : null;
+    _QA_PIN_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (r && r.width && r.height) {
+        el.style.left = Math.round(r.left) + 'px'; el.style.top = Math.round(r.top) + 'px';
+        el.style.width = Math.round(r.width) + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto';
+        if (id === 'ajGiveaway') { el.style.height = ''; el.style.maxHeight = Math.round(r.height) + 'px'; }
+        else { el.style.height = Math.round(r.height) + 'px'; el.style.maxHeight = ''; }
+      } else ['left', 'top', 'width', 'height', 'maxHeight', 'right', 'bottom'].forEach(k => { el.style[k] = ''; });
+    });
+  };
+  (function() {
+    const modal = document.getElementById('modal');
+    if (!modal || !window.MutationObserver) return;
+    new MutationObserver(() => { if (document.documentElement.classList.contains('aj-onair') && modal.classList.contains('open')) window._qaOnAirPin(); })
+      .observe(modal, { attributes: true, attributeFilter: ['class'] });
+  })();
   window._qaOnAir = function(on) {
     if (!_qaIsAdmin()) return;
     if (on == null) on = !document.documentElement.classList.contains('aj-onair');

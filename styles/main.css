@@ -3653,7 +3653,13 @@ html.aj-onair .aj-upnext{display:flex;align-items:center;gap:14px;flex-wrap:wrap
 html.aj-onair .aj-q-empty-cta{display:block;margin-top:14px;font-size:1.2rem;color:var(--text2)}
 .aj-q-empty-cta b{color:var(--accent)}
 /* Giveaway floats over the stage; admin toasts show top-centre */
-html.aj-onair #ajGiveaway{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:45;width:min(92vw,980px);max-height:92vh;overflow:auto;margin:0}
+/* Pop-ups pinned to the stage box (inline rect from app.js _qaOnAirPin) */
+html.aj-onair #ajGiveaway{position:fixed;transform:none;z-index:45;overflow:auto;margin:0;box-sizing:border-box;border-radius:0}
+html.aj-onair .aj-rpop{padding:10px;box-sizing:border-box}
+html.aj-onair .aj-rpop-box{width:100%;max-height:100%}
+html.aj-onair .aj-rpop-title{font-size:1.25rem}
+html.aj-onair .modal-overlay{box-sizing:border-box;padding:10px}
+html.aj-onair .modal-overlay > *{max-width:100%!important;max-height:100%!important;box-sizing:border-box}
 html.aj-onair #ajInboxMsg{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:55;margin:0;font-size:.9rem;box-shadow:0 10px 30px rgba(0,0,0,.6)}
 html.aj-onair #ajRosterPop{z-index:2100}
 /* Bonus question (Jack's gift): admin button + member banner */

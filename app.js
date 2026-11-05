@@ -31228,7 +31228,11 @@ document.addEventListener('mff:retireddata', _rerunAllPlayersEnrich);
     var tag = data.players[d.n] !== undefined ? data.players[d.n] : byNorm[norm(d.n)];
     if (tag) {
       // Never overwrite a hand-set tag; only refresh tags this feed applied.
-      if (!d.inj || d._injFromFirestore) {
+      // In season the live feed wins (Jack 2026-11-05, Garrett Wilson's
+      // concussion Q hidden): d.js still carries June offseason notes
+      // ("Knee Strain", "Ankle, 4/6/2026") with no status word, which blocked
+      // the feed and showed no pill at all.
+      if (!d.inj || d._injFromFirestore || !_isOffseasonNow()) {
         d.inj = tag;
         d._injFromFirestore = true;
         updated++;

@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-11-04-askjack6" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-04-askjack27" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-04-askjack6" as="script">
+<link rel="preload" href="app.js?v=2026-11-04-ajqueue1" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-11-05" as="script">
 <link rel="preload" href="data/d.js?v=2026-11-05b" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack6">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack27">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -2204,7 +2204,7 @@ tr:hover .ao-chip,.ao-chip:focus{opacity:1}
 /* Fullscreen: still in flow right under the last tier (not pinned to the screen bottom), just bigger */
 #tierCardWrap.tcv-fullscreen .tcv-watermark{padding:14px 0 0 2px;background:none;font-size:28px;letter-spacing:3px;color:rgba(255,255,255,.78);text-shadow:0 2px 4px rgba(0,0,0,.95),0 0 10px rgba(0,0,0,.8)}
 #tierCardWrap.tcv-fullscreen{padding-bottom:24px}
-.tcv-row-wm{position:absolute;left:272px;width:136px;bottom:1px;text-align:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;line-height:1;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.9);pointer-events:none;user-select:none}
+.tcv-row-wm{position:absolute;left:272px;width:140px;bottom:1px;text-align:center;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;line-height:1;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.9);pointer-events:none;user-select:none}
 /* ROW CARDS layout — horizontal graphic cards (rank | headshot | name/pos | stats | matchup | team logo)
    on a team-color band. One card per line under each tier letter; sized to mirror the
    PNG export in _tcvRowCardCanvas (418×72 CSS px) so what you see is what downloads. */
@@ -2242,7 +2242,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 .tcv-move-date:disabled{opacity:.5}
 .tcv-key-move{color:var(--text1);opacity:.9}
 .tcv-row-team-mini{width:18px;height:18px;object-fit:contain;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
-.tcv-row-stats{flex:0 0 136px;height:44px;margin:0 0 0 6px;display:flex;align-items:stretch;background:rgba(0,0,0,.55);border-radius:6px;color:#fff}
+.tcv-row-stats{flex:0 0 140px;height:44px;margin:0 0 0 6px;display:flex;align-items:stretch;background:rgba(0,0,0,.55);border-radius:6px;color:#fff}
 .tcv-row-stat{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1}
 .tcv-row-stat-v{font-family:'DM Sans',system-ui,sans-serif;font-size:15px;font-weight:700}
 .tcv-row-stat-v .tcv-stat-blank{opacity:.35}
@@ -3464,20 +3464,27 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
      locked teaser for signed-in free users, forms/answers for premium. -->
 <div class="page" id="pageAskJack" style="padding:0;overflow:auto">
 <div class="auth-anchor" id="authAnchorAskJack"></div>
-<div style="width:100%;max-width:1000px;margin:0 auto;padding:20px 16px;min-width:0;box-sizing:border-box">
+<div style="width:100%;margin:0 auto;padding:20px 28px;min-width:0;box-sizing:border-box">
 <div class="compare-header" style="margin-bottom:.35rem;flex-wrap:wrap;gap:.5rem">
 <span class="compare-title">ASK JACK</span>
 <!-- Admin view (2026-11-04): Jack's MEMBER VIEW / INBOX toggle. app.js _qaAdminSync
      shows it for admins only and remembers the pick (localStorage aj_admin_view). -->
 <div id="ajAdminBar" class="aj-admin-bar" style="display:none">
 <span class="aj-lbl">ADMIN</span>
+<!-- FREE Q'S: opens 1-a-day free questions for every signed-in member while Jack is live
+     (shared/askjack_settings.freeOpen). VIEW AS: preview the member panel as premium or free. -->
+<button type="button" id="ajFreeToggle" class="aj-free-toggle" onclick="window._qaAdminFreeToggle()">FREE Q'S: …</button>
+<div class="aj-seg" id="ajViewAs" role="group" aria-label="Preview member view as">
+<button type="button" class="aj-seg-btn" data-viewas="premium" onclick="window._qaAdminViewAs('premium')" title="Preview the panel as a premium member">AS PREMIUM</button>
+<button type="button" class="aj-seg-btn" data-viewas="free" onclick="window._qaAdminViewAs('free')" title="Preview the panel as a free member">AS FREE</button>
+</div>
 <div class="aj-seg" role="tablist" aria-label="Ask Jack view">
 <button type="button" class="aj-seg-btn" role="tab" data-view="member" onclick="window._qaAdminToggle('member')">MEMBER VIEW</button>
 <button type="button" class="aj-seg-btn" role="tab" data-view="inbox" onclick="window._qaAdminToggle('inbox')">INBOX <span id="ajInboxCount"></span></button>
 </div>
 </div>
 </div>
-<p class="aj-intro">Stuck on a lineup call or a trade offer? Premium members send Jack two questions a week: one trade, plus either a start/sit or a full Lineup Optimizer. Pick your league, pick the question type, and his answer shows up right here.</p>
+<p class="aj-intro">Stuck on a lineup call or a trade offer? Premium members send Jack two questions a week: one trade, plus either a start/sit or a full Lineup Optimizer. Pick your league, pick the question type, and his answer shows up right here. When Jack is live streaming, free members get one question a day too.</p>
 <div id="mtAskJack"><div class="aj-loading">Loading…</div></div>
 <!-- Admin INBOX view (admins only, shown by #pageAskJack.aj-inbox-on): the Account
      admin panel's inbox code (_adminQaLoad) renders questions into #ajInboxList. -->
@@ -3486,7 +3493,9 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 <button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" data-status="open" onclick="window._qaAdminLoad('open')">QUEUE</button>
 <button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" data-status="answered" onclick="window._qaAdminLoad('answered')">ANSWERED</button>
 <button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" onclick="window._qaAdminLoad()" title="Reload">↻ REFRESH</button>
-<span class="aj-inbox-hint">Oldest question first. Click the winner (or tap the starters), then CONFIRM. The next one loads.</span>
+<button type="button" class="acct-btn acct-btn-outline aj-inbox-btn aj-onair-btn" onclick="window._qaOnAir()" title="Stream view: hides everything but the question and the queue. Keys: 1-4 pick · Enter confirm · N next · S skip · F fullscreen · Esc exit">⚫ ON AIR</button>
+<button type="button" class="acct-btn acct-btn-outline aj-inbox-btn" onclick="window._adminQaGiveaway()" title="End-of-stream premium giveaway drawn from today's free askers">🎉 GIVEAWAY</button>
+<span class="aj-inbox-hint">Premium first, then line skips, then free — oldest first. Click the winner (or tap the starters), then CONFIRM. Clicking a queue row just shows it; the order never changes.</span>
 </div>
 <!-- Per-player info toggles (2026-11-04): which board the rank comes from and which
      projection shows under each player. app.js _ajInfoSet re-fills the lines in place. -->
@@ -3514,6 +3523,37 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 </div>
 <div class="acct-msg" id="ajInboxMsg"></div>
+<!-- ON AIR strip (html.aj-onair only): live dot, key cheatsheet, fullscreen + exit -->
+<div id="ajOnAirBar" class="aj-onair-bar" aria-hidden="true">
+<span class="aj-onair-dot"></span><span class="aj-onair-lbl">ON AIR</span>
+<div class="aj-seg aj-seg-sm aj-onair-asp" role="group" aria-label="Stage shape" title="Stage shape for your OBS scene — crop the window capture to the stage (A cycles)">
+<button type="button" class="aj-seg-btn" data-asp="fit" onclick="window._qaOnAirAspect('fit')">FIT</button>
+<button type="button" class="aj-seg-btn" data-asp="169" onclick="window._qaOnAirAspect('169')">16:9</button>
+<button type="button" class="aj-seg-btn" data-asp="11" onclick="window._qaOnAirAspect('11')">1:1</button>
+<button type="button" class="aj-seg-btn" data-asp="45" onclick="window._qaOnAirAspect('45')">4:5</button>
+<button type="button" class="aj-seg-btn" data-asp="916" onclick="window._qaOnAirAspect('916')">9:16</button>
+</div>
+<button type="button" class="aj-onair-x" onclick="window._qaOnAirQueue()" title="Show / hide the queue column beside the stage (Q) — hiding it resizes the stage, so re-crop in OBS if you do">QUEUE</button>
+<button type="button" class="aj-onair-x" onclick="window._qaOnAirBonus()" title="Give this member a bonus question (B)">🎁 BONUS</button>
+<span class="aj-onair-keys"><b>1-4</b> pick · <b>Enter</b> confirm · <b>N</b> next · <b>S</b> skip · <b>↑↓</b> queue · <b>B</b> bonus · <b>Q</b> hide queue · <b>A</b> shape · <b>F</b> fullscreen · <b>Esc</b> exit · controls hide when the mouse rests</span>
+<button type="button" class="aj-onair-x" onclick="window._qaOnAirFullscreen()" title="Fullscreen (F)">⛶</button>
+<button type="button" class="aj-onair-x" onclick="window._qaOnAir(false)" title="Exit ON AIR (Esc)">EXIT</button>
+</div>
+<!-- ON AIR queue dock: the queue list beside the stage (outside the OBS crop) when the
+     stage shape leaves room; app.js _adminQaRenderQueue fills it (html.aj-qdock). -->
+<div id="ajOnAirQueue" class="aj-onair-queue" aria-label="Queue"></div>
+<!-- Premium GIVEAWAY (admin): pool = free askers today (never premium), randomizer, gift -->
+<div id="ajGiveaway" class="aj-gw" style="display:none">
+<div class="aj-gw-head"><span class="aj-gw-title">🎉 PREMIUM GIVEAWAY</span><span class="aj-gw-sub">Pool: everyone who asked a free question <select id="ajGwScope" class="aj-gw-sel" onchange="window._adminQaGiveawayPool()"><option value="today">today</option><option value="week">this week</option></select> · <span id="ajGwCount">…</span></span><button type="button" class="aj-onair-x" onclick="window._adminQaGiveaway(false)" title="Close">✕</button></div>
+<div id="ajGwPool" class="aj-gw-pool"></div>
+<div class="aj-gw-ctl">
+<label class="aj-gw-lbl">WINNERS <input id="ajGwN" type="number" min="1" max="20" value="1" class="aj-gw-in"></label>
+<label class="aj-gw-lbl">DAYS <input id="ajGwDays" type="number" min="1" max="365" value="30" class="aj-gw-in"></label>
+<button type="button" id="ajGwDraw" class="aj-q-confirm" onclick="window._adminQaGiveawayDraw()">🎲 DRAW</button>
+<button type="button" id="ajGwGift" class="aj-gift" style="display:none" onclick="window._adminQaGiveawayGift()">🎁 GIFT</button>
+</div>
+<div id="ajGwStage" class="aj-gw-stage"></div>
+</div>
 <div id="ajInboxList" style="display:flex;flex-direction:column;gap:.6rem"></div>
 </div>
 </div>
@@ -3665,7 +3705,7 @@ Only 2026 class prospects are updated. Values outside 0–10 are flagged.</div>
 </div>
 <div id="mtQuickPick" class="mt-quick-pick" hidden><span>Which site is this league on?</span><button type="button" onclick="window._mtQuickImport('espn')">ESPN</button><button type="button" onclick="window._mtQuickImport('yahoo')">Yahoo</button></div>
 <div id="mtQuickStatus" class="mt-quick-status"></div>
-<div class="mt-quick-hint">Sleeper · ESPN · Yahoo — free. Private ESPN / Yahoo leagues use the free MFF extension (see the cards below).</div>
+<div class="mt-quick-hint">Sleeper · ESPN · Yahoo — free with an account (sign in to import; your leagues save to your account). Private ESPN / Yahoo leagues use the free MFF extension (see the cards below).</div>
 </div>
 <!-- Empty-state preview — what you unlock after importing a league. Auto-hides via JS once
      teams are loaded (the import grid stays at top until then for completion-rate reasons). -->
@@ -5261,8 +5301,8 @@ Jack's Rankings require a <span class="md-premium-link" onclick="document.queryS
 <div class="help-sections">
 <div class="help-section">
 <div class="help-section-icon">📥</div>
-<div class="help-section-title">IMPORTING YOUR PORTFOLIO</div>
-<div class="help-section-desc"><b style="color:var(--accent)">Sleeper:</b> paste a league ID to pull every team in that league. <b style="color:var(--accent)">Underdog:</b> upload your Underdog CSV export (Account → Best Ball → Export). Every draft, every pick, every entry fee — synced in one click.</div>
+<div class="help-section-title">IMPORTING YOUR LEAGUES</div>
+<div class="help-section-desc"><b style="color:var(--accent)">Fastest:</b> paste your <b>Sleeper username</b> in the box at the top of the Leagues tab — every league you're in comes over at once. <b style="color:var(--accent)">One league:</b> paste its link or ID — Sleeper, ESPN (<i>leagueId=…</i> in the URL) or Yahoo (<i>football.fantasysports.yahoo.com/f1/…</i>); the box works out which site it is. <b style="color:var(--accent)">Private ESPN / Yahoo leagues:</b> install the free MFF extension in desktop Chrome and click <b>Export league to MFF</b> on your league page (phones can't run extensions, so do that part on a computer). <b style="color:var(--accent)">Keep them:</b> sign in before you import so your leagues are saved to your account and sync across devices. <b style="color:var(--accent)">Underdog:</b> upload your CSV export (Account → Best Ball → Export) on the Underdog tab.</div>
 </div>
 
 <div class="help-section">
@@ -7037,7 +7077,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-04-askjack6"></script>
+<script defer src="app.js?v=2026-11-04-ajqueue1"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

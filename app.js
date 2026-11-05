@@ -553,6 +553,7 @@ window._HS_NORM = (function() {
       i.src = src;
     });
   }
+  const readyUrl = new Map();           // rawSrc -> blob url | null, once settled
   function normalizedUrl(src) {
     if (blobCache.has(src)) return blobCache.get(src);
     const p = (async () => {
@@ -566,7 +567,17 @@ window._HS_NORM = (function() {
       } catch (e) { return null; }   // tainted canvas → CSS fallback
     })();
     blobCache.set(src, p);
+    p.then(url => readyUrl.set(src, url), () => readyUrl.set(src, null));
     return p;
+  }
+  // What to render for a headshot right now (Jack 2026-11-04, "why do the
+  // headshots flicker"): once a flagged headshot has been re-framed, surfaces
+  // that rebuild their cards use the finished blob straight away — no raw
+  // paint, no hide-and-fade, no swap — so only a player's first appearance in
+  // the session fades in. {src, wait} — wait = ' hs-wait' while it's unknown.
+  function renderSrc(src) {
+    if (readyUrl.has(src)) { const u = readyUrl.get(src); return { src: u || src, wait: '' }; }
+    return { src, wait: waitClass(src) };
   }
   function settled(img) {
     return new Promise(r => {
@@ -588,9 +599,16 @@ window._HS_NORM = (function() {
     const p = normalizedUrl(src).then(async url => {
       if (url) { img.src = url; await settled(img); }
       else if (isSquare(img)) img.classList.add('hs-sq');
-    }).finally(() => pending.delete(img));
+    }).finally(() => { pending.delete(img); img.classList.remove('hs-wait'); });
     pending.set(img, p);
     return p;
+  }
+  // Surfaces that know a headshot is flagged (data/headshot_framing.js) can
+  // render the <img> with class hs-wait (opacity 0): it stays hidden until the
+  // re-framed blob is in, so the swap fades in once instead of the raw crop
+  // painting first and then jumping (Jack 2026-11-04, Ask Jack trade tiles).
+  function waitClass(src) {
+    try { return (typeof src === 'string' && isHeadshot(src) && framing(src)) ? ' hs-wait' : ''; } catch (_) { return ''; }
   }
   // Synchronous hook for canvas exporters: hand back a normalized canvas for
   // a flagged/square headshot (img must be CORS-clean), else the image untouched.
@@ -614,13 +632,16 @@ window._HS_NORM = (function() {
       if (p) await p;
     }));
   }
-  document.addEventListener('load', e => { if (e.target && e.target.tagName === 'IMG') check(e.target); }, true);
+  document.addEventListener('load', e => { if (e.target && e.target.tagName === 'IMG') { if (!check(e.target)) e.target.classList.remove('hs-wait'); } }, true);
+  document.addEventListener('error', e => { if (e.target && e.target.tagName === 'IMG') e.target.classList.remove('hs-wait'); }, true);
   // Images that finished loading before this ran (cached, eager).
-  const sweep = () => Array.from(document.images).forEach(img => { if (img.complete && img.naturalWidth) check(img); });
+  const sweep = () => Array.from(document.images).forEach(img => { if (img.complete && img.naturalWidth) { if (!check(img)) img.classList.remove('hs-wait'); } });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sweep); else sweep();
   window._hsNormImage = normImage;
   window._hsNormalizeAll = normalizeAll;
-  return { check, normImage, normalizeAll, isHeadshot, framing, _blobCache: blobCache };
+  window._hsWaitClass = waitClass;
+  window._hsRenderSrc = renderSrc;
+  return { check, normImage, normalizeAll, isHeadshot, framing, waitClass, renderSrc, _blobCache: blobCache };
 })();
 
 // === FUTURE DRAFT PICKS (dynasty/SF rankings) ===
@@ -4970,6 +4991,13 @@ window._ajInfoSet = function(key, val) {
   window._ajInfoSyncBar();
   // Re-fill every info line in place: tapped lineup chips + typed notes survive.
   document.querySelectorAll('.aj-pinfo[data-name]').forEach(el => { el.innerHTML = _ajInfoHtml(el.getAttribute('data-name')); });
+  document.querySelectorAll('.aj-pstats[data-name]').forEach(el => {
+    el.innerHTML = el.hasAttribute('data-ros') ? _ajPcardStatsRosHtml(el.getAttribute('data-name'), el.getAttribute('data-ros') || '') : _ajPcardStatsHtml(el.getAttribute('data-name'));
+  });
+  document.querySelectorAll('.aj-pbody[data-name]').forEach(el => {
+    el.innerHTML = el.hasAttribute('data-ros') ? _ajPcardRosBodyHtml(el.getAttribute('data-name'), el.getAttribute('data-ros') || '') : _ajPcardBodyHtml(el.getAttribute('data-name'));
+  });
+  if (typeof window._ajTradeFooterRefresh === 'function') window._ajTradeFooterRefresh();
 };
 window._ajInfoSyncBar = function() {
   const o = _ajInfoOpts();
@@ -4977,13 +5005,35 @@ window._ajInfoSyncBar = function() {
 };
 // Player lookup: exact rankings name, then alias, then case-insensitive. Free
 // text ("Chuba Hubbard + 2027 2nd") is split on + , / & "and" per piece.
+const _ajFindCache = {};
 function _ajFindPlayer(name) {
   if (typeof D === 'undefined' || !Array.isArray(D)) return null;
   const n = String(name || '').trim();
   if (!n) return null;
-  let d = D.find(q => q && q.n === n && !q._retired && q.t);
+  const hit = _ajFindCache[n];
+  if (hit && D[hit.idx] === hit) return hit;
+  // Future-pick rows ("2027 Early 1st") are priced by _ajPickValuesIn, never as players.
+  const ok = q => q && !q._retired && q.t && !q._isFuturePick;
+  let d = D.find(q => ok(q) && q.n === n);
   if (!d && typeof _PROSPECT_ALIASES !== 'undefined' && _PROSPECT_ALIASES && _PROSPECT_ALIASES[n]) d = D.find(q => q && q.n === _PROSPECT_ALIASES[n] && !q._retired);
-  if (!d) { const low = n.toLowerCase(); d = D.find(q => q && !q._retired && q.t && q.n.toLowerCase() === low); }
+  if (!d) { const low = n.toLowerCase(); d = D.find(q => ok(q) && q.n.toLowerCase() === low); }
+  // League-platform spellings (Jack 2026-11-04): Sleeper's "Chris Godwin Jr."
+  // vs the board's "Chris Godwin" (either way round), punctuation drift.
+  if (!d) {
+    const strip = s => String(s).toLowerCase().replace(/\s+(jr\.?|sr\.?|ii|iii|iv|v)$/i, '').replace(/[.'’\-]/g, '').replace(/\s+/g, ' ').trim();
+    const key = strip(n);
+    if (key) d = D.find(q => ok(q) && strip(q.n) === key);
+  }
+  // Defenses: "Green Bay Packers" / "Packers" / "GB D/ST" → "Green Bay Packers D/ST".
+  if (!d) {
+    const low = n.toLowerCase().replace(/\s*(d\/st|dst|def|defense|d)$/i, '').trim();
+    if (low) {
+      const full = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP) ? Object.keys(TEAM_ABBR_MAP).find(f => f.toLowerCase() === low || String(TEAM_ABBR_MAP[f]).toLowerCase() === low) : null;
+      const want = (full || low).toLowerCase() + ' d/st';
+      d = D.find(q => ok(q) && q.s === 'DST' && (q.n.toLowerCase() === want || q.n.toLowerCase().endsWith(' ' + want)));
+    }
+  }
+  if (d) _ajFindCache[n] = d;
   return d || null;
 }
 function _ajPlayersIn(text) {
@@ -5092,6 +5142,516 @@ function _ajInfoHtml(text) {
   }).join('');
 }
 window._ajInfoHtml = _ajInfoHtml;
+
+// Player card tiles for the inbox (2026-11-04, Jack streams while answering):
+// team-color band, ESPN headshot, name + pos pill + team logo, and three stat
+// cells (rank on the toggled board · the toggled projection · opponent).
+// Headshot / name click opens the full player card; the tile's own onclick
+// (opts.onclick) is the question action (select the winner / fill a slot).
+function _ajOppLogoUrl(oppText) {
+  const m = /(?:vs|@)\s+([A-Z]{2,4})/.exec(oppText || '');
+  if (!m) return null;
+  if (!window._tcvAbbrToLogoId && typeof TEAM_ABBR_MAP !== 'undefined' && typeof TEAM_LOGO_IDS !== 'undefined') {
+    window._tcvAbbrToLogoId = {};
+    Object.keys(TEAM_ABBR_MAP).forEach(full => { if (TEAM_LOGO_IDS[full]) window._tcvAbbrToLogoId[TEAM_ABBR_MAP[full]] = TEAM_LOGO_IDS[full]; });
+  }
+  const id = window._tcvAbbrToLogoId ? window._tcvAbbrToLogoId[m[1]] : null;
+  return id ? 'https://a.espncdn.com/i/teamlogos/nfl/500/' + id + '.png' : null;
+}
+function _ajPcardStatsHtml(name) {
+  const d = _ajFindPlayer(name);
+  if (!d) return '';
+  const o = _ajInfoOpts();
+  const i = _ajPlayerInfo(d, o);
+  const verLbl = { jacks: "Jack's", consensus: 'Cons.', mine: 'Mine' }[o.ver];
+  const fmtLbl = { ppr: 'PPR', half: 'HALF', std: 'STD' }[o.fmt];
+  const pl = d.s === 'DST' ? 'D/ST' : d.s;
+  const cell = (v, l, c, title) => '<div class="aj-pcs" title="' + _ajEsc(title || l) + '"><span class="aj-pcs-v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</span><span class="aj-pcs-l">' + l + '</span></div>';
+  const blank = '<span class="aj-pcs-blank">—</span>';
+  const cells = [];
+  cells.push(i.rank
+    ? cell(_ajEsc(pl) + (i.rank.pos || '?'), '#' + i.rank.ovr + ' ' + _ajEsc(verLbl.toUpperCase()), null, verLbl + ' board (' + (o.scope === 'weekly' ? 'this week' : 'ROS') + '): ' + pl + i.rank.pos + ', #' + i.rank.ovr + ' overall')
+    : cell(blank, _ajEsc(verLbl.toUpperCase()), null, 'Not on the ' + verLbl + ' board'));
+  const col = v => (typeof posFptsColor === 'function' && v != null) ? posFptsColor(v, d.s) : null;
+  if (o.proj === 'ours') cells.push(i.proj != null ? cell(i.proj.toFixed(1), 'PROJ ' + fmtLbl, col(i.proj), 'Site projection, week ' + i.wk + ' (' + fmtLbl + ')') : cell(blank, 'PROJ', null, i.bye ? 'Bye week' : 'No projection'));
+  else if (o.proj === 'book') cells.push(i.book != null ? cell(i.book.toFixed(1), 'BOOK ' + fmtLbl, col(i.book), 'Prop lines scored, week ' + i.wk + ' (' + fmtLbl + ')') : cell(blank, 'BOOK', null, 'No lines posted'));
+  else {
+    const L = i.lines || {};
+    const rows = (_AJ_LINE_ROWS[d.s] || []).filter(r => typeof L[r[0]] === 'number').slice(0, 2);
+    if (!rows.length) cells.push(cell(blank, 'LINES', null, 'No lines posted'));
+    rows.forEach(r => {
+      const v = L[r[0]];
+      const txt = r[2] === 'odds' ? ((v > 0 ? '+' : '') + Math.round(v)) : r[2] === 0 ? String(Math.round(v)) : (Math.round(v * 10) / 10).toFixed(1);
+      cells.push(cell(txt, _ajEsc(r[1].toUpperCase()), null, r[1] + ' line (' + (i.books || []).join('/') + ')'));
+    });
+  }
+  if (i.bye) cells.push(cell('<span class="aj-pcs-bad">BYE</span>', 'WK ' + i.wk, null, 'On bye this week'));
+  else if (i.out) cells.push(cell('<span class="aj-pcs-bad">OUT</span>', 'WK ' + i.wk, null, 'Ruled out'));
+  else if (i.opp) {
+    const lu = _ajOppLogoUrl(i.opp);
+    const pre = i.opp.indexOf('@') === 0 ? '@' : 'vs';
+    cells.push('<div class="aj-pcs aj-pcs-opp" title="' + _ajEsc(i.opp) + ' this week"><span class="aj-pcs-pre">' + pre + '</span>' + (lu ? '<img src="' + lu + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<span class="aj-pcs-v">' + _ajEsc(i.opp.replace(/^(vs|@)\s*/, '')) + '</span>') + '</div>');
+  }
+  return cells.join('');
+}
+// Trade tiles (Jack 2026-11-04, "trades should always show ROS"): the small
+// tile's strip swaps this week's rank / proj / opponent for the ROS rank on
+// the chosen board, the season projection and the trade-calc value.
+function _ajPcardStatsRosHtml(name, fmt) {
+  const d = _ajFindPlayer(name);
+  if (!d) return '';
+  const o = _ajInfoOpts();
+  const verLbl = { jacks: "Jack's", consensus: 'Cons.', mine: 'Mine' }[o.ver];
+  const fmtLbl = { ppr: 'PPR', half: 'HALF', std: 'STD' }[o.fmt];
+  const pl = d.s === 'DST' ? 'D/ST' : d.s;
+  const cell = (v, l, c, title) => '<div class="aj-pcs" title="' + _ajEsc(title || l) + '"><span class="aj-pcs-v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</span><span class="aj-pcs-l">' + l + '</span></div>';
+  const blank = '<span class="aj-pcs-blank">—</span>';
+  const col = v => (typeof posFptsColor === 'function' && v != null) ? posFptsColor(v, d.s) : null;
+  const rk = _ajRankFor(d, o.ver, 'redraft');
+  const cells = [rk
+    ? cell(_ajEsc(pl) + (rk.pos || '?'), '#' + rk.ovr + ' ' + _ajEsc(verLbl.toUpperCase()) + ' ROS', null, verLbl + ' rest-of-season board: ' + pl + rk.pos + ', #' + rk.ovr + ' overall')
+    : cell(blank, _ajEsc(verLbl.toUpperCase()) + ' ROS', null, 'Not on the ' + verLbl + ' ROS board')];
+  let proj = null;
+  const prev = rankingScoringFmt;
+  rankingScoringFmt = o.fmt;
+  try { const base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null; proj = (typeof base === 'number' && isFinite(base)) ? Math.round(base * 10) / 10 : null; } catch (_) {} finally { rankingScoringFmt = prev; }
+  cells.push(proj != null ? cell(proj.toFixed(1), 'ROS ' + fmtLbl, col(proj), 'Season projection per game (' + fmtLbl + ')') : cell(blank, 'ROS PROJ', null, 'No projection'));
+  const tv = _ajPlayerTradeValue(d, fmt);
+  cells.push(tv != null ? cell(tv, 'VALUE', '#fbbf24', 'Trade Calculator value (' + verLbl + ' board, ' + _ajTradeMode(fmt).toUpperCase() + ')') : cell(blank, 'VALUE', null, 'Unpriced'));
+  if (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) cells.push(cell('<span class="aj-pcs-bad">OUT</span>', 'SEASON', null, 'Out for the season'));
+  return cells.join('');
+}
+window._ajPcardStatsRosHtml = _ajPcardStatsRosHtml;
+// Lineup picker order (Jack 2026-11-04): best first by the RANKS toggle's
+// board (Jack's / this week by default; pass 'redraft' for trade contexts);
+// unranked players sink, position order breaks ties.
+window._ajSortByRank = function(names, scope) {
+  const o = _ajInfoOpts();
+  const key = {};
+  (names || []).forEach(n => {
+    const d = _ajFindPlayer(n);
+    const r = d ? _ajRankFor(d, o.ver, scope || o.scope) : null;
+    key[n] = r && r.ovr ? r.ovr : 99999;
+  });
+  const posSorted = (typeof window._qaSortByPos === 'function') ? window._qaSortByPos(names) : names.slice();
+  return posSorted.slice().sort((a, b) => key[a] - key[b] || posSorted.indexOf(a) - posSorted.indexOf(b));
+};
+window._ajOpenCard = function(name) {
+  const d = _ajFindPlayer(name);
+  if (d && typeof window.openPlayerCard === 'function') window.openPlayerCard(d);
+};
+// Headshot to render: the normalizer's finished re-frame when it has one
+// (no blink on re-renders), else the raw URL hidden until it lands.
+const _ajHs = src => (typeof window._hsRenderSrc === 'function') ? window._hsRenderSrc(src) : { src, wait: '' };
+window._ajPlayerCardHtml = function(name, opts) {
+  opts = opts || {};
+  const d = _ajFindPlayer(name);
+  if (!d) return '';
+  const band = (typeof _tcvRowBand === 'function') ? _tcvRowBand(d.t) : { p: '#1f2937', s: '#475569', light: false };
+  const bg = (typeof _tcvRowBandCss === 'function') ? _tcvRowBandCss(band) : band.p;
+  const img = d._slImg && typeof window._thumbHeadshotUrl === 'function' ? window._thumbHeadshotUrl(d._slImg) : (d._slImg || '');
+  const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
+  const logo = (logoId && typeof window._logoSrc === 'function') ? window._logoSrc(d, logoId) : '';
+  const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
+  const disp = (typeof _tcvDisplayName === 'function') ? _tcvDisplayName(d) : d.n;
+  const safeName = _ajEsc(d.n);
+  const open = 'event.stopPropagation();window._ajOpenCard(\'' + safeName.replace(/'/g, '&#39;') + '\')';
+  return '<div class="aj-pcard' + (band.light ? ' tcv-row-light' : '') + (opts.cls ? ' ' + opts.cls : '') + '" style="background:' + bg + '"' +
+      (opts.onclick ? ' role="button" tabindex="0" onclick="' + opts.onclick + '"' : '') + ' data-name="' + safeName + '">' +
+    '<span class="aj-pcard-img" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' +
+      (img ? '<img src="' + _ajEsc(_ajHs(img).src) + '" class="aj-hs' + _ajHs(img).wait + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<span class="aj-pcard-noimg">' + _ajEsc((d.s || '?')) + '</span>') + '</span>' +
+    '<span class="aj-pcard-id">' +
+      '<span class="aj-pcard-name" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' + _ajEsc(disp) + '</span>' +
+      '<span class="aj-pcard-sub"><span class="tcv-pos-pill ' + _ajEsc(d.s) + '">' + _ajEsc(d.s) + '</span>' + (logo ? '<img class="aj-pcard-logo" src="' + _ajEsc(logo) + '" alt="" loading="lazy">' : '') + '<span class="aj-pcard-abbr">' + _ajEsc(abbr) + '</span></span>' +
+    '</span>' +
+    (opts.ros != null
+      ? '<span class="aj-pcard-stats aj-pstats" data-name="' + safeName + '" data-ros="' + _ajEsc(opts.ros) + '">' + _ajPcardStatsRosHtml(d.n, opts.ros) + '</span>'
+      : '<span class="aj-pcard-stats aj-pstats" data-name="' + safeName + '">' + _ajPcardStatsHtml(d.n) + '</span>') +
+  '</div>';
+};
+// Every player found in a free-text option ("Chuba Hubbard + 2027 2nd").
+window._ajPlayerCardsHtml = function(text, opts) {
+  return _ajPlayersIn(text).map(d => (opts && opts.big ? window._ajPlayerBigCardHtml : window._ajPlayerCardHtml)(d.n, opts)).join('');
+};
+// Big vertical card (Jack 2026-11-04, "like the Start/Sit tool"): team band
+// header with a large headshot, then the three stat cells, OURS + BOOK side
+// by side, and every posted prop line. Used for start/sit choices and the
+// two trade sides so the question fills the screen on stream.
+function _ajPcardLinesHtml(d, i) {
+  const L = i.lines || {};
+  const rows = (_AJ_LINE_ROWS[d.s] || []).filter(r => typeof L[r[0]] === 'number');
+  if (!rows.length) return '<div class="aj-pcv-line aj-pi-na">' + (i.bye ? 'Bye week' : 'No prop lines posted yet') + '</div>';
+  return rows.map(r => {
+    const v = L[r[0]];
+    const txt = r[2] === 'odds' ? ((v > 0 ? '+' : '') + Math.round(v)) : r[2] === 0 ? String(Math.round(v)) : (Math.round(v * 10) / 10).toFixed(1);
+    return '<div class="aj-pcv-line"><span>' + _ajEsc(r[1]) + '</span><b>' + txt + '</b></div>';
+  }).join('') + (i.books && i.books.length ? '<div class="aj-pcv-books">' + _ajEsc(i.books.join(' · ')) + '</div>' : '');
+}
+function _ajPcardBodyHtml(name) {
+  const d = _ajFindPlayer(name);
+  if (!d) return '';
+  const o = _ajInfoOpts();
+  const i = _ajPlayerInfo(d, o);
+  const verLbl = { jacks: "JACK'S", consensus: 'CONSENSUS', mine: 'MY RANKS' }[o.ver];
+  const scopeLbl = o.scope === 'weekly' ? 'WK ' + i.wk : 'ROS';
+  const fmtLbl = { ppr: 'PPR', half: 'HALF', std: 'STD' }[o.fmt];
+  const pl = d.s === 'DST' ? 'D/ST' : d.s;
+  const col = v => (typeof posFptsColor === 'function' && v != null) ? posFptsColor(v, d.s) : null;
+  const num = (v, l, c, title) => '<div class="aj-pcv-num" title="' + _ajEsc(title || l) + '"><span class="aj-pcv-num-v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</span><span class="aj-pcv-num-l">' + l + '</span></div>';
+  const blank = '<span class="aj-pcs-blank">—</span>';
+  const rank = i.rank
+    ? num(_ajEsc(pl) + (i.rank.pos || '?'), '#' + i.rank.ovr + ' ' + _ajEsc(verLbl) + (o.scope === 'weekly' ? '' : ' ROS'), null, verLbl + ' board (' + scopeLbl + '): ' + pl + i.rank.pos + ', #' + i.rank.ovr + ' overall')
+    : num(blank, _ajEsc(verLbl) + (o.scope === 'weekly' ? '' : ' ROS'), null, 'Not on the ' + verLbl + ' board');
+  const proj = i.proj != null ? num(i.proj.toFixed(1), 'OUR PROJ · ' + fmtLbl, col(i.proj), 'Site projection, week ' + i.wk) : num(blank, 'OUR PROJ', null, i.bye ? 'Bye week' : 'No projection');
+  const book = i.book != null ? num(i.book.toFixed(1), 'BOOK PROJ · ' + fmtLbl, col(i.book), 'This week\'s prop lines scored') : num(blank, 'BOOK PROJ', null, 'No lines posted');
+  let opp;
+  if (i.bye) opp = '<span class="aj-pcs-bad">BYE</span> week ' + i.wk;
+  else if (i.out) opp = '<span class="aj-pcs-bad">OUT</span> this week' + (i.opp ? ' · ' + _ajEsc(i.opp) : '');
+  else if (i.opp) {
+    const lu = _ajOppLogoUrl(i.opp);
+    opp = (lu ? '<img src="' + lu + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') + '<b>' + _ajEsc(i.opp) + '</b> · week ' + i.wk;
+  } else opp = '<span class="aj-pi-na">No game found this week</span>';
+  return '<div class="aj-pcv-nums">' + rank + proj + book + '</div>' +
+    '<div class="aj-pcv-opp">' + opp + '</div>' +
+    '<div class="aj-pcv-lines">' + _ajPcardLinesHtml(d, i) + '</div>';
+}
+
+// ===== TRADE questions = rest-of-season view (Jack 2026-11-04) =====
+// A trade is a season decision, so trade cards swap this week's lines for
+// ROS rank (the chosen RANKS board, ROS scope), season projection, PPG to
+// date, ROS + playoff SOS, bye ahead, and the trade-calc value of each piece;
+// each side then totals through _packageAdjustedTotal — the Trade Calculator's
+// own formula — with the calc's FAIR / WINS verdict across the two panels.
+// The league's format string ("Dynasty · SF · PPR · 12-team") picks the calc
+// mode; the RANKS toggle (Jack's / consensus / my ranks) picks the source.
+function _ajTradeMode(fmt) {
+  const f = String(fmt || '').toLowerCase();
+  const sf = /\bsf\b|superflex|2qb/.test(f);
+  if (/dynasty|keeper/.test(f)) return sf ? 'dynastysf' : 'dynasty';
+  return sf ? 'superflex' : 'redraft';
+}
+function _ajTradeSrc() { const v = _ajInfoOpts().ver; return v === 'mine' ? 'mine' : v; }
+function _ajPlayerTradeValue(d, fmt) {
+  if (!d || typeof window._getTradeValue !== 'function') return null;
+  try { return window._getTradeValue(d, _ajTradeSrc(), _ajTradeMode(fmt)); } catch (_) { return null; }
+}
+// Pick tokens typed into a side ("2027 1st", "2nd 2028", "1st") priced like the calc.
+function _ajPickValuesIn(text, fmt) {
+  const out = [];
+  const pickVal = window._getPickValue || null; // trade chunk; absent until it loads
+  if (typeof pickVal !== 'function') return out;
+  const mode = _ajTradeMode(fmt);
+  // "2027 1st", "2028 early 2nd", "late 1st 2027", "1st" (= next draft).
+  const re = /\b(?:(20\d\d)\s*(?:(early|mid|late)\s*)?(1st|2nd|3rd|4th)|(?:(early|mid|late)\s*)?(1st|2nd|3rd|4th)(?:\s*(?:round|rd)?\s*(?:pick)?)(?:\s*(20\d\d))?)\b/gi;
+  let m;
+  while ((m = re.exec(String(text || '')))) {
+    const round = (m[3] || m[5]).toLowerCase();
+    const slot = (m[2] || m[4] || 'mid').toLowerCase();
+    const year = m[1] || m[6] || String(new Date().getFullYear() + 1);
+    let v = null;
+    try { v = pickVal(round, year, slot, mode, null, _ajTradeSrc()); } catch (_) {}
+    if (typeof v === 'number' && isFinite(v) && v > 0) out.push({ label: year + (slot !== 'mid' ? ' ' + slot : '') + ' ' + round, v: Math.round(v) });
+  }
+  return out;
+}
+window._ajPickValuesIn = _ajPickValuesIn;
+function _ajSideValue(text, fmt, vsCount) {
+  const ps = _ajPlayersIn(text);
+  const pieces = [];
+  ps.forEach(d => {
+    const v = _ajPlayerTradeValue(d, fmt);
+    if (typeof v === 'number') pieces.push({ lbl: (typeof _tcvDisplayName === 'function' ? _tcvDisplayName(d) : d.n).split(' ').slice(-1)[0], v: Math.round(v) });
+  });
+  const picks = _ajPickValuesIn(text, fmt);
+  picks.forEach(p => pieces.push({ lbl: p.label, v: p.v, pick: true }));
+  const vals = pieces.map(p => p.v);
+  const raw = vals.reduce((a, b) => a + b, 0);
+  const total = (vals.length && typeof window._packageAdjustedTotal === 'function')
+    ? window._packageAdjustedTotal(vals, _ajTradeMode(fmt), vsCount) : raw;
+  return { total: Math.round(total), raw: Math.round(raw), pieces, n: vals.length, picks, unpriced: Math.max(ps.length - (vals.length - picks.length), 0) };
+}
+// Footer under each trade side (Jack 2026-11-04 "show the true value
+// adjusted, not just the two numbers"): the side's pieces with each value,
+// the raw sum, the package adjustment that gets to the calc total, and one
+// verdict from the asker's seat — "<who> GIVES 281 · GETS 231 → LOSES 18%".
+// opts = the question's options array, i = this side (0 = the asker gives),
+// who = the asker's label (Jack's inbox: their first name; member view: YOU).
+window._ajTradeFooterHtml = function(opts, i, fmt, who) {
+  opts = Array.isArray(opts) ? opts : [];
+  if (opts.length < 2 || typeof window._packageAdjustedTotal !== 'function') return '';
+  const count = t => _ajPlayersIn(t).length + _ajPickValuesIn(t, fmt).length;
+  const a = _ajSideValue(opts[0], fmt, count(opts[1]));
+  const b = _ajSideValue(opts[1], fmt, count(opts[0]));
+  const mine = i === 0 ? a : b;
+  const srcLbl = { jacks: "JACK'S", consensus: 'CONSENSUS', mine: 'MY RANKS' }[_ajInfoOpts().ver] || '';
+  const modeLbl = { redraft: 'REDRAFT', superflex: 'SUPERFLEX', dynasty: 'DYNASTY', dynastysf: 'DYNASTY SF' }[_ajTradeMode(fmt)];
+  who = String(who || 'ASKER').toUpperCase().slice(0, 16);
+  const you = who === 'YOU';
+  let verdict = '', cls = 'even';
+  if (a.total && b.total) {
+    const diff = Math.abs(a.total - b.total), pct = Math.round(diff / Math.max(a.total, b.total) * 100);
+    const gives = '<span class="aj-tv-who">' + _ajEsc(who) + '</span> GIVE' + (you ? '' : 'S') + ' <b>' + a.total + '</b> · GET' + (you ? '' : 'S') + ' <b>' + b.total + '</b> → ';
+    if (pct <= 5) verdict = gives + 'FAIR TRADE';
+    else if (b.total > a.total) { verdict = gives + 'WIN' + (you ? '' : 'S') + ' +' + pct + '%'; cls = 'win'; }   // the asker receives more
+    else { verdict = gives + 'LOSE' + (you ? '' : 'S') + ' −' + pct + '%'; cls = 'lose'; }
+  } else verdict = 'UNPRICED — a piece has no value on the ' + srcLbl + ' board';
+  // The math: "London 167 + Swift 140 = 307 raw · 2-for-1 package −26".
+  let calc = '';
+  if (mine.pieces.length > 1) {
+    calc = mine.pieces.map(p => _ajEsc(p.lbl) + ' <b>' + p.v + '</b>').join(' + ') + ' = ' + mine.raw + ' raw';
+    if (mine.total !== mine.raw) calc += ' · ' + mine.pieces.length + '-for-' + (i === 0 ? b : a).pieces.length + ' package <b>' + (mine.total > mine.raw ? '+' : '−') + Math.abs(mine.total - mine.raw) + '</b>';
+  } else if (mine.pieces.length === 1) calc = _ajEsc(mine.pieces[0].lbl) + ' <b>' + mine.pieces[0].v + '</b>' + (mine.pieces[0].pick ? ' (pick)' : '');
+  if (mine.unpriced) calc += (calc ? ' · ' : '') + mine.unpriced + ' unpriced';
+  return '<div class="aj-tv aj-tv-' + cls + '" data-tv-i="' + i + '" title="Trade Calculator value: ' + srcLbl + ' board, ' + modeLbl + ' curve; the side sending more pieces pays the roster-spot cost on its extras (package adjustment)">' +
+    '<div class="aj-tv-main"><span class="aj-tv-l">' + (i === 0 ? 'VALUE OUT' : 'VALUE IN') + '</span><span class="aj-tv-v">' + (mine.total || '—') + '</span>' +
+    (calc ? '<span class="aj-tv-calc">' + calc + '</span>' : '') + '</div>' +
+    '<div class="aj-tv-verdict">' + verdict + '</div>' +
+    '<div class="aj-tv-src">' + srcLbl + ' · ' + modeLbl + ' · trade calc formula, package-adjusted</div></div>';
+};
+window._ajTradeFooterRefresh = function() {
+  document.querySelectorAll('.aj-tv-wrap[data-opts]').forEach(w => {
+    let opts = null;
+    try { opts = JSON.parse(w.getAttribute('data-opts') || 'null'); } catch (_) {}
+    w.innerHTML = window._ajTradeFooterHtml(opts, parseInt(w.getAttribute('data-i'), 10) || 0, w.getAttribute('data-fmt') || '', w.getAttribute('data-who') || '');
+  });
+};
+function _ajSosCell(d, weeks, lbl, title) {
+  if (typeof window._mtGetPlayoffSos !== 'function' || !weeks.length) return null;
+  let ps = null;
+  try { ps = window._mtGetPlayoffSos(d.t, d.s, weeks); } catch (_) {}
+  if (!ps || !ps.rank) return null;
+  return '<div class="aj-pcv-line" title="' + _ajEsc((ps.title || title || '').replace(/"/g, '')) + '"><span>' + lbl + '</span><b style="color:' + _ajEsc(ps.color || '#fff') + '">#' + ps.rank + ' <span class="aj-sos-tag">' + _ajEsc(ps.label || '') + '</span></b></div>';
+}
+function _ajPcardRosBodyHtml(name, fmt) {
+  const d = _ajFindPlayer(name);
+  if (!d) return '';
+  const o = _ajInfoOpts();
+  const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
+  const verLbl = { jacks: "JACK'S", consensus: 'CONSENSUS', mine: 'MY RANKS' }[o.ver];
+  const fmtLbl = { ppr: 'PPR', half: 'HALF', std: 'STD' }[o.fmt];
+  const pl = d.s === 'DST' ? 'D/ST' : d.s;
+  const col = v => (typeof posFptsColor === 'function' && v != null) ? posFptsColor(v, d.s) : null;
+  const num = (v, l, c, title) => '<div class="aj-pcv-num" title="' + _ajEsc(title || l) + '"><span class="aj-pcv-num-v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</span><span class="aj-pcv-num-l">' + l + '</span></div>';
+  const blank = '<span class="aj-pcs-blank">—</span>';
+  const rk = _ajRankFor(d, o.ver, 'redraft');
+  const rank = rk
+    ? num(_ajEsc(pl) + (rk.pos || '?'), '#' + rk.ovr + ' ' + _ajEsc(verLbl) + ' ROS', null, verLbl + ' rest-of-season board: ' + pl + rk.pos + ', #' + rk.ovr + ' overall')
+    : num(blank, _ajEsc(verLbl) + ' ROS', null, 'Not on the ' + verLbl + ' ROS board');
+  let proj = null, ppg = null;
+  const prev = rankingScoringFmt;
+  rankingScoringFmt = o.fmt;
+  try {
+    const base = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null;
+    proj = (typeof base === 'number' && isFinite(base)) ? Math.round(base * 10) / 10 : null;
+    ppg = (typeof adjSeasonPpg === 'function') ? adjSeasonPpg(d) : null;
+  } catch (_) {} finally { rankingScoringFmt = prev; }
+  const projC = proj != null ? num(proj.toFixed(1), 'ROS PROJ · ' + fmtLbl, col(proj), 'Season projection per game (' + fmtLbl + ')') : num(blank, 'ROS PROJ', null, 'No projection');
+  const ppgC = (ppg && ppg.v != null) ? num(ppg.v.toFixed(1), "'" + ppg.yr + ' PPG' + (ppg.gp ? ' · ' + ppg.gp + ' GP' : ''), col(ppg.v), 'Fantasy points per game' + (ppg.yr === 26 ? ' this season' : ' last season') + ' (' + fmtLbl + ')') : num(blank, 'PPG', null, 'No games yet');
+  const tv = _ajPlayerTradeValue(d, fmt);
+  const tvC = tv != null ? num(tv, 'TRADE VALUE', '#fbbf24', 'Trade Calculator value (' + verLbl + ' board, ' + _ajTradeMode(fmt).toUpperCase() + ')') : num(blank, 'TRADE VALUE', null, 'Unpriced');
+  // Schedule ahead: bye still to come, games left, SOS windows.
+  const rows = [];
+  try {
+    const abbr = (typeof teamAbbr === 'function') ? teamAbbr(d.t) : d.t;
+    const sched = (typeof window.getNflScheduleForTeam === 'function') ? window.getNflScheduleForTeam(abbr) : null;
+    let byeWk = null, left = 0;
+    if (sched) for (let w = wk; w <= 18; w++) { const e = sched[w]; if (!e) continue; if (e.bye) { if (byeWk == null && w >= wk) byeWk = w; } else if (e.opp) left++; }
+    if (sched) rows.push('<div class="aj-pcv-line"><span>Bye</span><b>' + (byeWk != null ? (byeWk === wk ? '<span class="aj-pcs-bad">THIS WEEK</span>' : 'week ' + byeWk) : 'done') + '</b></div>');
+    if (left) rows.push('<div class="aj-pcv-line"><span>Games left</span><b>' + left + '</b></div>');
+    const ros = []; for (let w = wk; w <= 17; w++) ros.push(w);
+    const rosC = _ajSosCell(d, ros, 'ROS SOS · W' + wk + '-17', 'Rest-of-season schedule, 1 = easiest');
+    if (rosC) rows.push(rosC);
+    const pC = _ajSosCell(d, [15, 16, 17], 'Playoff SOS · W15-17', 'Playoff schedule, 1 = easiest');
+    if (pC) rows.push(pC);
+  } catch (_) {}
+  if (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) rows.unshift('<div class="aj-pcv-line"><span class="aj-pcs-bad">OUT FOR SEASON</span><b></b></div>');
+  return '<div class="aj-pcv-nums aj-pcv-nums-ros">' + rank + projC + ppgC + tvC + '</div>' +
+    '<div class="aj-pcv-lines">' + (rows.join('') || '<div class="aj-pcv-line aj-pi-na">No schedule data</div>') + '</div>';
+}
+window._ajPcardRosBodyHtml = _ajPcardRosBodyHtml;
+
+// Roster popover: a team's whole roster as tiles, best first, with the pieces
+// in the trade marked. Opened from the team names on a trade question.
+// Lineup builder for the popover (Jack 2026-11-04 "format it in a starting
+// lineup with the league settings, toggle before / after the trade"): the
+// league's starting slots (x.slots, from format.rosterPositions) filled best
+// first by ROS projection — fixed positions first, then W/R · W/T, FLEX,
+// SUPERFLEX — the rest is the bench.
+const _AJ_SLOT_LBL = { SUPER_FLEX: 'SUPERFLEX', 'Q/W/R/T': 'SUPERFLEX', SUPERFLEX: 'SUPERFLEX', REC_FLEX: 'W/T FLEX', WRRB_FLEX: 'W/R FLEX', 'W/R': 'W/R FLEX', 'W/T': 'W/T FLEX', 'W/R/T': 'FLEX', 'RB/WR/TE': 'FLEX', FLEX: 'FLEX', DST: 'DST', 'D/ST': 'DST', DEF: 'DST' };
+function _ajSlotAllows(sl, pos) {
+  const u = String(sl || '').toUpperCase(), P = String(pos || '').toUpperCase();
+  if (u === 'QB' || u === 'RB' || u === 'WR' || u === 'TE' || u === 'K') return P === u;
+  if (u === 'DST' || u === 'DEF' || u === 'D/ST') return P === 'DST' || P === 'DEF';
+  if (u === 'SUPER_FLEX' || u === 'SUPERFLEX' || u === 'Q/W/R/T') return ['QB', 'RB', 'WR', 'TE'].includes(P);
+  if (u === 'WRRB_FLEX' || u === 'W/R') return P === 'RB' || P === 'WR';
+  if (u === 'REC_FLEX' || u === 'W/T') return P === 'WR' || P === 'TE';
+  if (u === 'FLEX' || u === 'W/R/T' || u === 'RB/WR/TE') return ['RB', 'WR', 'TE'].includes(P);
+  return true;
+}
+function _ajSlotTier(sl) {
+  const u = String(sl || '').toUpperCase();
+  if (['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'DEF', 'D/ST'].includes(u)) return 0;
+  if (['WRRB_FLEX', 'W/R', 'REC_FLEX', 'W/T'].includes(u)) return 1;
+  if (['FLEX', 'W/R/T', 'RB/WR/TE'].includes(u)) return 2;
+  if (['SUPER_FLEX', 'SUPERFLEX', 'Q/W/R/T'].includes(u)) return 3;
+  return 4;
+}
+function _ajRosProj(d) {
+  const prev = rankingScoringFmt;
+  rankingScoringFmt = _ajInfoOpts().fmt;
+  try { const v = (typeof adjProjPpg === 'function') ? adjProjPpg(d) : null; return (typeof v === 'number' && isFinite(v)) ? v : 0; }
+  catch (_) { return 0; } finally { rankingScoringFmt = prev; }
+}
+function _ajBestLineup(names, slots) {
+  const ps = names.map(n => { const d = _ajFindPlayer(n); return { n, d, pos: d ? d.s : '', v: d && !(typeof window._irIsOut === 'function' && window._irIsOut(d.n)) ? _ajRosProj(d) : 0 }; });
+  ps.sort((a, b) => b.v - a.v);
+  const used = {};
+  const out = slots.map(s => ({ slot: s, lbl: _AJ_SLOT_LBL[String(s).toUpperCase()] || String(s).toUpperCase(), name: null, v: 0 }));
+  out.map((o, i) => i).sort((a, b) => _ajSlotTier(out[a].slot) - _ajSlotTier(out[b].slot) || a - b).forEach(i => {
+    const p = ps.find(q => q.d && !used[q.n] && _ajSlotAllows(out[i].slot, q.pos));
+    if (p) { used[p.n] = 1; out[i].name = p.n; out[i].v = p.v; }
+  });
+  return { slots: out, bench: ps.filter(p => !used[p.n]).map(p => p.n), total: Math.round(out.reduce((s, o) => s + o.v, 0) * 10) / 10 };
+}
+// Starting slots for a trade question: the ones sent with it (trades since
+// 2026-11-04), else the synced league's roster positions when it's one of
+// Jack's own leagues, else a standard lineup (+ SUPERFLEX for SF formats).
+function _ajSlotsFor(x) {
+  if (Array.isArray(x.slots) && x.slots.length) return { slots: x.slots, src: 'league' };
+  const id = x.league && x.league.id;
+  const saved = window._mtSavedLeagues || null;
+  const lg = (id && Array.isArray(saved)) ? saved.find(l => l && String(l.leagueId) === String(id)) : null;
+  const rp = (lg && lg.format && Array.isArray(lg.format.rosterPositions))
+    ? lg.format.rosterPositions.map(s => String(s || '').toUpperCase()).filter(s => s && !/^(BN|BE|BENCH|IR|IR\+|RES|TAXI|NA)$/.test(s)).slice(0, 20) : [];
+  if (rp.length) return { slots: rp, src: 'synced' };
+  const f = String((x.league && x.league.fmt) || '').toLowerCase();
+  const std = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'K', 'DST'];
+  if (/\bsf\b|superflex|2qb/.test(f)) std.splice(7, 0, 'SUPER_FLEX');
+  return { slots: std, src: 'assumed' };
+}
+// Roster popover. t = {title, roster, marks (this team gives), gets (it
+// receives), slots, fmt, sub}; with slots it renders the starting lineup
+// with a BEFORE / AFTER THE TRADE toggle (projected starter PPG for each),
+// otherwise the plain best-first tile grid. Legacy positional call kept.
+window._ajRosterPop = function(t, names, marks, sub, fmt) {
+  if (!t || typeof t !== 'object') t = { title: t, roster: names, marks, sub, fmt };
+  let pop = document.getElementById('ajRosterPop');
+  if (!pop) {
+    pop = document.createElement('div');
+    pop.id = 'ajRosterPop';
+    pop.className = 'aj-rpop';
+    pop.innerHTML = '<div class="aj-rpop-box" role="dialog" aria-modal="true"><div class="aj-rpop-head"><div><div class="aj-rpop-title"></div><div class="aj-rpop-sub"></div></div><div class="aj-rpop-ctl"></div><button type="button" class="aj-rpop-x" onclick="window._ajRosterPopClose()" aria-label="Close">✕</button></div><div class="aj-rpop-body"></div></div>';
+    pop.addEventListener('click', e => { if (e.target === pop) window._ajRosterPopClose(); });
+    document.body.appendChild(pop);
+  }
+  t.roster = Array.isArray(t.roster) ? t.roster.filter(Boolean) : [];
+  t.marks = Array.isArray(t.marks) ? t.marks : [];
+  t.gets = Array.isArray(t.gets) ? t.gets : [];
+  t.slots = Array.isArray(t.slots) ? t.slots : [];
+  pop._t = t;
+  pop._view = 'before';
+  pop.querySelector('.aj-rpop-title').textContent = t.title || 'Roster';
+  const canToggle = t.slots.length && (t.marks.length || t.gets.length);
+  pop.querySelector('.aj-rpop-ctl').innerHTML = canToggle
+    ? '<div class="aj-seg aj-seg-sm aj-rpop-seg" role="group" aria-label="Lineup view"><button type="button" class="aj-seg-btn on" data-v="before" onclick="window._ajRosterPopView(\'before\')">BEFORE TRADE</button><button type="button" class="aj-seg-btn" data-v="after" onclick="window._ajRosterPopView(\'after\')">AFTER TRADE</button></div>'
+    : '';
+  _ajRosterPopRender(pop);
+  pop.classList.add('open');
+  document.documentElement.classList.add('aj-rpop-open');
+  if (typeof window._qaOnAirPin === 'function') window._qaOnAirPin();   // on air: inside the stage box
+};
+window._ajRosterPopView = function(v) {
+  const pop = document.getElementById('ajRosterPop');
+  if (!pop || !pop._t) return;
+  pop._view = v === 'after' ? 'after' : 'before';
+  pop.querySelectorAll('.aj-rpop-seg [data-v]').forEach(b => b.classList.toggle('on', b.getAttribute('data-v') === pop._view));
+  _ajRosterPopRender(pop);
+};
+function _ajRosterPopRender(pop) {
+  const t = pop._t, after = pop._view === 'after';
+  const fmt = t.fmt != null ? t.fmt : '';
+  const tile = (n, cls) => (typeof window._ajPlayerCardHtml === 'function' && window._ajPlayerCardHtml(n, { cls: cls || '', ros: fmt })) || '<div class="aj-chip">' + _ajEsc(n) + '</div>';
+  const body = pop.querySelector('.aj-rpop-body'), sub = pop.querySelector('.aj-rpop-sub');
+  if (!t.roster.length) { body.innerHTML = '<div class="aj-pi-na">No roster was attached to this question.</div>'; sub.textContent = ''; return; }
+  if (!t.slots.length) {
+    const order = (typeof window._ajSortByRank === 'function') ? window._ajSortByRank(t.roster, 'redraft') : t.roster;
+    sub.textContent = t.sub || (t.roster.length + ' players' + (t.marks.length ? ' · ' + t.marks.length + ' in this trade (marked)' : '') + ' · ROS view');
+    body.innerHTML = '<div class="aj-pick aj-pick-tiles aj-rpop-tiles">' + order.map(n => tile(n, t.marks.indexOf(n) >= 0 ? 'sel aj-rpop-in' : '')).join('') + '</div>';
+    return;
+  }
+  const beforeNames = t.roster;
+  const afterNames = t.roster.filter(n => t.marks.indexOf(n) < 0).concat(t.gets.filter(n => t.roster.indexOf(n) < 0));
+  const L0 = _ajBestLineup(beforeNames, t.slots);
+  const L1 = (t.marks.length || t.gets.length) ? _ajBestLineup(afterNames, t.slots) : L0;
+  const L = after ? L1 : L0;
+  const delta = Math.round((L1.total - L0.total) * 10) / 10;
+  const fmtLbl = { ppr: 'PPR', half: 'HALF', std: 'STD' }[_ajInfoOpts().fmt] || '';
+  const tag = n => after
+    ? (t.gets.indexOf(n) >= 0 ? '<span class="aj-lu-tag in">IN</span>' : '')
+    : (t.marks.indexOf(n) >= 0 ? '<span class="aj-lu-tag out">OUT IN DEAL</span>' : '');
+  const rowCls = n => after ? (t.gets.indexOf(n) >= 0 ? ' aj-lu-in' : '') : (t.marks.indexOf(n) >= 0 ? ' aj-lu-out' : '');
+  sub.textContent = (after ? 'After the trade: ' : 'Before the trade: ') + (after ? afterNames.length : beforeNames.length) + ' players · best lineup by ROS projection (' + fmtLbl + ')' +
+    (t.slotsSrc === 'assumed' ? ' · standard lineup assumed (this question didn\'t carry the league\'s slots)' : '');
+  body.innerHTML =
+    '<div class="aj-lu-tot"><span class="aj-lu-tot-l">STARTERS</span><span class="aj-lu-tot-v">' + L.total.toFixed(1) + '</span><span class="aj-lu-tot-s">proj PPG · ' + fmtLbl + '</span>' +
+      ((t.marks.length || t.gets.length) ? '<span class="aj-lu-tot-d ' + (delta > 0 ? 'up' : delta < 0 ? 'down' : '') + '">' + (after ? 'vs ' + L0.total.toFixed(1) + ' before' : 'after the deal ' + L1.total.toFixed(1)) + ' (' + (delta > 0 ? '+' : '') + delta.toFixed(1) + ')</span>' : '') +
+    '</div>' +
+    '<div class="aj-lu">' + L.slots.map(o => '<div class="aj-lu-row' + (o.name ? rowCls(o.name) : '') + '"><span class="aj-slot-pos">' + _ajEsc(o.lbl) + '</span>' +
+      (o.name ? tile(o.name) + tag(o.name) : '<span class="aj-slot-empty">nobody eligible</span>') + '</div>').join('') + '</div>' +
+    // Bench in the same rows as the starters (Jack 11-04): BN label + tile.
+    (L.bench.length ? '<div class="aj-lu-bench-h">BENCH (' + L.bench.length + ')</div><div class="aj-lu aj-lu-benchrows">' + L.bench.map(n => '<div class="aj-lu-row aj-lu-bench' + rowCls(n) + '"><span class="aj-slot-pos aj-slot-pos-bn">BN</span>' + tile(n) + tag(n) + '</div>').join('') + '</div>' : '');
+}
+window._ajRosterPopClose = function() {
+  const pop = document.getElementById('ajRosterPop');
+  if (pop) pop.classList.remove('open');
+  document.documentElement.classList.remove('aj-rpop-open');
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.documentElement.classList.contains('aj-rpop-open')) window._ajRosterPopClose(); });
+// Team buttons for a trade question: x.team / x.roster = the asker's side,
+// x.partner = {name, roster} the other team (both stored at submit time);
+// x.slots = the league's starting slots (trades since 2026-11-04).
+window._ajTradeTeamBtn = function(x, i, whoLbl) {
+  const side = i === 0 ? { name: x.team, roster: x.roster } : (x.partner || {});
+  const roster = Array.isArray(side.roster) ? side.roster : [];
+  const label = side.name ? String(side.name) : (i === 0 ? (x.name || 'Their team') : 'Other team');
+  if (!roster.length) return '<span class="aj-choice-side">' + whoLbl + '</span>';
+  const opts = Array.isArray(x.options) ? x.options : [];
+  const marks = _ajPlayersIn(opts[i] || '').map(d => d.n);
+  const gets = _ajPlayersIn(opts[i === 0 ? 1 : 0] || '').map(d => d.n);
+  const key = 'ajTeam_' + Math.random().toString(36).slice(2, 9);
+  window._ajTeamData = window._ajTeamData || {};
+  const sl = _ajSlotsFor(x);
+  window._ajTeamData[key] = { title: label, roster, marks, gets, slots: sl.slots, slotsSrc: sl.src, fmt: (x.league && x.league.fmt) || '' };
+  return '<button type="button" class="aj-choice-side aj-team-btn" onclick="event.stopPropagation();window._ajRosterPop(window._ajTeamData[\'' + key + '\'])" title="Open ' + _ajEsc(label) + '\'s lineup before / after this deal">' +
+    whoLbl + ' <span class="aj-team-name">' + _ajEsc(label) + '</span><span class="aj-team-open">LINEUP ▸</span></button>';
+};
+window._ajPlayerBigCardHtml = function(name, opts) {
+  opts = opts || {};
+  const d = _ajFindPlayer(name);
+  if (!d) return '';
+  const band = (typeof _tcvRowBand === 'function') ? _tcvRowBand(d.t) : { p: '#1f2937', s: '#475569', light: false };
+  const img = d._slImg && typeof window._fixHeadshotUrl === 'function' ? window._fixHeadshotUrl(d._slImg) : (d._slImg || '');
+  const logoId = (typeof TEAM_LOGO_IDS !== 'undefined') ? TEAM_LOGO_IDS[d.t] : null;
+  const logo = (logoId && typeof window._logoSrc === 'function') ? window._logoSrc(d, logoId) : '';
+  const abbr = (typeof TEAM_ABBR_MAP !== 'undefined' && TEAM_ABBR_MAP[d.t]) || d.t || '';
+  const disp = (typeof _tcvDisplayName === 'function') ? _tcvDisplayName(d) : d.n;
+  const safeName = _ajEsc(d.n);
+  const open = 'event.stopPropagation();window._ajOpenCard(\'' + safeName.replace(/'/g, '&#39;') + '\')';
+  const vbg = 'linear-gradient(180deg,' + band.p + ' 0%,' + band.p + ' 42%,' + band.s + ' 100%)';
+  return '<div class="aj-pcard aj-pcard-v' + (band.light ? ' tcv-row-light' : '') + (opts.cls ? ' ' + opts.cls : '') + '" style="background:' + vbg + '"' +
+      (opts.onclick ? ' role="button" tabindex="0" onclick="' + opts.onclick + '"' : '') + ' data-name="' + safeName + '">' +
+    '<div class="aj-pcv-head">' + (logo ? '<img class="aj-pcv-wm" src="' + _ajEsc(logo) + '" alt="" loading="lazy" aria-hidden="true">' : '') +
+      '<div class="aj-pcv-id">' +
+        '<span class="aj-pcard-name aj-pcv-name" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' + _ajEsc(disp) + '</span>' +
+        '<span class="aj-pcard-sub"><span class="tcv-pos-pill ' + _ajEsc(d.s) + '">' + _ajEsc(d.s) + '</span>' + (logo ? '<img class="aj-pcard-logo" src="' + _ajEsc(logo) + '" alt="" loading="lazy">' : '') + '<span class="aj-pcard-abbr">' + _ajEsc(abbr) + '</span></span>' +
+      '</div>' +
+      '<span class="aj-pcv-img" onclick="' + open + '" title="Open ' + safeName + '\'s player card">' + (img ? '<img src="' + _ajEsc(_ajHs(img).src) + '" class="aj-hs' + _ajHs(img).wait + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') + '</span>' +
+    '</div>' +
+    (opts.ros != null
+      ? '<div class="aj-pcv-body aj-pbody" data-name="' + safeName + '" data-ros="' + _ajEsc(opts.ros === true ? '' : opts.ros) + '">' + _ajPcardRosBodyHtml(d.n, opts.ros === true ? '' : opts.ros) + '</div>'
+      : '<div class="aj-pcv-body aj-pbody" data-name="' + safeName + '">' + _ajPcardBodyHtml(d.n) + '</div>') +
+  '</div>';
+};
 
 // CLAY PPG: Mike Clay's 2026 stat line scored in the current format (site
 // scoring incl. receptions — Clay projects them; INTs he doesn't) ÷ 17 games,
@@ -5424,17 +5984,40 @@ function _updateViewOptsSummary() {
 // messages stay there); that card's status line is mirrored under the box. A short
 // run of digits is ESPN or Yahoo — the picker asks. Core, not the myteams chunk, so
 // the onclick works before the chunk lands (it waits for _mtEnsureLoaded).
+// League imports need an account (Jack 2026-11-04 "only allow imports if
+// signed in"): leagues are saved to the account, so a signed-out import would
+// be gone on the next load. Every importer (quick-add box, the three cards,
+// the extension hand-offs) checks this first; signed out = the message on the
+// card + the sign-in modal.
+window._mtRequireSignIn = function (statusEl) {
+  const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+  if (user) return true;
+  const msg = 'Sign in (free) to import — your leagues are saved to your account and sync across your devices.';
+  const show = el => { if (el) { el.textContent = msg; el.style.color = 'var(--accent)'; } };
+  show(statusEl);
+  const q = document.getElementById('mtQuickStatus');
+  if (q !== statusEl) show(q);
+  if (typeof window.openAuthModal === 'function') window.openAuthModal();
+  return false;
+};
 window._mtQuickImport = async function (force) {
   const input = document.getElementById('mtQuickInput'), st = document.getElementById('mtQuickStatus'), pick = document.getElementById('mtQuickPick');
   if (!input) return;
   const raw = input.value.trim();
   const say = (m, c) => { if (st) { st.textContent = m; st.style.color = c || ''; } };
   if (pick) pick.hidden = true;
+  if (!window._mtRequireSignIn(st)) return;
   if (!raw) { say('Paste a league ID, a league URL, or a Sleeper username.', 'var(--accent)'); return; }
   let p = force || null, value = raw;
   if (!p) {
+    // Sleeper league URLs (sleeper.com/leagues/<id>, sleeper.app/..., with or
+    // without /team etc.) carry the 15+ digit league id — pull it out
+    // (2026-11-04: the placeholder promised URLs but only bare ids worked).
+    const slUrl = /sleeper\.(com|app)/i.test(raw) ? (raw.match(/\d{15,}/) || [])[0] : null;
     if (/espn\.com/i.test(raw) || /leagueId=\d+/i.test(raw)) p = 'espn';
     else if (/yahoo\.com/i.test(raw) || /^\d+\.l\.\d+$/i.test(raw)) p = 'yahoo';
+    else if (slUrl) { p = 'sleeper'; value = slUrl; }
+    else if (/sleeper\.(com|app)/i.test(raw)) { say('That Sleeper link has no league ID in it — open the league in Sleeper and copy its URL, or paste your Sleeper username.', 'var(--accent)'); return; }
     else if (/^\d{15,}$/.test(raw)) p = 'sleeper';
     else if (/^\d+$/.test(raw)) { if (pick) pick.hidden = false; say(''); return; }
     else if (/^@?[A-Za-z0-9_.-]{2,32}$/.test(raw)) p = 'sleeperUser';
@@ -7632,13 +8215,30 @@ window._weeklyAssumeOutApply = function(map) {
   }
   return true;
 };
-window._weeklyAssumeOutSave = function(next) {
+// PER-NAME WRITES (Jack 2026-11-04, week 9: "it moved players into the injury/out when I already took them out").
+// The list used to be saved by rewriting the WHOLE assumeOut map from this tab's copy, so any tab / device holding an
+// older copy (a laptop or phone tab woken from sleep, the IndexedDB-cached first snapshot on load, a tab whose
+// listener lagged) put every name Jack had already moved back in straight back into BYE / OUT on its next click.
+// Now each click sends only its own change — arrayUnion / arrayRemove on assumeOut.<wk> (activated.<wk>) — so a
+// stale copy can never resurrect a name removed elsewhere.
+window._weeklyListDelta = function(field, wk, names, add) {
+  names = (names || []).filter(Boolean);
+  if (!names.length) return Promise.resolve(false);
   try {
     if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.firestore) {
-      firebase.firestore().collection('settings').doc('active_week').set({ assumeOut: next }, { merge: true })
-        .catch(e => console.warn('[Weekly] assume-out sync failed:', e));
+      const FV = firebase.firestore.FieldValue, patch = {};
+      patch[field] = {};
+      patch[field][String(wk)] = add ? FV.arrayUnion.apply(FV, names) : FV.arrayRemove.apply(FV, names);
+      return firebase.firestore().collection('settings').doc('active_week').set(patch, { merge: true })
+        .then(() => true)
+        .catch(e => {
+          console.warn('[Weekly] ' + field + ' sync failed:', e);
+          if (typeof toast === 'function') toast('Could not save the Week ' + wk + ' change (' + (e.code || e.message) + ') — sign in again and retry');
+          return false;
+        });
     }
-  } catch(e) { console.warn('[Weekly] assume-out sync failed:', e); }
+  } catch(e) { console.warn('[Weekly] ' + field + ' sync failed:', e); }
+  return Promise.resolve(false);
 };
 window._weeklyAssumeOutToggle = function(name, wk) {
   if (typeof window.isAdmin !== 'function' || !window.isAdmin()) { toast('Only admins can assume a player out'); return false; }
@@ -7648,9 +8248,9 @@ window._weeklyAssumeOutToggle = function(name, wk) {
   const i = cur.indexOf(name);
   if (i >= 0) cur.splice(i, 1); else cur.push(name);
   const next = Object.assign({}, map);
-  next[k] = cur;   // always written (an empty array clears the week under a merge write)
+  next[k] = cur;
   window._weeklyAssumeOutApply(next);
-  window._weeklyAssumeOutSave(next);
+  window._weeklyListDelta('assumeOut', wk, [name], i < 0);
   if (typeof toast === 'function') toast(i >= 0 ? name + ' back in the Week ' + wk + ' rankings' : name + ' assumed OUT for Week ' + wk);
   if (typeof render === 'function' && typeof currentMode !== 'undefined' && currentMode === 'weekly') { try { render(); } catch(_e) {} }
   if (typeof window._sstRefresh === 'function') { try { window._sstRefresh(); } catch(_e) {} }
@@ -7736,14 +8336,9 @@ window._weeklyActivateToggle = function(name, wk) {
   const i = cur.indexOf(name);
   if (i >= 0) cur.splice(i, 1); else cur.push(name);
   const next = Object.assign({}, map);
-  next[k] = cur;   // always written (an empty array clears the week under a merge write)
+  next[k] = cur;
   window._weeklyActivatedApply(next);
-  try {
-    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && firebase.firestore) {
-      firebase.firestore().collection('settings').doc('active_week').set({ activated: next }, { merge: true })
-        .catch(e => console.warn('[Weekly] activate sync failed:', e));
-    }
-  } catch(e) { console.warn('[Weekly] activate sync failed:', e); }
+  window._weeklyListDelta('activated', wk, [name], i < 0);   // per-name write, never the whole map (see _weeklyListDelta)
   window._weeklyActivatedSync();
   if (typeof toast === 'function') toast(i >= 0 ? name + ' back out for Week ' + wk : name + ' activated for Week ' + wk + ' — back in the rankings pool');
   try {
@@ -8450,7 +9045,7 @@ async function _tcvMoveLoadDate(dateStr) {
 }
 // Layout in CSS px — the .tcv-row-card CSS mirrors these so the on-screen
 // card and the exported PNG match. Canvas draws at 3× for crisp output.
-const _TCV_ROW = { MV_IMG_DX: 14, W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 42, STATS_X: 272, STATS_W: 136, STATS_H: 44, RNG_STATS_X: 308 };
+const _TCV_ROW = { MV_IMG_DX: 14, W: 418, H: 72, PAD_TOP: 14, PAD_X: 14, PAD_BOTTOM: 22, IMG_X: 4, IMG_W: 110, IMG_H: 86, NAME_X: 112, NAME_END: 226, MINI_LOGO: 18, OPP_X: 230, OPP_W: 36, OPP_LOGO: 42, STATS_X: 272, STATS_W: 140, STATS_H: 44, RNG_STATS_X: 308 };
 const _TCV_POS_COLORS = { QB: '#ec4899', RB: '#10b981', WR: '#3b82f6', TE: '#f59e0b', K: '#64748b', DST: '#64748b' };
 function _tcvRowBand(teamName) {
   const c = _tcvTC(teamName) || { p: '#1f2937', s: '#475569' };
@@ -8602,6 +9197,10 @@ function _tcvBuildRowCard(d, displayRank, tierLabel, glowRgb, filePrefix, prevRa
   const seasonBye = (opp || _rng) ? null : _tcvSeasonBye(d);
   if (seasonBye != null) {
     oppHtml = '<div class="tcv-row-opp tcv-row-bye" title="Bye week ' + seasonBye + '"><span class="tcv-row-bye-l">BYE</span><span class="tcv-row-bye-n">' + seasonBye + '</span></div>';
+  } else if (!opp && !_rng) {
+    // Season board, bye already passed: keep the slot so the stats box sits at
+    // the same x as the BYE rows (Jack 2026-11-04 — rows looked shifted).
+    oppHtml = '<div class="tcv-row-opp tcv-row-opp-empty" aria-hidden="true"></div>';
   } else if (opp) {
     oppHtml = (opp.bye || opp.out)
       ? '<div class="tcv-row-opp tcv-opp-bye' + (opp.out ? ' tcv-opp-out' : '') + '" title="' + _tcvOppTitle(opp) + '">' + (opp.out || 'BYE') + '</div>'
@@ -14163,21 +14762,39 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
         if (_list) {   // null = boards not loaded yet — the 60 s re-check retries
           window._weeklySeedWritten = wk;
           window._weeklyFrozenLocal = wk;
-          const _aoMap = Object.assign({}, window._weeklyAssumeOutMap || {});
-          const _cur = _aoMap[String(wk)] || [];
-          const _seed = _list.filter(n => _cur.indexOf(n) < 0);
-          _aoMap[String(wk)] = _cur.concat(_seed);
-          window._weeklyAssumeOutApply(_aoMap);
-          const _now = new Date().toISOString();
-          const _w = { assumeOut: _aoMap, assumeOutFrozenWeek: wk, assumeOutFrozenAt: _now };
-          if (!_seeded) { _w.assumeOutSeededWeek = wk; _w.assumeOutSeededAt = _now; }
           const _what = _seeded ? 'Out / under-50%' : 'Questionable / Doubtful / Out';
           let _sdb = null;
           try { _sdb = (typeof firebase !== 'undefined' && firebase.firestore && firebase.apps && firebase.apps.length) ? firebase.firestore() : null; } catch (_e) {}
           if (_sdb) {
-            _sdb.collection('settings').doc('active_week').set(_w, { merge: true })
-              .then(() => { console.log('[Weekly] week ' + wk + ' seed: ' + _seed.length + ' ' + _what + ' players parked in the BYE / OUT row; week frozen', _seed); if (_seed.length && typeof toast === 'function') toast('Week ' + wk + ': ' + _seed.length + ' ' + _what + ' player' + (_seed.length === 1 ? '' : 's') + ' parked in the BYE / OUT row — from here only you move players out'); })
-              .catch(e => { console.warn('[Weekly] assume-out seed write failed:', e); window._weeklySeedWritten = null; window._weeklyFrozenLocal = null; });
+            // 2026-11-04 (week 9 re-park): the seed runs inside a transaction that re-reads the SERVER doc. A tab
+            // working from a stale snapshot (IndexedDB cache on load, a laptop / phone tab waking up after the
+            // Tuesday roll) used to seed again and rewrite the week's whole list over Jack's UNDOs; now it sees the
+            // week is already frozen and writes nothing. New names are added with arrayUnion — never a full list.
+            const _ref = _sdb.collection('settings').doc('active_week');
+            _sdb.runTransaction(tx => tx.get(_ref).then(snap => {
+              const s = (snap.exists && snap.data()) || {};
+              if ((parseInt(s.assumeOutFrozenWeek, 10) || 0) >= wk) return null;   // another tab already ran it
+              const sSeeded = (parseInt(s.assumeOutSeededWeek, 10) || 0) >= wk;
+              const srvCur = (s.assumeOut && s.assumeOut[String(wk)]) || [];
+              // seeded on the server since this tab built its list: only the Out / under-50% catch-up applies
+              const want = (sSeeded && !_seeded) ? (window._weeklyAssumeOutSeed(wk, { outsOnly: true }) || []) : _list;
+              const add = want.filter(n => srvCur.indexOf(n) < 0);
+              const now = new Date().toISOString();
+              const w = { assumeOutFrozenWeek: wk, assumeOutFrozenAt: now };
+              if (!sSeeded) { w.assumeOutSeededWeek = wk; w.assumeOutSeededAt = now; }
+              if (add.length) {
+                const FV = firebase.firestore.FieldValue;
+                w.assumeOut = {}; w.assumeOut[String(wk)] = FV.arrayUnion.apply(FV, add);
+              }
+              tx.set(_ref, w, { merge: true });
+              return { add: add, what: sSeeded ? 'Out / under-50%' : 'Questionable / Doubtful / Out' };
+            }))
+              .then(r => {
+                if (!r) { console.log('[Weekly] week ' + wk + ' already seeded + frozen on the server — this tab wrote nothing'); return; }
+                console.log('[Weekly] week ' + wk + ' seed: ' + r.add.length + ' ' + r.what + ' players parked in the BYE / OUT row; week frozen', r.add);
+                if (r.add.length && typeof toast === 'function') toast('Week ' + wk + ': ' + r.add.length + ' ' + r.what + ' player' + (r.add.length === 1 ? '' : 's') + ' parked in the BYE / OUT row — from here only you move players out');
+              })
+              .catch(e => { console.warn('[Weekly] assume-out seed write failed (' + _what + '):', e); window._weeklySeedWritten = null; window._weeklyFrozenLocal = null; });
           } else { window._weeklySeedWritten = null; window._weeklyFrozenLocal = null; }
         }
       } catch (_e) { console.warn('[Weekly] assume-out seed failed:', _e); window._weeklySeedWritten = null; window._weeklyFrozenLocal = null; }
@@ -14305,7 +14922,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
       const next = Object.assign({}, window._weeklyAssumeOutMap || {});
       next[String(wk)] = cur.concat(add);
       window._weeklyAssumeOutApply(next);
-      window._weeklyAssumeOutSave(next);
+      window._weeklyListDelta('assumeOut', wk, add, true);   // only the new names (arrayUnion), never the whole list
       if (typeof render === 'function') render();
       if (typeof window._sstRefresh === 'function') { try { window._sstRefresh(); } catch(_e) {} }
       if (typeof toast === 'function') toast(add.length + ' player' + (add.length === 1 ? '' : 's') + ' parked in the Week ' + wk + ' BYE / OUT row');
@@ -35325,12 +35942,274 @@ window.fmtHeight = fmtHeight;
         : '<span style="background:rgba(245,158,11,.15);color:var(--accent);padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">🔀 START/SIT</span>';
     }
     const _adminQaTypeName = t => t === 'trade' ? 'trade' : t === 'lineup' ? 'lineup' : 'start/sit';
+    // Queue tier: premium (or legacy docs with no tier) → paid line skips → free.
+    const _adminQaTierRank = x => x.tier === 'free' ? 2 : x.tier === 'skip' ? 1 : 0;
+    window._adminQaGiveCredit = function(docId) {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const row = (window._adminQaQueue || []).find(r => r.id === docId) || (window._adminQaRows || []).find(r => r.id === docId);
+      if (!db || !row || !row.data.uid) return;
+      const x = row.data;
+      const ticket = x.uid + '_c' + Date.now();
+      const btn = document.getElementById('adminQaGift-' + docId);
+      if (btn) { btn.disabled = true; btn.textContent = 'GIVING…'; }
+      db.collection('qa_credits').doc(ticket).set({ uid: x.uid, name: (x.name || 'Member').slice(0, 120), grantedAt: new Date().toISOString(), by: 'jack', fromQ: docId, fromType: x.type || null })
+        .then(() => {
+          x.bonusGiven = (x.bonusGiven || 0) + 1;
+          if (btn) { btn.disabled = false; btn.textContent = '🎁 BONUS GIVEN' + (x.bonusGiven > 1 ? ' ×' + x.bonusGiven : '') + ' · GIVE ANOTHER'; btn.classList.add('on'); }
+          showAdminMsg(_qaTargets().msg, '🎁 Bonus question given to ' + (x.name || 'the member') + ' — any type, never expires', 'success');
+        })
+        .catch(e => { if (btn) { btn.disabled = false; btn.textContent = '🎁 GIVE A BONUS QUESTION'; } showAdminMsg(_qaTargets().msg, 'Couldn\'t give the bonus: ' + e.message, 'error'); });
+    };
+    const _adminQaGiftBtn = (docId, x) => '<button type="button" id="adminQaGift-' + _qaAdminEsc(docId) + '" class="aj-gift' + (x.bonusGiven ? ' on' : '') + '" onclick="window._adminQaGiveCredit(\'' + _qaAdminEsc(docId) + '\')" title="Hand this member a free premium question for later — any type, never expires (e.g. you couldn\'t fully answer, or a player is hurt and they should re-ask)">' + (x.bonusGiven ? '🎁 BONUS GIVEN · GIVE ANOTHER' : '🎁 GIVE A BONUS QUESTION') + '</button>';
+    // ===== END-OF-STREAM GIVEAWAY (Jack 2026-11-04) =====
+    // Pool = everyone who asked a FREE-line question today (tier free / skip —
+    // premium members never land there; Jack's own practice questions and
+    // anyone already holding gifted premium are dropped). DRAW cycles names
+    // on screen and settles on N winners; GIFT writes gifted_premium like the
+    // Account > Admin grant (never shortening a longer existing grant) and
+    // logs qa_giveaways/{ms}.
+    const _QA_DAY_MS = 86400000, _QA_ANCHOR = 1767675600000;
+    window._adminQaGiveaway = function(open) {
+      const box = document.getElementById('ajGiveaway');
+      if (!box) return;
+      const on = open == null ? box.style.display === 'none' || !box.style.display : !!open;
+      box.style.display = on ? '' : 'none';
+      if (on) window._adminQaGiveawayPool();
+    };
+    window._adminQaGiveawayPool = function() {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const list = document.getElementById('ajGwPool');
+      const scope = (document.getElementById('ajGwScope') || {}).value || 'today';
+      if (!db || !list) return;
+      list.innerHTML = '<span class="aj-pi-na">Loading the pool…</span>';
+      const me = (firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.uid : '';
+      const day = Math.floor((Date.now() - _QA_ANCHOR) / _QA_DAY_MS), wk = Math.floor((Date.now() - _QA_ANCHOR) / (7 * _QA_DAY_MS));
+      db.collection('qa_questions').where('tier', 'in', ['free', 'skip']).limit(500).get().then(snap => {
+        const byUid = {};
+        snap.forEach(d => {
+          const x = d.data() || {};
+          if (!x.uid || x.uid === me || x.testN) return;
+          if (scope === 'today' ? x.dayIdx !== day : x.weekIdx !== wk) return;
+          if (!byUid[x.uid]) byUid[x.uid] = { uid: x.uid, name: x.name || 'Member', n: 0, skip: false };
+          byUid[x.uid].n++;
+          if (x.tier === 'skip') byUid[x.uid].skip = true;
+        });
+        const pool = Object.values(byUid).sort((a, b) => a.name.localeCompare(b.name));
+        window._adminQaGwPool = pool;
+        window._adminQaGwWinners = null;
+        const cnt = document.getElementById('ajGwCount');
+        if (cnt) cnt.textContent = pool.length + (pool.length === 1 ? ' entrant' : ' entrants');
+        list.innerHTML = pool.length
+          ? pool.map(e => '<span class="aj-gw-chip">' + _qaAdminEsc(e.name) + (e.n > 1 ? ' <i>×' + e.n + '</i>' : '') + '</span>').join('')
+          : '<span class="aj-pi-na">Nobody asked a free question ' + (scope === 'today' ? 'today' : 'this week') + ' yet.</span>';
+        const stage = document.getElementById('ajGwStage');
+        if (stage) stage.innerHTML = '';
+        const gift = document.getElementById('ajGwGift');
+        if (gift) gift.style.display = 'none';
+      }).catch(e => { list.innerHTML = '<span class="aj-pi-na">Couldn\'t load the pool: ' + _qaAdminEsc(e.message) + '</span>'; });
+    };
+    // Email + current gifted-premium state for an entrant (Jack can read user_index + gifted_premium).
+    function _adminQaEntrantInfo(db, e) {
+      return db.collection('user_index').doc(e.uid).get().then(d => {
+        const email = (d.exists && d.data() && d.data().email) ? String(d.data().email).toLowerCase() : (e.name && e.name.indexOf('@') > 0 ? e.name.toLowerCase() : '');
+        if (!email) return Object.assign({}, e, { email: '', giftExpires: 0 });
+        return db.collection('gifted_premium').doc(email.replace(/[^a-z0-9]/g, '_')).get()
+          .then(g => Object.assign({}, e, { email, giftExpires: (g.exists && g.data() && g.data().expires) || 0 }))
+          .catch(() => Object.assign({}, e, { email, giftExpires: 0 }));
+      }).catch(() => Object.assign({}, e, { email: '', giftExpires: 0 }));
+    }
+    window._adminQaGiveawayDraw = function() {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const pool = window._adminQaGwPool || [];
+      const stage = document.getElementById('ajGwStage');
+      const nWin = Math.max(1, Math.min(20, parseInt((document.getElementById('ajGwN') || {}).value, 10) || 1));
+      if (!db || !stage) return;
+      if (!pool.length) { showAdminMsg(_qaTargets().msg, 'The pool is empty', 'error'); return; }
+      const drawBtn = document.getElementById('ajGwDraw');
+      if (drawBtn) { drawBtn.disabled = true; drawBtn.textContent = 'DRAWING…'; }
+      stage.innerHTML = '<div class="aj-gw-cycler" id="ajGwCycler">…</div>';
+      // Resolve emails + drop anyone already on gifted premium, then draw.
+      Promise.all(pool.map(e => _adminQaEntrantInfo(db, e))).then(infos => {
+        const eligible = infos.filter(e => !(e.giftExpires > Date.now()));
+        if (!eligible.length) { stage.innerHTML = '<div class="aj-pi-na">Everyone in the pool already has gifted premium.</div>'; if (drawBtn) { drawBtn.disabled = false; drawBtn.textContent = '🎲 DRAW'; } return; }
+        // Fisher–Yates with crypto randomness
+        const arr = eligible.slice();
+        const rnd = n => { const u = new Uint32Array(1); (window.crypto || {}).getRandomValues ? crypto.getRandomValues(u) : (u[0] = Math.floor(Math.random() * 4294967296)); return u[0] % n; };
+        for (let i = arr.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+        const winners = arr.slice(0, Math.min(nWin, arr.length));
+        window._adminQaGwWinners = winners;
+        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const cyc = document.getElementById('ajGwCycler');
+        let tick = 0;
+        const spin = setInterval(() => { if (cyc) cyc.textContent = eligible[tick++ % eligible.length].name; }, 70);
+        setTimeout(() => {
+          clearInterval(spin);
+          stage.innerHTML = '<div class="aj-gw-winners">' + winners.map((w, i) =>
+            '<div class="aj-gw-win" style="animation-delay:' + (reduced ? 0 : i * 0.45) + 's"><span class="aj-gw-win-k">🎉 WINNER' + (winners.length > 1 ? ' ' + (i + 1) : '') + '</span><span class="aj-gw-win-n">' + _qaAdminEsc(w.name) + '</span>' + (w.email ? '' : '<span class="aj-gw-win-warn">no email on file — gift by hand</span>') + '</div>').join('') + '</div>' +
+            (eligible.length < infos.length ? '<div class="aj-pi-na" style="margin-top:6px">' + (infos.length - eligible.length) + ' entrant' + (infos.length - eligible.length === 1 ? '' : 's') + ' skipped — already on gifted premium.</div>' : '');
+          if (drawBtn) { drawBtn.disabled = false; drawBtn.textContent = '🎲 DRAW AGAIN'; }
+          const gift = document.getElementById('ajGwGift');
+          const days = Math.max(1, parseInt((document.getElementById('ajGwDays') || {}).value, 10) || 30);
+          if (gift) { gift.style.display = ''; gift.disabled = false; gift.textContent = '🎁 GIFT ' + days + ' DAYS TO ' + winners.length + ' WINNER' + (winners.length === 1 ? '' : 'S'); }
+        }, reduced ? 300 : 2600);
+      });
+    };
+    window._adminQaGiveawayGift = function() {
+      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const winners = window._adminQaGwWinners || [];
+      const days = Math.max(1, parseInt((document.getElementById('ajGwDays') || {}).value, 10) || 30);
+      const gift = document.getElementById('ajGwGift');
+      if (!db || !winners.length) return;
+      if (gift) { gift.disabled = true; gift.textContent = 'GIFTING…'; }
+      const adminEmail = (firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : 'admin';
+      const labels = { 7: '1 Week', 30: '1 Month', 365: 'Yearly Pass' };
+      const label = labels[days] || days + ' days';
+      const now = Date.now();
+      const writes = winners.filter(w => w.email).map(w => {
+        // Never shorten a longer existing grant.
+        const expires = Math.max(w.giftExpires || 0, now + days * _QA_DAY_MS);
+        return db.collection('gifted_premium').doc(w.email.replace(/[^a-z0-9]/g, '_')).set({
+          email: w.email, expires: expires, days: days, label: label + ' (stream giveaway)', grantedBy: adminEmail, grantedAt: new Date().toISOString(), source: 'giveaway', uid: w.uid
+        });
+      });
+      Promise.all(writes)
+        .then(() => db.collection('qa_giveaways').doc(String(now)).set({ at: new Date().toISOString(), days: days, pool: (window._adminQaGwPool || []).length, winners: winners.map(w => ({ uid: w.uid, name: w.name, email: w.email || null })) }).catch(e => console.warn('[Giveaway] log failed', e)))
+        .then(() => {
+          const gifted = winners.filter(w => w.email).length;
+          if (gift) gift.textContent = '✅ GIFTED ' + label.toUpperCase() + ' TO ' + gifted + (gifted === 1 ? ' WINNER' : ' WINNERS');
+          showAdminMsg(_qaTargets().msg, '🎉 ' + label + ' premium gifted to ' + winners.filter(w => w.email).map(w => w.name).join(', '), 'success');
+        })
+        .catch(e => { if (gift) { gift.disabled = false; gift.textContent = '🎁 RETRY GIFT'; } showAdminMsg(_qaTargets().msg, 'Gift error: ' + e.message, 'error'); });
+    };
+
+    function _adminQaTierChip(tier, x) {
+      if (x && x.credit) return '<span class="aj-tier aj-tier-prem" title="Bonus question Jack gave them">🎁 BONUS</span>';
+      return tier === 'free'
+        ? '<span class="aj-tier aj-tier-free">FREE</span>'
+        : tier === 'skip'
+        ? '<span class="aj-tier aj-tier-skip">⚡ SKIP $4.99</span>'
+        : '<span class="aj-tier aj-tier-prem">★ PREMIUM</span>';
+    }
     // Open-question count on the Ask Jack tab's INBOX toggle.
     const _adminQaBadge = n => { const c = document.getElementById('ajInboxCount'); if (c) c.textContent = n ? '(' + n + ')' : ''; };
     const _adminQaInfo = n => '<div class="aj-pinfo" data-name="' + _qaAdminEsc(n) + '">' + (typeof window._ajInfoHtml === 'function' ? window._ajInfoHtml(n) : '') + '</div>';
     // Lineup roster as tap-to-start chips (+ info line each); shared by the
     // answered-list row and the queue card. Ids feed _adminQaToggle.
-    function _adminQaRosterHtml(safeId, x) {
+    // Slot eligibility + labels. The league's starting slots come with the
+    // question (x.slots, from format.rosterPositions with bench/IR stripped).
+    const _QA_SLOT_LBL = { SUPER_FLEX: 'SUPERFLEX', 'Q/W/R/T': 'SUPERFLEX', SUPERFLEX: 'SUPERFLEX', REC_FLEX: 'W/T FLEX', WRRB_FLEX: 'W/R FLEX', 'W/R': 'W/R FLEX', 'W/T': 'W/T FLEX', 'W/R/T': 'FLEX', 'RB/WR/TE': 'FLEX', DST: 'DST', 'D/ST': 'DST', DEF: 'DST' };
+    const _adminQaSlotLabel = sl => _QA_SLOT_LBL[sl] || sl;
+    function _adminQaSlotAllows(sl, pos) {
+      const u = String(sl || '').toUpperCase();
+      const P = String(pos || '').toUpperCase();
+      if (u === 'QB' || u === 'RB' || u === 'WR' || u === 'TE' || u === 'K') return P === u;
+      if (u === 'DST' || u === 'DEF' || u === 'D/ST') return P === 'DST' || P === 'DEF';
+      if (u === 'SUPER_FLEX' || u === 'SUPERFLEX' || u === 'Q/W/R/T') return ['QB', 'RB', 'WR', 'TE'].includes(P);
+      if (u === 'WRRB_FLEX' || u === 'W/R') return P === 'RB' || P === 'WR';
+      if (u === 'REC_FLEX' || u === 'W/T') return P === 'WR' || P === 'TE';
+      if (u === 'FLEX' || u === 'W/R/T' || u === 'RB/WR/TE') return ['RB', 'WR', 'TE'].includes(P);
+      return true; // IDP / unknown: anyone
+    }
+    // Per-question slot state: window._adminQaLineup[docId] = [name|null per slot].
+    function _adminQaSlotState(docId, x) {
+      const S = window._adminQaLineup || (window._adminQaLineup = {});
+      if (S[docId]) return S[docId];
+      const slots = Array.isArray(x.slots) ? x.slots : [];
+      const st = slots.map(() => null);
+      // Answered already: lay the saved lineup back into its slots (or fit
+      // plain starters by eligibility) so UPDATE LINEUP starts from it.
+      const posOf = typeof window._qaPosOf === 'function' ? window._qaPosOf : () => '';
+      if (Array.isArray(x.lineup) && x.lineup.length === slots.length) x.lineup.forEach((r, i) => { st[i] = r && r.name ? r.name : null; });
+      else if (Array.isArray(x.starters)) x.starters.forEach(n => { const i = slots.findIndex((sl, j) => !st[j] && _adminQaSlotAllows(sl, posOf(n))); if (i >= 0) st[i] = n; });
+      S[docId] = st;
+      return st;
+    }
+    function _adminQaSlotsHtml(safeId, docId, x) {
+      const posOf = typeof window._qaPosOf === 'function' ? window._qaPosOf : () => '';
+      const sortPos = typeof window._qaSortByPos === 'function' ? window._qaSortByPos : a => a.slice();
+      const slotSum = typeof window._qaSlotSummary === 'function' ? window._qaSlotSummary : a => a.join(' · ');
+      const roster = Array.isArray(x.roster) ? x.roster : [];
+      const slots = x.slots;
+      const st = _adminQaSlotState(docId, x);
+      const openIdx = (window._adminQaSlotOpenIdx || {})[docId];
+      const filled = st.filter(Boolean).length;
+      const fmt = (x.league && x.league.fmt) ? _qaAdminEsc(x.league.fmt).replace(/(\.5 PPR|Half PPR|PPR|STD|Standard)/i, '<b class="aj-scoring">$1</b>') : '';
+      let html = '<div class="aj-slots-head"><b>Lineup:</b> ' + _qaAdminEsc(slotSum(slots)) + (fmt ? ' &nbsp;·&nbsp; ' + fmt : '') +
+        ' &nbsp;·&nbsp; <span id="adminQaCnt-' + safeId + '" data-need="' + slots.length + '">' + filled + ' of ' + slots.length + ' filled</span> · tap a slot, then a player</div>';
+      html += '<div class="aj-slots" id="adminQaSlots-' + safeId + '">' + slots.map((sl, i) => {
+        const name = st[i];
+        const open = openIdx === i;
+        const openJs = 'window._adminQaSlotOpen(\'' + safeId + '\',' + i + ')';
+        const tile = name && typeof window._ajPlayerCardHtml === 'function' ? window._ajPlayerCardHtml(name, { onclick: openJs, cls: 'aj-slot-tile' }) : '';
+        let row = '<div class="aj-slot' + (name ? ' filled' : '') + (open ? ' open' : '') + (tile ? ' has-tile' : '') + '">' +
+          '<button type="button" class="aj-slot-btn' + (tile ? ' aj-slot-btn-pos' : '') + '" onclick="' + openJs + '" title="' + (name ? 'Change this slot' : 'Fill this slot') + '">' +
+            '<span class="aj-slot-pos">' + _qaAdminEsc(_adminQaSlotLabel(sl)) + '</span>' +
+            (tile ? '' : name ? '<span class="aj-slot-name">' + _qaAdminEsc(name) + '</span>' : '<span class="aj-slot-empty">tap to fill</span>') +
+          '</button>' +
+          tile +
+          (name ? '<button type="button" class="aj-slot-x" onclick="window._adminQaSlotClear(\'' + safeId + '\',' + i + ')" title="Clear slot">✕</button>' : '') +
+          '</div>';
+        if (name && !tile) row += '<div class="aj-slot-info">' + _adminQaInfo(name) + '</div>';
+        if (open) {
+          const used = st.filter((n, j) => n && j !== i);
+          const byRank = typeof window._ajSortByRank === 'function' ? window._ajSortByRank : sortPos;
+          const elig = byRank(roster.filter(n => _adminQaSlotAllows(sl, posOf(n)) && used.indexOf(n) < 0));
+          row += '<div class="aj-slot-picker">' + (elig.length ? elig.map(n => {
+            const pos = posOf(n);
+            const fill = 'window._adminQaSlotFill(\'' + safeId + '\',' + i + ',this.getAttribute(\'data-name\'))';
+            const tile = (typeof window._ajPlayerCardHtml === 'function') ? window._ajPlayerCardHtml(n, { onclick: fill, cls: n === name ? 'sel' : '' }) : '';
+            if (tile) return tile;
+            return '<div class="aj-rp"><button type="button" class="aj-chip aj-chip-btn' + (n === name ? ' aj-chip-start' : '') + '" data-name="' + _qaAdminEsc(n) + '" onclick="' + fill + '">' +
+              (pos ? '<span class="aj-chip-pos">' + _qaAdminEsc(pos) + '</span>' : '') + _qaAdminEsc(n) + '</button>' + _adminQaInfo(n) + '</div>';
+          }).join('') : '<div class="aj-pi-na">Nobody eligible left on their roster for this slot.</div>') + '</div>';
+        }
+        return row;
+      }).join('') + '</div>';
+      return html;
+    }
+    function _adminQaSlotsRerender(docId) {
+      const q = (window._adminQaQueue || []).find(r => r.id === docId) || (window._adminQaRows || []).find(r => r.id === docId);
+      const box = document.getElementById('adminQaSlotsWrap-' + docId);
+      if (!q || !box) return;
+      box.innerHTML = _adminQaSlotsHtml(_qaAdminEsc(docId), docId, q.data);
+    }
+    window._adminQaSlotOpen = function(docId, i) {
+      const O = window._adminQaSlotOpenIdx || (window._adminQaSlotOpenIdx = {});
+      O[docId] = O[docId] === i ? null : i;
+      _adminQaSlotsRerender(docId);
+    };
+    window._adminQaSlotFill = function(docId, i, name) {
+      const st = (window._adminQaLineup || {})[docId];
+      if (!st) return;
+      // A player can hold one slot — moving him clears his old one.
+      st.forEach((n, j) => { if (n === name && j !== i) st[j] = null; });
+      st[i] = name;
+      (window._adminQaSlotOpenIdx || (window._adminQaSlotOpenIdx = {}))[docId] = null;
+      _adminQaSlotsRerender(docId);
+    };
+    window._adminQaSlotClear = function(docId, i) {
+      const st = (window._adminQaLineup || {})[docId];
+      if (!st) return;
+      st[i] = null;
+      _adminQaSlotsRerender(docId);
+    };
+    // Starters (+ slot map) for the save: slot builder when the question has
+    // slots, else the tap-any-players chips.
+    function _adminQaStarters(docId, x) {
+      const st = (window._adminQaLineup || {})[docId];
+      if (st && Array.isArray(x.slots) && x.slots.length) {
+        const starters = st.filter(Boolean);
+        return { starters, lineup: x.slots.map((sl, i) => ({ slot: _adminQaSlotLabel(sl), name: st[i] || null })) };
+      }
+      const wrap = document.getElementById('adminQaRoster-' + docId);
+      const starters = wrap ? Array.from(wrap.querySelectorAll('.aj-chip-start')).map(b => b.getAttribute('data-name')).filter(Boolean) : [];
+      return { starters, lineup: null };
+    }
+
+    function _adminQaRosterHtml(safeId, x, docId) {
+      if (Array.isArray(x.slots) && x.slots.length && docId) {
+        return '<div id="adminQaSlotsWrap-' + safeId + '">' + _adminQaSlotsHtml(safeId, docId, x) + '</div>';
+      }
       const posOf = typeof window._qaPosOf === 'function' ? window._qaPosOf : () => '';
       const sortPos = typeof window._qaSortByPos === 'function' ? window._qaSortByPos : a => a.slice();
       const slotSum = typeof window._qaSlotSummary === 'function' ? window._qaSlotSummary : a => a.join(' · ');
@@ -35354,7 +36233,7 @@ window.fmtHeight = fmtHeight;
       const safeId = _qaAdminEsc(docId);
 
       let html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px">';
-      html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">' + typeChip +
+      html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">' + _adminQaTierChip(x.tier, x) + typeChip +
         '<b style="font-size:.8rem">' + _qaAdminEsc(x.name || 'Member') + '</b>' +
         '<span style="font-size:.6875rem;color:var(--text2)">' + _qaAdminEsc(when) + ' · week ' + _qaAdminEsc(x.weekIdx) + '</span>' +
         (x.status === 'answered' ? '<span style="font-size:.6875rem;color:var(--green);font-weight:700">ANSWERED</span>' : '') +
@@ -35375,7 +36254,7 @@ window.fmtHeight = fmtHeight;
           '<span style="font-size:.76rem;color:var(--text)">' + sideTag + _qaAdminEsc(o) + '</span></div>' + info(o) + '</div>';
       });
       if (x.type === 'lineup') {
-        html += _adminQaRosterHtml(safeId, x);
+        html += _adminQaRosterHtml(safeId, x, docId);
         html += '<button onclick="window._adminQaSaveLineup(\'' + safeId + '\')" style="margin-top:4px;padding:6px 14px;border-radius:6px;border:1px solid ' + (x.status === 'answered' ? '#22c55e' : 'var(--accent)') + ';background:' + (x.status === 'answered' ? '#22c55e' : 'transparent') + ';color:' + (x.status === 'answered' ? '#000' : 'var(--accent)') + ';font-family:\'Bebas Neue\',sans-serif;font-size:.78rem;letter-spacing:1px;cursor:pointer">' + (x.status === 'answered' ? '⭐ SAVED — UPDATE LINEUP' : 'SAVE LINEUP') + '</button>';
       } else if (x.roster && x.roster.length) {
         html += '<details style="margin-top:4px"><summary style="cursor:pointer;font-size:.6875rem;color:var(--text2)">Their roster (' + x.roster.length + ')</summary>' +
@@ -35384,7 +36263,8 @@ window.fmtHeight = fmtHeight;
       html += '<div style="display:flex;gap:8px;margin-top:8px;align-items:center">' +
         '<input type="text" id="adminQaNote-' + safeId + '" placeholder="' + (x.type === 'lineup' ? 'Optional note to send with your lineup' : 'Optional note to send with your pick') + '" maxlength="1000" value="' + _qaAdminEsc(x.answer || '') + '" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 9px;font-size:.72rem">' +
         '<button onclick="window._adminQaDelete(\'' + safeId + '\')" title="Delete question" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.7rem;color:var(--red);cursor:pointer;font-weight:700">✕</button>' +
-        '</div>';
+        '</div>' +
+        '<div class="aj-q-gift">' + _adminQaGiftBtn(docId, x) + '</div>';
       html += '</div>';
       return html;
     }
@@ -35404,7 +36284,7 @@ window.fmtHeight = fmtHeight;
     function _adminQaQueueCard(docId, x, total) {
       const safeId = _qaAdminEsc(docId);
       let html = '<div class="aj-q" id="adminQaCard-' + safeId + '">';
-      html += '<div class="aj-q-head"><span class="aj-q-count">' + total + ' IN QUEUE · OLDEST FIRST</span>' + _adminQaTypeChip(x.type) +
+      html += '<div class="aj-q-head"><span class="aj-q-count">' + total + ' IN QUEUE</span>' + _adminQaTierChip(x.tier, x) + _adminQaTypeChip(x.type) +
         '<b>' + _qaAdminEsc(x.name || 'Member') + '</b>' +
         '<span class="aj-q-when">' + _qaAdminEsc(_adminQaAgo(x.createdAt)) + ' · week ' + _qaAdminEsc(x.weekIdx) + '</span></div>';
       if (x.league && x.league.name) {
@@ -35413,22 +36293,43 @@ window.fmtHeight = fmtHeight;
       if (x.q) html += '<div class="aj-q-note">"' + _qaAdminEsc(x.q) + '"</div>';
       let confirmLbl;
       if (x.type === 'lineup') {
-        html += _adminQaRosterHtml(safeId, x);
+        html += _adminQaRosterHtml(safeId, x, docId);
         confirmLbl = 'CONFIRM LINEUP';
       } else {
-        html += '<div class="aj-choices">' + (x.options || []).map((o, i) => {
-          const sideTag = x.type === 'trade' ? '<span class="aj-choice-side">' + (i === 0 ? 'THEY GIVE' : 'THEY GET') + '</span>' : '';
-          return '<button type="button" class="aj-choice" data-i="' + i + '" onclick="window._adminQaSelect(\'' + safeId + '\',' + i + ')">' +
-            sideTag + '<span class="aj-choice-txt">' + _qaAdminEsc(o) + '</span>' + _adminQaInfo(o) + '</button>';
+        // Start/sit: one big vertical card per option across the width (Start/Sit
+        // tool look). Trade: THEY GIVE | THEY GET panels, each stacking that side's
+        // cards (Trade Calculator look). Free text (picks, unknown names) stays as a
+        // caption; options naming nobody we know keep the plain text + info line.
+        const opts = x.options || [];
+        const isTrade = x.type === 'trade';
+        // Trades: rest-of-season cards + the trade-calc value footer per side,
+        // team names open that roster (Jack 2026-11-04).
+        const fmt = (x.league && x.league.fmt) || '';
+        const optsJson = _qaAdminEsc(JSON.stringify(opts.slice(0, 2)));
+        const who = String(x.name || 'Member').split(/\s+/)[0];
+        html += '<div class="aj-choices ' + (isTrade ? 'aj-choices-trade' : 'aj-choices-v aj-choices-n' + Math.min(opts.length, 4)) + '">' + opts.map((o, i) => {
+          const sideTag = isTrade
+            ? (typeof window._ajTradeTeamBtn === 'function' ? window._ajTradeTeamBtn(x, i, i === 0 ? 'THEY GIVE' : 'THEY GET') : '<span class="aj-choice-side">' + (i === 0 ? 'THEY GIVE' : 'THEY GET') + '</span>')
+            : '';
+          const cards = (typeof window._ajPlayerCardsHtml === 'function') ? window._ajPlayerCardsHtml(o, isTrade ? { big: true, ros: fmt } : { big: true }) : '';
+          const single = cards && typeof _ajFindPlayer === 'function' && !!_ajFindPlayer(o);
+          const footer = (isTrade && typeof window._ajTradeFooterHtml === 'function')
+            ? '<div class="aj-tv-wrap" data-opts="' + optsJson + '" data-i="' + i + '" data-fmt="' + _qaAdminEsc(fmt) + '" data-who="' + _qaAdminEsc(who) + '">' + window._ajTradeFooterHtml(opts, i, fmt, who) + '</div>' : '';
+          return '<div class="aj-choice' + (cards ? ' aj-choice-tiles aj-choice-big' : '') + '" role="button" tabindex="0" data-i="' + i + '" onclick="window._adminQaSelect(\'' + safeId + '\',' + i + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">' +
+            sideTag + (cards
+              ? (single ? '' : '<span class="aj-choice-txt aj-choice-cap">' + _qaAdminEsc(o) + '</span>') + cards
+              : '<span class="aj-choice-txt">' + _qaAdminEsc(o) + '</span>' + _adminQaInfo(o)) +
+            footer + '</div>';
         }).join('') + '</div>';
         confirmLbl = 'CONFIRM PICK';
       }
       html += '<div class="aj-q-bar">' +
         '<input type="text" id="adminQaNote-' + safeId + '" class="aj-input aj-q-noteinp" placeholder="Optional note to send with your ' + (x.type === 'lineup' ? 'lineup' : 'pick') + '" maxlength="1000">' +
         '<button type="button" id="adminQaConfirm-' + safeId + '" class="aj-q-confirm" onclick="window._adminQaConfirm(\'' + safeId + '\')"' + (x.type === 'lineup' ? '' : ' disabled') + '>' + confirmLbl + '</button>' +
-        '<button type="button" class="aj-q-skip" onclick="window._adminQaSkip(\'' + safeId + '\')" title="Move this one to the back of the queue">SKIP</button>' +
+        '<button type="button" class="aj-q-skip" onclick="window._adminQaSkip(\'' + safeId + '\')" title="Show the next question — this one keeps its place in the queue">SKIP</button>' +
         '<button type="button" class="aj-q-del" onclick="window._adminQaDelete(\'' + safeId + '\')" title="Delete question (frees the member\'s weekly slot)">✕</button>' +
-        '</div>';
+        '</div>' +
+        '<div class="aj-q-gift">' + _adminQaGiftBtn(docId, x) + '<span class="aj-q-gift-hint">Didn\'t fully answer, or they should re-ask later? Give them a free premium question.</span></div>';
       html += '</div>';
       return html;
     }
@@ -35437,25 +36338,64 @@ window.fmtHeight = fmtHeight;
       if (!list) return;
       const q = window._adminQaQueue || [];
       _adminQaBadge(q.length);
-      if (!q.length) { list.innerHTML = '<div class="aj-q-empty">No open questions — inbox zero 🎉</div>'; return; }
-      const cur = q[0];
-      // Current question on the left; the whole queue (username, type, age)
-      // down the right (Jack 2026-11-04). A row click brings that one up.
+      const fit = () => { if (typeof window._qaOnAirFit === 'function') window._qaOnAirFit(); };
+      if (!q.length) {
+        // The CTA line only shows on air (viewers see where to send theirs).
+        list.innerHTML = '<div class="aj-q-empty">No open questions — inbox zero 🎉<div class="aj-q-empty-cta">Send yours at <b>myfantasyfootball.co</b> › ASK JACK</div></div>';
+        fit();
+        return;
+      }
+      // The queue order is fixed (premium → line skips → free, oldest first);
+      // a separate pointer says which one is on screen (Jack 2026-11-04:
+      // "don't change the order of the queue"). Click / ↑↓ / SKIP move the
+      // pointer only; CONFIRM removes the answered one and stays in place.
+      const ci = _adminQaCurIdx();
+      const cur = q[ci];
       const side = '<aside class="aj-qside"><div class="aj-qside-h">QUEUE <span>(' + q.length + ')</span></div>' +
         q.map((r, i) => {
           const safe = _qaAdminEsc(r.id);
-          return '<button type="button" class="aj-qrow' + (i === 0 ? ' cur' : '') + '" onclick="window._adminQaJump(\'' + safe + '\')" title="' + (i === 0 ? 'Answering now' : 'Bring this one up') + '">' +
+          return '<button type="button" class="aj-qrow' + (i === ci ? ' cur' : '') + '" onclick="window._adminQaJump(\'' + safe + '\')" title="' + (i === ci ? 'On screen now' : 'Show this one (the order stays)') + '">' +
             '<span class="aj-qrow-name">' + (i + 1) + '. ' + _qaAdminEsc(r.data.name || 'Member') + '</span>' +
-            '<span class="aj-qrow-meta">' + _adminQaTypeChip(r.data.type) + ' <span>' + _qaAdminEsc(_adminQaAgo(r.data.createdAt)) + '</span></span>' +
+            '<span class="aj-qrow-meta">' + _adminQaTierChip(r.data.tier, r.data) + _adminQaTypeChip(r.data.type) + ' <span>' + _qaAdminEsc(_adminQaAgo(r.data.createdAt)) + '</span></span>' +
             '</button>';
         }).join('') + '</aside>';
-      list.innerHTML = '<div class="aj-qwrap"><div class="aj-qmain">' + _adminQaQueueCard(cur.id, cur.data, q.length) + '</div>' + side + '</div>';
+      // ON AIR only (main.css): who's up next, for the stream — the rows after
+      // the one on screen (wrapping to the top), with their queue numbers.
+      const rest = q.slice(ci + 1).concat(q.slice(0, ci));
+      const upnext = '<div class="aj-upnext">' + (rest.length
+        ? '<span class="aj-upnext-l">UP NEXT</span>' + rest.slice(0, 3).map(r => '<span class="aj-upnext-i"><b>' + (q.indexOf(r) + 1) + '.</b> ' + _qaAdminEsc(r.data.name || 'Member') + ' ' + _adminQaTypeChip(r.data.type) + '</span>').join('') +
+          (rest.length > 3 ? '<span class="aj-upnext-more">+' + (rest.length - 3) + ' more</span>' : '')
+        : '<span class="aj-upnext-l">LAST ONE IN THE QUEUE</span><span class="aj-upnext-cta">Ask yours at <b>myfantasyfootball.co</b> › ASK JACK</span>') + '</div>';
+      // ON AIR with room beside the stage (html.aj-qdock, set by _qaOnAirFit):
+      // the queue docks OUTSIDE the stage in #ajOnAirQueue — Jack's eyes only,
+      // never in the OBS crop. Otherwise it stays in the stage as the Q drawer.
+      const dock = document.getElementById('ajOnAirQueue');
+      const docked = !!dock && document.documentElement.classList.contains('aj-onair') && document.documentElement.classList.contains('aj-qdock');
+      if (dock) dock.innerHTML = docked ? side : '';
+      list.innerHTML = '<div class="aj-qwrap"><div class="aj-qmain">' + _adminQaQueueCard(cur.id, cur.data, q.length) + upnext + '</div>' + (docked ? '' : side) + '</div>';
+      fit();
     }
+    window._adminQaRenderQueue = _adminQaRenderQueue;
+    // Pointer into the fixed-order queue (window._adminQaCur = doc id).
+    function _adminQaCurIdx() {
+      const q = window._adminQaQueue || [];
+      let i = q.findIndex(r => r.id === window._adminQaCur);
+      if (i < 0) { i = 0; window._adminQaCur = q[0] ? q[0].id : null; }
+      return i;
+    }
+    window._adminQaCurrent = function() { const q = window._adminQaQueue || []; return q[_adminQaCurIdx()] || null; };
+    // ↑ / ↓ on air (and SKIP): step the pointer, wrapping; the order never moves.
+    window._adminQaRotate = function(dir) {
+      const q = window._adminQaQueue || [];
+      if (q.length < 2) return;
+      const i = (_adminQaCurIdx() + (dir > 0 ? 1 : -1) + q.length) % q.length;
+      window._adminQaCur = q[i].id;
+      _adminQaRenderQueue();
+    };
     window._adminQaJump = function(docId) {
       const q = window._adminQaQueue || [];
-      const i = q.findIndex(r => r.id === docId);
-      if (i <= 0) return;
-      q.unshift(q.splice(i, 1)[0]);
+      if (!q.some(r => r.id === docId) || window._adminQaCur === docId) return;
+      window._adminQaCur = docId;
       _adminQaRenderQueue();
     };
     window._adminQaSelect = function(docId, idx) {
@@ -35466,7 +36406,7 @@ window.fmtHeight = fmtHeight;
         const on = b.getAttribute('data-i') === String(idx);
         b.classList.toggle('sel', on);
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
-        if (on) picked = b.querySelector('.aj-choice-txt');
+        if (on) picked = b.querySelector('.aj-choice-txt') || b.querySelector('.aj-pcard-name');
       });
       const btn = document.getElementById('adminQaConfirm-' + docId);
       if (btn) {
@@ -35474,6 +36414,44 @@ window.fmtHeight = fmtHeight;
         btn.textContent = 'CONFIRM: ' + (picked ? picked.textContent.slice(0, 40) : 'PICK');
       }
     };
+    const _QA_REVEAL_MS = 3000;
+    function _adminQaStamp(type, win) {
+      if (type === 'startsit') return win ? 'START' : 'SIT';
+      if (type === 'trade') return win ? 'WINNER' : 'LOSER';
+      return win ? 'STARTER' : '';
+    }
+    function _adminQaReveal(docId, x, patch) {
+      const card = document.getElementById('adminQaCard-' + docId);
+      if (!card) return Promise.resolve();
+      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      card.classList.add('aj-revealing');
+      if (x.type === 'lineup') {
+        const rows = Array.from(card.querySelectorAll('.aj-slot.filled'));
+        rows.forEach((r, i) => setTimeout(() => r.classList.add('aj-win'), reduced ? 0 : 90 * i));
+        const head = card.querySelector('.aj-slots-head');
+        if (head) head.insertAdjacentHTML('beforeend', '<span class="aj-stamp aj-stamp-win aj-stamp-inline">LINEUP SET</span>');
+      } else {
+        card.querySelectorAll('.aj-choice').forEach(ch => {
+          const win = parseInt(ch.getAttribute('data-i'), 10) === patch.pick;
+          ch.classList.add(win ? 'aj-win' : 'aj-lose');
+          ch.insertAdjacentHTML('beforeend', '<span class="aj-stamp ' + (win ? 'aj-stamp-win' : 'aj-stamp-lose') + '">' + _adminQaStamp(x.type, win) + '</span>');
+        });
+      }
+      const bar = card.querySelector('.aj-q-bar');
+      if (bar) {
+        bar.style.display = 'none';
+        bar.insertAdjacentHTML('afterend', '<div class="aj-reveal-bar"><span class="aj-reveal-msg">Answered ✓ · next question in a moment</span>' +
+          '<button type="button" class="aj-q-confirm" onclick="window._adminQaRevealNext()">NEXT ▶</button></div>');
+      }
+      return new Promise(resolve => {
+        let done = false;
+        const fin = () => { if (done) return; done = true; window._adminQaRevealResolve = null; resolve(); };
+        window._adminQaRevealResolve = fin;
+        setTimeout(fin, reduced ? 600 : _QA_REVEAL_MS);
+      });
+    }
+    window._adminQaRevealNext = function() { if (typeof window._adminQaRevealResolve === 'function') window._adminQaRevealResolve(); };
+
     window._adminQaConfirm = function(docId) {
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
       const q = window._adminQaQueue || [];
@@ -35481,10 +36459,10 @@ window.fmtHeight = fmtHeight;
       if (!db || !entry) return;
       const patch = { status: 'answered', answeredAt: new Date().toISOString() };
       if (entry.data.type === 'lineup') {
-        const wrap = document.getElementById('adminQaRoster-' + docId);
-        const starters = wrap ? Array.from(wrap.querySelectorAll('.aj-chip-start')).map(b => b.getAttribute('data-name')).filter(Boolean) : [];
-        if (!starters.length) { showAdminMsg(_qaTargets().msg, 'Tap the players you\'d start first', 'error'); return; }
-        patch.starters = starters.slice(0, 30);
+        const L = _adminQaStarters(docId, entry.data);
+        if (!L.starters.length) { showAdminMsg(_qaTargets().msg, 'Fill the slots with the players you\'d start first', 'error'); return; }
+        patch.starters = L.starters.slice(0, 30);
+        if (L.lineup) patch.lineup = L.lineup;
       } else {
         const sel = document.querySelector('#adminQaCard-' + CSS.escape(docId) + ' .aj-choice.sel');
         if (!sel) { showAdminMsg(_qaTargets().msg, 'Click the winner first', 'error'); return; }
@@ -35495,23 +36473,45 @@ window.fmtHeight = fmtHeight;
       patch.answer = note ? note.slice(0, 1000) : firebase.firestore.FieldValue.delete();
       const btn = document.getElementById('adminQaConfirm-' + docId);
       if (btn) { btn.disabled = true; btn.textContent = 'SAVING…'; }
+      // Stall watchdog: after a long idle the Firestore stream can sit in
+      // reconnect backoff and a write queues silently for 30-60 s. At 6 s we
+      // bounce the network (forces an immediate reconnect; the queued write
+      // is resent) and say so; at 25 s we say the pick is queued safely.
+      let settled = false;
+      const t1 = setTimeout(() => {
+        if (settled) return;
+        if (btn) btn.textContent = 'RECONNECTING…';
+        showAdminMsg(_qaTargets().msg, 'Slow connection — reconnecting to save your pick…', 'error');
+        try { db.disableNetwork().then(() => db.enableNetwork()).catch(() => {}); } catch (e) {}
+      }, 6000);
+      const t2 = setTimeout(() => {
+        if (settled) return;
+        showAdminMsg(_qaTargets().msg, 'Still saving — the pick is queued and will land as soon as the connection returns. You can keep waiting or reload; it won\'t be lost.', 'error');
+      }, 25000);
       db.collection('qa_questions').doc(docId).update(patch)
+        .then(() => { settled = true; clearTimeout(t1); clearTimeout(t2); return _adminQaReveal(docId, entry.data, patch); })
         .then(() => {
+          // Drop the answered one; the pointer stays at the same spot, i.e.
+          // moves on to whatever was next in line.
+          const at = q.findIndex(r => r.id === docId);
           window._adminQaQueue = q.filter(r => r.id !== docId);
-          showAdminMsg(_qaTargets().msg, 'Answered ✓' + (window._adminQaQueue.length ? ' — next one up' : ' — queue clear'), 'success');
+          const nq = window._adminQaQueue;
+          window._adminQaCur = (nq[at] || nq[0] || {}).id || null;
+          showAdminMsg(_qaTargets().msg, 'Answered ✓' + (nq.length ? ' — next one up' : ' — queue clear'), 'success');
           _adminQaRenderQueue();
         })
         .catch(e => {
+          settled = true; clearTimeout(t1); clearTimeout(t2);
           if (btn) { btn.disabled = false; btn.textContent = entry.data.type === 'lineup' ? 'CONFIRM LINEUP' : 'CONFIRM PICK'; }
           showAdminMsg(_qaTargets().msg, 'Answer error: ' + e.message, 'error');
         });
     };
     window._adminQaSkip = function(docId) {
+      // SKIP = show the next one; nothing moves in the order.
       const q = window._adminQaQueue || [];
-      const i = q.findIndex(r => r.id === docId);
-      if (i < 0 || q.length < 2) return;
-      q.push(q.splice(i, 1)[0]);
-      _adminQaRenderQueue();
+      if (!q.some(r => r.id === docId) || q.length < 2) return;
+      window._adminQaCur = docId;
+      window._adminQaRotate(1);
     };
 
     function _adminQaLoad(status) {
@@ -35526,17 +36526,18 @@ window.fmtHeight = fmtHeight;
           snap.forEach(d => rows.push({ id: d.id, data: d.data() }));
           rows.sort((a, b) => (b.data.createdAt || '').localeCompare(a.data.createdAt || ''));
           if (status === 'open') {
-            // QUEUE: oldest first, one at a time.
-            rows.reverse();
+            // QUEUE: premium → line skips → free, oldest first within each.
+            rows.sort((a, b) => (_adminQaTierRank(a.data) - _adminQaTierRank(b.data)) || (a.data.createdAt || '').localeCompare(b.data.createdAt || ''));
             window._adminQaQueue = rows;
             _adminQaRenderQueue();
-            if (rows.length) showAdminMsg(qaMsg, rows.length + ' in the queue — oldest first', 'success');
+            if (rows.length) showAdminMsg(qaMsg, rows.length + ' in the queue — premium first, then line skips, then free (oldest first)', 'success');
             return;
           }
           if (!rows.length) {
             qaListEl.innerHTML = '<div style="font-size:.72rem;color:var(--text2)">Nothing answered yet.</div>';
             return;
           }
+          window._adminQaRows = rows;
           qaListEl.innerHTML = rows.map(r => _adminQaRow(r.id, r.data)).join('');
           showAdminMsg(qaMsg, rows.length + ' answered', 'success');
         })
@@ -35577,14 +36578,16 @@ window.fmtHeight = fmtHeight;
 
     window._adminQaSaveLineup = function(docId) {
       const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
-      const wrap = document.getElementById('adminQaRoster-' + docId);
-      if (!db || !wrap) return;
-      const starters = Array.from(wrap.querySelectorAll('.aj-chip-start')).map(b => b.getAttribute('data-name')).filter(Boolean);
-      if (!starters.length) { showAdminMsg(_qaTargets().msg, 'Tap the players you\'d start first', 'error'); return; }
+      if (!db) return;
+      const row = (window._adminQaRows || []).find(r => r.id === docId) || (window._adminQaQueue || []).find(r => r.id === docId);
+      const L = _adminQaStarters(docId, row ? row.data : {});
+      const starters = L.starters;
+      if (!starters.length) { showAdminMsg(_qaTargets().msg, 'Fill the slots with the players you\'d start first', 'error'); return; }
       const noteEl = document.getElementById('adminQaNote-' + docId);
       const note = noteEl && noteEl.value.trim();
       const patch = {
         starters: starters.slice(0, 30),
+        lineup: L.lineup || firebase.firestore.FieldValue.delete(),
         status: 'answered',
         answeredAt: new Date().toISOString(),
         answer: note ? note.slice(0, 1000) : firebase.firestore.FieldValue.delete()
@@ -39391,8 +40394,12 @@ window.fmtHeight = fmtHeight;
         const r = await fetch('data/real_trades_redraft.json?d=' + stamp);
         const j = r && r.ok ? await r.json() : null;
         if (!j || !Array.isArray(j.trades)) return;
+        // 2026-11-04: file now comes from scripts/pull_trade_trends.py — `trades`
+        // = trades detected in users' synced My Teams leagues (src 'lg'), `hot` =
+        // Yahoo + CBS most-traded counts. Older crawl files (no `hot`) still work.
+        const isLg = !!j.hot;
         const list = j.trades.map(t => ({ id: t.id, date: t.date, dyn: false, qbs: +t.qbs || 1, ppr: t.ppr == null ? 1 : +t.ppr, tep: +t.tep || 0,
-          teams: +t.teams || 12, s1: t.s1 || [], s2: t.s2 || [], diff: null, src: 'sl' }));
+          teams: +t.teams || 12, s1: t.s1 || [], s2: t.s2 || [], diff: null, src: isLg ? 'lg' : 'sl' }));
         const byIdMap = {};
         list.forEach(t => { byIdMap[t.id] = t; });
         // Player trade counts since MNF (players only; a player appears once per trade)
@@ -39406,8 +40413,15 @@ window.fmtHeight = fmtHeight;
             (cnt[a.n] = cnt[a.n] || { n: a.n, p: a.p, c: 0 }).c++;
           });
         });
-        const top = Object.values(cnt).sort((a, b) => b.c - a.c).slice(0, 15);
-        _rt.sl = { list, byId: byIdMap, top, gen: j.generated || null, leagues: +j.leagues || 0,
+        let top = Object.values(cnt).sort((a, b) => b.c - a.c).slice(0, 15);
+        let hot = null;
+        // Yahoo + CBS counts — only while their window is this week's (a file
+        // left over from before the latest MNF would show last week's names).
+        if (j.hot && Array.isArray(j.hot.players) && Date.parse(j.hot.since) >= cut) {
+          top = j.hot.players.slice(0, 15).map(p => ({ n: p.n, p: p.p, c: (+p.y || 0) + (+p.c || 0), y: +p.y || 0, cb: +p.c || 0 }));
+          hot = { total: j.hot.players.reduce((s, p) => s + (+p.y || 0) + (+p.c || 0), 0) };
+        }
+        _rt.sl = { list, byId: byIdMap, top, hot, isLg, gen: j.generated || null, leagues: +j.leagues || 0,
           sinceMnf: list.filter(t => Date.parse(t.date) >= cut).length };
       } catch (_) {}
       finally { render(); }
@@ -39509,7 +40523,9 @@ window.fmtHeight = fmtHeight;
       const names = [...inCalc].map(i => D[i] && D[i].n).filter(Boolean);
       let html = '<div class="rt-head"><div><div class="rt-title">RECENT REAL TRADES</div>'
         + '<div class="rt-sub">' + (sl
-          ? 'Sleeper · ' + sl.list.length.toLocaleString() + ' redraft trades from ' + sl.leagues.toLocaleString() + ' public leagues' + (sl.gen ? ' (scanned ' + _esc(ago(sl.gen)) + ')' : '') + ' + FantasyCalc live feed'
+          ? (sl.isLg
+            ? (sl.list.length ? sl.list.length.toLocaleString() + (sl.list.length === 1 ? ' trade' : ' trades') + ' from leagues synced to MFF' + (sl.gen ? ' (checked ' + _esc(ago(sl.gen)) + ')' : '') + ' + ' : '') + 'FantasyCalc live feed'
+            : 'Sleeper · ' + sl.list.length.toLocaleString() + ' redraft trades from ' + sl.leagues.toLocaleString() + ' public leagues' + (sl.gen ? ' (scanned ' + _esc(ago(sl.gen)) + ')' : '') + ' + FantasyCalc live feed')
           : 'FantasyCalc · live Sleeper-league trades')
         + ' · priced with <b>' + _esc(tradeSource) + '</b> values · ' + all.length.toLocaleString() + ' trades'
         + (_rt.at ? ' · updated ' + _esc(ago(new Date(_rt.at).toISOString())) : '') + '</div></div>'
@@ -39518,9 +40534,12 @@ window.fmtHeight = fmtHeight;
             + '<button class="rt-btn' + (!showInvolving ? ' active' : '') + '" data-rt="all">All recent</button>' : '')
         + '<button class="rt-btn rt-refresh" data-rt="refresh" title="Fetch the newest trades">' + (_rt.busy ? '…' : '↻') + '</button></div></div>';
       if (sl && sl.top.length) {
-        html += '<div class="rt-hot"><div class="rt-hot-lbl">MOST TRADED SINCE MNF <span class="rt-n">' + sl.sinceMnf.toLocaleString() + ' trades</span></div><div class="rt-hot-chips">'
-          + sl.top.map(p => '<button class="rt-btn rt-hot-chip' + (player === p.n ? ' active' : '') + '" data-rt="player" data-rtp="' + _esc(p.n) + '" title="Show trades involving ' + _esc(p.n) + '">'
-            + _esc(p.n) + ' <span class="rt-n">' + p.c + '</span></button>').join('')
+        const kFmt = n => n >= 10000 ? Math.round(n / 1000) + 'k' : n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
+        html += '<div class="rt-hot"><div class="rt-hot-lbl">MOST TRADED SINCE MNF <span class="rt-n">'
+          + (sl.hot ? 'Yahoo + CBS · ' + kFmt(sl.hot.total) + ' player trades' : sl.sinceMnf.toLocaleString() + ' trades') + '</span></div><div class="rt-hot-chips">'
+          + sl.top.map(p => '<button class="rt-btn rt-hot-chip' + (player === p.n ? ' active' : '') + '" data-rt="player" data-rtp="' + _esc(p.n) + '" title="'
+            + (sl.hot ? _esc(p.n) + ' — traded ' + p.y.toLocaleString() + 'x on Yahoo since MNF, ' + p.cb.toLocaleString() + 'x on CBS. Tap for real trades with him.' : 'Show trades involving ' + _esc(p.n)) + '">'
+            + _esc(p.n) + ' <span class="rt-n">' + kFmt(p.c) + '</span></button>').join('')
           + '</div></div>';
       }
       if (player) {
@@ -39547,7 +40566,7 @@ window.fmtHeight = fmtHeight;
           const fcNote = t.diff != null ? '<span class="rt-fc" title="FantasyCalc\'s own value gap for this trade (positive = side 1 received more by their numbers)">FC ' + (t.diff > 0 ? '+' : '') + t.diff + '</span>' : '';
           const exact = t.dyn === f.dyn && t.qbs === f.qbs;
           return '<div class="rt-row' + (exact ? '' : ' rt-other-fmt') + '" data-rtid="' + _esc(t.id) + '">'
-            + '<div class="rt-meta"><span class="rt-ago">' + _esc(ago(t.date)) + '</span><span class="rt-fmt" title="League format the trade happened in">' + _esc(fmtLbl(t)) + '</span>' + (t.src === 'sl' ? '<span class="rt-src" title="From our scan of public Sleeper redraft leagues">SLEEPER</span>' : '') + fcNote + '</div>'
+            + '<div class="rt-meta"><span class="rt-ago">' + _esc(ago(t.date)) + '</span><span class="rt-fmt" title="League format the trade happened in">' + _esc(fmtLbl(t)) + '</span>' + (t.src === 'sl' ? '<span class="rt-src" title="From our scan of public Sleeper redraft leagues">SLEEPER</span>' : t.src === 'lg' ? '<span class="rt-src" title="A real trade from a league synced to MFF (spotted on its next sync)">MFF LEAGUE</span>' : '') + fcNote + '</div>'
             + '<div class="rt-sides">'
             + '<div class="rt-side"><div class="rt-side-lbl">Side 1 gives <span class="rt-tot">' + (s1.total || '—') + '</span></div>' + s1.assets.map(chip).join('') + '</div>'
             + '<div class="rt-arrow">⇄</div>'
@@ -40161,15 +41180,23 @@ window.fmtHeight = fmtHeight;
         // Prefer the new settings({ localCache: persistentLocalCache() }) API
         // (Firebase >=10.5) — enableIndexedDbPersistence is deprecated. Falls
         // back to the legacy API if the SDK on the page is older.
+        // 2026-11-04: force long-polling. On some networks the WebChannel
+        // streaming transport hangs — measured in Jack's Chrome: the first
+        // Listen/channel request sat 45 s before the SDK's auto-detect gave up
+        // and switched to long-polling, so the first read AND every queued
+        // write (Ask Jack SEND / CONFIRM) waited ~35 s per page load. Forcing
+        // long-polling skips the probe; get()/set() cost the same either way.
         try {
           if (firebase.firestore.persistentLocalCache && firebase.firestore.persistentSingleTabManager) {
             db.settings({
+              experimentalForceLongPolling: true,
               localCache: firebase.firestore.persistentLocalCache({
                 tabManager: firebase.firestore.persistentSingleTabManager()
               })
             });
             console.log('[Auth] Firestore persistence enabled (cache API)');
           } else {
+            try { db.settings({ experimentalForceLongPolling: true }); } catch (_e) {}
             db.enablePersistence({ synchronizeTabs: false }).catch(err => {
               console.warn('[Auth] Persistence failed:', err.code);
             });
@@ -66128,6 +67155,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (!leagueId) return;
     const status = document.getElementById('mtSleeperStatus');
     const btn = document.getElementById('mtSleeperImportBtn');
+    if (typeof window._mtRequireSignIn === 'function' && !window._mtRequireSignIn(status)) return;
     btn.disabled = true;
     btn.textContent = 'Loading…';
     status.textContent = 'Fetching league data...';
@@ -66214,6 +67242,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const name = ((input && input.value) || '').trim().replace(/^@/, '');
     const say = (msg, color) => { if (status) { status.textContent = msg; status.style.color = color || ''; } };
     if (!name) { say('Enter your Sleeper username.', '#f59e0b'); return; }
+    if (typeof window._mtRequireSignIn === 'function' && !window._mtRequireSignIn(status)) return;
     if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
     try {
       say('Looking up ' + name + ' on Sleeper…');
@@ -66376,11 +67405,23 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         const key = 'espn_' + lg.leagueId;
         const sv = saved.find(l => l && String(l.leagueId) === key);
         if (!sv) return;                                            // never saved — IMPORT decides
-        if (String(_mtActiveEspnId) === String(lg.leagueId)) return; // active league saves on import
         if (_mtAutoCommittedAt[key] === (lg.syncedAt || 'once')) return;
         if (lg.syncedAt && sv.savedAt && lg.syncedAt <= Date.parse(sv.savedAt)) return; // save is newer
-        const fmt = _mtNormalizedFormat(lg);
         const savedMine = (sv.teams || []).find(t => t && t.isMyTeam);
+        // The league on screen (usually the one the page auto-opened from its
+        // OLD snapshot): re-import it so the page AND the save both take the
+        // fresh sync. It used to be skipped here, which meant the league you
+        // land on never auto-updated (Jack 2026-11-04 had to click IMPORT).
+        if (_mtActiveSource === 'espn' && String(_mtActiveEspnId) === String(lg.leagueId)) {
+          _mtAutoCommittedAt[key] = lg.syncedAt || 'once';
+          if (savedMine && !lg.teams.some(t => t && t.isMine)) {
+            lg.teams.forEach(t => { if (t) t.isMine = String(t.teamId) === String(savedMine.id); });
+          }
+          window._mtImportEspn(lg.leagueId);
+          console.log('[MyTeams] Re-imported open league from fresh extension sync:', lg.name || key);
+          return;
+        }
+        const fmt = _mtNormalizedFormat(lg);
         const teams = _mtNormalizedSaveTeams(lg, savedMine);
         _mtAutoCommittedAt[key] = lg.syncedAt || 'once';
         _mtSaveLeagueToCloud(key, _mtNormalizedLeagueMeta(lg), teams, fmt);
@@ -66568,6 +67609,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       if (status) { status.textContent = 'Paste your ESPN league ID (or the league URL).'; status.style.color = 'var(--accent)'; }
       return;
     }
+    if (typeof window._mtRequireSignIn === 'function' && !window._mtRequireSignIn(status)) return;
     if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
     if (status) { status.textContent = 'Fetching league from ESPN…'; status.style.color = 'var(--text2)'; }
     try {
@@ -66844,6 +67886,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       if (status) { status.textContent = 'Paste your Yahoo league ID (or the league URL).'; status.style.color = 'var(--accent)'; }
       return;
     }
+    if (typeof window._mtRequireSignIn === 'function' && !window._mtRequireSignIn(status)) return;
     if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
     const say = (msg) => { if (status) { status.textContent = msg; status.style.color = 'var(--text2)'; } };
     say('Fetching league from Yahoo…');
@@ -69712,14 +70755,26 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   // FIRESTORE TEAM PERSISTENCE
   // ═══════════════════════════════════════════════════════════
 
+  // Every league save read-modify-writes the same user doc, so two saves in
+  // flight at once write each other's league back stale (2026-11-04: the
+  // extension auto-commit fired one save per fresh league in parallel).
+  // All saves now run one at a time through this queue.
+  let _mtSaveQueue = Promise.resolve();
   function _mtSaveLeagueToCloud(leagueId, league, teams, fmtOverride) {
     const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!db || !user) return;
+    // Snapshot the format NOW: a queued save runs later, when the _mtFormat
+    // global may already belong to another league.
+    const fmtSnap = { ...(fmtOverride || _mtFormat) };
+    const p = _mtSaveQueue.then(() => _mtSaveLeagueNow(db, user, leagueId, league, teams, fmtSnap));
+    _mtSaveQueue = p.catch(() => {});
+    return p;
+  }
 
+  function _mtSaveLeagueNow(db, user, leagueId, league, teams, fmtSnap) {
     // Load existing saved leagues first, then add/update this one.
-    // Returns the promise so the background refresh can await each save —
-    // parallel saves read-modify-write the same doc and drop each other.
+    // Returns the promise so the background refresh can await each save.
     const docRef = db.collection('user_game_data').doc(user.uid);
     return docRef.get().then(doc => {
       const existing = doc.exists && doc.data().savedLeagues ? doc.data().savedLeagues : {};
@@ -69750,10 +70805,10 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         // Value history (daily points written by _mtRecordHistoryPoint) —
         // never wiped by a roster re-save.
         history: (existing[leagueId] && Array.isArray(existing[leagueId].history)) ? existing[leagueId].history : null,
-        // fmtOverride: background auto-commits pass the league's own format —
-        // this callback runs async, so the _mtFormat global may belong to
-        // whichever league is active by then.
-        format: { ...(fmtOverride || _mtFormat) },
+        // fmtSnap: taken when the save was requested (background auto-commits
+        // pass the league's own format) — this callback runs async, so the
+        // _mtFormat global may belong to whichever league is active by then.
+        format: fmtSnap,
         teams: teams.map(t => ({
           id: t.id,
           owner: t.owner,
@@ -73310,6 +74365,163 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   const _qaType = t => QA_TYPES[t] || QA_TYPES.startsit;
   function _qaSlotOf(type) { return type === 'trade' ? 'trade' : 'startsit'; }
   function _qaWeekIdx() { return Math.floor((Date.now() - QA_WEEK_ANCHOR) / QA_WEEK_MS); }
+  function _qaDayIdx() { return Math.floor((Date.now() - QA_WEEK_ANCHOR) / 86400000); }
+  function _qaIsAdmin() { return typeof window.isAdmin === 'function' && window.isAdmin(); }
+  // FREE QUESTIONS (2026-11-04, Jack): while he's live streaming he flips
+  // shared/askjack_settings.freeOpen on from the admin bar and any signed-in
+  // free member gets 1 question a day (doc {uid}_d{dayIdx}, tier 'free').
+  // Premium questions carry tier 'premium' and sort first in his queue; a
+  // free member can pay $4.99 (createCheckoutSession plan 'lineskip') to move
+  // ahead of every free question — tier 'skip', written by the Cloud Function
+  // after Stripe confirms, never by the client. Admins (Jack) get unlimited
+  // questions ({uid}_t{ms}, either tier) to practice. Rules mirror all of it.
+  function _qaSettings() { return (window._qaSettingsCache && (Date.now() - window._qaSettingsCache.at) < 60000) ? window._qaSettingsCache.data : null; }
+  function _qaLoadSettings(cb) {
+    const cur = _qaSettings();
+    if (cur) { cb(cur); return; }
+    const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
+    const db = fbReady && firebase.firestore ? firebase.firestore() : null;
+    if (!db) { cb({ freeOpen: false }); return; }
+    if (window._qaSettingsPending) { window._qaSettingsPending.push(cb); return; }
+    window._qaSettingsPending = [cb];
+    db.collection('shared').doc('askjack_settings').get().then(doc => {
+      const data = doc.exists ? (doc.data() || {}) : {};
+      window._qaSettingsCache = { at: Date.now(), data: { freeOpen: data.freeOpen === true } };
+    }).catch(e => {
+      console.warn('[AskJack] settings load error:', e);
+      window._qaSettingsCache = { at: Date.now() - 50000, data: { freeOpen: false } }; // retry in ~10s
+    }).then(() => {
+      const cbs = window._qaSettingsPending || []; window._qaSettingsPending = null;
+      cbs.forEach(f => { try { f(window._qaSettingsCache.data); } catch (_) {} });
+    });
+  }
+  function _qaFreeResetLabel() { return 'new free question tomorrow (midnight ET)'; }
+  // Line-skip CTA / badge under a member's open free question.
+  function _qaSkipHtml(x) {
+    if (x.tier === 'skip') return '<div class="aj-skip-done">⚡ Line skip paid — you\'re ahead of every free question in Jack\'s queue.</div>';
+    if (x.tier !== 'free' || x.status === 'answered' || !x._id) return '';
+    return '<div class="aj-skip-cta"><span>Jack answers premium questions first, then line skips, then the free line.</span>' +
+      '<button type="button" class="aj-skip-btn" onclick="window._qaBuySkip(\'' + _jtEsc(x._id) + '\')">⚡ SKIP THE LINE · $4.99</button></div>';
+  }
+  window._qaBuySkip = function(docId) {
+    const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
+    const user = (fbReady && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!user) { if (typeof window.openAuthModal === 'function') window.openAuthModal(); return; }
+    if (!fbReady || !firebase.functions) { if (typeof toast === 'function') toast('Checkout isn\'t available right now — try again in a minute.'); return; }
+    const btn = document.querySelector('.aj-skip-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'LOADING…'; }
+    let call;
+    try { call = firebase.app().functions('us-central1').httpsCallable('createCheckoutSession')({ plan: 'lineskip', qaDoc: docId }); }
+    catch (e) { call = Promise.reject(e); }
+    call.then(r => {
+      const url = r && r.data && r.data.url;
+      if (!url) throw new Error('No checkout URL returned.');
+      window.location.href = url;
+    }).catch(e => {
+      console.warn('[AskJack] line skip checkout error:', e);
+      if (typeof toast === 'function') toast('Couldn\'t start checkout: ' + (e && e.message || 'try again'));
+      if (btn) { btn.disabled = false; btn.textContent = '⚡ SKIP THE LINE · $4.99'; }
+    });
+  };
+  // Back from Stripe (?skip_success=1&session_id=… / ?skip_cancel=1): verify
+  // through the same callable premium uses; the webhook is the fallback. The
+  // session id is stashed so a signed-out return gets verified after sign-in.
+  function _qaSkipReturn(user) {
+    if (window._qaSkipHandled) return;
+    let sessionId = '', canceled = false;
+    try {
+      const params = new URLSearchParams(location.search);
+      if (params.get('skip_success') === '1') sessionId = params.get('session_id') || '';
+      canceled = params.get('skip_cancel') === '1';
+      if (sessionId || canceled) history.replaceState({}, '', location.pathname + (location.hash || '#askjack'));
+    } catch (_) {}
+    if (sessionId) { try { sessionStorage.setItem('mff_pending_skip', JSON.stringify({ sessionId: sessionId, at: Date.now() })); } catch (_) {} }
+    if (!sessionId && !canceled) {
+      try { const sp = JSON.parse(sessionStorage.getItem('mff_pending_skip') || 'null'); if (sp && sp.sessionId && Date.now() - (sp.at || 0) < 3600000) sessionId = sp.sessionId; } catch (_) {}
+    }
+    if (canceled) { window._qaSkipHandled = true; if (typeof toast === 'function') toast('No charge — your question is still in the free line.'); return; }
+    if (!sessionId) return;
+    if (!user) return; // retried on the next render once they sign in
+    window._qaSkipHandled = true;
+    if (typeof toast === 'function') toast('Payment received — moving you up the line…');
+    const done = () => { try { sessionStorage.removeItem('mff_pending_skip'); } catch (_) {} window._qaMineCache = null; window._qaRenderPanel(); };
+    let call;
+    try { call = firebase.app().functions('us-central1').httpsCallable('verifyCheckoutSession')({ sessionId: sessionId }); }
+    catch (e) { call = Promise.reject(e); }
+    call.then(r => {
+      const d = r && r.data;
+      if (typeof toast === 'function') toast(d && d.ok ? '⚡ Line skip paid — you\'re ahead of every free question.' : 'Payment received — your spot updates in a minute.');
+      done();
+    }).catch(e => {
+      console.warn('[AskJack] line skip verify failed:', e && e.code, e && e.message);
+      if (typeof toast === 'function') toast('Payment received — your spot updates in a minute. Email support if it doesn\'t.');
+      setTimeout(done, 8000);
+    });
+  }
+  // Admin bar: FREE Q'S ON/OFF (writes the settings doc) + VIEW AS premium/free.
+  function _qaAdminFreeSync() {
+    const b = document.getElementById('ajFreeToggle');
+    if (!b) return;
+    const st = _qaSettings();
+    if (!st) { b.textContent = 'FREE Q\'S: …'; _qaLoadSettings(() => _qaAdminFreeSync()); return; }
+    b.classList.toggle('on', !!st.freeOpen);
+    b.textContent = 'FREE Q\'S: ' + (st.freeOpen ? 'ON' : 'OFF');
+    b.title = st.freeOpen ? 'Free members can send 1 question a day right now — click to close' : 'Free questions are closed — click to open them (1 per member per day) while you\'re live';
+    document.querySelectorAll('#ajViewAs [data-viewas]').forEach(x => x.classList.toggle('on', x.getAttribute('data-viewas') === (window._qaViewAs || 'premium')));
+  }
+  window._qaAdminFreeToggle = function() {
+    const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
+    const db = fbReady && firebase.firestore ? firebase.firestore() : null;
+    if (!db || !_qaIsAdmin()) return;
+    const cur = _qaSettings();
+    const next = !(cur && cur.freeOpen);
+    const b = document.getElementById('ajFreeToggle');
+    if (b) b.disabled = true;
+    // Promise-based site dialog (window.mffConfirm); _mffConfirm is the
+    // replay-style sync wrapper and doesn't fit a promise chain.
+    const ask = msg => (typeof window.mffConfirm === 'function') ? window.mffConfirm(msg) : Promise.resolve(window.confirm(msg));
+    // Closing (Jack 2026-11-04): the unanswered free-line questions go with it.
+    // Paid line skips (tier 'skip'), premium questions and anything already
+    // answered stay. Count first so the confirm says what it's about to do.
+    const sweep = () => {
+      if (next) return Promise.resolve(0);
+      return db.collection('qa_questions').where('status', '==', 'open').limit(300).get().then(snap => {
+        const refs = [];
+        snap.forEach(d => { const x = d.data() || {}; if (x.tier === 'free') refs.push(d.ref); });
+        if (!refs.length) return 0;
+        return ask('Close free questions and remove ' + refs.length + ' unanswered free question' + (refs.length === 1 ? '' : 's') + ' from the queue?\n\nPaid line skips and premium questions stay.').then(okay => {
+          if (!okay) throw new Error('cancelled');
+          const batch = db.batch();
+          refs.forEach(r => batch.delete(r));
+          return batch.commit().then(() => refs.length);
+        });
+      });
+    };
+    sweep()
+      .then(removed => db.collection('shared').doc('askjack_settings').set({ freeOpen: next, updatedAt: new Date().toISOString() }, { merge: true }).then(() => removed))
+      .then(removed => {
+        window._qaSettingsCache = { at: Date.now(), data: { freeOpen: next } };
+        if (b) b.disabled = false;
+        _qaAdminFreeSync();
+        if (typeof toast === 'function') toast(next ? 'Free questions OPEN — 1 per member per day' : 'Free questions closed' + (removed ? ' — ' + removed + ' free question' + (removed === 1 ? '' : 's') + ' removed' : ''));
+        window._qaRenderPanel();
+        // Inbox open: reload the queue so the removed ones drop out.
+        const page = document.getElementById('pageAskJack');
+        if (removed && page && page.classList.contains('aj-inbox-on')) _qaAdminLoad();
+      })
+      .catch(e => {
+        if (b) b.disabled = false;
+        if (e && e.message === 'cancelled') { if (typeof toast === 'function') toast('Left open — nothing changed'); return; }
+        if (typeof toast === 'function') toast('Couldn\'t save: ' + (e && e.message || e));
+      });
+  };
+  window._qaViewAs = _qaLsGet('aj_viewas') === 'free' ? 'free' : 'premium';
+  window._qaAdminViewAs = function(v) {
+    window._qaViewAs = v === 'free' ? 'free' : 'premium';
+    _qaLsSet('aj_viewas', window._qaViewAs);
+    _qaAdminFreeSync();
+    window._qaRenderPanel();
+  };
 
   function _qaResetLabel() {
     const next = new Date(QA_WEEK_ANCHOR + (_qaWeekIdx() + 1) * QA_WEEK_MS);
@@ -73430,12 +74642,13 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
 
   // START/SIT · TRADE · LINEUP OPTIMIZER picker. Start/sit + lineup share
   // one weekly slot, so using one marks the other as used too.
-  function _qaTypePickerHtml(sel, mineBySlot) {
+  function _qaTypePickerHtml(sel, mineBySlot, mode) {
     return '<div class="aj-types" role="tablist" aria-label="Question type">' + QA_TYPE_ORDER.map(t => {
       const T = QA_TYPES[t];
       const used = mineBySlot[T.slot];
       let st, cls = '';
-      if (!used) st = '1 left this week';
+      if (!used) st = mode === 'admin' ? 'Unlimited (admin)' : mode === 'free' ? '1 free today' : mode === 'credit' ? 'Bonus available' : '1 left this week';
+      else if (mode === 'credit') { st = '🎁 Bonus available'; cls = ' aj-st-done'; }
       else if (used.type === t) { st = used.status === 'answered' ? 'ANSWERED' : 'SENT'; cls = used.status === 'answered' ? ' aj-st-done' : ' aj-st-sent'; }
       else { st = 'Used on ' + _qaType(used.type).name; cls = ' aj-st-used'; }
       return '<button type="button" class="aj-type' + (t === sel ? ' on' : '') + '" role="tab" aria-selected="' + (t === sel) + '" onclick="window._qaPickType(\'' + t + '\')">' +
@@ -73459,6 +74672,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const lg = (!isNaN(idx) && idx >= 0) ? (window._mtSavedLeagues || [])[idx] : null;
     window._qaLeagueId = lg ? String(lg.leagueId) : 'none';
     _qaLsSet('aj_league', window._qaLeagueId);
+    _qaClearPicks();
     window._qaRenderPanel();
   };
   // Called by _mtLoadSavedLeagues after a league sync: re-render (no-op when
@@ -73553,6 +74767,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (!bar) return;
     const admin = typeof window.isAdmin === 'function' && window.isAdmin();
     bar.style.display = admin ? '' : 'none';
+    if (admin) { _qaAdminFreeSync(); _qaOnAirRestore(); _qaOnAirApply(document.documentElement.classList.contains('aj-onair')); }
+    else if (document.documentElement.classList.contains('aj-onair')) _qaOnAirApply(false);
     const view = admin && _qaLsGet('aj_admin_view') === 'inbox' ? 'inbox' : 'member';
     _qaAdminApply(view);
     if (view === 'inbox') {
@@ -73567,6 +74783,248 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (view === 'inbox') _qaAdminLoad();
   };
   window._qaAdminLoad = function(status) { _qaAdminLoad(status); };
+  // ON AIR (stream view; Jack 2026-11-04 "optimize it for streaming"):
+  // html.aj-onair turns the inbox into a fixed STAGE for an OBS window capture.
+  //  - Stage shape presets (FIT the window · 16:9 · 1:1 · 4:5 · 9:16) letterbox
+  //    the stage on black, so a vertical / square stream scene gets a stage
+  //    shaped like it — crop the OBS capture to the stage (A cycles them).
+  //  - The question auto-scales to fit the stage: nothing scrolls on stream.
+  //  - Operator chrome (key strip, note + CONFIRM / SKIP bar, queue drawer,
+  //    cursor) hides 3 s after the mouse rests and comes back on a move, so
+  //    the capture shows the question alone; the keys do the work.
+  //  - UP NEXT strip + an empty-queue CTA for viewers (main.css .aj-upnext).
+  // Keys: 1-4 pick a tile (or open slot N on a lineup), Enter confirm (NEXT
+  // during the reveal), N next, S skip, B bonus question, Q queue drawer,
+  // A stage shape, F fullscreen, Esc exit. Remembered (localStorage aj_onair,
+  // aj_onair_aspect) so a refresh mid-stream stays on air.
+  const _QA_ASPECTS = ['fit', '169', '11', '45', '916'];
+  function _qaOnAirApply(on) {
+    document.documentElement.classList.toggle('aj-onair', on);
+    const b = document.querySelector('.aj-onair-btn');
+    if (b) { b.classList.toggle('on', on); b.textContent = on ? '🔴 ON AIR' : '⚫ ON AIR'; }
+    if (on) {
+      _qaOnAirAspectApply(_qaLsGet('aj_onair_aspect') || 'fit');
+      _qaOnAirCtl(true);
+    } else {
+      document.documentElement.classList.remove('aj-ctl', 'aj-qopen', 'aj-qdock', 'aj-qhide');
+      document.documentElement.removeAttribute('data-aj-aspect');
+      const list = document.getElementById('ajInboxList');
+      if (list) Array.from(list.children).forEach(el => { el.style.width = ''; el.style.minHeight = ''; el.style.transform = ''; delete el.dataset.ajScale; });
+      // Put a docked queue back into the page layout; unpin the pop-ups.
+      if (typeof window._adminQaRenderQueue === 'function' && list && list.querySelector('.aj-qwrap')) window._adminQaRenderQueue();
+      if (typeof window._qaOnAirPin === 'function') window._qaOnAirPin();
+    }
+  }
+  // A new stage shape or window size re-measures (drops the per-card scale lock).
+  function _qaOnAirUnlock() {
+    const list = document.getElementById('ajInboxList');
+    if (list) Array.from(list.children).forEach(el => { delete el.dataset.ajLock; });
+  }
+  function _qaOnAirAspectApply(a) {
+    if (_QA_ASPECTS.indexOf(a) < 0) a = 'fit';
+    document.documentElement.setAttribute('data-aj-aspect', a);
+    document.querySelectorAll('.aj-onair-asp [data-asp]').forEach(b => b.classList.toggle('on', b.getAttribute('data-asp') === a));
+    _qaOnAirUnlock();
+    _qaOnAirFit();
+  }
+  window._qaOnAirAspect = function(a) {
+    if (a == null) { const cur = document.documentElement.getAttribute('data-aj-aspect') || 'fit'; a = _QA_ASPECTS[(_QA_ASPECTS.indexOf(cur) + 1) % _QA_ASPECTS.length]; }
+    if (_QA_ASPECTS.indexOf(a) < 0) a = 'fit';
+    _qaLsSet('aj_onair_aspect', a);
+    _qaOnAirAspectApply(a);
+  };
+  // Scale the stage content to fit: width = stage / scale so it fills the
+  // stage after scaling; a few passes because height depends on width. The
+  // min-height pins the bottom-anchored CONFIRM bar to the stage bottom.
+  let _qaFitRaf = 0, _qaFitRO = null;
+  function _qaOnAirFit() {
+    if (!document.documentElement.classList.contains('aj-onair') || _qaFitRaf) return;
+    _qaFitRaf = requestAnimationFrame(() => {
+      _qaFitRaf = 0;
+      if (!document.documentElement.classList.contains('aj-onair')) return;
+      const stage = document.getElementById('ajInboxList');
+      const inner = stage ? stage.firstElementChild : null;
+      if (!stage || !inner) return;
+      // Queue column (Jack 11-04 "I don't want the queue blocking"): the queue
+      // is a fixed-width column on the right, OUTSIDE the stage; the stage is
+      // sized to the space left of it (--aj-aw × --aj-ah, main.css), so the
+      // OBS crop never sees the list. Q hides the column (the stage then grows
+      // into the space — re-crop if you do that mid-stream).
+      const h = document.documentElement;
+      const dockW = h.classList.contains('aj-qhide') ? 0 : (window.innerWidth >= 1100 ? 300 : window.innerWidth >= 700 ? 240 : 0);
+      h.style.setProperty('--aj-dock-w', dockW + 'px');
+      h.style.setProperty('--aj-aw', Math.max(0, window.innerWidth - dockW) + 'px');
+      h.style.setProperty('--aj-ah', window.innerHeight + 'px');
+      if ((dockW > 0) !== h.classList.contains('aj-qdock')) {
+        h.classList.toggle('aj-qdock', dockW > 0);
+        if (typeof window._adminQaRenderQueue === 'function' && document.querySelector('#ajInboxList .aj-qwrap')) { window._adminQaRenderQueue(); return; } // re-render moves the queue and re-fits
+      }
+      const W = stage.clientWidth, H = stage.clientHeight;
+      if (!W || !H) return;
+      inner.style.setProperty('--aj-sh', H + 'px');
+      // Lineup builder: a slot picker open or closed changes the content
+      // height, which used to rescale the whole stage on every slot click
+      // (Jack 11-04 "make it always the same size"). The scale is computed
+      // once per question card (with headroom for the rows filling in) and
+      // held while that card is on stage; pickers scroll inside a bounded
+      // box (main.css) and the stage scrolls if one still runs past the end.
+      const card = inner.querySelector('.aj-q');
+      const cardId = card ? card.id : '';
+      h.classList.toggle('aj-pick-open', !!inner.querySelector('.aj-slot.open'));
+      if (cardId && inner.dataset.ajLock === cardId && inner.dataset.ajScale) {
+        const s = parseFloat(inner.dataset.ajScale) || 1;
+        inner.style.width = Math.round(W / s) + 'px';
+        inner.style.transform = s === 1 ? '' : 'scale(' + s + ')';
+        inner.style.minHeight = Math.round(H / s) + 'px';
+        window._qaOnAirPin();
+        return;
+      }
+      const headroom = (card && card.querySelector('.aj-slots')) ? 1.15 : 1;
+      // Shrink-only from 1: a wider (unscaled) box can reflow the cards into
+      // more columns and get SHORTER, so a naive fixed-point loop flips between
+      // "one column, too tall" and "two columns, fits" and can stop on the
+      // wrong one (Jack's 9:16 stage, 11-04). Never growing keeps it monotone.
+      let s = 1;
+      for (let k = 0; k < 5; k++) {
+        inner.style.width = Math.round(W / s) + 'px';
+        inner.style.transform = s === 1 ? '' : 'scale(' + s + ')';
+        inner.style.minHeight = '';
+        const ch = inner.scrollHeight * headroom;
+        const s2 = Math.max(0.3, Math.min(s, H / Math.max(ch, 1)));
+        if (s - s2 < 0.004) { s = s2; break; }
+        s = s2;
+      }
+      inner.style.width = Math.round(W / s) + 'px';
+      inner.style.transform = s === 1 ? '' : 'scale(' + s + ')';
+      inner.style.minHeight = Math.round(H / s) + 'px';
+      inner.style.setProperty('--aj-s', String(s));
+      inner.dataset.ajScale = String(s);
+      if (cardId) inner.dataset.ajLock = cardId;
+      window._qaOnAirPin();
+      if (!_qaFitRO && window.ResizeObserver) _qaFitRO = new ResizeObserver(() => _qaOnAirFit());
+      if (_qaFitRO && !inner._ajFitObserved) { inner._ajFitObserved = true; _qaFitRO.observe(inner); }
+    });
+  }
+  window._qaOnAirFit = _qaOnAirFit;
+  window.addEventListener('resize', () => { _qaOnAirUnlock(); _qaOnAirFit(); });
+  // Operator chrome: shown on mouse movement, gone 3 s after it rests (kept
+  // while the pointer or focus is on a control, e.g. typing a note).
+  let _qaCtlTimer = 0;
+  function _qaOnAirCtl(show) {
+    const h = document.documentElement;
+    if (!h.classList.contains('aj-onair')) return;
+    h.classList.toggle('aj-ctl', !!show);
+    clearTimeout(_qaCtlTimer);
+    if (show) _qaCtlTimer = setTimeout(_qaOnAirCtlHide, 3000);
+  }
+  function _qaOnAirCtlHide() {
+    const a = document.activeElement;
+    const inCtl = a && a.closest && a.closest('.aj-onair-bar,.aj-q-bar,.aj-qside,.aj-gw');
+    const hov = document.querySelector('.aj-onair-bar:hover,.aj-q-bar:hover,.aj-qside:hover,.aj-gw:hover,.aj-rpop:hover');
+    if (inCtl || hov) { _qaCtlTimer = setTimeout(_qaOnAirCtlHide, 1500); return; }
+    document.documentElement.classList.remove('aj-ctl');
+  }
+  ['mousemove', 'pointerdown', 'wheel'].forEach(ev => document.addEventListener(ev, () => { if (document.documentElement.classList.contains('aj-onair')) _qaOnAirCtl(true); }, { passive: true }));
+  window._qaOnAirQueue = function(open) {
+    const h = document.documentElement;
+    // open = show the queue column; hiding it hands its width to the stage.
+    h.classList.toggle('aj-qhide', open == null ? !h.classList.contains('aj-qhide') : !open);
+    _qaOnAirUnlock();
+    _qaOnAirFit();
+  };
+  window._qaOnAirBonus = function() {
+    const cur = (typeof window._adminQaCurrent === 'function') ? window._adminQaCurrent() : (window._adminQaQueue || [])[0];
+    if (cur && typeof window._adminQaGiveCredit === 'function') window._adminQaGiveCredit(cur.id);
+  };
+  // Pop-ups on air (Jack 11-04 "all the pop ups in these restrictions too"):
+  // the lineup / roster popover, the player card modal and the giveaway panel
+  // are pinned to the stage's own box instead of the whole window, so the
+  // OBS crop shows them whole. Re-pinned on every fit, popover open and
+  // player-card open; cleared when ON AIR ends.
+  const _QA_PIN_IDS = ['ajRosterPop', 'modal', 'ajGiveaway'];
+  window._qaOnAirPin = function() {
+    const on = document.documentElement.classList.contains('aj-onair');
+    const stage = document.getElementById('ajInboxList');
+    const r = (on && stage) ? stage.getBoundingClientRect() : null;
+    _QA_PIN_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (r && r.width && r.height) {
+        el.style.left = Math.round(r.left) + 'px'; el.style.top = Math.round(r.top) + 'px';
+        el.style.width = Math.round(r.width) + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto';
+        if (id === 'ajGiveaway') { el.style.height = ''; el.style.maxHeight = Math.round(r.height) + 'px'; }
+        else { el.style.height = Math.round(r.height) + 'px'; el.style.maxHeight = ''; }
+      } else ['left', 'top', 'width', 'height', 'maxHeight', 'right', 'bottom'].forEach(k => { el.style[k] = ''; });
+    });
+  };
+  (function() {
+    const modal = document.getElementById('modal');
+    if (!modal || !window.MutationObserver) return;
+    new MutationObserver(() => { if (document.documentElement.classList.contains('aj-onair') && modal.classList.contains('open')) window._qaOnAirPin(); })
+      .observe(modal, { attributes: true, attributeFilter: ['class'] });
+  })();
+  window._qaOnAir = function(on) {
+    if (!_qaIsAdmin()) return;
+    if (on == null) on = !document.documentElement.classList.contains('aj-onair');
+    _qaLsSet('aj_onair', on ? '1' : '0');
+    _qaOnAirApply(on);
+    if (on) {
+      _qaLsSet('aj_admin_view', 'inbox');
+      _qaAdminApply('inbox');
+      _qaAdminLoad();
+      if (typeof window.switchPage === 'function' && !document.getElementById('pageAskJack').classList.contains('active')) window.switchPage('askjack');
+    } else if (document.fullscreenElement) {
+      try { document.exitFullscreen(); } catch (_) {}
+    }
+  };
+  window._qaOnAirFullscreen = function() {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen();
+    } catch (_) {}
+  };
+  // Restore on load (admin only — _qaAdminSync runs once the account resolves).
+  const _qaOnAirRestore = () => { if (_qaIsAdmin() && _qaLsGet('aj_onair') === '1' && !document.documentElement.classList.contains('aj-onair')) window._qaOnAir(true); };
+  document.addEventListener('keydown', e => {
+    if (!document.documentElement.classList.contains('aj-onair')) return;
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target;
+    const typing = t && (t.tagName === 'TEXTAREA' || t.isContentEditable || (t.tagName === 'INPUT' && !t.classList.contains('aj-q-noteinp')));
+    if (typing) return;
+    const q = window._adminQaQueue || [];
+    const cur = (typeof window._adminQaCurrent === 'function') ? window._adminQaCurrent() : q[0];
+    const revealing = typeof window._adminQaRevealResolve === 'function';
+    const key = e.key;
+    if (key === 'Escape') {
+      e.preventDefault();
+      if (document.documentElement.classList.contains('aj-rpop-open')) return; // the roster popover's own Escape
+      window._qaOnAir(false); return;
+    }
+    if (key === 'f' || key === 'F') { e.preventDefault(); window._qaOnAirFullscreen(); return; }
+    if (key === 'q' || key === 'Q') { e.preventDefault(); window._qaOnAirQueue(); return; }
+    if (key === 'a' || key === 'A') { e.preventDefault(); window._qaOnAirAspect(); return; }
+    if (!cur) return;
+    if (key === 'b' || key === 'B') { e.preventDefault(); window._qaOnAirBonus(); return; }
+    if ((key === 'ArrowDown' || key === 'ArrowRight' || key === ']') && !revealing) { e.preventDefault(); if (typeof window._adminQaRotate === 'function') window._adminQaRotate(1); return; }
+    if ((key === 'ArrowUp' || key === 'ArrowLeft' || key === '[') && !revealing) { e.preventDefault(); if (typeof window._adminQaRotate === 'function') window._adminQaRotate(-1); return; }
+    if (revealing) {
+      if (key === 'Enter' || key === 'n' || key === 'N' || key === ' ') { e.preventDefault(); window._adminQaRevealNext(); }
+      return;
+    }
+    if (/^[1-9]$/.test(key)) {
+      e.preventDefault();
+      const n = parseInt(key, 10) - 1;
+      if (cur.data.type === 'lineup') { if (typeof window._adminQaSlotOpen === 'function') window._adminQaSlotOpen(cur.id, n); }
+      else if (typeof window._adminQaSelect === 'function' && document.querySelector('#adminQaCard-' + CSS.escape(cur.id) + ' .aj-choice[data-i="' + n + '"]')) window._adminQaSelect(cur.id, n);
+      return;
+    }
+    if (key === 'Enter') {
+      const btn = document.getElementById('adminQaConfirm-' + cur.id);
+      if (btn && !btn.disabled) { e.preventDefault(); btn.click(); }
+      return;
+    }
+    if ((key === 's' || key === 'S') && typeof window._adminQaSkip === 'function') { e.preventDefault(); window._adminQaSkip(cur.id); }
+  });
   // Page enter (switchPage hook): refresh the inbox so new questions show up.
   window._qaAdminEnter = function() {
     const page = document.getElementById('pageAskJack');
@@ -73579,6 +75037,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     _qaAdminSync();
     const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
     const user = (fbReady && firebase.auth) ? firebase.auth().currentUser : null;
+    _qaSkipReturn(user);
     if (!user) {
       // Own tab (2026-11-04): a blank page reads as broken, so signed-out
       // visitors get a sign-in prompt instead of a hidden panel.
@@ -73593,17 +75052,56 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       return;
     }
     const isPremNow = (typeof window.hasPremium === 'function') && window.hasPremium();
+    const admin = _qaIsAdmin();
 
-    const header =
+    const premHeader =
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">' +
         '<span class="jt-badge">PREMIUM</span>' +
         // No "ASK JACK" title here: the tab's page header already says it.
         '<span style="font-size:.6875rem;color:var(--text2);font-style:italic">2 questions every week: 1 trade + 1 start/sit or lineup</span>' +
       '</div>';
+    const freeHeader =
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">' +
+        '<span class="jt-badge aj-badge-free">FREE</span>' +
+        '<span style="font-size:.6875rem;color:var(--text2);font-style:italic">Jack\'s live — free members get 1 question today</span>' +
+      '</div>';
+
+    // Admin (Jack): unlimited practice questions; VIEW AS flips the member view.
+    if (admin) {
+      const asFree = window._qaViewAs === 'free';
+      window._qaMode = asFree ? 'adminfree' : 'admin';
+      _qaLoadMine(sect, user, list => _qaRenderInner(sect, asFree ? freeHeader : premHeader, list, 'admin', asFree));
+      return;
+    }
 
     if (!isPremNow) {
+      const st = _qaSettings();
+      if (!st) {
+        if (sect._qaLastHtml !== 'loading') { sect._qaLastHtml = 'loading'; sect.innerHTML = '<div class="aj-loading">Loading…</div>'; }
+        sect.style.display = 'block';
+        _qaLoadSettings(() => window._qaRenderPanel());
+        return;
+      }
+      if (st.freeOpen) {
+        window._qaMode = 'free';
+        _qaLoadMine(sect, user, list => _qaRenderInner(sect, freeHeader, list, 'free', true));
+        return;
+      }
+      // Free member holding a bonus ticket from Jack: the premium panel, where
+      // every slot reads as used except the bonus (mode 'credit').
+      const cachedC = window._qaMineCache;
+      if (!cachedC || cachedC.uid !== user.uid || (Date.now() - cachedC.at) >= 60000) {
+        _qaLoadMine(sect, user, () => window._qaRenderPanel());
+        return;
+      }
+      if ((cachedC.credits || []).length) {
+        window._qaMode = 'credit';
+        _qaRenderInner(sect, premHeader, cachedC.list, 'credit', false);
+        return;
+      }
+      window._qaMode = 'locked';
       const _locked =
-        '<div class="aj-card">' + header +
+        '<div class="aj-card">' + premHeader +
         '<div class="jt-locked-wrap" style="margin-top:8px">' +
           '<div class="jt-locked-content" style="filter:blur(3px);pointer-events:none;padding:18px">' +
             '<div style="font-size:.8rem;color:var(--text2)">Who do I start — Puka Nacua or Nico Collins? &nbsp;·&nbsp; Should I take this trade? &nbsp;·&nbsp; Set my lineup</div>' +
@@ -73613,6 +75111,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
             '<div class="jt-locked-label">PREMIUM FEATURE</div>' +
             '<div class="jt-locked-desc">Every week, send Jack a trade plus a start/sit or a full-lineup question. He makes the call right from your synced roster.</div>' +
             '<button class="jt-locked-btn" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{const t=document.querySelector(\'[data-acct-tab=premium]\');if(t)t.click();},150)">UPGRADE TO PRO</button>' +
+            '<div class="aj-locked-free">Not premium? When Jack is live streaming he opens free questions — 1 a day — right here.</div>' +
           '</div>' +
         '</div></div>';
       if (sect._qaLastHtml !== _locked) { sect._qaLastHtml = _locked; sect.innerHTML = _locked; }
@@ -73620,20 +75119,35 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       return;
     }
 
-    // Premium: load my questions (60s cache so auth churn doesn't re-hit Firestore)
+    window._qaMode = 'premium';
+    _qaLoadMine(sect, user, list => _qaRenderInner(sect, premHeader, list, 'premium', false));
+  };
+
+  // My questions (60s cache so auth churn doesn't re-hit Firestore). Each
+  // row carries its doc id as _id (the line-skip checkout needs it).
+  // Bonus tickets (qa_credits, handed out by Jack from the inbox): unused =
+  // no question created under the ticket's id yet. Loaded with my questions.
+  function _qaLoadMine(sect, user, cb) {
     const cached = window._qaMineCache;
-    if (cached && cached.uid === user.uid && (Date.now() - cached.at) < 60000) {
-      _qaRenderInner(sect, header, cached.list);
-      return;
-    }
+    if (cached && cached.uid === user.uid && (Date.now() - cached.at) < 60000) { window._qaCreditIds = cached.credits || []; cb(cached.list); return; }
+    const fbReady = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length;
     const db = fbReady && firebase.firestore ? firebase.firestore() : null;
     if (!db) { sect.style.display = 'none'; return; }
-    db.collection('qa_questions').where('uid', '==', user.uid).get().then(snap => {
+    Promise.all([
+      db.collection('qa_questions').where('uid', '==', user.uid).get(),
+      db.collection('qa_credits').where('uid', '==', user.uid).get().catch(e => { console.warn('[AskJack] credits load error:', e); return null; })
+    ]).then(([snap, csnap]) => {
       const list = [];
-      snap.forEach(d => list.push(d.data()));
+      snap.forEach(d => list.push(Object.assign({ _id: d.id }, d.data())));
       list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-      window._qaMineCache = { uid: user.uid, at: Date.now(), list: list };
-      _qaRenderInner(sect, header, list);
+      const usedIds = {};
+      list.forEach(x => { usedIds[x._id] = true; });
+      const credits = [];
+      if (csnap) csnap.forEach(d => { if (!usedIds[d.id]) credits.push(d.id); });
+      credits.sort();
+      window._qaCreditIds = credits;
+      window._qaMineCache = { uid: user.uid, at: Date.now(), list: list, credits: credits };
+      cb(list);
     }).catch(e => {
       console.warn('[AskJack] load error:', e);
       // Own tab: say so instead of leaving the page blank.
@@ -73641,39 +75155,70 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       sect.innerHTML = '<div class="aj-card aj-signin"><div class="aj-signin-sub">Couldn\'t load your questions. Check your connection and reopen this tab.</div></div>';
       sect.style.display = 'block';
     });
-  };
+  }
 
-  function _qaRenderInner(sect, header, list) {
-    const wk = _qaWeekIdx();
+  // mode: 'premium' (2 weekly slots) | 'free' (1 a day) | 'admin' (unlimited;
+  // freeLook flips the labels to the free member's view for practice).
+  function _qaRenderInner(sect, header, list, mode, freeLook) {
+    mode = mode || 'premium';
+    const wk = _qaWeekIdx(), day = _qaDayIdx();
+    const lblMode = mode === 'admin' ? 'admin' : (freeLook ? 'free' : 'premium');
     const mineBySlot = {};
-    list.forEach(x => {
-      if (x.weekIdx !== wk) return;
-      const s = _qaSlotOf(x.type);
-      if (!mineBySlot[s]) mineBySlot[s] = x;
-    });
+    if (mode === 'free') {
+      // A paid line skip flips tier free → skip; it's still today's free question.
+      const today = list.find(x => (x.tier === 'free' || x.tier === 'skip') && x.dayIdx === day && !x.testN) || null;
+      if (today) { mineBySlot.startsit = today; mineBySlot.trade = today; }
+    } else if (mode === 'premium') {
+      list.forEach(x => {
+        if (x.weekIdx !== wk || x.tier === 'free' || x.testN) return;
+        const s = _qaSlotOf(x.type);
+        if (!mineBySlot[s]) mineBySlot[s] = x;
+      });
+    }
     const sel = _qaSelType();
     const T = QA_TYPES[sel];
-    const used = mineBySlot[T.slot];
+    let used = mineBySlot[T.slot];
+    const credits = window._qaCreditIds || [];
+    // mode 'credit' (free member, questions closed): only the bonus is usable.
+    if (mode === 'credit') { mineBySlot.startsit = mineBySlot.startsit || { _lockedSlot: true }; mineBySlot.trade = mineBySlot.trade || { _lockedSlot: true }; used = mineBySlot[T.slot]; }
+    // A held bonus ticket reopens a used slot — the form comes back with a
+    // banner and the send goes out under the ticket (premium, never expires).
+    const useCredit = !!(used && credits.length && mode !== 'admin');
+    window._qaUseCredit = useCredit;
+    window._qaSlotUsed = { startsit: !!mineBySlot.startsit, trade: !!mineBySlot.trade };
+    const creditBanner = credits.length
+      ? '<div class="aj-credit-banner">🎁 Jack gave you ' + (credits.length === 1 ? 'a bonus question' : credits.length + ' bonus questions') + ' — any type, never expires' + (useCredit ? '. This one uses it.' : '. It kicks in once your regular slot is used.') + '</div>'
+      : '';
 
     let pane = '<div class="aj-pane" role="tabpanel">' +
       '<div class="aj-pane-head">' + T.icon + ' ' + T.label +
-      (used && used.type === sel ? '<span class="aj-pane-st' + (used.status === 'answered' ? ' aj-st-done' : '') + '">' + (used.status === 'answered' ? 'ANSWERED' : 'SENT — WAITING ON JACK') + '</span>' : '') +
+      (used && !useCredit && used.type === sel ? '<span class="aj-pane-st' + (used.status === 'answered' ? ' aj-st-done' : '') + '">' + (used.status === 'answered' ? 'ANSWERED' : 'SENT — WAITING ON JACK') + '</span>' : '') +
+      (useCredit ? '<span class="aj-pane-st aj-st-done">🎁 BONUS QUESTION</span>' : '') +
       '</div>';
-    if (used && used.type === sel) {
+    if (useCredit) {
+      pane += (sel === 'lineup' ? _qaLineupFormHtml(_qaSelLeague()) : _qaFormHtml(sel));
+    } else if (used && used._lockedSlot) {
+      pane += '<div class="aj-used-note">Premium questions are part of the Season Pass. Your bonus question from Jack is used up — upgrade for 2 questions every week.</div>';
+    } else if (used && used.type === sel) {
       pane += _qaSubmittedHtml(used);
     } else if (used) {
-      pane += '<div class="aj-used-note">Start/sit and lineup share one question a week, and this week\'s went to your ' + _qaType(used.type).name + ' question. ' + _qaResetLabel().replace(/^n/, 'N') + '.</div>' +
+      pane += '<div class="aj-used-note">' + (mode === 'free'
+          ? 'You get one free question a day, and today\'s went to your ' + _qaType(used.type).name + ' question. New free question tomorrow (midnight ET).'
+          : 'Start/sit and lineup share one question a week, and this week\'s went to your ' + _qaType(used.type).name + ' question. ' + _qaResetLabel().replace(/^n/, 'N') + '.') + '</div>' +
         '<div class="aj-used-q"><div class="aj-used-q-lbl">' + _qaType(used.type).icon + ' ' + _qaType(used.type).label + '</div>' + _qaSubmittedHtml(used) + '</div>';
     } else {
       pane += sel === 'lineup' ? _qaLineupFormHtml(_qaSelLeague()) : _qaFormHtml(sel);
     }
     pane += '</div>';
 
-    // Past answers (previous weeks, answered only)
-    const past = list.filter(x => x.status === 'answered' && x.weekIdx !== wk).slice(0, 6);
+    // Past answers (previous weeks, answered only). Admin practice: the last
+    // 8 of Jack's own questions, any status, so he can see every state.
+    const past = mode === 'admin'
+      ? list.slice(0, 8)
+      : list.filter(x => x.status === 'answered' && !(mode === 'free' ? ((x.tier === 'free' || x.tier === 'skip') && x.dayIdx === day) : x.weekIdx === wk)).slice(0, 6);
     let pastHtml = '';
     if (past.length) {
-      pastHtml = '<details style="margin-top:12px"><summary style="cursor:pointer;font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2)">PAST ANSWERS (' + past.length + ')</summary>' +
+      pastHtml = '<details style="margin-top:12px"' + (mode === 'admin' ? ' open' : '') + '><summary style="cursor:pointer;font-family:\'Bebas Neue\',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2)">' + (mode === 'admin' ? 'YOUR RECENT QUESTIONS (' : 'PAST ANSWERS (') + past.length + ')</summary>' +
         '<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">' +
         past.map(x => '<div style="background:var(--surface2,rgba(255,255,255,.03));border:1px solid var(--border);border-radius:8px;padding:10px">' +
           '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:4px">' + _qaType(x.type).icon + ' ' + _qaType(x.type).label + ' · ' + (x.createdAt ? new Date(x.createdAt).toLocaleDateString() : '') + '</div>' +
@@ -73684,9 +75229,11 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const _newHtml =
       '<div class="aj-card">' +
       header +
-      '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:12px">Jack makes the call himself · ' + _qaResetLabel() + '</div>' +
+      '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:12px">Jack makes the call himself · ' +
+        (mode === 'admin' ? 'admin: unlimited practice questions (' + (freeLook ? 'free' : 'premium') + ' view)' : freeLook ? _qaFreeResetLabel() : _qaResetLabel()) + '</div>' +
+      creditBanner +
       _qaLeagueBarHtml() +
-      _qaTypePickerHtml(sel, mineBySlot) +
+      _qaTypePickerHtml(sel, mineBySlot, credits.length && mode !== 'admin' ? 'credit' : lblMode) +
       pane + pastHtml + _qaDatalist() +
       '</div>';
     // Idempotent render: if nothing changed (questions, leagues, picked type,
@@ -73735,7 +75282,185 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       '<div id="qaMsg-' + type + '" class="aj-msg"></div>';
   }
 
+  // Chip selections per form (survive re-renders; cleared on send / league change).
+  function _qaPicks(key) { const P = window._qaPicksState || (window._qaPicksState = {}); return P[key] || (P[key] = []); }
+  function _qaClearPicks(prefix) {
+    const P = window._qaPicksState || {};
+    Object.keys(P).forEach(k => { if (!prefix || k === prefix || k.indexOf(prefix + '-') === 0) delete P[k]; });
+  }
+  function _qaOtherTeams(lg) {
+    return (lg && Array.isArray(lg.teams) ? lg.teams : []).map((t, i) => ({ t, i })).filter(x => x.t && !x.t.isMyTeam);
+  }
+  function _qaTeamPlayers(t) {
+    return t && Array.isArray(t.players) ? t.players.map(q => typeof q === 'string' ? q : (q && q.name) || '').filter(Boolean) : [];
+  }
+  function _qaTeamLabel(t, i) { return (t && (t.owner || t.name)) ? String(t.owner || t.name) : 'Team ' + (i + 1); }
+  // Which other team the trade is with (per league; defaults to the first one).
+  function _qaTradeTeamIdx(lg) {
+    const others = _qaOtherTeams(lg);
+    if (!others.length) return -1;
+    const map = window._qaTradeTeamByLeague || (window._qaTradeTeamByLeague = {});
+    const want = map[String(lg.leagueId)];
+    return others.some(x => x.i === want) ? want : others[0].i;
+  }
+  function _qaChipsHtml(key, names, max, ros) {
+    const picked = _qaPicks(key);
+    const order = (typeof window._ajSortByRank === 'function') ? window._ajSortByRank(names, ros != null ? 'redraft' : null) : _qaSortByPos(names);
+    if (typeof window._ajPlayerCardHtml === 'function') {
+      // Player tiles (headshot, team band, rank / proj / opp), best first.
+      // Trade sides (ros = league format) show the ROS rank / season proj /
+      // trade value strip instead of this week's.
+      return '<div class="aj-pick aj-pick-tiles" id="qaPick-' + key + '" data-max="' + (max || 0) + '">' + order.map(n => {
+        const on = picked.indexOf(n) >= 0;
+        const tileOpts = { onclick: 'window._qaChipToggle(\'' + key + '\', this)', cls: 'aj-chip-btn' + (on ? ' sel aj-chip-start' : '') };
+        if (ros != null) tileOpts.ros = ros;
+        return window._ajPlayerCardHtml(n, tileOpts)
+          || '<button type="button" class="aj-chip aj-chip-btn' + (on ? ' aj-chip-start' : '') + '" data-name="' + _jtEsc(n) + '" onclick="window._qaChipToggle(\'' + key + '\', this)">' + _jtEsc(n) + '</button>';
+      }).join('') + '</div>';
+    }
+    return '<div class="aj-roster aj-pick" id="qaPick-' + key + '" data-max="' + (max || 0) + '">' + _qaSortByPos(names).map(n => {
+      const pos = _qaPosOf(n);
+      const on = picked.indexOf(n) >= 0;
+      return '<button type="button" class="aj-chip aj-chip-btn' + (on ? ' aj-chip-start' : '') + '" data-name="' + _jtEsc(n) + '" aria-pressed="' + on + '" onclick="window._qaChipToggle(\'' + key + '\', this)">' +
+        (pos ? '<span class="aj-chip-pos">' + _jtEsc(pos) + '</span>' : '') + _jtEsc(n) + '</button>';
+    }).join('') + '</div>';
+  }
+  function _qaPickCount(key, max, what) {
+    const n = _qaPicks(key).length;
+    return '<span class="aj-pickcnt" id="qaPickCnt-' + key + '">' + n + (max ? ' of ' + max : '') + ' ' + what + '</span>';
+  }
+  window._qaChipToggle = function(key, btn) {
+    const name = btn.getAttribute('data-name');
+    const wrap = document.getElementById('qaPick-' + key);
+    const max = wrap ? parseInt(wrap.getAttribute('data-max'), 10) || 0 : 0;
+    const picks = _qaPicks(key);
+    const i = picks.indexOf(name);
+    if (i >= 0) picks.splice(i, 1);
+    else {
+      if (max && picks.length >= max) { if (typeof toast === 'function') toast('Up to ' + max + ' players — unpick one first'); return; }
+      picks.push(name);
+    }
+    btn.classList.toggle('aj-chip-start', i < 0);
+    btn.classList.toggle('sel', i < 0);
+    btn.setAttribute('aria-pressed', i < 0 ? 'true' : 'false');
+    const cnt = document.getElementById('qaPickCnt-' + key);
+    if (cnt) cnt.textContent = picks.length + (max ? ' of ' + max : '') + ' ' + (cnt.getAttribute('data-what') || 'picked');
+  };
+  // ===== Draft picks on a trade side (Jack 2026-11-04: "for dynasty add
+  // picks — click add picks and have a drop down"). Dynasty / keeper leagues
+  // get an ADD A PICK button per side: year (next three drafts) · round ·
+  // early / mid / late. Picks are stored as "2027 1st" / "2028 early 2nd"
+  // strings in _qaPicks(key + '-picks'), joined into the side text at send
+  // time, so Jack's card prices them like the Trade Calculator. =====
+  function _qaIsDynasty(lg) { return !!(lg && lg.format && /dynasty|keeper/i.test(String(lg.format.type || ''))); }
+  function _qaNextDraftYear() { const d = new Date(); return d.getFullYear() + (d.getMonth() >= 4 ? 1 : 0); }
+  function _qaPickChipsHtml(key) {
+    const picks = _qaPicks(key + '-picks');
+    const val = p => {
+      if (typeof window._getPickValue !== 'function' || typeof window._ajPickValuesIn !== 'function') return null;
+      const lg = _qaSelLeague();
+      const got = window._ajPickValuesIn(p, _qaLeagueFmt(lg, true));
+      return got.length ? got[0].v : null;
+    };
+    const inner = '<div class="aj-pickrow">' +
+      picks.map((p, i) => { const v = val(p); return '<span class="aj-chip aj-chip-start aj-pickchip">🎟️ ' + _jtEsc(p.toUpperCase()) + (v ? ' <i>' + v + '</i>' : '') + '<button type="button" class="aj-pickchip-x" onclick="window._qaPickRemove(\'' + key + '\',' + i + ')" title="Remove this pick">✕</button></span>'; }).join('') +
+      '<button type="button" class="aj-add aj-pick-addbtn" onclick="window._qaPickAddOpen(\'' + key + '\')">+ ADD A PICK</button>' +
+      '</div>' +
+      '<div class="aj-pick-add" id="qaPickAdd-' + key + '" style="display:none">' +
+        '<select id="qaPickYr-' + key + '" class="aj-input aj-pick-sel" aria-label="Draft year">' + [0, 1, 2].map(k => { const y = _qaNextDraftYear() + k; return '<option value="' + y + '">' + y + '</option>'; }).join('') + '</select>' +
+        '<select id="qaPickRd-' + key + '" class="aj-input aj-pick-sel" aria-label="Round"><option value="1st">1st round</option><option value="2nd">2nd round</option><option value="3rd">3rd round</option><option value="4th">4th round</option></select>' +
+        '<select id="qaPickSlot-' + key + '" class="aj-input aj-pick-sel" aria-label="Pick slot"><option value="mid">mid (unknown)</option><option value="early">early</option><option value="late">late</option></select>' +
+        '<button type="button" class="aj-send aj-pick-go" onclick="window._qaPickAdd(\'' + key + '\')">ADD</button>' +
+        '<button type="button" class="aj-add" onclick="window._qaPickAddOpen(\'' + key + '\',false)">cancel</button>' +
+      '</div>';
+    return '<div class="aj-picks" id="qaPicks-' + key + '">' + inner + '</div>';
+  }
+  function _qaPickChipsRerender(key) {
+    const box = document.getElementById('qaPicks-' + key);
+    if (!box) return;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = _qaPickChipsHtml(key);
+    box.innerHTML = tmp.firstChild.innerHTML;
+  }
+  window._qaPickAddOpen = function(key, open) {
+    const add = document.getElementById('qaPickAdd-' + key);
+    if (!add) return;
+    const on = open == null ? add.style.display === 'none' : !!open;
+    add.style.display = on ? '' : 'none';
+    if (on) { const s = document.getElementById('qaPickYr-' + key); if (s) s.focus(); }
+  };
+  window._qaPickAdd = function(key) {
+    const yr = (document.getElementById('qaPickYr-' + key) || {}).value;
+    const rd = (document.getElementById('qaPickRd-' + key) || {}).value;
+    const slot = (document.getElementById('qaPickSlot-' + key) || {}).value || 'mid';
+    if (!yr || !rd) return;
+    const picks = _qaPicks(key + '-picks');
+    if (picks.length >= 6) { if (typeof toast === 'function') toast('Up to 6 picks per side'); return; }
+    picks.push(yr + (slot !== 'mid' ? ' ' + slot : '') + ' ' + rd);
+    _qaPickChipsRerender(key);
+  };
+  window._qaPickRemove = function(key, i) {
+    const picks = _qaPicks(key + '-picks');
+    picks.splice(i, 1);
+    _qaPickChipsRerender(key);
+  };
+  window._qaTradeTeamChanged = function() {
+    const sel = document.getElementById('qaTradeTeam');
+    const lg = _qaSelLeague();
+    if (!sel || !lg) return;
+    const map = window._qaTradeTeamByLeague || (window._qaTradeTeamByLeague = {});
+    map[String(lg.leagueId)] = parseInt(sel.value, 10);
+    _qaClearPicks('trade-1'); // the other side's roster changed
+    window._qaRenderPanel();
+  };
+  function _qaRosterFormHtml(type, lg) {
+    const mine = _qaMyPlayers(lg);
+    let body = '';
+    if (type === 'startsit') {
+      body = '<div class="aj-ask">Tap the players you\'re deciding between (2–4) · ' + _qaPickCount('startsit', 4, 'picked').replace('class="aj-pickcnt"', 'class="aj-pickcnt" data-what="picked"') + '</div>' +
+        _qaChipsHtml('startsit', mine, 4);
+    } else {
+      const others = _qaOtherTeams(lg);
+      const ti = _qaTradeTeamIdx(lg);
+      const other = ti >= 0 ? lg.teams[ti] : null;
+      const fmt = _qaLeagueFmt(lg, true);
+      const dyn = _qaIsDynasty(lg);
+      body = '<div class="aj-side-lbl">TRADING WITH</div>' +
+        '<select id="qaTradeTeam" class="aj-input" onchange="window._qaTradeTeamChanged()">' +
+          others.map(x => '<option value="' + x.i + '"' + (x.i === ti ? ' selected' : '') + '>' + _jtEsc(_qaTeamLabel(x.t, x.i)) + '</option>').join('') +
+        '</select>' +
+        '<div class="aj-side-lbl">SIDE A — YOU GIVE · ' + _qaPickCount('trade-0', 0, 'picked').replace('class="aj-pickcnt"', 'class="aj-pickcnt" data-what="picked"') + ' <span class="aj-side-ros">· rest-of-season view</span></div>' +
+        _qaChipsHtml('trade-0', mine, 0, fmt) +
+        (dyn ? _qaPickChipsHtml('trade-0') : '') +
+        '<input type="text" id="qaExtra-trade-0" class="aj-input aj-input-note" placeholder="Anything else you give' + (dyn ? '' : ' (picks, e.g. 2027 2nd)') + '" maxlength="80">' +
+        '<div class="aj-side-lbl">SIDE B — YOU GET' + (other ? ' FROM ' + _jtEsc(_qaTeamLabel(other, ti)).toUpperCase() : '') + ' · ' + _qaPickCount('trade-1', 0, 'picked').replace('class="aj-pickcnt"', 'class="aj-pickcnt" data-what="picked"') + '</div>' +
+        (other && _qaTeamPlayers(other).length
+          ? _qaChipsHtml('trade-1', _qaTeamPlayers(other), 0, fmt)
+          : '<div class="aj-need-league">No roster synced for that team yet — re-sync the league on My Teams.</div>') +
+        (dyn ? _qaPickChipsHtml('trade-1') : '') +
+        '<input type="text" id="qaExtra-trade-1" class="aj-input aj-input-note" placeholder="Anything else you get' + (dyn ? '' : ' (picks, e.g. 2027 1st)') + '" maxlength="80">';
+    }
+    return body +
+      _qaNoteInput(type, 'Optional context (scoring quirks, injuries, league situation…)') +
+      _qaSendBtn(type, false);
+  }
+  // Options from the chip pickers (null when the form is the text version).
+  function _qaPickedOptions(type) {
+    if (!document.getElementById('qaPick-' + (type === 'trade' ? 'trade-0' : 'startsit'))) return null;
+    if (type === 'startsit') return _qaPicks('startsit').slice(0, 4);
+    const side = k => {
+      const names = _qaPicks(k).slice().concat(_qaPicks(k + '-picks'));
+      const extra = (document.getElementById('qaExtra-' + k) || {}).value;
+      if (extra && extra.trim()) names.push(extra.trim());
+      return names.join(' + ').slice(0, 200);
+    };
+    return [side('trade-0'), side('trade-1')];
+  }
+
   function _qaFormHtml(type) {
+    // Synced league with my roster on it → tap-to-pick forms (no typing).
+    const lgR = _qaSelLeague();
+    if (lgR && _qaMyPlayers(lgR).length && (type === 'startsit' || type === 'trade')) return _qaRosterFormHtml(type, lgR);
     let opts = '';
     if (type === 'startsit') {
       opts = _qaOptionInput(type, 0, 'Player 1 — e.g. Puka Nacua') +
@@ -73777,12 +75502,65 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       _qaSendBtn('lineup', false);
   }
 
-  function _qaSubmittedHtml(x) {
-    let body = '';
+  // Member view of a sent/answered question in the admin's look (Jack
+  // 2026-11-04): big team-color cards with START / SIT or WINNER / LOSER
+  // stamps, trade as YOU GIVE | YOU GET panels, lineup as slot rows with
+  // tiles. Falls back to the plain rows when the card helpers aren't loaded.
+  function _qaSubmittedCardsHtml(x) {
+    if (typeof window._ajPlayerCardsHtml !== 'function' || typeof window._ajPlayerCardHtml !== 'function') return null;
+    const answered = x.status === 'answered';
     if (x.type === 'lineup') {
       const roster = Array.isArray(x.roster) ? x.roster : [];
       const starters = Array.isArray(x.starters) ? x.starters : [];
-      if (x.status === 'answered' && starters.length) {
+      if (answered && Array.isArray(x.lineup) && x.lineup.length) {
+        const bench = roster.filter(n => starters.indexOf(n) < 0);
+        return '<div class="aj-lineup-lbl">JACK\'S LINEUP</div><div class="aj-slots">' +
+          x.lineup.map(r => '<div class="aj-slot' + (r.name ? ' filled has-tile' : '') + '"><span class="aj-slot-btn aj-slot-btn-pos aj-slot-static"><span class="aj-slot-pos">' + _jtEsc(r.slot || '') + '</span></span>' +
+            (r.name ? (window._ajPlayerCardHtml(r.name, { cls: 'aj-slot-tile' }) || '<span class="aj-slot-name">' + _jtEsc(r.name) + '</span>') : '<span class="aj-slot-empty">left open</span>') + '</div>').join('') +
+          '</div>' + (bench.length ? '<div class="aj-bench">Bench: ' + _qaSortByPos(bench).map(_jtEsc).join(', ') + '</div>' : '');
+      }
+      if (answered && starters.length) {
+        const bench = roster.filter(n => starters.indexOf(n) < 0);
+        return '<div class="aj-lineup-lbl">JACK\'S LINEUP</div><div class="aj-pick aj-pick-tiles">' + _qaSortByPos(starters).map(n => window._ajPlayerCardHtml(n, { cls: 'sel' })).join('') + '</div>' +
+          (bench.length ? '<div class="aj-bench">Bench: ' + _qaSortByPos(bench).map(_jtEsc).join(', ') + '</div>' : '');
+      }
+      return '<div class="aj-lineup-meta">' + (x.slots && x.slots.length ? '<b>Starters:</b> ' + _jtEsc(_qaSlotSummary(x.slots)) + ' &nbsp;·&nbsp; ' : '') + roster.length + ' players sent</div>' +
+        '<div class="aj-pick aj-pick-tiles">' + _qaSortByPos(roster).map(n => window._ajPlayerCardHtml(n)).join('') + '</div>';
+    }
+    const opts = x.options || [];
+    const isTrade = x.type === 'trade';
+    const stamp = i => !answered ? '' : '<span class="aj-stamp aj-static ' + (x.pick === i ? 'aj-stamp-win' : 'aj-stamp-lose') + '">' + (isTrade ? (x.pick === i ? 'WINNER' : 'LOSER') : (x.pick === i ? 'START' : 'SIT')) + '</span>';
+    const fmt = (x.league && x.league.fmt) || '';
+    const optsJson = _jtEsc(JSON.stringify(opts.slice(0, 2)));
+    return '<div class="aj-choices ' + (isTrade ? 'aj-choices-trade' : 'aj-choices-v') + '">' + opts.map((o, i) => {
+      const cards = window._ajPlayerCardsHtml(o, isTrade ? { big: true, ros: fmt } : { big: true });
+      const single = cards && _ajFindPlayer(o);
+      const sideTag = isTrade
+        ? (typeof window._ajTradeTeamBtn === 'function' ? window._ajTradeTeamBtn(x, i, i === 0 ? 'YOU GIVE' : 'YOU GET') : '<span class="aj-choice-side">' + (i === 0 ? 'YOU GIVE' : 'YOU GET') + '</span>')
+        : '';
+      const footer = (isTrade && typeof window._ajTradeFooterHtml === 'function')
+        ? '<div class="aj-tv-wrap" data-opts="' + optsJson + '" data-i="' + i + '" data-fmt="' + _jtEsc(fmt) + '" data-who="YOU">' + window._ajTradeFooterHtml(opts, i, fmt, 'YOU') + '</div>' : '';
+      return '<div class="aj-choice aj-choice-big aj-choice-tiles aj-mopt' + (answered ? (x.pick === i ? ' aj-win' : ' aj-lose aj-static') : '') + '">' +
+        sideTag +
+        (cards ? (single ? '' : '<span class="aj-choice-txt aj-choice-cap">' + _jtEsc(o) + '</span>') + cards : '<span class="aj-choice-txt">' + _jtEsc(o) + '</span>') +
+        footer + stamp(i) + '</div>';
+    }).join('') + '</div>';
+  }
+
+  function _qaSubmittedHtml(x) {
+    let body = _qaSubmittedCardsHtml(x) || '';
+    if (body) {
+      // card view built above — only the trailing lines follow
+    } else if (x.type === 'lineup') {
+      const roster = Array.isArray(x.roster) ? x.roster : [];
+      const starters = Array.isArray(x.starters) ? x.starters : [];
+      if (x.status === 'answered' && Array.isArray(x.lineup) && x.lineup.length) {
+        const bench = roster.filter(n => starters.indexOf(n) < 0);
+        body += '<div class="aj-lineup-lbl">JACK\'S LINEUP</div><div class="aj-slotlist">' +
+          x.lineup.map(r => '<div class="aj-slotrow"><span class="aj-slot-pos">' + _jtEsc(r.slot || '') + '</span><span class="aj-slotrow-name">' + (r.name ? '⭐ ' + _jtEsc(r.name) : '<span class="aj-pi-na">left open</span>') + '</span></div>').join('') +
+          '</div>' +
+          (bench.length ? '<div class="aj-bench">Bench: ' + _qaSortByPos(bench).map(_jtEsc).join(', ') + '</div>' : '');
+      } else if (x.status === 'answered' && starters.length) {
         const bench = roster.filter(n => starters.indexOf(n) < 0);
         body += '<div class="aj-lineup-lbl">JACK\'S LINEUP</div>' +
           '<div class="aj-roster">' + _qaSortByPos(starters).map(n => {
@@ -73797,11 +75575,14 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     } else {
       body = (x.options || []).map((o, i) => {
         const picked = x.status === 'answered' && x.pick === i;
+        const answered = x.status === 'answered';
         const sideTag = x.type === 'trade' ? '<span style="font-size:.6875rem;color:var(--text2)">' + (i === 0 ? 'YOU GIVE: ' : 'YOU GET: ') + '</span>' : '';
+        const verdict = !answered ? '' : x.type === 'startsit' ? (picked ? 'START' : 'SIT') : x.type === 'trade' ? (picked ? 'WINNER' : 'LOSER') : (picked ? 'JACK\'S PICK' : '');
         // flex, not float: on a phone the floated label wrapped below and hung off the box
         return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px;padding:6px 9px;border-radius:6px;margin-bottom:4px;font-size:.76rem;' +
           (picked ? 'background:rgba(34,197,94,.12);border:1px solid var(--green);color:var(--text);font-weight:600' : 'background:var(--bg);border:1px solid var(--border);color:var(--text2)') + '">' +
-          '<span>' + (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + '</span>' + (picked ? '<span style="color:var(--green);font-size:.6875rem;margin-left:auto">JACK\'S PICK</span>' : '') +
+          '<span>' + (picked ? '⭐ ' : '') + sideTag + _jtEsc(o) + '</span>' +
+          (verdict ? '<span class="aj-verdict ' + (picked ? 'aj-verdict-win' : 'aj-verdict-lose') + '">' + verdict + '</span>' : '') +
           '</div>';
       }).join('');
     }
@@ -73809,7 +75590,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       (x.q ? '<div style="font-size:.6875rem;color:var(--text2);font-style:italic;margin-top:2px">"' + _jtEsc(x.q) + '"</div>' : '') +
       (x.league && x.league.name ? '<div style="font-size:.6875rem;color:var(--text2);margin-top:3px">🔗 ' + _jtEsc(x.league.name) + (x.league.fmt ? ' · ' + _jtEsc(x.league.fmt) : '') + '</div>' : '') +
       (x.status === 'answered' && x.answer ? '<div style="margin-top:6px;padding:7px 9px;background:rgba(245,158,11,.08);border-left:3px solid var(--accent);border-radius:4px;font-size:.72rem;color:var(--text)"><b>Jack:</b> ' + _jtEsc(x.answer) + '</div>' : '') +
-      (x.status !== 'answered' ? '<div style="font-size:.6875rem;color:var(--text2);font-style:italic;margin-top:4px">Jack usually answers within a day or two — his ' + (x.type === 'lineup' ? 'lineup' : 'pick') + ' will show up right here.</div>' : '');
+      (x.status !== 'answered' ? '<div style="font-size:.6875rem;color:var(--text2);font-style:italic;margin-top:4px">Jack usually answers within a day or two — his ' + (x.type === 'lineup' ? 'lineup' : 'pick') + ' will show up right here.</div>' : '') +
+      _qaSkipHtml(x);
   }
 
   window._qaAddOption = function(type) {
@@ -73841,14 +75623,28 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
 
     const wk = _qaWeekIdx();
     const lg = _qaSelLeague();
+    const mode = window._qaMode || 'premium';
     const payload = {
       uid: user.uid,
       name: (user.displayName || user.email || 'Member').slice(0, 120),
       type: type,
       weekIdx: wk,
       status: 'open',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      tier: (mode === 'free' || mode === 'adminfree') ? 'free' : 'premium'
     };
+    // Doc id IS the quota (rules): premium {uid}_{wk}_{slot}, free {uid}_d{day}, admin {uid}_t{ms} (unlimited),
+    // bonus ticket {uid}_c{ms} (the ticket's own id — single-use by construction).
+    let docId = user.uid + '_' + wk + '_' + _qaSlotOf(type);
+    const credits = window._qaCreditIds || [];
+    const slotUsed = (window._qaSlotUsed || {})[_qaSlotOf(type)];
+    if (mode !== 'admin' && mode !== 'adminfree' && credits.length && (window._qaUseCredit || slotUsed || mode === 'credit')) {
+      payload.tier = 'premium';
+      payload.credit = credits[0];
+      docId = credits[0];
+    }
+    else if (mode === 'free') { payload.dayIdx = _qaDayIdx(); docId = user.uid + '_d' + payload.dayIdx; }
+    else if (mode === 'admin' || mode === 'adminfree') { payload.testN = Date.now(); docId = user.uid + '_t' + payload.testN; }
 
     if (type === 'lineup') {
       const roster = _qaMyPlayers(lg).slice(0, 60);
@@ -73856,14 +75652,20 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const slots = _qaStarterSlots(lg);
       if (slots.length) payload.slots = slots.map(s => s.slice(0, 12));
     } else {
-      const options = [];
-      for (let i = 0; i < 4; i++) {
-        const el = document.getElementById('qaOpt-' + type + '-' + i);
-        const v = el && el.value.trim();
-        if (v) options.push(v.slice(0, 120));
+      let options = _qaPickedOptions(type);
+      if (options) {
+        if (type === 'startsit' && options.length < 2) { say('Tap at least 2 players to choose between.'); return; }
+        if (type === 'trade' && (!options[0] || !options[1])) { say('Pick what you give and what you get.'); return; }
+      } else {
+        options = [];
+        for (let i = 0; i < 4; i++) {
+          const el = document.getElementById('qaOpt-' + type + '-' + i);
+          const v = el && el.value.trim();
+          if (v) options.push(v.slice(0, 120));
+        }
+        if (type === 'startsit' && options.length < 2) { say('Enter at least 2 players to choose between.'); return; }
+        if (type === 'trade' && options.length < 2) { say('Fill in both sides of the trade.'); return; }
       }
-      if (type === 'startsit' && options.length < 2) { say('Enter at least 2 players to choose between.'); return; }
-      if (type === 'trade' && options.length < 2) { say('Fill in both sides of the trade.'); return; }
       payload.options = options;
     }
     const note = (document.getElementById('qaNote-' + type) || {}).value;
@@ -73877,6 +75679,20 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       };
       const roster = _qaMyPlayers(lg);
       if (roster.length) payload.roster = roster.slice(0, 60);
+      // Trades carry both teams so Jack can pop either roster open and see
+      // the deal in context (team = the asker's, partner = the other side).
+      if (type === 'trade') {
+        const teams = Array.isArray(lg.teams) ? lg.teams : [];
+        const myIdx = teams.findIndex(t => t && t.isMyTeam);
+        if (myIdx >= 0) payload.team = _qaTeamLabel(teams[myIdx], myIdx).slice(0, 80);
+        const ti = _qaTradeTeamIdx(lg);
+        const other = ti >= 0 ? teams[ti] : null;
+        const theirs = other ? _qaTeamPlayers(other) : [];
+        if (other && theirs.length) payload.partner = { name: _qaTeamLabel(other, ti).slice(0, 80), roster: theirs.slice(0, 60) };
+        // Starting slots → Jack's roster popover shows each team's lineup before / after the deal.
+        const tslots = _qaStarterSlots(lg);
+        if (tslots.length) payload.slots = tslots.map(s => s.slice(0, 12));
+      }
     }
 
     const btn = document.getElementById('qaSendBtn-' + type);
@@ -73884,19 +75700,28 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     // .doc().set() on a fixed uid_week_slot ID: succeeds only as a CREATE —
     // rules deny update, which is exactly the weekly quota. Lineup uses the
     // start/sit slot (they share one question a week).
-    db.collection('qa_questions').doc(user.uid + '_' + wk + '_' + _qaSlotOf(type)).set(payload)
+    // Trade `slots` (lineup before/after view) needs the 2026-11-04 rules; if
+    // the rules deploy lands after the site, resend once without them.
+    const send = () => db.collection('qa_questions').doc(docId).set(payload).catch(e => {
+      if (e && e.code === 'permission-denied' && type === 'trade' && payload.slots) { delete payload.slots; return db.collection('qa_questions').doc(docId).set(payload); }
+      throw e;
+    });
+    send()
       .then(() => {
         window._qaMineCache = null;
         // Sent: clear this type's typed drafts so they don't come back next week.
         const drafts = window._qaDrafts || {};
         Object.keys(drafts).forEach(id => { if (id.indexOf('-' + type) > 0) delete drafts[id]; });
+        _qaClearPicks(type);
         if (typeof toast === 'function') toast('Sent! Jack\'s ' + (type === 'lineup' ? 'lineup' : 'pick') + ' will show up here.');
         window._qaRenderPanel();
       })
       .catch(e => {
         if (btn) { btn.disabled = false; btn.textContent = 'SEND TO JACK'; }
         if (e && e.code === 'permission-denied') {
-          say('Looks like this week\'s ' + (type === 'trade' ? 'trade' : 'start/sit + lineup') + ' question is already used (or the week just rolled over — refresh and try again).');
+          say(mode === 'free'
+            ? 'Looks like today\'s free question is already used, or Jack just closed free questions. New one tomorrow at midnight ET.'
+            : 'Looks like this week\'s ' + (type === 'trade' ? 'trade' : 'start/sit + lineup') + ' question is already used (or the week just rolled over — refresh and try again).');
         } else {
           say('Couldn\'t send: ' + (e && e.message || 'unknown error'));
         }

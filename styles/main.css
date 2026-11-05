@@ -3426,6 +3426,413 @@ tbody td{font-size:.8125rem}
 .aj-chip-pos{font-size:.6rem;font-weight:700;letter-spacing:.5px;color:var(--text2)}
 .aj-chip-start{background:rgba(34,197,94,.14);border-color:var(--green);font-weight:600}
 .aj-chip-btn{cursor:pointer;font:inherit;font-size:.74rem;min-height:32px}
+/* Member tap-to-pick forms (synced league): my roster for start/sit + trade give, the chosen team for trade get */
+.aj-pick{margin-bottom:8px}
+.aj-pickcnt{font-weight:700;color:var(--text)}
+select.aj-input{min-height:40px;color:var(--text)}
+/* Admin slot-by-slot lineup builder + member slot list */
+.aj-slots-head{font-size:.7rem;color:var(--text2);margin-bottom:8px;line-height:1.5}
+.aj-scoring{color:var(--accent)}
+.aj-slots{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.aj-slot{display:flex;align-items:stretch;gap:6px}
+.aj-slot-btn{flex:1;display:flex;align-items:center;gap:10px;min-height:40px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;text-align:left;font:inherit}
+.aj-slot-btn:hover{border-color:var(--accent)}
+.aj-slot.filled .aj-slot-btn{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.08)}
+.aj-slot.open .aj-slot-btn{border-color:var(--accent);background:rgba(245,158,11,.08)}
+.aj-slot-pos{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;color:var(--accent);min-width:64px}
+.aj-slot-name{font-weight:700;font-size:.82rem}
+.aj-slot-empty{font-size:.72rem;color:var(--text2);font-style:italic}
+.aj-slot-x{background:var(--surface2,rgba(255,255,255,.03));border:1px solid var(--border);border-radius:8px;color:var(--red);padding:0 10px;cursor:pointer;font-weight:700}
+.aj-slot-info{padding:0 0 4px 12px}
+/* Filled slot = label + tile on one row */
+.aj-slot.has-tile{align-items:center;gap:8px;margin:2px 0}
+.aj-slot-btn.aj-slot-btn-pos{flex:0 0 auto;min-width:84px;justify-content:center;padding:6px 10px;align-self:stretch}
+.aj-slot.has-tile .aj-slot-tile{flex:1;min-width:0}
+.aj-slot.has-tile .aj-slot-x{align-self:stretch}
+html.aj-onair .aj-slot-btn.aj-slot-btn-pos{min-width:104px}
+/* Lineup slot tiles = one fixed-height row each (Jack 11-04 "every position
+   the same size"): the stats strip stays beside the name even in a narrow
+   stage (the name clamps instead of the strip dropping under it), and empty
+   slots match the filled height so nothing shifts as the lineup fills in */
+.aj-slot-tile.aj-pcard{flex-wrap:nowrap}
+.aj-slot-tile .aj-pcard-id{flex:1 1 0;min-width:0}
+.aj-slot-tile .aj-pcard-stats{flex:0 0 auto;margin:0 6px 0 auto}
+@container (max-width:400px){.aj-slot-tile .aj-pcard-stats{flex:0 0 auto;margin:0 6px 0 auto}.aj-slot-tile .aj-pcard-id{flex:1 1 0}.aj-slot-tile .aj-pcard-name{font-size:17px}.aj-slot-tile .aj-pcs{min-width:46px;padding:0 4px}}
+.aj-slot-tile.aj-pcard{height:64px;min-height:64px}
+.aj-slot:not(.has-tile) .aj-slot-btn{min-height:64px}
+html.aj-onair .aj-slot-tile.aj-pcard{height:92px;min-height:92px}
+html.aj-onair .aj-slot:not(.has-tile) .aj-slot-btn{min-height:92px}
+html.aj-onair .aj-slot{margin:3px 0}
+.aj-slot-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:6px 10px;padding:8px 10px;margin:2px 0 6px;background:var(--surface2,rgba(255,255,255,.03));border:1px dashed var(--border);border-radius:8px}
+/* Inbox player tiles (tier-row look): team band, headshot, name, three stat cells */
+.aj-pcard{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:64px;border-radius:8px;color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.25),0 4px 10px rgba(0,0,0,.5);overflow:hidden;cursor:default}
+.aj-pcard[role=button]{cursor:pointer}
+.aj-pcard[role=button]:hover{box-shadow:0 0 0 2px var(--accent),0 4px 10px rgba(0,0,0,.5)}
+.aj-pcard.sel,.aj-choice.sel .aj-pcard{box-shadow:0 0 0 3px var(--green),0 4px 10px rgba(0,0,0,.5)}
+.aj-pcard.tcv-row-light{color:#0f172a}
+.aj-pcard-img{flex:0 0 74px;height:64px;align-self:flex-end;display:flex;align-items:flex-end;justify-content:center;cursor:pointer}
+.aj-pcard-img img{width:74px;height:58px;object-fit:contain;object-position:center bottom;display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.aj-pcard-noimg{font-family:'Bebas Neue',sans-serif;font-size:22px;opacity:.6;padding-bottom:14px}
+.aj-pcard-id{flex:1 1 120px;min-width:0;display:flex;flex-direction:column;gap:3px;padding:4px 0}
+.aj-pcard-name{font-family:'Bebas Neue',Impact,sans-serif;font-size:21px;line-height:.95;letter-spacing:.5px;white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;text-shadow:0 1px 2px rgba(0,0,0,.55);cursor:pointer}
+.aj-pcard-name:hover{text-decoration:underline}
+.tcv-row-light .aj-pcard-name{text-shadow:none}
+.aj-pcard-sub{display:flex;align-items:center;gap:5px;font-family:'Bebas Neue',Impact,sans-serif;font-size:11px;letter-spacing:1px;opacity:.9}
+.aj-pcard-sub .tcv-pos-pill{position:static;font-size:10px;padding:1px 5px;line-height:1.3}
+.aj-pcard-logo{width:18px;height:18px;object-fit:contain;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
+.aj-pcard-stats{flex:0 0 auto;display:flex;align-items:stretch;justify-content:space-around;height:44px;margin:0 6px 0 auto;background:rgba(0,0,0,.55);border-radius:6px;color:#fff;max-width:100%}
+.aj-pcs{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1;min-width:44px;padding:0 5px}
+/* Narrow tile (container query): the stats strip drops under the name row and spans it */
+.aj-pcard{container-type:inline-size}
+@container (max-width:400px){.aj-pcard-stats{flex:1 1 100%;margin:0 6px 6px}.aj-pcard-id{flex-basis:0}}
+.aj-pcs-v{font-family:'DM Sans',system-ui,sans-serif;font-size:15px;font-weight:700;white-space:nowrap}
+.aj-pcs-l{font-family:'DM Sans',system-ui,sans-serif;font-size:8px;letter-spacing:.8px;color:rgba(255,255,255,.62);font-weight:600;white-space:nowrap}
+.aj-pcs-blank{opacity:.35}
+.aj-pcs-bad{color:#fca5a5}
+.aj-pcs-opp{position:relative;min-width:44px}
+.aj-pcs-opp img{width:34px;height:34px;object-fit:contain;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
+.aj-pcs-pre{position:absolute;left:2px;bottom:2px;z-index:2;font-family:'Bebas Neue',Impact,sans-serif;font-size:13px;line-height:1;color:#e2e8f0;-webkit-text-stroke:.9px #0a0a0a;paint-order:stroke fill}
+.aj-choice-tiles{padding:8px;gap:6px}
+.aj-choice-tiles .aj-pcard{width:100%}
+.aj-choice-cap{font-size:.72rem;font-weight:600;color:var(--text2)}
+.aj-slot-info .aj-pcard{margin:2px 0 4px 0}
+.aj-slot-picker .aj-pcard{min-width:0}
+/* CONFIRM reveal: winner pops + glows with a stamp, losers grey out, lineup slots light up in turn */
+@keyframes ajWinPop{0%{transform:scale(1)}35%{transform:scale(1.045)}60%{transform:scale(.99)}100%{transform:scale(1.02)}}
+@keyframes ajWinGlow{0%{box-shadow:0 0 0 2px var(--green),0 0 0 0 rgba(34,197,94,.6)}70%{box-shadow:0 0 0 3px var(--green),0 0 0 22px rgba(34,197,94,0)}100%{box-shadow:0 0 0 3px var(--green),0 0 26px rgba(34,197,94,.45)}}
+@keyframes ajLoseFade{0%{filter:grayscale(0);opacity:1}100%{filter:grayscale(1);opacity:.5}}
+@keyframes ajStampIn{0%{transform:rotate(-14deg) scale(2.2);opacity:0}55%{transform:rotate(-9deg) scale(.92);opacity:1}100%{transform:rotate(-9deg) scale(1);opacity:1}}
+@keyframes ajSlotIn{0%{transform:translateX(-6px);background:rgba(34,197,94,0)}100%{transform:none;background:rgba(34,197,94,.22)}}
+.aj-choice{position:relative}
+.aj-choice.aj-win{border-color:var(--green);background:rgba(34,197,94,.14);animation:ajWinPop .7s cubic-bezier(.2,1.4,.4,1) forwards,ajWinGlow 1.1s ease-out forwards;z-index:2}
+.aj-choice.aj-win .aj-choice-txt::before{content:'⭐ '}
+.aj-choice.aj-lose{animation:ajLoseFade .9s ease .25s forwards;pointer-events:none}
+.aj-stamp{position:absolute;top:8px;right:10px;padding:5px 12px;border:3px solid;border-radius:8px;font-family:'Bebas Neue',Impact,sans-serif;font-size:1.35rem;letter-spacing:3px;line-height:1;text-transform:uppercase;transform:rotate(-9deg);opacity:0;animation:ajStampIn .5s cubic-bezier(.2,1.2,.4,1) .15s forwards;pointer-events:none;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);z-index:3}
+.aj-stamp-win{color:#4ade80;border-color:#4ade80;text-shadow:0 0 10px rgba(74,222,128,.6)}
+.aj-stamp-lose{color:#f87171;border-color:#f87171;animation-delay:.55s}
+.aj-stamp-inline{position:static;display:inline-block;margin-left:10px;font-size:1rem;padding:3px 9px;transform:rotate(-4deg);vertical-align:middle}
+.aj-slot.aj-win .aj-slot-btn{border-color:var(--green);animation:ajSlotIn .45s ease forwards}
+.aj-slot.aj-win .aj-slot-pos{color:#4ade80}
+.aj-reveal-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+.aj-reveal-msg{font-size:.78rem;color:var(--green);font-weight:600;flex:1;min-width:180px}
+.aj-q.aj-revealing .aj-choice:not(.aj-win):not(.aj-lose){opacity:.5}
+.aj-verdict{margin-left:auto;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:2px;padding:1px 8px;border:1.5px solid;border-radius:5px;transform:rotate(-3deg)}
+.aj-verdict-win{color:#4ade80;border-color:#4ade80}
+.aj-verdict-lose{color:#f87171;border-color:rgba(248,113,113,.7);opacity:.85}
+@media (prefers-reduced-motion:reduce){.aj-choice.aj-win,.aj-choice.aj-lose,.aj-stamp,.aj-slot.aj-win .aj-slot-btn{animation-duration:.01s;animation-delay:0s}.aj-stamp{opacity:1}}
+/* ON AIR (html.aj-onair): stream capture view — only the question + queue, scaled up */
+.aj-onair-btn.on{border-color:#ef4444;color:#fca5a5;background:rgba(239,68,68,.12)}
+.aj-onair-bar{display:none}
+html.aj-onair .sidebar,html.aj-onair #globalAuthBar,html.aj-onair #pageAskJack .compare-header,html.aj-onair #pageAskJack .aj-intro,html.aj-onair .aj-inbox-bar,html.aj-onair #ajInfoBar,html.aj-onair #ajInboxMsg,html.aj-onair .page-tour,html.aj-onair #globalPassBtn{display:none!important}
+html.aj-onair .main-content{margin:0!important;padding:0!important}
+html.aj-onair #pageAskJack{padding:0;background:radial-gradient(1200px 600px at 50% -10%,#1e293b 0%,#0b1120 55%,#05080f 100%)}
+html.aj-onair #pageAskJack > div{max-width:none;padding:18px 28px 28px}
+@media (max-width:600px){#pageAskJack > div{padding-left:14px!important;padding-right:14px!important}}
+html.aj-onair .aj-onair-bar{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:8px 12px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);border-radius:10px;font-size:.78rem;color:var(--text2)}
+.aj-onair-dot{width:12px;height:12px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,.7);animation:ajOnAir 1.6s ease-out infinite}
+@keyframes ajOnAir{0%{box-shadow:0 0 0 0 rgba(239,68,68,.7)}100%{box-shadow:0 0 0 12px rgba(239,68,68,0)}}
+.aj-onair-lbl{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:3px;color:#fca5a5}
+.aj-onair-keys{flex:1;min-width:200px}
+.aj-onair-keys b{color:var(--text);font-weight:700}
+.aj-onair-x{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:6px 12px;min-height:34px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;cursor:pointer}
+.aj-onair-x:hover{border-color:var(--accent);color:var(--accent)}
+html.aj-onair .aj-qwrap{grid-template-columns:minmax(0,1fr) 320px;gap:18px}
+html.aj-onair .aj-q{padding:22px 26px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+html.aj-onair .aj-q-head{font-size:1.05rem;gap:12px}
+html.aj-onair .aj-q-count{font-size:1.15rem}
+html.aj-onair .aj-q-note{font-size:1rem}
+html.aj-onair .aj-q-league{font-size:.85rem}
+html.aj-onair .aj-choices{grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:14px}
+html.aj-onair .aj-choice{padding:12px;border-width:3px;border-radius:14px}
+html.aj-onair .aj-choice-side{font-size:.8rem}
+html.aj-onair .aj-pcard{min-height:92px;gap:10px;border-radius:12px}
+html.aj-onair .aj-pcard-img{flex-basis:104px;height:92px}
+html.aj-onair .aj-pcard-img img{width:104px;height:84px}
+html.aj-onair .aj-pcard-name{font-size:32px}
+html.aj-onair .aj-pcard-sub{font-size:13px}
+html.aj-onair .aj-pcard-sub .tcv-pos-pill{font-size:12px;padding:2px 7px}
+html.aj-onair .aj-pcard-logo{width:24px;height:24px}
+html.aj-onair .aj-pcard-stats{height:60px;margin-right:10px}
+html.aj-onair .aj-pcs{min-width:62px;padding:0 8px}
+html.aj-onair .aj-pcs-v{font-size:21px}
+html.aj-onair .aj-pcs-l{font-size:10px}
+html.aj-onair .aj-pcs-opp img{width:46px;height:46px}
+html.aj-onair .aj-pcs-pre{font-size:16px}
+html.aj-onair .aj-stamp{font-size:2.1rem;padding:8px 18px;border-width:4px;top:12px;right:16px}
+html.aj-onair .aj-q-bar{margin-top:18px}
+html.aj-onair .aj-q-confirm{font-size:1.2rem;padding:14px 26px;min-height:54px}
+html.aj-onair .aj-q-skip,html.aj-onair .aj-q-del{min-height:54px}
+html.aj-onair .aj-q-noteinp{font-size:.95rem;min-height:54px}
+html.aj-onair .aj-reveal-msg{font-size:1rem}
+html.aj-onair .aj-qside{padding:14px;border-radius:16px}
+html.aj-onair .aj-qside-h{font-size:1.2rem}
+html.aj-onair .aj-qrow{padding:12px 12px;min-height:56px}
+html.aj-onair .aj-qrow-name{font-size:1.05rem}
+html.aj-onair .aj-qrow-meta{font-size:.78rem}
+html.aj-onair .aj-slot-btn{min-height:50px;font-size:1rem}
+html.aj-onair .aj-slot-pos{font-size:1.15rem;min-width:84px}
+html.aj-onair .aj-slot-name{font-size:1rem}
+html.aj-onair .aj-slots-head{font-size:.9rem}
+html.aj-onair .aj-slot-picker{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
+html.aj-onair .aj-q-empty{font-size:1.4rem;padding:60px 0;text-align:center}
+/* ===== ON AIR stream stage (Jack 2026-11-04 "optimize it for streaming") =====
+   #ajInbox pins to the viewport on black; #ajInboxList is the STAGE (shape per
+   html[data-aj-aspect]); app.js _qaOnAirFit scales the stage content to fit.
+   Operator chrome shows only while html.aj-ctl (mouse moving / on a control). */
+html.aj-onair{overflow:hidden}
+html.aj-onair #ajInbox{position:fixed;inset:0;z-index:40;display:flex!important;align-items:stretch;justify-content:flex-start;background:#000}
+html.aj-onair:not(.aj-ctl) #ajInbox{cursor:none}
+/* Stage area = the window minus the queue column (--aj-aw × --aj-ah, set by app.js); the stage centres in it */
+html.aj-onair #ajInboxList{position:relative;overflow:hidden;display:block!important;flex:0 0 auto;margin:auto;width:var(--aj-aw,100vw);height:var(--aj-ah,100vh);background:radial-gradient(1200px 600px at 50% -10%,#1e293b 0%,#0b1120 55%,#05080f 100%)}
+html.aj-onair[data-aj-aspect="169"] #ajInboxList{width:min(var(--aj-aw,100vw),calc(var(--aj-ah,100vh) * 16 / 9));height:min(var(--aj-ah,100vh),calc(var(--aj-aw,100vw) * 9 / 16))}
+html.aj-onair[data-aj-aspect="11"] #ajInboxList{width:min(var(--aj-aw,100vw),var(--aj-ah,100vh));height:min(var(--aj-ah,100vh),var(--aj-aw,100vw))}
+html.aj-onair[data-aj-aspect="45"] #ajInboxList{width:min(var(--aj-aw,100vw),calc(var(--aj-ah,100vh) * 4 / 5));height:min(var(--aj-ah,100vh),calc(var(--aj-aw,100vw) * 5 / 4))}
+html.aj-onair[data-aj-aspect="916"] #ajInboxList{width:min(var(--aj-aw,100vw),calc(var(--aj-ah,100vh) * 9 / 16));height:min(var(--aj-ah,100vh),calc(var(--aj-aw,100vw) * 16 / 9))}
+html.aj-onair.aj-ctl #ajInboxList{outline:1px dashed rgba(255,255,255,.3);outline-offset:-1px}
+/* Lineup builder on air: the stage scale is locked per question (app.js); the
+   slot picker scrolls inside a box ≤ 40% of the stage, and the stage itself
+   scrolls while a picker is open in case it still runs past the bottom */
+html.aj-onair .aj-slot-picker{max-height:calc(var(--aj-sh,900px) * .4 / var(--aj-s,1));overflow:auto}
+html.aj-onair.aj-pick-open #ajInboxList{overflow-y:auto}
+html.aj-onair #ajInboxList > *{position:relative;box-sizing:border-box;transform-origin:top left;padding:18px 24px 24px}
+html.aj-onair .aj-qwrap{display:block}
+html.aj-onair .aj-qmain{min-width:0}
+@keyframes ajQIn{from{opacity:0}to{opacity:1}}
+html.aj-onair .aj-q{animation:ajQIn .4s ease;background:rgba(15,23,42,.55);border-color:rgba(255,255,255,.08)}
+html.aj-onair .aj-q-count,html.aj-onair .aj-q-when{display:none}
+html.aj-onair .aj-q-head b{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:1px;line-height:1}
+html.aj-onair .aj-q-head .aj-tier{font-size:.78rem}
+/* Operator strip: fixed at the viewport bottom (only operator chrome lives
+   down there), slides away when the mouse rests */
+html.aj-onair .aj-onair-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;margin:0;padding:6px 12px;border-radius:12px 12px 0 0;border-bottom:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);transform:translateY(110%);opacity:0;transition:transform .25s ease,opacity .25s ease;flex-wrap:wrap}
+html.aj-onair.aj-ctl .aj-onair-bar{transform:none;opacity:1}
+html.aj-onair .aj-onair-keys{font-size:.72rem}
+.aj-onair-asp .aj-seg-btn{min-height:30px;padding:4px 8px;font-size:.74rem}
+/* The note + CONFIRM / SKIP bar pins to the stage bottom and shows with the
+   chrome, lifted above the strip (--aj-s = the stage scale, set by app.js) */
+html.aj-onair .aj-q-bar,html.aj-onair .aj-reveal-bar{position:absolute;left:0;right:0;bottom:0;margin:0;padding:14px 24px 18px;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.9) 40%);z-index:6}
+html.aj-onair .aj-q-bar{opacity:0;pointer-events:none;transition:opacity .25s ease}
+html.aj-onair.aj-ctl .aj-q-bar{opacity:1;pointer-events:auto;bottom:calc(52px / var(--aj-s,1))}
+/* Tall stage (Jack 11-04 "make the players smaller width so we can put them
+   next to each other"): two narrower cards side by side, compact header */
+html.aj-onair[data-aj-aspect="916"] .aj-choices.aj-choices-v,html.aj-onair[data-aj-aspect="916"] .aj-choices.aj-choices-trade{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+html.aj-onair[data-aj-aspect="916"] .aj-choice-big{padding:6px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-name{font-size:24px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-img{flex-basis:56%;max-width:220px;height:170px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-img img{height:170px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-wm{width:160px;height:160px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-num-v{font-size:22px}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-line{font-size:.85rem}
+html.aj-onair[data-aj-aspect="916"] .aj-pcv-line b{font-size:.95rem}
+html.aj-onair[data-aj-aspect="916"] .aj-tv-v{font-size:1.6rem}
+html.aj-onair[data-aj-aspect="916"] .aj-tv-verdict{font-size:1rem}
+html.aj-onair .aj-q-gift{display:none}
+html.aj-onair .aj-reveal-msg{font-size:1.2rem}
+/* Queue: a drawer over the stage (Q / QUEUE button), not a sidebar */
+html.aj-onair #ajInboxList .aj-qside{display:none;position:absolute;top:0;right:0;bottom:0;width:min(380px,48%);z-index:7;overflow:auto;border-radius:0;border-width:0 0 0 1px;background:rgba(5,8,15,.94);backdrop-filter:blur(8px);box-shadow:-10px 0 40px rgba(0,0,0,.6)}
+html.aj-onair.aj-qopen #ajInboxList .aj-qside{display:flex}
+/* Queue COLUMN (Jack 11-04 "I don't want the queue blocking"): a fixed-width
+   column on the right, outside the stage (the stage is sized to the space
+   left of it) — click a row to bring it up, ↑↓ keys; Q hides the column */
+.aj-onair-queue{display:none}
+html.aj-onair.aj-qdock .aj-onair-queue{display:block;flex:0 0 var(--aj-dock-w,300px);width:var(--aj-dock-w,300px);height:100vh;overflow:auto;box-sizing:border-box;padding:14px 10px 60px;background:#000;border-left:1px solid rgba(255,255,255,.08);z-index:48;order:2}
+html.aj-onair.aj-qdock .aj-onair-queue::before{content:'YOUR EYES ONLY · outside the stage';display:block;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--text2);padding:0 6px 6px}
+.aj-onair-queue .aj-qside{padding:12px;border-radius:14px}
+.aj-onair-queue .aj-qside-h{font-size:1.15rem}
+.aj-onair-queue .aj-qrow{padding:10px 12px;min-height:50px}
+.aj-onair-queue .aj-qrow-name{font-size:1rem}
+.aj-onair-queue .aj-qrow-meta{font-size:.74rem}
+/* UP NEXT strip (viewers) + empty-queue CTA: on air only */
+.aj-upnext,.aj-q-empty-cta{display:none}
+html.aj-onair .aj-upnext{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 2px 0;padding:10px 16px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);border-radius:12px;font-size:1rem;color:var(--text)}
+.aj-upnext-l{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:3px;color:var(--accent)}
+.aj-upnext-i{display:inline-flex;align-items:center;gap:6px}
+.aj-upnext-i b{color:var(--text2);font-weight:600}
+.aj-upnext-more,.aj-upnext-cta{color:var(--text2)}
+.aj-upnext-cta b{color:var(--accent)}
+html.aj-onair .aj-q-empty-cta{display:block;margin-top:14px;font-size:1.2rem;color:var(--text2)}
+.aj-q-empty-cta b{color:var(--accent)}
+/* Giveaway floats over the stage; admin toasts show top-centre */
+/* Pop-ups pinned to the stage box (inline rect from app.js _qaOnAirPin) */
+html.aj-onair #ajGiveaway{position:fixed;transform:none;z-index:45;overflow:auto;margin:0;box-sizing:border-box;border-radius:0}
+html.aj-onair .aj-rpop{padding:10px;box-sizing:border-box}
+html.aj-onair .aj-rpop-box{width:100%;max-height:100%}
+html.aj-onair .aj-rpop-title{font-size:1.25rem}
+html.aj-onair .modal-overlay{box-sizing:border-box;padding:10px}
+html.aj-onair .modal-overlay > *{max-width:100%!important;max-height:100%!important;box-sizing:border-box}
+html.aj-onair #ajInboxMsg{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:55;margin:0;font-size:.9rem;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+html.aj-onair #ajRosterPop{z-index:2100}
+/* Bonus question (Jack's gift): admin button + member banner */
+.aj-q-gift{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+.aj-gift{background:none;border:1px solid rgba(245,158,11,.5);border-radius:8px;color:var(--accent);padding:8px 14px;min-height:40px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.2px;cursor:pointer}
+.aj-gift:hover{background:rgba(245,158,11,.1)}
+.aj-gift.on{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.1)}
+.aj-gift:disabled{opacity:.6;cursor:default}
+.aj-q-gift-hint{font-size:.7rem;color:var(--text2);flex:1;min-width:200px}
+.aj-credit-banner{margin-bottom:12px;padding:9px 12px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);border-radius:8px;font-size:.78rem;color:var(--text);font-weight:600}
+html.aj-onair .aj-q-gift-hint{display:none}
+/* Premium giveaway panel + on-air name cycler */
+.aj-gw{margin:0 0 12px;padding:14px 16px;background:var(--surface);border:1px solid rgba(245,158,11,.4);border-radius:12px}
+.aj-gw-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.aj-gw-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;color:var(--accent)}
+.aj-gw-sub{flex:1;min-width:220px;font-size:.74rem;color:var(--text2)}
+.aj-gw-sel{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 6px;font-size:.74rem}
+.aj-gw-pool{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;max-height:120px;overflow:auto}
+.aj-gw-chip{padding:4px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--border);font-size:.74rem}
+.aj-gw-chip i{font-style:normal;color:var(--text2)}
+.aj-gw-ctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.aj-gw-lbl{display:flex;align-items:center;gap:6px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2)}
+.aj-gw-in{width:64px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 8px;font-size:.85rem;min-height:40px;font-family:'DM Sans',sans-serif}
+.aj-gw-stage{margin-top:12px}
+.aj-gw-cycler{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:2px;text-align:center;padding:18px;color:var(--text);background:var(--bg);border:1px dashed var(--border);border-radius:12px}
+.aj-gw-winners{display:flex;flex-direction:column;gap:8px}
+@keyframes ajGwIn{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+.aj-gw-win{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 18px;border-radius:12px;background:rgba(34,197,94,.12);border:2px solid var(--green);box-shadow:0 0 26px rgba(34,197,94,.35);opacity:0;animation:ajGwIn .6s cubic-bezier(.2,1.3,.4,1) forwards}
+.aj-gw-win-k{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;color:#4ade80}
+.aj-gw-win-n{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:1.5px;color:var(--text);line-height:1}
+.aj-gw-win-warn{font-size:.72rem;color:#fca5a5}
+html.aj-onair .aj-gw{padding:20px 24px}
+html.aj-onair .aj-gw-cycler{font-size:4rem;padding:30px}
+html.aj-onair .aj-gw-win-n{font-size:3.2rem}
+/* Big vertical player cards: start/sit choices across the width, trade = two side panels */
+.aj-choices.aj-choices-v{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.aj-choices.aj-choices-trade{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px}
+html.aj-onair .aj-choices.aj-choices-v{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+html.aj-onair .aj-choices.aj-choices-trade{grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr))}
+.aj-choice-big{padding:10px;align-items:stretch}
+.aj-choice-big .aj-choice-side{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2.5px;color:var(--accent);padding:2px 2px 4px}
+.aj-choices-trade .aj-choice-big{display:flex;flex-direction:column;gap:10px}
+.aj-pcard-v{display:flex;flex-direction:column;width:100%;min-width:0;border-radius:14px;overflow:hidden;background:var(--bg)}
+.aj-pcv-head{position:relative;display:flex;align-items:stretch;justify-content:space-between;gap:6px;min-height:0;padding:0 0 0 14px;overflow:hidden}
+.aj-pcv-wm{position:absolute;right:-16px;top:-18px;width:190px;height:190px;object-fit:contain;opacity:.26;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));pointer-events:none}
+.aj-pcv-id,.aj-pcv-img{position:relative;z-index:1}
+.aj-pcv-opp{display:flex;align-items:center;gap:8px;font-size:.82rem;color:rgba(255,255,255,.85);padding:2px 2px 0}
+.aj-pcv-opp img{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
+.aj-pcv-opp b{color:#fff}
+.aj-pcv-nums{grid-template-columns:repeat(auto-fit,minmax(min(100%,86px),1fr))}
+.aj-pcv-num-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.aj-pcv-num:first-child .aj-pcv-num-v{color:#fbbf24}
+.tcv-row-light .aj-pcv-body{color:#fff}
+.aj-pcv-id{flex:1 1 0;display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:0;padding:6px 0 6px}
+.aj-pcv-name{font-size:26px;white-space:normal;line-height:.95;cursor:pointer;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+.aj-pcv-img{flex:0 0 60%;max-width:270px;height:200px;display:flex;align-items:flex-end;justify-content:flex-end;cursor:pointer;margin-right:-4px}
+.aj-pcv-img img{width:100%;height:200px;object-fit:cover;object-position:center top;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.55))}
+.aj-pcv-body{display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px;background:rgba(0,0,0,.42);color:#fff}
+.aj-pcv-stats{margin:0;width:100%;justify-content:space-between}
+.aj-pcv-stats .aj-pcs{flex:1 1 0;min-width:0}
+.aj-pcv-nums{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.aj-pcv-num{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;background:rgba(0,0,0,.45);border-radius:8px;line-height:1}
+.aj-pcv-num-v{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:800}
+.aj-pcv-num-l{font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:.8px;color:rgba(255,255,255,.62);font-weight:600;text-align:center}
+.aj-pcv-lines{display:flex;flex-direction:column;gap:3px}
+.aj-pcv-line{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;color:rgba(255,255,255,.75);padding:3px 2px;border-bottom:1px solid rgba(255,255,255,.07)}
+.aj-pcv-line b{color:#fff;font-size:.9rem}
+.aj-pcv-books{font-size:.64rem;color:rgba(255,255,255,.45);text-align:right;padding-top:2px}
+.aj-choice.aj-lose .aj-pcard-v{filter:grayscale(1)}
+html.aj-onair .aj-pcv-name{font-size:38px}
+html.aj-onair .aj-pcv-img{flex-basis:60%;max-width:340px;height:260px}
+html.aj-onair .aj-pcv-img img{height:260px}
+html.aj-onair .aj-pcv-head{min-height:0}
+html.aj-onair .aj-pcv-wm{width:250px;height:250px}
+html.aj-onair .aj-pcv-num-v{font-size:30px}
+html.aj-onair .aj-pcv-num-l{font-size:10px}
+html.aj-onair .aj-pcv-line{font-size:1rem}
+html.aj-onair .aj-pcv-line b{font-size:1.15rem}
+@media (max-width:600px){.aj-pcv-img{height:170px;max-width:220px}.aj-pcv-img img{height:170px}.aj-pcv-name{font-size:24px}}
+/* Trade questions: ROS cards + trade-calc value footer + team roster popover (11-04) */
+.aj-pcv-nums.aj-pcv-nums-ros{grid-template-columns:repeat(auto-fit,minmax(min(100%,80px),1fr))}
+.aj-sos-tag{font-size:.62rem;font-weight:800;letter-spacing:.5px;opacity:.85}
+.aj-tv-wrap{display:block;width:100%}
+.aj-tv{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:3px;color:var(--text)}
+.aj-tv-main{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.aj-tv-l{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:2px;color:var(--text2)}
+.aj-tv-v{font-family:'DM Sans',sans-serif;font-size:1.6rem;font-weight:800;color:#fbbf24;line-height:1}
+.aj-tv-vs{font-size:.76rem;color:var(--text2)}
+.aj-tv-verdict{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;color:var(--text2)}
+.aj-tv-win .aj-tv-verdict{color:var(--green)}
+.aj-tv-lose .aj-tv-verdict{color:#ef4444}
+.aj-tv-win{border-color:rgba(34,197,94,.45)}
+.aj-tv-lose{border-color:rgba(239,68,68,.4)}
+.aj-tv-src{font-size:.62rem;color:var(--text2);letter-spacing:.6px}
+.aj-tv-calc{font-size:.72rem;color:var(--text2);flex-basis:100%;line-height:1.4}
+.aj-tv-calc b{color:var(--text);font-weight:700}
+.aj-tv-verdict b{color:var(--text);font-family:'DM Sans',sans-serif;font-weight:800;letter-spacing:0}
+.aj-tv-who{color:var(--accent)}
+.aj-tv-win .aj-tv-verdict b,.aj-tv-lose .aj-tv-verdict b{color:inherit}
+html.aj-onair .aj-tv-v{font-size:2.2rem}
+html.aj-onair .aj-tv-verdict{font-size:1.3rem}
+html.aj-onair .aj-tv-src,html.aj-onair .aj-tv-calc{font-size:.85rem}
+/* Flagged ESPN headshots stay hidden until the normalizer's re-framed blob lands, then fade in */
+.aj-hs{transition:opacity .25s ease}
+img.hs-wait{opacity:0}
+/* Roster popover as a starting lineup (slots from the league) with BEFORE / AFTER the trade */
+.aj-rpop-ctl{margin-left:auto}
+.aj-rpop-head{align-items:center}
+.aj-lu-tot{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+.aj-lu-tot-l{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:2px;color:var(--text2)}
+.aj-lu-tot-v{font-family:'DM Sans',sans-serif;font-size:1.5rem;font-weight:800;color:var(--accent);line-height:1}
+.aj-lu-tot-s{font-size:.72rem;color:var(--text2)}
+.aj-lu-tot-d{margin-left:auto;font-size:.78rem;font-weight:700;color:var(--text2)}
+.aj-lu-tot-d.up{color:var(--green)}
+.aj-lu-tot-d.down{color:#f87171}
+.aj-lu{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr));gap:6px 12px;margin-bottom:12px}
+.aj-lu-row{display:flex;align-items:center;gap:8px;position:relative}
+.aj-lu-row .aj-slot-pos{min-width:78px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;color:var(--accent);padding:6px 4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;align-self:stretch;display:flex;align-items:center;justify-content:center}
+.aj-lu-row .aj-pcard{flex:1;min-width:0}
+.aj-lu-bench{position:relative}
+.aj-lu-tag{position:absolute;top:-7px;right:8px;z-index:3;font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1.5px;padding:2px 7px;border-radius:5px;border:1.5px solid;background:rgba(0,0,0,.8)}
+.aj-lu-tag.out{color:#f87171;border-color:#f87171}
+.aj-lu-tag.in{color:#4ade80;border-color:#4ade80}
+.aj-lu-out .aj-pcard{box-shadow:0 0 0 2px #ef4444,0 4px 10px rgba(0,0,0,.5);opacity:.85}
+.aj-lu-in .aj-pcard{box-shadow:0 0 0 3px var(--green),0 4px 10px rgba(0,0,0,.5)}
+.aj-lu-bench-h{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:2px;color:var(--text2);margin:4px 0 8px}
+.aj-lu-row .aj-slot-pos.aj-slot-pos-bn{color:var(--text2)}
+.aj-lu-benchrows .aj-pcard{opacity:.92}
+@media (max-width:600px){.aj-rpop-ctl{order:3;flex-basis:100%}.aj-lu-row .aj-slot-pos{min-width:58px;font-size:.78rem;letter-spacing:1px}}
+.aj-team-btn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;background:none;border:0;border-radius:6px;cursor:pointer;text-align:left;padding:2px 2px 4px}
+.aj-team-btn:hover{background:rgba(255,255,255,.05)}
+.aj-team-btn .aj-team-name{font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:0;color:var(--text);text-transform:none}
+.aj-team-btn .aj-team-open{margin-left:auto;font-size:.62rem;letter-spacing:1px;color:var(--accent);border:1px solid rgba(245,158,11,.5);border-radius:4px;padding:2px 6px}
+html.aj-onair .aj-team-btn .aj-team-name{font-size:1rem}
+.aj-rpop{position:fixed;inset:0;z-index:2100;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px}
+.aj-rpop.open{display:flex}
+.aj-rpop-box{width:min(1000px,100%);max-height:92vh;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6);overflow:hidden}
+.aj-rpop-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.aj-rpop-title{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--accent)}
+.aj-rpop-sub{font-size:.74rem;color:var(--text2)}
+.aj-rpop-x{background:none;border:1px solid var(--border);color:var(--text);border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:1rem;flex-shrink:0}
+.aj-rpop-x:hover{border-color:var(--accent);color:var(--accent)}
+.aj-rpop-body{padding:14px 16px;overflow:auto}
+.aj-rpop-tiles{margin-bottom:0}
+html.aj-rpop-open{overflow:hidden}
+@media (max-width:600px){.aj-rpop{padding:0}.aj-rpop-box{max-height:100vh;height:100%;border-radius:0}.aj-tv-v{font-size:1.4rem}}
+/* Member view: same cards, static stamps (no replay animation), tile pickers */
+.aj-mopt{cursor:default}
+.aj-stamp.aj-static{animation:none;opacity:1;transform:rotate(-9deg)}
+.aj-choice.aj-lose.aj-static{animation:none;filter:grayscale(1);opacity:.55;pointer-events:auto}
+.aj-choice.aj-win.aj-mopt{animation:none;box-shadow:0 0 0 3px var(--green),0 0 22px rgba(34,197,94,.35)}
+.aj-pick-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:8px;margin-bottom:8px}
+@media (max-width:600px){.aj-pick-tiles,.aj-roster-grid,.aj-slot-picker{grid-template-columns:1fr}.aj-pcard-img{flex-basis:64px}.aj-pcard-img img{width:64px;height:52px}.aj-pcard-name{font-size:19px}.aj-pcs{min-width:0;flex:1 1 0;padding:0 3px}.aj-pcs-opp img{width:28px;height:28px}.aj-q{padding:12px}.aj-choice-big{padding:6px}.aj-q-bar .aj-q-noteinp{flex-basis:100%}.aj-stamp{font-size:1.1rem;padding:4px 9px}.aj-qside{padding:8px}.aj-info-bar{padding:6px 8px}.aj-seg-sm .aj-seg-btn{padding:5px 7px;font-size:.72rem}}
+.aj-pick-tiles .aj-pcard.sel{box-shadow:0 0 0 3px var(--green),0 4px 10px rgba(0,0,0,.5)}
+/* Trade side: ROS note + draft-pick chips / ADD A PICK dropdown (dynasty, 11-04) */
+.aj-side-ros{font-weight:400;color:var(--text2);letter-spacing:0;text-transform:none;font-family:'DM Sans',sans-serif;font-size:.68rem}
+.aj-picks{margin:-2px 0 8px}
+.aj-pickrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.aj-pickchip{gap:6px;padding-right:4px}
+.aj-pickchip i{font-style:normal;color:#fbbf24;font-weight:700}
+.aj-pickchip-x{background:none;border:0;color:var(--text2);cursor:pointer;font-size:.72rem;padding:4px 6px;min-height:28px;border-radius:999px}
+.aj-pickchip-x:hover{color:var(--red)}
+.aj-pick-addbtn{margin:0;padding:6px 10px;min-height:32px;border:1px dashed rgba(245,158,11,.5);border-radius:999px;font-size:.72rem;letter-spacing:.5px}
+.aj-pick-addbtn:hover{background:rgba(245,158,11,.1)}
+.aj-pick-add{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px;padding:8px 10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px}
+.aj-pick-add .aj-pick-sel{flex:1 1 110px;width:auto;margin:0;min-height:36px}
+.aj-pick-add .aj-pick-go{width:auto;flex:0 0 auto;padding:8px 16px;min-height:36px}
+.aj-pick-add .aj-add{margin:0}
+.aj-slot-btn.aj-slot-static{cursor:default}
+.aj-slot-btn.aj-slot-static:hover{border-color:var(--border)}
+.aj-slotlist{display:flex;flex-direction:column;gap:3px;margin-bottom:6px}
+.aj-slotrow{display:flex;align-items:center;gap:10px;padding:5px 9px;border-radius:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);font-size:.78rem}
+.aj-slotrow-name{font-weight:600}
 .aj-chip-btn:hover{border-color:var(--accent)}
 /* Admin view toggle (Jack only) + INBOX view on the Ask Jack tab */
 .aj-admin-bar{display:flex;align-items:center;gap:8px;margin-left:auto}
@@ -3434,6 +3841,23 @@ tbody td{font-size:.8125rem}
 .aj-seg-btn+.aj-seg-btn{border-left:1px solid var(--border)}
 .aj-seg-btn.on{background:rgba(245,158,11,.15);color:var(--accent)}
 #ajInboxCount{font-family:'DM Sans',sans-serif;font-size:.72rem;letter-spacing:0}
+/* FREE Q'S toggle + VIEW AS (admin bar), free-member badge, line-skip CTA, queue tier chips */
+.aj-free-toggle{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:7px 12px;min-height:36px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;cursor:pointer}
+.aj-free-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.aj-free-toggle.on{border-color:var(--green);background:rgba(34,197,94,.15);color:var(--green)}
+.aj-free-toggle:disabled{opacity:.5;cursor:default}
+#pageAskJack.aj-inbox-on #ajViewAs{display:none}
+.aj-badge-free{background:var(--green)}
+.aj-locked-free{font-size:.72rem;color:var(--text2);margin-top:10px;max-width:360px;line-height:1.4}
+.aj-skip-cta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding:8px 10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:.7rem;color:var(--text2)}
+.aj-skip-cta span{flex:1;min-width:180px}
+.aj-skip-btn{background:var(--green);color:#000;border:none;border-radius:8px;padding:8px 14px;min-height:40px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.2px;cursor:pointer;font-weight:700;white-space:nowrap}
+.aj-skip-btn:disabled{opacity:.6;cursor:default}
+.aj-skip-done{margin-top:8px;font-size:.72rem;color:var(--green);font-weight:600}
+.aj-tier{padding:2px 7px;border-radius:4px;font-size:.6375rem;font-weight:800;letter-spacing:.5px;white-space:nowrap}
+.aj-tier-prem{background:rgba(245,158,11,.15);color:var(--accent)}
+.aj-tier-skip{background:rgba(34,197,94,.18);color:var(--green)}
+.aj-tier-free{background:rgba(255,255,255,.06);color:var(--text2)}
 #ajInbox{display:none}
 #pageAskJack.aj-inbox-on #ajInbox{display:block}
 #pageAskJack.aj-inbox-on #mtAskJack,#pageAskJack.aj-inbox-on .aj-intro{display:none!important}
@@ -3461,7 +3885,7 @@ tbody td{font-size:.8125rem}
 .aj-q-when,.aj-q-league{font-size:.6875rem;color:var(--text2)}
 .aj-q-league{margin-bottom:4px}
 .aj-q-note{font-size:.74rem;color:var(--text);font-style:italic;margin:2px 0 8px}
-.aj-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin:6px 0 4px}
+.aj-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:8px;margin:6px 0 4px}
 .aj-choice{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px;min-height:56px;background:var(--bg);border:2px solid var(--border);border-radius:10px;color:var(--text);cursor:pointer;text-align:left;font:inherit}
 .aj-choice:hover{border-color:var(--accent)}
 .aj-choice.sel{border-color:var(--green);background:rgba(34,197,94,.12)}

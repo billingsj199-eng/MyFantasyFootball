@@ -1,10 +1,13 @@
 # Real redraft trades refresh (Task Scheduler: "MFF Real Trades").
 #
-#   scripts/pull_sleeper_trades.py   public Sleeper redraft leagues (snowball-found, pool cached in
-#                                     E:\MyFantasyFootball\sleeper_trades_cache) -> data/real_trades_redraft.json
+#   scripts/pull_trade_trends.py    (2026-11-04) Yahoo Buzz Index + CBS most-traded counts since MNF
+#                                    + trades detected in users' synced My Teams leagues (Cloud
+#                                    Function exportLeagueTrades) -> data/real_trades_redraft.json
+#   scripts/pull_sleeper_trades.py   the old public-Sleeper snowball crawl - NO LONGER RUN (Jack
+#                                    2026-11-04); kept so it can be switched back on.
 #
 # Feeds the Trade Calc RECENT REAL TRADES panel + MOST TRADED SINCE MNF chips (redraft modes).
-# The crawl is git-free and runs BEFORE the repo turn (~15-30 min of Sleeper calls); only the
+# The pull is git-free (a handful of requests) and runs BEFORE the repo turn; only the
 # commit + push takes the turn. No ?v= bump: app.js fetches the JSON with an hourly ?d= stamp.
 # Commits ONLY data/real_trades_redraft.json.
 # Log: E:\MyFantasyFootball\sleeper_trades_cache\task_log.txt (~300 lines)
@@ -26,10 +29,10 @@ function Write-Log($msg) {
 Set-Location $Repo
 Write-Log '=== real trades start ==='
 
-$out = & $Python 'scripts\pull_sleeper_trades.py' 2>&1 | Out-String
-Write-Log ('crawl: ' + ($out -split "`n" | Select-Object -Last 3 | Out-String).Trim())
+$out = & $Python 'scripts\pull_trade_trends.py' 2>&1 | Out-String
+Write-Log ('pull: ' + ($out -split "`n" | Select-Object -Last 3 | Out-String).Trim())
 if ($LASTEXITCODE -ne 0) {
-    Write-Log "CRAWL FAILED (exit $LASTEXITCODE) - $Data left as is"
+    Write-Log "PULL FAILED (exit $LASTEXITCODE) - $Data left as is"
     git checkout -- $Data 2>$null
     exit 1
 }
@@ -43,7 +46,7 @@ if (-not $changed) {
 } else {
     $stamp = Get-Date -Format 'yyyy-MM-dd-HHmm'
     git add -f -- $Data
-    git commit -m ('Auto real redraft trades (Sleeper) {0}' -f $stamp) -- $Data
+    git commit -m ('Auto trade trends (Yahoo + CBS + synced leagues) {0}' -f $stamp) -- $Data
     $global:LASTEXITCODE = $(if (Invoke-SafePullPush -Log { param($m) Write-Log $m } -What 'real trades') { 0 } else { 1 })
     if ($LASTEXITCODE -eq 0) { Write-Log 'real trades committed + pushed' } else { Write-Log "PUSH FAILED (exit $LASTEXITCODE) - commit is local" }
 }

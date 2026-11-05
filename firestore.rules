@@ -373,6 +373,15 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isJack();
     }
+    // shared/askjack_settings: { freeOpen: bool } — Jack flips free Ask Jack
+    // questions on while he's live streaming (Ask Jack admin bar). Public read
+    // so the member panel knows; the qa_questions create rule reads it too.
+    match /shared/askjack_settings {
+      allow read: if true;
+      allow write: if isJack()
+                   && request.resource.data.keys().hasOnly(['freeOpen', 'updatedAt'])
+                   && request.resource.data.freeOpen is bool;
+    }
     // rankings_history/{timestamp}: rolling cloud backup of Jack's rankings,
     // written after every saveJacksRankings. Admin-only both ways — it's a
     // disaster-recovery mirror, never read by the app at runtime.
@@ -386,40 +395,101 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isJack();
     }
-    // qa_questions/{uid}_{weekIdx}_{slot}: premium "Ask Jack" weekly Q&A.
-    // Each user gets 2 questions per week (Tuesday reset): 1 trade + 1
-    // start/sit OR lineup (2026-11-04: those two share the 'startsit' slot).
-    // The quota is enforced by the doc ID itself: users can only CREATE (never
-    // update/delete), and the ID must be uid_weekIdx_slot where weekIdx is
-    // validated against request.time — weekIdx = floor((now - anchor) / 7d),
-    // anchor = Tue 2026-01-06 00:00 EST (1767675600000 ms). Keep the anchor in
-    // sync with QA_WEEK_ANCHOR in app.js. Premium gating is client-side,
-    // matching shared/jacks_portfolio. Start/sit + trade questions carry 2-4
+    // qa_questions: the "Ask Jack" Q&A. Two kinds of question (2026-11-04):
+    //  PREMIUM — {uid}_{weekIdx}_{slot}, tier 'premium'. 2 per week (Tuesday
+    //    reset): 1 trade + 1 start/sit OR lineup (those two share the 'startsit'
+    //    slot). weekIdx = floor((now - anchor) / 7d).
+    //  FREE — {uid}_d{dayIdx}, tier 'free'. 1 per day for any signed-in member,
+    //    only while shared/askjack_settings.freeOpen is true (Jack flips it on
+    //    when he's live). dayIdx = floor((now - anchor) / 1d).
+    // anchor = Tue 2026-01-06 00:00 EST (1767675600000 ms) — keep in sync with
+    // QA_WEEK_ANCHOR in app.js. The quota is the doc ID itself: users can only
+    // CREATE (never update/delete) and the ID is validated against request.time,
+    // so nobody mints extra weeks/days. Start/sit + trade questions carry 2-4
     // `options` Jack picks one of; lineup questions carry the member's roster
     // (+ `slots`, the league's starting positions) and no options. Answers
-    // (pick / starters / answer / answeredAt / status) are admin-only updates.
+    // (pick / starters / answer / answeredAt / status) are admin-only updates,
+    // and so is tier 'skip' (the $4.99 line skip — written by the Cloud
+    // Function after Stripe confirms payment, never by the client).
+    function qaFreeOpen() {
+      return exists(/databases/$(database)/documents/shared/askjack_settings)
+             && get(/databases/$(database)/documents/shared/askjack_settings).data.get('freeOpen', false) == true;
+    }
+    // qa_credits/{uid}_c{ms}: a bonus question Jack hands a member from the
+    // inbox ("didn't fully answer" / "re-ask when he's back"). Never expires,
+    // any type, counts as premium. One ticket = one question: the question is
+    // created under the TICKET's id, so create-only on qa_questions makes it
+    // single-use with no counter to race.
+    match /qa_credits/{cId} {
+      allow read: if request.auth != null
+                  && (resource.data.uid == request.auth.uid || isJack());
+      allow write: if isJack();
+    }
+    // qa_giveaways/{ms}: log of end-of-stream premium giveaways (winners +
+    // pool size). Admin-only both ways.
+    match /qa_giveaways/{gId} {
+      allow read, write: if isJack();
+    }
     match /qa_questions/{qId} {
+      // The three create paths live INSIDE the match so they can see qId.
+      function qaCreditCreate() {
+        return request.resource.data.tier == 'premium'
+               && request.resource.data.credit == qId
+               && qId.matches('^' + request.auth.uid + '_c[0-9]+$')
+               && !('dayIdx' in request.resource.data)
+               && exists(/databases/$(database)/documents/qa_credits/$(qId))
+               && get(/databases/$(database)/documents/qa_credits/$(qId)).data.uid == request.auth.uid;
+      }
+      function qaPremiumCreate() {
+        return request.resource.data.tier == 'premium'
+               && (isJack() || hasStripePremium() || hasGiftedPremium())
+               && !('dayIdx' in request.resource.data)
+               // slot: trade → 'trade'; startsit + lineup share 'startsit'.
+               && qId == (request.auth.uid + '_' + string(request.resource.data.weekIdx) + '_' + (request.resource.data.type == 'trade' ? 'trade' : 'startsit'));
+      }
+      function qaFreeCreate() {
+        return request.resource.data.tier == 'free'
+               && qaFreeOpen()
+               && request.resource.data.dayIdx is int
+               && request.resource.data.dayIdx == (request.time.toMillis() - 1767675600000) / 86400000
+               && qId == (request.auth.uid + '_d' + string(request.resource.data.dayIdx));
+      }
+      // Jack practices on his own tab: unlimited questions, either tier, id
+      // {uid}_t{testN} (testN = client ms timestamp) so nothing collides.
+      function qaAdminCreate() {
+        return isJack()
+               && request.resource.data.tier in ['premium', 'free']
+               && request.resource.data.testN is int
+               && qId == (request.auth.uid + '_t' + string(request.resource.data.testN));
+      }
       allow read: if request.auth != null
                   && (resource.data.uid == request.auth.uid
                       || isJack());
       allow create: if request.auth != null
                     && request.resource.data.uid == request.auth.uid
-                    // 2026-10-28: premium is checked here too, not only in the client.
-                    && (isJack() || hasStripePremium() || hasGiftedPremium())
                     && request.resource.data.type in ['startsit', 'trade', 'lineup']
                     && request.resource.data.weekIdx is int
                     && request.resource.data.weekIdx == (request.time.toMillis() - 1767675600000) / 604800000
-                    // slot: trade → 'trade'; startsit + lineup share 'startsit'.
-                    && qId == (request.auth.uid + '_' + string(request.resource.data.weekIdx) + '_' + (request.resource.data.type == 'trade' ? 'trade' : 'startsit'))
+                    && (qaPremiumCreate() || qaFreeCreate() || qaAdminCreate() || qaCreditCreate())
                     && request.resource.data.status == 'open'
-                    && request.resource.data.keys().hasOnly(['uid','name','type','weekIdx','status','createdAt','options','q','league','roster','slots'])
+                    && request.resource.data.keys().hasOnly(['uid','name','type','weekIdx','status','createdAt','options','q','league','roster','slots','tier','dayIdx','testN','credit','team','partner'])
+                    // Trades: team = the asker's team label, partner = the other team + its roster (both optional).
+                    && (!('team' in request.resource.data) || (request.resource.data.team is string && request.resource.data.team.size() <= 80))
+                    && (!('partner' in request.resource.data) || (
+                          request.resource.data.type == 'trade'
+                          && request.resource.data.partner is map
+                          && request.resource.data.partner.keys().hasOnly(['name','roster'])
+                          && request.resource.data.partner.name is string && request.resource.data.partner.name.size() <= 80
+                          && request.resource.data.partner.roster is list && request.resource.data.partner.roster.size() <= 60
+                       ))
                     && (request.resource.data.type == 'lineup'
                           // Lineup: roster required (Jack picks starters from it), no options.
                           ? (!('options' in request.resource.data)
                              && 'roster' in request.resource.data
                              && request.resource.data.roster.size() >= 2
                              && (!('slots' in request.resource.data) || (request.resource.data.slots is list && request.resource.data.slots.size() <= 20)))
-                          : (!('slots' in request.resource.data)
+                          // Trades may carry the league's starting slots too (lineup before/after view).
+                          : ((!('slots' in request.resource.data) || (request.resource.data.type == 'trade' && request.resource.data.slots is list && request.resource.data.slots.size() <= 20))
                              && request.resource.data.options is list
                              && request.resource.data.options.size() >= 2
                              && request.resource.data.options.size() <= 4

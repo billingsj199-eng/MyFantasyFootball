@@ -1,6 +1,28 @@
 {
- "updated": "2026-11-04T23:10:00Z",
+ "updated": "2026-11-05T23:16:52Z",
  "items": [
+  {
+   "player": "Cam Skattebo",
+   "team": "NYG",
+   "pos": "RB",
+   "date": "2026-11-02",
+   "headline": "Hurt hamstring on final carry of Week 7 OT win at Houston; coach Daboll calls him day-to-day for Week 9 vs. Eagles",
+   "take": "No firm game status yet -- watch Thursday/Friday practice reports; Devin Singletary is the handcuff if Skattebo sits.",
+   "url": "https://www.cbssports.com/fantasy/football/news/giants-cam-skattebo-day-to-day-with-hamstring-injury",
+   "tag": "injury",
+   "src_type": "team"
+  },
+  {
+   "player": "Christian Watson",
+   "team": "GB",
+   "pos": "WR",
+   "date": "2026-10-29",
+   "headline": "Played through fractured ribs (8 catches, 113 yards) in Thursday win over Panthers after X-rays showed cracked ribs",
+   "take": "CT scan showed no internal injury; the Thursday-to-Sunday gap gives him 10 days rest before Week 9 vs. Patriots (Nov. 8) -- trending toward playing.",
+   "url": "https://www.4for4.com/news/christian-watson-returns-game-after-suffering-broken-rib",
+   "tag": "injury",
+   "src_type": "report"
+  },
   {
    "player": "Zach Charbonnet",
    "team": "SEA",

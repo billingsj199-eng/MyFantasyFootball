@@ -65494,6 +65494,9 @@ const _MT_FPA_SRC = _MT_FPA_POS.concat('DST');
 // window.MFF_OPP_TDN_OFF = true (actual points on the in-season side).
 // New season: build the prior with scripts/build_fpa_prior.py.
 const _MT_FPA_PRIOR_K = { QB: 3, RB: 4, WR: 6, TE: 2, DST: 2 };
+// positions whose in-season side is NOT schedule-adjusted (2026-11-05, see _mtObservedFpa);
+// sidebars keep the same list as OPP_RAW_POS
+const _MT_FPA_RAW_POS = { RB: true };
 let _mtFpaCache = null;
 var _mtObservedFpa = function _mtObservedFpa() {
   const _src = (window.FPA_2026 && window.FPA_2026.weeks) || null;
@@ -65568,7 +65571,11 @@ var _mtObservedFpa = function _mtObservedFpa() {
       if (s.wks.size >= 1) perGame[team] = s.pts / s.wks.size;
     });
     // swap raw points allowed for the schedule-adjusted number when every row carried its offense
-    const S = (typeof window._wkSchedAdjust === 'function' && games[pos].length && window.MFF_SOS_RAW_FPA !== true)
+    // RB reads RAW points allowed (Jack 2026-11-05): 2015-25 backtest
+    // (scripts/research_sched_adjust_backtest.py) - raw RB in-season side beat
+    // the adjusted one in 10 of 11 seasons on the offense-neutral target
+    // (.263 vs .246; 2026 itself 8 / 8). QB / WR / TE / D/ST keep the adjustment.
+    const S = (typeof window._wkSchedAdjust === 'function' && games[pos].length && window.MFF_SOS_RAW_FPA !== true && !_MT_FPA_RAW_POS[pos])
       ? window._wkSchedAdjust(games[pos]) : null;
     if (S) Object.keys(perGame).forEach(team => { if (typeof S.dE[team] === 'number') perGame[team] = S.mu + S.dE[team]; });
     if (S) _mtFpaCache.adjusted = true;

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>MFF Report</title>
+<link rel="icon" href="../icons/icon-192.png">
+<style>
+  :root {
+    --bg: #0d0d0d; --surface: #1a1a19; --surface2: #222221; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --accent: #3987e5;
+    --good: #0ca30c; --warn: #fab219; --bad: #e66767;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  a { color: var(--accent); }
+  header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--grid); background: var(--surface); position: sticky; top: 0; z-index: 6; flex-wrap: wrap; }
+  header h1 { font-size: 17px; margin: 0; letter-spacing: .02em; }
+  header h1 span { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 8px; }
+  header .spacer { flex: 1; }
+  header .who { color: var(--muted); font-size: 12px; }
+  button, select, input { font: inherit; color: var(--ink); background: var(--surface2); border: 1px solid var(--axis); border-radius: 6px; padding: 6px 10px; min-height: 34px; }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .5; cursor: default; }
+  input[type=date] { padding: 4px 8px; }
+  main { padding: 14px 16px 60px; max-width: 1400px; margin: 0 auto; }
+
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips button { padding: 5px 11px; border-radius: 16px; font-size: 13px; color: var(--ink2); }
+  .chips button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .seg { display: inline-flex; border: 1px solid var(--axis); border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; background: var(--surface2); color: var(--ink2); padding: 5px 12px; }
+  .seg button + button { border-left: 1px solid var(--axis); }
+  .seg button.on { background: var(--accent); color: #fff; }
+  .custom { display: none; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .custom.show { display: flex; }
+  label.tog { display: inline-flex; gap: 6px; align-items: center; color: var(--ink2); font-size: 13px; cursor: pointer; }
+  .rangeLbl { color: var(--muted); font-size: 12px; margin: 2px 0 14px; }
+  .rangeLbl b { color: var(--ink2); font-weight: 600; }
+
+  h2.sec { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 22px 0 8px; font-weight: 600; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; }
+  .tile { background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; padding: 10px 12px; min-height: 86px; }
+  .tile .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+  .tile .v { font-size: 24px; font-weight: 650; margin-top: 2px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .tile .d { font-size: 12px; margin-top: 2px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tile .d .up { color: var(--good); } .tile .d .dn { color: var(--bad); }
+  .tile .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .tile.na .v { color: var(--muted); font-size: 18px; }
+
+  .card { background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; min-width: 0; }
+  .card h3 { font-size: 13px; margin: 0 0 2px; color: var(--ink); font-weight: 600; }
+  .card .hint { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  @media (max-width: 1000px) { .grid3 { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } .tile .v { font-size: 21px; } }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink2); margin: 0 0 6px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .legend i.ln { height: 2px; border-radius: 1px; vertical-align: 3px; width: 14px; }
+  .legend i.dash { height: 0; border-top: 2px dashed var(--muted); background: none !important; vertical-align: 3px; width: 14px; }
+  .chart { position: relative; }
+  .chart svg { display: block; width: 100%; overflow: visible; }
+  .chart .tip { position: absolute; pointer-events: none; background: #000; border: 1px solid var(--axis); border-radius: 6px; padding: 7px 10px; font-size: 12px; color: var(--ink); display: none; z-index: 3; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
+  .tip .tt { color: var(--muted); margin-bottom: 3px; }
+  .tip .row { display: flex; gap: 10px; justify-content: space-between; }
+  .tip .row i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+  .tip .row b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .empty { color: var(--muted); font-size: 13px; padding: 30px 0; text-align: center; }
+
+  .tablewrap { overflow: auto; max-height: 520px; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 13px; }
+  th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; position: sticky; top: 0; background: var(--surface); z-index: 1; }
+  th.l, td.l { text-align: left; }
+  td.l { max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+  td.dim { color: var(--muted); }
+  td .up { color: var(--good); } td .dn { color: var(--bad); }
+  tr.tot td { font-weight: 650; border-top: 1px solid var(--axis); }
+  .tbar { display: inline-block; height: 6px; border-radius: 3px; background: var(--s1); vertical-align: middle; margin-left: 6px; opacity: .85; }
+  .card .tools { float: right; display: flex; gap: 6px; }
+  .card .tools button { font-size: 12px; padding: 3px 9px; min-height: 28px; }
+
+  .status { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 12px; font-size: 12px; background: var(--surface2); color: var(--ink2); border: 1px solid var(--axis); }
+  .pill .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .pill.ok .dot { background: var(--good); } .pill.err .dot { background: var(--bad); } .pill.warn .dot { background: var(--warn); }
+  .notice { background: rgba(250,178,25,.08); border: 1px solid rgba(250,178,25,.35); border-radius: 10px; padding: 10px 14px; margin: 10px 0; font-size: 13px; color: var(--ink2); }
+  .notice b { color: var(--ink); }
+  .notice code { background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: 12px; user-select: all; }
+  .notice ol { margin: 6px 0 0 18px; padding: 0; }
+
+  #gate { padding: 70px 16px; text-align: center; color: var(--ink2); }
+  #gate .box { display: inline-block; background: var(--surface); border: 1px solid var(--grid); border-radius: 12px; padding: 28px 34px; max-width: 420px; }
+  #gate h2 { margin: 0 0 10px; color: var(--ink); }
+  #loading { display: none; position: fixed; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--accent), transparent); background-size: 50% 100%; animation: ld 1s linear infinite; z-index: 10; }
+  @keyframes ld { from { background-position: -50% 0; } to { background-position: 150% 0; } }
+  body.busy #loading { display: block; }
+  body.busy #app { opacity: .6; transition: opacity .2s; }
+</style>
+</head>
+<body>
+<div id="loading"></div>
+<header>
+  <h1>MFF Report <span id="genAt"></span></h1>
+  <div class="spacer"></div>
+  <span class="who" id="who"></span>
+  <button id="refreshBtn" title="Re-pull from Stripe, Firebase and GA4 (skips the 5-minute cache)" style="display:none">↻ Refresh</button>
+  <button id="signOutBtn" style="display:none">Sign out</button>
+</header>
+
+<div id="gate"><div class="box"><h2>Admin only</h2><div id="gateMsg">Checking sign-in…</div></div></div>
+
+<main id="app" style="display:none">
+  <div class="bar">
+    <div class="chips" id="presets"></div>
+  </div>
+  <div class="bar">
+    <div class="custom" id="customBox">
+      <input type="date" id="cStart" aria-label="Start date"> <span style="color:var(--muted)">to</span>
+      <input type="date" id="cEnd" aria-label="End date">
+      <button class="primary" id="cApply">Apply</button>
+    </div>
+    <div class="seg" id="grain" role="group" aria-label="Group by">
+      <button data-g="day">Day</button><button data-g="week">Week</button><button data-g="month">Month</button>
+    </div>
+    <label class="tog"><input type="checkbox" id="cmp"> Compare to previous period</label>
+  </div>
+  <div class="rangeLbl" id="rangeLbl"></div>
+  <div id="notices"></div>
+
+  <h2 class="sec">Money</h2>
+  <div class="tiles" id="tilesMoney"></div>
+  <h2 class="sec">Users</h2>
+  <div class="tiles" id="tilesUsers"></div>
+
+  <h2 class="sec">Trends</h2>
+  <div class="grid2">
+    <div class="card"><h3>Revenue by plan</h3><p class="hint">Gross sales per period, before Stripe fees. Renewals = recurring subscription charges.</p><div class="legend" id="lgRev"></div><div class="chart" id="chRev"></div></div>
+    <div class="card"><h3>Daily active users</h3><p class="hint" id="hintDau">GA4 active users per day (averaged when grouped).</p><div class="legend" id="lgDau"></div><div class="chart" id="chDau"></div></div>
+    <div class="card"><h3>New accounts</h3><p class="hint">Firebase sign-ups per period.</p><div class="legend" id="lgSign"></div><div class="chart" id="chSign"></div></div>
+    <div class="card"><h3>Paying members</h3><p class="hint">Active subscriptions + unexpired Season Passes at the end of each period.</p><div class="legend" id="lgMem"></div><div class="chart" id="chMem"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="tools"><button id="csvBtn">Download CSV</button></div>
+    <h3 id="periodTitle">By period</h3>
+    <p class="hint">Every metric for each period in the range. Switch Day / Week / Month above.</p>
+    <div class="tablewrap"><table id="tblPeriods"></table></div>
+  </div>
+
+  <h2 class="sec">Breakdowns</h2>
+  <div class="grid2">
+    <div class="card"><h3>Revenue by plan</h3><p class="hint">Gross sales in the range.</p><div class="tablewrap"><table id="tblPlans"></table></div></div>
+    <div class="card"><h3>Members &amp; accounts now</h3><p class="hint">Live snapshot — not affected by the date range.</p><div class="tablewrap"><table id="tblNow"></table></div></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><h3>Traffic channels</h3><p class="hint">GA4 sessions.</p><div class="tablewrap" style="max-height:360px"><table id="tblChannels"></table></div></div>
+    <div class="card"><h3>Top sources</h3><p class="hint">GA4 sessions by source.</p><div class="tablewrap" style="max-height:360px"><table id="tblSources"></table></div></div>
+    <div class="card"><h3>Devices</h3><p class="hint">GA4 active users.</p><div class="tablewrap"><table id="tblDevices"></table></div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>Top pages / tabs</h3><p class="hint">GA4 views (SPA tabs log as page views).</p><div class="tablewrap" style="max-height:420px"><table id="tblPages"></table></div></div>
+    <div class="card"><h3>Key events</h3><p class="hint">GA4 event counts — sign-in, premium CTAs, feature use.</p><div class="tablewrap" style="max-height:420px"><table id="tblEvents"></table></div></div>
+  </div>
+  <div class="card"><h3>Recent payments</h3><p class="hint">Latest Stripe charges in the range (newest first).</p><div class="tablewrap" style="max-height:420px"><table id="tblRecent"></table></div></div>
+
+  <h2 class="sec">Data sources</h2>
+  <div class="status" id="srcStatus"></div>
+</main>
+
+<script>
+  // Firebase compat SDK (same project + version as the main site).
+  (function(){
+    var V = 'https://www.gstatic.com/firebasejs/10.12.2/';
+    window._REP_FB_CFG = {
+      apiKey: "AIzaSyD9D_Rhb5hEpz2cBWqQr7hcFCDoluwq6uY",
+      authDomain: "jackb933-website.firebaseapp.com",
+      projectId: "jackb933-website",
+      storageBucket: "jackb933-website.firebasestorage.app",
+      messagingSenderId: "732824763527",
+      appId: "1:732824763527:web:2a4b344d01ee89cf668c22"
+    };
+    function load(src){ return new Promise(function(res, rej){ var s = document.createElement('script'); s.src = src; s.crossOrigin = 'anonymous'; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+    window._REP_FB_READY = load(V + 'firebase-app-compat.js')
+      .then(function(){ return load(V + 'firebase-auth-compat.js'); })
+      .then(function(){ return load(V + 'firebase-functions-compat.js'); })
+      .then(function(){ if (!(firebase.apps && firebase.apps.length)) firebase.initializeApp(window._REP_FB_CFG); return true; })
+      .catch(function(e){ console.warn('[report] firebase load failed', e); return false; });
+  })();
+</script>
+<script src="report.js?v=2026-11-06c"></script>
+</body>
+</html>

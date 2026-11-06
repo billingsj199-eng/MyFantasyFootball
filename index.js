@@ -1126,3 +1126,14 @@ exports.exportLeagueTrades = onRequest(
     }
   }
 );
+
+// === adminReport (2026-11-06): data feed for the admin-only /report/ page ===
+// Revenue (Stripe), accounts (Auth), premium + Ask Jack (Firestore), traffic
+// (GA4 Data API). Jack's verified email only. Logic lives in admin_report.js.
+exports.adminReport = require("./admin_report").build({
+  STRIPE_SECRET_KEY,
+  ALLOWED_ORIGINS,
+  PRICE_IDS,
+  SEASON_PASS_PRICE_ID,
+  SEASON_PASS_END_MS,
+});

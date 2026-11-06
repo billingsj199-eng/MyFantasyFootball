@@ -112,12 +112,66 @@ async function stripeSection(cfg, range, force) {
     cached("stripe_sessions", force, () => listAll(stripe.checkout.sessions.list({ status: "complete", limit: 100 }), 10000)),
   ]);
 
-  const [bts, invoices] = await Promise.all([
-    listAll(stripe.balanceTransactions.list({ created: { gte: fromSec, lte: toSec }, limit: 100, expand: ["data.source"] }), 20000),
+  // The whole balance ledger is small for this account, so pull it all once
+  // (cached) and use it for both the range and the lifetime totals.
+  const [allBts, invoices, balance, payouts, account] = await Promise.all([
+    cached("stripe_bts", force, () => listAll(stripe.balanceTransactions.list({ limit: 100, expand: ["data.source"] }), 50000)),
     listAll(stripe.invoices.list({ created: { gte: fromSec - 3 * 86400, lte: toSec }, status: "paid", limit: 100 }), 20000),
+    stripe.balance.retrieve().catch((e) => ({ error: e.message })),
+    cached("stripe_payouts", force, () => listAll(stripe.payouts.list({ limit: 100, expand: ["data.destination"] }), 5000)),
+    stripe.accounts.retrieve().catch((e) => ({ error: e.message })),
   ]);
 
-  // Money per day from the balance ledger.
+  // Lifetime totals across the whole ledger.
+  const life = { gross: 0, fees: 0, net: 0, refunds: 0, payments: 0, paidOut: 0, firstAt: null };
+  for (const bt of allBts) {
+    if (bt.type === "charge" || bt.type === "payment") {
+      life.gross += bt.amount; life.fees += bt.fee; life.net += bt.net; life.payments++;
+      if (!life.firstAt || bt.created * 1000 < life.firstAt) life.firstAt = bt.created * 1000;
+    } else if (bt.type === "refund" || bt.type === "payment_refund" || bt.type === "payment_failure_refund"
+      || bt.type === "adjustment" || bt.type === "dispute") {
+      life.refunds += -bt.amount; life.fees += bt.fee; life.net += bt.net;
+    } else if (bt.type === "stripe_fee" || bt.type === "tax_fee") {
+      life.fees += -bt.net; life.net += bt.net;
+    }
+  }
+  for (const p of payouts) if (p.status === "paid") life.paidOut += p.amount;
+
+  // Balance + payouts (what's in Stripe vs. what reached the bank).
+  const sumCur = (arr) => (arr || []).filter((x) => x.currency === "usd").reduce((s, x) => s + x.amount, 0);
+  const sched = account && account.settings && account.settings.payouts && account.settings.payouts.schedule;
+  const bankOf = (p) => {
+    const d = p.destination && typeof p.destination === "object" ? p.destination : null;
+    return d ? { name: d.bank_name || d.brand || (d.object === "card" ? "Card" : "Bank"), last4: d.last4 || "" } : null;
+  };
+  const payoutRows = payouts.map((p) => ({
+    id: p.id, amount: p.amount, created: p.created * 1000, arrival: p.arrival_date * 1000,
+    status: p.status, method: p.method, automatic: !!p.automatic, bank: bankOf(p),
+    failure: p.failure_message || "",
+  }));
+  const paidOutDaily = {};
+  for (const p of payoutRows) {
+    if (p.status !== "paid") continue;
+    const ds = dayKey(p.arrival);
+    paidOutDaily[ds] = (paidOutDaily[ds] || 0) + p.amount;
+  }
+  const upcoming = payoutRows.filter((p) => p.status === "pending" || p.status === "in_transit").sort((a, b) => a.arrival - b.arrival);
+  const lastBank = (payoutRows.find((p) => p.bank) || {}).bank || null;
+  const payoutInfo = {
+    available: balance && !balance.error ? sumCur(balance.available) : null,
+    pending: balance && !balance.error ? sumCur(balance.pending) : null,
+    instantAvailable: balance && !balance.error && balance.instant_available ? sumCur(balance.instant_available) : null,
+    schedule: sched ? { interval: sched.interval, delayDays: sched.delay_days, weeklyAnchor: sched.weekly_anchor || null, monthlyAnchor: sched.monthly_anchor || null } : null,
+    payoutsEnabled: account && !account.error ? !!account.payouts_enabled : null,
+    bank: lastBank,
+    upcoming: upcoming.slice(0, 5),
+    recent: payoutRows.slice(0, 30),
+    paidOutDaily,
+    error: (balance && balance.error) || (account && account.error) || null,
+  };
+
+  // Money per day from the balance ledger (range only).
+  const bts = allBts.filter((bt) => bt.created >= fromSec && bt.created <= toSec);
   const daily = {};
   const bump = (ds, k, v) => { (daily[ds] = daily[ds] || { gross: 0, fees: 0, net: 0, refunds: 0, payments: 0 })[k] += v; };
   const recent = [];
@@ -228,6 +282,8 @@ async function stripeSection(cfg, range, force) {
       payingNow: live.monthly + live.yearly + live.other + seasonActive,
     },
     recent: recent.slice(0, 25),
+    lifetime: life,
+    payouts: payoutInfo,
   };
 }
 

@@ -39746,8 +39746,16 @@ window.fmtHeight = fmtHeight;
     }
     const found = D.find(p => p.n === name);
     if (found) return found;
-    const norm = String(name).toLowerCase().replace(/[.\-'\s]/g, '');
-    return D.find(p => p.n && p.n.toLowerCase().replace(/[.\-'\s]/g, '') === norm) || null;
+    const collapse = s => String(s).toLowerCase().replace(/[.\-'\s]/g, '');
+    const norm = collapse(name);
+    const hit = D.find(p => p.n && collapse(p.n) === norm);
+    if (hit) return hit;
+    // "James Cook III" / "Deebo Samuel Sr." → D's bare "James Cook" / "Deebo Samuel".
+    const bare = String(name).replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '');
+    if (bare === name) return null;
+    if (typeof nameToIdx !== 'undefined' && nameToIdx[bare] !== undefined) return D[nameToIdx[bare]];
+    const nb = collapse(bare);
+    return D.find(p => p.n && collapse(p.n) === nb) || null;
   }
 
   function _finderGetActiveLeague() {
@@ -66500,6 +66508,16 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     // DST fallback: Sleeper "Chicago Bears" → D entry "Chicago Bears D/ST".
     if (typeof nameToIdx !== 'undefined' && nameToIdx[name + ' D/ST'] !== undefined) {
       return D[nameToIdx[name + ' D/ST']];
+    }
+    // Reverse suffix case: the league sends "James Cook III" / "Deebo Samuel Sr."
+    // but D stores the bare "James Cook" / "Deebo Samuel" (nameToIdx only aliases
+    // the other direction). Tried last so an exact "Marvin Harrison Jr." never
+    // collapses onto a bare-name entry.
+    const bare = name.replace(/\s+(Jr\.?|Sr\.?|II|III|IV|V)$/i, '');
+    if (bare !== name) {
+      if (typeof nameToIdx !== 'undefined' && nameToIdx[bare] !== undefined) return D[nameToIdx[bare]];
+      const nb = bare.toLowerCase().replace(/[.\-'\s]/g, '');
+      if (normIdx[nb] !== undefined) return D[normIdx[nb]];
     }
     return null;
   }

@@ -1521,8 +1521,23 @@ CLEAR ALL
     /* Tier banner rows still need to span full card width */
     #pageRankings tbody tr.tier-row{display:block;padding:8px 12px;background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.25)!important}
     #pageRankings tbody tr.tier-row td{display:block;text-align:center!important}
-    /* Premium-blur cards: keep the blur but fit the card shape */
-    #pageRankings tbody tr.premium-blur td{filter:blur(4px)}
+    /* Premium-blur cards (2026-11-07 phone crash fix): a free user on JACK'S /
+       MY RANKS / SIM / MFF VALUE got every row past the cutoff rendered with
+       filter:blur on EVERY cell — ~3,700 filtered elements, each its own GPU
+       compositing layer. iOS Safari runs out of GPU memory on that and kills
+       the tab ("site crashes when I hit the ranks"); Chrome shrugs it off.
+       Blur the card once (one layer per row — the row is display:flex on
+       phones, so filter applies cleanly) and keep only the first 8 blurred
+       teaser rows: the wall card sits ABOVE them, and rows past the cutoff
+       carry no information anyway. Desktop (table-row layout) is unchanged. */
+    #pageRankings tbody tr.premium-blur{filter:blur(4px)}
+    #pageRankings tbody tr.premium-blur td{filter:none!important;transition:none}
+    #pageRankings tbody tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur{display:none!important}
+    /* The premium wall row's single cell is td:first-child, so the card rules
+       above gave it the 24px drag-handle slot and its SIGN IN / UPGRADE card
+       spilled off the left edge of the phone. Let it span the card. */
+    #pageRankings tbody tr#premiumWallRow{display:block;padding:0}
+    #pageRankings tbody tr#premiumWallRow td{display:block;flex:none;width:100%!important;margin:0!important}
     /* Floating drag clone — lives on <body>, outside #pageRankings, so the card
        rules above don't reach it. Mirror the card layout so the row being
        dragged looks like the card it came from. */

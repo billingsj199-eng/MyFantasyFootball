@@ -1,6 +1,107 @@
 {
- "updated": "2026-11-07T23:10:00Z",
+ "updated": "2026-11-08T23:13:21Z",
  "items": [
+  {
+   "player": "Shedeur Sanders",
+   "team": "CLE",
+   "pos": "QB",
+   "date": "2026-11-06",
+   "headline": "Browns officially name Sanders starter Sunday at Saints over Watson",
+   "take": "First career start of the season - streamable in deep/2QB leagues, low ceiling behind a shaky Browns O-line.",
+   "url": "https://www.ajc.com/news/2026/11/browns-to-start-shedeur-sanders-vs-saints-with-deshaun-watson-in-concussion-protocol/",
+   "tag": "role",
+   "src_type": "team"
+  },
+  {
+   "player": "Deshaun Watson",
+   "team": "CLE",
+   "pos": "QB",
+   "date": "2026-11-06",
+   "headline": "Browns sticking with Sanders at Saints even after Watson returned to practice Friday",
+   "take": "Still officially questionable (concussion protocol) but team's plan is to sit him Week 9 - treat as out for lineup purposes.",
+   "url": "https://www.clevelandbrowns.com/news/deshaun-watson-questionable-for-week-9-vs-the-saints-injury-report",
+   "tag": "injury",
+   "avail": {
+    "k": "out",
+    "wk": 9
+   },
+   "src_type": "team"
+  },
+  {
+   "player": "DeVonta Smith",
+   "team": "PHI",
+   "pos": "WR",
+   "date": "2026-11-06",
+   "headline": "Ruled out Week 9 vs. Giants, third straight missed game with hamstring",
+   "take": "No practice all week - keep him benched again; Lemon/Cooper absorb the target share.",
+   "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/eagles-injury-update-saquon-barkley-back-giants-devonta-smith-dontayvion-wicks/764651/",
+   "tag": "injury",
+   "avail": {
+    "k": "out",
+    "wk": 9
+   },
+   "src_type": "team"
+  },
+  {
+   "player": "Dontayvion Wicks",
+   "team": "PHI",
+   "pos": "WR",
+   "date": "2026-11-06",
+   "headline": "Ruled out Week 9 vs. Giants with hamstring, third straight absence",
+   "take": "Non-factor again; Eagles leaning on Lemon/Cooper at WR behind Barkley-heavy gameplan.",
+   "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/eagles-injury-update-saquon-barkley-back-giants-devonta-smith-dontayvion-wicks/764651/",
+   "tag": "injury",
+   "avail": {
+    "k": "out",
+    "wk": 9
+   },
+   "src_type": "team"
+  },
+  {
+   "player": "Saquon Barkley",
+   "team": "PHI",
+   "pos": "RB",
+   "date": "2026-11-06",
+   "headline": "Good to go Week 9 vs. Giants per Garafolo despite hamstring/back scare",
+   "take": "Full workload expected - locked-in RB1 with Smith and Wicks both out, more volume likely funnels his way.",
+   "url": "https://www.rotoballer.com/?p=1985878",
+   "tag": "injury",
+   "avail": {
+    "k": "play",
+    "wk": 9
+   },
+   "src_type": "insider"
+  },
+  {
+   "player": "Cam Skattebo",
+   "team": "NYG",
+   "pos": "RB",
+   "date": "2026-11-06",
+   "headline": "Doubtful for Week 9 at Eagles; Rapoport says it 'does not seem' he'll play",
+   "take": "Did not practice all week after the bye - plan for Devin Singletary as the lead back if Skattebo sits.",
+   "url": "https://www.thefantasyfootballers.com/news/646286/cam-skattebo-doubtful-for-week-9/",
+   "tag": "injury",
+   "avail": {
+    "k": "doubt",
+    "wk": 9
+   },
+   "src_type": "insider"
+  },
+  {
+   "player": "Christian Watson",
+   "team": "GB",
+   "pos": "WR",
+   "date": "2026-11-06",
+   "headline": "No injury designation for Week 9 at Patriots after practicing in pads",
+   "take": "Fully cleared from the cracked ribs - back to normal usage, safe to start.",
+   "url": "https://www.thefantasyfootballers.com/news/646272/christian-watson-no-designation-for-week-9/",
+   "tag": "injury",
+   "avail": {
+    "k": "play",
+    "wk": 9
+   },
+   "src_type": "team"
+  },
   {
    "player": "Jacoby Brissett",
    "team": "ARI",
@@ -903,17 +1004,6 @@
    "src_type": "team"
   },
   {
-   "player": "Caleb Williams",
-   "team": "CHI",
-   "pos": "QB",
-   "date": "2026-10-18",
-   "headline": "Returned from hamstring, went 30-of-36 for 305 yards and a TD in 31-23 win over ATL",
-   "take": "Hamstring clearly a non-issue now -- locks back in as a high-end weekly fantasy starter",
-   "url": "https://www.chicagobears.com/news/game-recap-bears-improve-to-4-2-with-road-victory-in-atlanta-2026-week-6",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
    "player": "Rashee Rice",
    "team": "KC",
    "pos": "WR",
@@ -1002,17 +1092,6 @@
    "src_type": "team"
   },
   {
-   "player": "Omar Cooper Jr.",
-   "team": "NYJ",
-   "pos": "WR",
-   "date": "2026-10-18",
-   "headline": "6 catches, 103 yards, 48-yard TD in Week 6 win over NE, back from an ankle injury",
-   "take": "A legitimate streaming/flex option in the Jets' offense off that showing",
-   "url": "https://www.yardbarker.com/nfl/articles/top_rookie_performers_from_nfl_week_6/s1_13132_44447385",
-   "tag": "riser",
-   "src_type": "report"
-  },
-  {
    "player": "Davante Adams",
    "team": "LAR",
    "pos": "WR",
@@ -1058,110 +1137,6 @@
    "src_type": "insider"
   },
   {
-   "player": "Jaydon Blue",
-   "team": "PHI",
-   "pos": "RB",
-   "date": "2026-10-17",
-   "headline": "Signed to Eagles' active roster as pass-catching RB depth the same day Hurts went to IR",
-   "take": "Deep-league stash only -- buried behind Dameon Pierce and Carson Steele, but a name to know if Philadelphia's injury-ravaged backfield thins further",
-   "url": "https://www.philadelphiaeagles.com/news/eagles-place-jalen-hurts-on-injured-reserve-sign-jaydon-blue-to-the-active-roster-2026-nfl-week-6-panthers",
-   "tag": "transaction",
-   "src_type": "team"
-  },
-  {
-   "player": "DK Metcalf",
-   "team": "PIT",
-   "pos": "WR",
-   "date": "2026-10-18",
-   "headline": "Added to injury report Friday with illness, questionable for Week 6 vs. Buccaneers",
-   "take": "Steelers' WR room is already down Roman Wilson and Ben Skowronek; Germie Bernard is the fallback if Metcalf sits",
-   "url": "https://www.rotoballer.com/?p=1967988",
-   "tag": "injury",
-   "avail": {
-    "k": "gtd",
-    "wk": 6
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Saquon Barkley",
-   "team": "PHI",
-   "pos": "RB",
-   "date": "2026-10-17",
-   "headline": "Officially ruled out Week 6 vs. Panthers after missing all week of practice (hamstring)",
-   "take": "Confirmed inactive; Eagles backfield now thin with Will Shipley also landing on IR this week",
-   "url": "https://sports.yahoo.com/articles/eagles-panthers-final-injury-report-211315959.html",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 6
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Jalen Hurts",
-   "team": "PHI",
-   "pos": "QB",
-   "date": "2026-10-17",
-   "headline": "Placed on injured reserve with the calf blood clot; no return timetable given",
-   "take": "Tanner McKee is now the Eagles' starter for at least the next several weeks, not just Week 6",
-   "url": "https://www.cbssports.com/nfl/news/eagles-rule-out-jalen-hurts-for-week-6-vs-panthers/",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
-   "player": "Will Shipley",
-   "team": "PHI",
-   "pos": "RB",
-   "date": "2026-10-17",
-   "headline": "Placed on injured reserve ahead of Week 6 vs. Panthers",
-   "take": "Eagles backfield depth behind the injured Barkley is now a real concern \u2014 watch the inactive list for a practice-squad call-up",
-   "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/eagles-injury-update-week-6-saquon-barkley-devonta-smith-drew-kendall-jalen-hurts/759046/",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
-   "player": "Caleb Williams",
-   "team": "CHI",
-   "pos": "QB",
-   "date": "2026-10-17",
-   "headline": "Full practice Friday, officially Questionable Week 6 vs. Falcons; must pass pregame stress test",
-   "take": "Williams himself says the hamstring is actually torn, not the Grade 2 strain first reported \u2014 Schefter/Rapoport expect him to start, but treat as a real game-time gamble",
-   "url": "https://www.chicagobears.com/news/injury-update-caleb-williams-questionable-for-sunday-s-game-vs-falcons",
-   "tag": "injury",
-   "avail": {
-    "k": "gtd",
-    "wk": 6
-   },
-   "src_type": "insider"
-  },
-  {
-   "player": "Breece Hall",
-   "team": "NYJ",
-   "pos": "RB",
-   "date": "2026-10-17",
-   "headline": "Out again Week 6 vs. Patriots with the lingering quad injury, still week-to-week",
-   "take": "No firm return week yet; Braelon Allen remains the clear every-down back",
-   "url": "https://www.fox32chicago.com/sports/jets-list-rb-breece-hall-week-to-week-putting-status-bears-game-question",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 6
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Braelon Allen",
-   "team": "NYJ",
-   "pos": "RB",
-   "date": "2026-10-17",
-   "headline": "Entrenched as Jets' lead back again with Hall out \u2014 played 32 of 34 snaps last week",
-   "take": "Full-workload RB2 value as long as Hall remains sidelined",
-   "url": "https://clutchpoints.com/nfl/new-york-jets/jets-news-new-york-still-missing-breece-hall-for-week-5-clash-with-browns",
-   "tag": "role",
-   "src_type": "report"
-  },
-  {
    "player": "Baker Mayfield",
    "team": "TB",
    "pos": "QB",
@@ -1177,88 +1152,6 @@
     "unit": "w"
    },
    "src_type": "insider"
-  },
-  {
-   "player": "Jalon Daniels",
-   "team": "TB",
-   "pos": "QB",
-   "date": "2026-10-17",
-   "headline": "Confirmed for a third straight start at QB for Tampa Bay while Mayfield (thumb) is out",
-   "take": "Undrafted rookie already has a road win over Dallas; a viable streaming QB play again vs. Pittsburgh",
-   "url": "https://www.rotoballer.com/?p=1966101",
-   "tag": "role",
-   "src_type": "team"
-  },
-  {
-   "player": "Tre' Harris",
-   "team": "LAC",
-   "pos": "WR",
-   "date": "2026-10-17",
-   "headline": "Set to sit out Week 6 vs. Chiefs with the hamstring injury suffered in Week 5",
-   "take": "Chargers have a Week 7 bye, so his next realistic game back is Week 8 vs. the Rams \u2014 Valdes-Scantling, Wease and Davis absorb the targets in the meantime",
-   "url": "https://www.rotoballer.com/?p=1964898",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 6
-   },
-   "src_type": "report"
-  },
-  {
-   "player": "David Montgomery",
-   "team": "HOU",
-   "pos": "RB",
-   "date": "2026-10-17",
-   "headline": "Officially ruled out for Week 6 in London vs. Jaguars (groin); stayed home in Houston",
-   "take": "Confirms Woody Marks as the clear lead back for the London game",
-   "url": "https://www.rotoballer.com/?p=1967261",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 6
-   },
-   "src_type": "team"
-  },
-  {
-   "player": "Woody Marks",
-   "team": "HOU",
-   "pos": "RB",
-   "date": "2026-10-17",
-   "headline": "Confirmed as Texans' clear lead back for Week 6 in London with Montgomery officially out",
-   "take": "Workhorse-role waiver priority this week after handling most of the backfield in Week 5",
-   "url": "https://www.rotoballer.com/?p=1967261",
-   "tag": "role",
-   "src_type": "report"
-  },
-  {
-   "player": "Nathaniel Dell",
-   "team": "HOU",
-   "pos": "WR",
-   "date": "2026-10-17",
-   "headline": "Won't make his season debut in Week 6 vs. Jaguars; still working through limited practices off IR",
-   "take": "Still not a Week 6 play while he completes his return-from-IR practice window; monitor for a Week 7 or 8 activation",
-   "url": "https://www.thefantasyfootballers.com/news/642611/nathaniel-dell-wont-debut-in-week-6/",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 6
-   },
-   "src_type": "report"
-  },
-  {
-   "player": "Jeremiyah Love",
-   "team": "ARI",
-   "pos": "RB",
-   "date": "2026-10-17",
-   "headline": "Officially ruled out for Week 6 vs. Rams with the lingering ankle issue",
-   "take": "Tyler Allgeier remains the early-down fill-in as Love continues to be eased back in",
-   "url": "https://arizonasports.com/?p=3635136",
-   "tag": "injury",
-   "avail": {
-    "k": "out",
-    "wk": 6
-   },
-   "src_type": "team"
   },
   {
    "player": "Tyquan Thornton",

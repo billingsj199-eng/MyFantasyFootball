@@ -36355,21 +36355,8 @@ window.fmtHeight = fmtHeight;
       // pointer only; CONFIRM removes the answered one and stays in place.
       const ci = _adminQaCurIdx();
       const cur = q[ci];
-      const side = '<aside class="aj-qside"><div class="aj-qside-h">QUEUE <span>(' + q.length + ')</span></div>' +
-        q.map((r, i) => {
-          const safe = _qaAdminEsc(r.id);
-          return '<button type="button" class="aj-qrow' + (i === ci ? ' cur' : '') + '" onclick="window._adminQaJump(\'' + safe + '\')" title="' + (i === ci ? 'On screen now' : 'Show this one (the order stays)') + '">' +
-            '<span class="aj-qrow-name">' + (i + 1) + '. ' + _qaAdminEsc(r.data.name || 'Member') + '</span>' +
-            '<span class="aj-qrow-meta">' + _adminQaTierChip(r.data.tier, r.data) + _adminQaTypeChip(r.data.type) + ' <span>' + _qaAdminEsc(_adminQaAgo(r.data.createdAt)) + '</span></span>' +
-            '</button>';
-        }).join('') + '</aside>';
-      // ON AIR only (main.css): who's up next, for the stream — the rows after
-      // the one on screen (wrapping to the top), with their queue numbers.
-      const rest = q.slice(ci + 1).concat(q.slice(0, ci));
-      const upnext = '<div class="aj-upnext">' + (rest.length
-        ? '<span class="aj-upnext-l">UP NEXT</span>' + rest.slice(0, 3).map(r => '<span class="aj-upnext-i"><b>' + (q.indexOf(r) + 1) + '.</b> ' + _qaAdminEsc(r.data.name || 'Member') + ' ' + _adminQaTypeChip(r.data.type) + '</span>').join('') +
-          (rest.length > 3 ? '<span class="aj-upnext-more">+' + (rest.length - 3) + ' more</span>' : '')
-        : '<span class="aj-upnext-l">LAST ONE IN THE QUEUE</span><span class="aj-upnext-cta">Ask yours at <b>myfantasyfootball.co</b> › ASK JACK</span>') + '</div>';
+      const side = _adminQaSideHtml(q, ci);
+      const upnext = _adminQaUpNextHtml(q, ci);
       // ON AIR with room beside the stage (html.aj-qdock, set by _qaOnAirFit):
       // the queue docks OUTSIDE the stage in #ajOnAirQueue — Jack's eyes only,
       // never in the OBS crop. Otherwise it stays in the stage as the Q drawer.
@@ -36379,6 +36366,78 @@ window.fmtHeight = fmtHeight;
       list.innerHTML = '<div class="aj-qwrap"><div class="aj-qmain">' + _adminQaQueueCard(cur.id, cur.data, q.length) + upnext + '</div>' + (docked ? '' : side) + '</div>';
       fit();
     }
+    window._adminQaRenderQueue = _adminQaRenderQueue;
+    function _adminQaSideHtml(q, ci) {
+      return '<aside class="aj-qside"><div class="aj-qside-h">QUEUE <span>(' + q.length + ')</span></div>' +
+        q.map((r, i) => {
+          const safe = _qaAdminEsc(r.id);
+          return '<button type="button" class="aj-qrow' + (i === ci ? ' cur' : '') + '" onclick="window._adminQaJump(\'' + safe + '\')" title="' + (i === ci ? 'On screen now' : 'Show this one (the order stays)') + '">' +
+            '<span class="aj-qrow-name">' + (i + 1) + '. ' + _qaAdminEsc(r.data.name || 'Member') + '</span>' +
+            '<span class="aj-qrow-meta">' + _adminQaTierChip(r.data.tier, r.data) + _adminQaTypeChip(r.data.type) + ' <span>' + _qaAdminEsc(_adminQaAgo(r.data.createdAt)) + '</span></span>' +
+            '</button>';
+        }).join('') + '</aside>';
+    }
+    // ON AIR only (main.css): who's up next, for the stream — the rows after
+    // the one on screen (wrapping to the top), with their queue numbers.
+    function _adminQaUpNextHtml(q, ci) {
+      const rest = q.slice(ci + 1).concat(q.slice(0, ci));
+      return '<div class="aj-upnext">' + (rest.length
+        ? '<span class="aj-upnext-l">UP NEXT</span>' + rest.slice(0, 3).map(r => '<span class="aj-upnext-i"><b>' + (q.indexOf(r) + 1) + '.</b> ' + _qaAdminEsc(r.data.name || 'Member') + ' ' + _adminQaTypeChip(r.data.type) + '</span>').join('') +
+          (rest.length > 3 ? '<span class="aj-upnext-more">+' + (rest.length - 3) + ' more</span>' : '')
+        : '<span class="aj-upnext-l">LAST ONE IN THE QUEUE</span><span class="aj-upnext-cta">Ask yours at <b>myfantasyfootball.co</b> › ASK JACK</span>') + '</div>';
+    }
+    // Live queue (Jack 11-08 "make sure the queue updates live"): when the
+    // question on screen is still in the queue, only the queue list, the UP
+    // NEXT strip and the count are redrawn — the picked tile, typed note and
+    // open slot pickers on the card stay as they are.
+    function _adminQaRenderQueueLite() {
+      const { list } = _qaTargets();
+      const q = window._adminQaQueue || [];
+      const ci = _adminQaCurIdx();
+      const cur = q[ci];
+      const card = (list && cur) ? document.getElementById('adminQaCard-' + cur.id) : null;
+      if (!card || !list.contains(card)) { _adminQaRenderQueue(); return; }
+      _adminQaBadge(q.length);
+      const side = _adminQaSideHtml(q, ci);
+      const swap = (el, html) => {
+        if (!el) return;
+        const scroller = el.parentElement && el.parentElement.id === 'ajOnAirQueue' ? el.parentElement : el;
+        const top = scroller.scrollTop;
+        el.outerHTML = html;
+        scroller.scrollTop = top;
+        if (scroller !== el) return;
+        const fresh = list.querySelector('.aj-qside');
+        if (fresh) fresh.scrollTop = top;
+      };
+      const dock = document.getElementById('ajOnAirQueue');
+      swap(dock && dock.querySelector('.aj-qside'), side);
+      swap(list.querySelector('.aj-qside'), side);
+      const un = list.querySelector('.aj-upnext');
+      if (un) un.outerHTML = _adminQaUpNextHtml(q, ci);
+      const cnt = card.querySelector('.aj-q-count');
+      if (cnt) cnt.textContent = q.length + ' IN QUEUE';
+      if (typeof window._qaOnAirFit === 'function') window._qaOnAirFit();
+    }
+    // A fresh snapshot of the open queue. While a pick is saving or its reveal
+    // is playing, the rows wait in _adminQaPending (the confirm flow applies
+    // them when it moves on), so the card being answered never vanishes early.
+    function _adminQaApplyRows(rows) {
+      if (window._adminQaBusy || typeof window._adminQaRevealResolve === 'function') { window._adminQaPending = rows; return; }
+      window._adminQaPending = null;
+      const old = window._adminQaQueue || [];
+      const curId = window._adminQaCur;
+      window._adminQaQueue = rows;
+      if (curId && !rows.some(r => r.id === curId)) {
+        // The one on screen went away (answered / deleted elsewhere): show
+        // whatever now sits at its old spot.
+        const at = Math.max(0, old.findIndex(r => r.id === curId));
+        window._adminQaCur = (rows[at] || rows[rows.length - 1] || {}).id || null;
+        _adminQaRenderQueue();
+        return;
+      }
+      _adminQaRenderQueueLite();
+    }
+    window._adminQaApplyRows = _adminQaApplyRows; // console / test hook
     window._adminQaRenderQueue = _adminQaRenderQueue;
     // Pointer into the fixed-order queue (window._adminQaCur = doc id).
     function _adminQaCurIdx() {
@@ -36477,6 +36536,8 @@ window.fmtHeight = fmtHeight;
       patch.answer = note ? note.slice(0, 1000) : firebase.firestore.FieldValue.delete();
       const btn = document.getElementById('adminQaConfirm-' + docId);
       if (btn) { btn.disabled = true; btn.textContent = 'SAVING…'; }
+      // Live-queue snapshots wait while this saves + reveals (_adminQaApplyRows).
+      window._adminQaBusy = docId;
       // Stall watchdog: after a long idle the Firestore stream can sit in
       // reconnect backoff and a write queues silently for 30-60 s. At 6 s we
       // bounce the network (forces an immediate reconnect; the queued write
@@ -36498,7 +36559,11 @@ window.fmtHeight = fmtHeight;
           // Drop the answered one; the pointer stays at the same spot, i.e.
           // moves on to whatever was next in line.
           const at = q.findIndex(r => r.id === docId);
-          window._adminQaQueue = q.filter(r => r.id !== docId);
+          // Questions that arrived during the save/reveal come in here.
+          const base = window._adminQaPending || window._adminQaQueue || q;
+          window._adminQaPending = null;
+          window._adminQaBusy = null;
+          window._adminQaQueue = base.filter(r => r.id !== docId);
           const nq = window._adminQaQueue;
           window._adminQaCur = (nq[at] || nq[0] || {}).id || null;
           showAdminMsg(_qaTargets().msg, 'Answered ✓' + (nq.length ? ' — next one up' : ' — queue clear'), 'success');
@@ -36506,6 +36571,8 @@ window.fmtHeight = fmtHeight;
         })
         .catch(e => {
           settled = true; clearTimeout(t1); clearTimeout(t2);
+          window._adminQaBusy = null;
+          if (window._adminQaPending) { const p = window._adminQaPending; window._adminQaPending = null; window._adminQaQueue = p.some(r => r.id === docId) ? p : (window._adminQaQueue || q); }
           if (btn) { btn.disabled = false; btn.textContent = entry.data.type === 'lineup' ? 'CONFIRM LINEUP' : 'CONFIRM PICK'; }
           showAdminMsg(_qaTargets().msg, 'Answer error: ' + e.message, 'error');
         });
@@ -36518,11 +36585,55 @@ window.fmtHeight = fmtHeight;
       window._adminQaRotate(1);
     };
 
+    // Open queue = a live Firestore listener (Jack 11-08 "make sure the queue
+    // updates live"): new questions, and ones answered or deleted on another
+    // device, show up without a REFRESH. One listener per list element; a
+    // re-load with it already running just redraws from the latest rows.
+    let _adminQaUnsub = null, _adminQaListenEl = null, _adminQaAgoTimer = 0;
+    function _adminQaUnlisten() {
+      if (_adminQaUnsub) { try { _adminQaUnsub(); } catch (_) {} }
+      _adminQaUnsub = null; _adminQaListenEl = null;
+      clearInterval(_adminQaAgoTimer); _adminQaAgoTimer = 0;
+    }
+    function _adminQaListen(db, listEl, msgEl) {
+      if (_adminQaUnsub && _adminQaListenEl === listEl) {
+        if (!window._adminQaBusy && typeof window._adminQaRevealResolve !== 'function') _adminQaRenderQueue();
+        return;
+      }
+      _adminQaUnlisten();
+      _adminQaListenEl = listEl;
+      listEl.innerHTML = '<div style="font-size:.72rem;color:var(--text2)">Loading…</div>';
+      let first = true;
+      _adminQaUnsub = db.collection('qa_questions').where('status', '==', 'open').limit(100).onSnapshot(snap => {
+        if (window._adminQaView !== 'open' || _adminQaListenEl !== listEl) return;
+        const rows = [];
+        snap.forEach(d => rows.push({ id: d.id, data: d.data() }));
+        // QUEUE: premium → line skips → free, oldest first within each.
+        rows.sort((a, b) => (_adminQaTierRank(a.data) - _adminQaTierRank(b.data)) || (a.data.createdAt || '').localeCompare(b.data.createdAt || ''));
+        const prev = (window._adminQaQueue || []).length;
+        _adminQaApplyRows(rows);
+        if (first) {
+          first = false;
+          if (rows.length) showAdminMsg(msgEl, rows.length + ' in the queue — premium first, then line skips, then free (oldest first) · updates live', 'success');
+        } else if (rows.length > prev) {
+          showAdminMsg(_qaTargets().msg, (rows.length - prev) + ' new question' + (rows.length - prev > 1 ? 's' : '') + ' in the queue', 'success');
+        }
+      }, e => {
+        _adminQaUnlisten();
+        showAdminMsg(_qaTargets().msg, 'Live queue error: ' + e.message + ' — tap REFRESH', 'error');
+      });
+      // Keep the "2d ago" stamps honest between snapshots.
+      _adminQaAgoTimer = setInterval(() => {
+        if (window._adminQaView === 'open' && document.contains(listEl) && !window._adminQaBusy && typeof window._adminQaRevealResolve !== 'function' && (window._adminQaQueue || []).length) _adminQaRenderQueueLite();
+      }, 60000);
+    }
     function _adminQaLoad(status) {
-      const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+      const db =(typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
       const { list: qaListEl, msg: qaMsg } = _qaTargets();
       if (!db || !qaListEl) { showAdminMsg(_qaTargets().msg, 'Database not available', 'error'); return; }
       window._adminQaView = status;
+      if (status === 'open') { _adminQaListen(db, qaListEl, qaMsg); return; }
+      _adminQaUnlisten();
       qaListEl.innerHTML = '<div style="font-size:.72rem;color:var(--text2)">Loading…</div>';
       db.collection('qa_questions').where('status', '==', status).limit(status === 'open' ? 100 : 25).get()
         .then(snap => {
@@ -74882,8 +74993,14 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const h = document.documentElement;
       const dockW = h.classList.contains('aj-qhide') ? 0 : (window.innerWidth >= 1100 ? 300 : window.innerWidth >= 700 ? 240 : 0);
       h.style.setProperty('--aj-dock-w', dockW + 'px');
+      // The operator strip gets its own strip under the stage + queue (it used
+      // to slide up over the stage bottom, Jack 11-08); offsetHeight ignores
+      // the slide-away transform, and a wrapped strip on a narrow window counts.
+      const oaBar = document.getElementById('ajOnAirBar');
+      const barH = oaBar ? Math.ceil(oaBar.offsetHeight) : 0;
+      h.style.setProperty('--aj-barh', barH + 'px');
       h.style.setProperty('--aj-aw', Math.max(0, window.innerWidth - dockW) + 'px');
-      h.style.setProperty('--aj-ah', window.innerHeight + 'px');
+      h.style.setProperty('--aj-ah', Math.max(0, window.innerHeight - barH) + 'px');
       if ((dockW > 0) !== h.classList.contains('aj-qdock')) {
         h.classList.toggle('aj-qdock', dockW > 0);
         if (typeof window._adminQaRenderQueue === 'function' && document.querySelector('#ajInboxList .aj-qwrap')) { window._adminQaRenderQueue(); return; } // re-render moves the queue and re-fits

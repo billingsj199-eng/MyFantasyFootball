@@ -3580,7 +3580,9 @@ html.aj-onair .aj-q-empty{font-size:1.4rem;padding:60px 0;text-align:center}
    html[data-aj-aspect]); app.js _qaOnAirFit scales the stage content to fit.
    Operator chrome shows only while html.aj-ctl (mouse moving / on a control). */
 html.aj-onair{overflow:hidden}
-html.aj-onair #ajInbox{position:fixed;inset:0;z-index:40;display:flex!important;align-items:stretch;justify-content:flex-start;background:#000}
+/* The bottom --aj-barh strip (measured by app.js) is kept free for the operator
+   strip, so it never covers the stage or the queue (Jack 11-08 "on air covering bottom") */
+html.aj-onair #ajInbox{position:fixed;inset:0;z-index:40;display:flex!important;align-items:stretch;justify-content:flex-start;background:#000;box-sizing:border-box;padding-bottom:var(--aj-barh,40px)}
 html.aj-onair:not(.aj-ctl) #ajInbox{cursor:none}
 /* Stage area = the window minus the queue column (--aj-aw × --aj-ah, set by app.js); the stage centres in it */
 html.aj-onair #ajInboxList{position:relative;overflow:hidden;display:block!important;flex:0 0 auto;margin:auto;width:var(--aj-aw,100vw);height:var(--aj-ah,100vh);background:radial-gradient(1200px 600px at 50% -10%,#1e293b 0%,#0b1120 55%,#05080f 100%)}
@@ -3612,7 +3614,7 @@ html.aj-onair .aj-onair-keys{font-size:.72rem}
    chrome, lifted above the strip (--aj-s = the stage scale, set by app.js) */
 html.aj-onair .aj-q-bar,html.aj-onair .aj-reveal-bar{position:absolute;left:0;right:0;bottom:0;margin:0;padding:14px 24px 18px;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.9) 40%);z-index:6}
 html.aj-onair .aj-q-bar{opacity:0;pointer-events:none;transition:opacity .25s ease}
-html.aj-onair.aj-ctl .aj-q-bar{opacity:1;pointer-events:auto;bottom:calc(52px / var(--aj-s,1))}
+html.aj-onair.aj-ctl .aj-q-bar{opacity:1;pointer-events:auto}
 /* Tall stage (Jack 11-04 "make the players smaller width so we can put them
    next to each other"): two narrower cards side by side, compact header */
 html.aj-onair[data-aj-aspect="916"] .aj-choices.aj-choices-v,html.aj-onair[data-aj-aspect="916"] .aj-choices.aj-choices-trade{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -3635,7 +3637,7 @@ html.aj-onair.aj-qopen #ajInboxList .aj-qside{display:flex}
    column on the right, outside the stage (the stage is sized to the space
    left of it) — click a row to bring it up, ↑↓ keys; Q hides the column */
 .aj-onair-queue{display:none}
-html.aj-onair.aj-qdock .aj-onair-queue{display:block;flex:0 0 var(--aj-dock-w,300px);width:var(--aj-dock-w,300px);height:100vh;overflow:auto;box-sizing:border-box;padding:14px 10px 60px;background:#000;border-left:1px solid rgba(255,255,255,.08);z-index:48;order:2}
+html.aj-onair.aj-qdock .aj-onair-queue{display:block;flex:0 0 var(--aj-dock-w,300px);width:var(--aj-dock-w,300px);height:auto;overflow:auto;box-sizing:border-box;padding:14px 10px 60px;background:#000;border-left:1px solid rgba(255,255,255,.08);z-index:48;order:2}
 html.aj-onair.aj-qdock .aj-onair-queue::before{content:'YOUR EYES ONLY · outside the stage';display:block;font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--text2);padding:0 6px 6px}
 .aj-onair-queue .aj-qside{padding:12px;border-radius:14px}
 .aj-onair-queue .aj-qside-h{font-size:1.15rem}

@@ -36239,7 +36239,8 @@ window.fmtHeight = fmtHeight;
         '</div>';
       if (x.league && x.league.name) {
         html += '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:4px">🔗 ' + _qaAdminEsc(x.league.name) +
-          (x.league.fmt ? ' · ' + _qaAdminEsc(x.league.fmt) : '') + '</div>';
+          (x.league.fmt ? ' · ' + _qaAdminEsc(x.league.fmt) : '') +
+          (x.league.rec ? ' · <b class="aj-q-rec" title="Their record when they asked">📊 ' + _qaAdminEsc(x.league.rec) + '</b>' : '') + '</div>';
       }
       if (x.q) html += '<div style="font-size:.72rem;color:var(--text);font-style:italic;margin-bottom:6px">"' + _qaAdminEsc(x.q) + '"</div>';
       // Rank / projection / lines under each player (core _ajInfoHtml; the
@@ -36287,7 +36288,8 @@ window.fmtHeight = fmtHeight;
         '<b>' + _qaAdminEsc(x.name || 'Member') + '</b>' +
         '<span class="aj-q-when">' + _qaAdminEsc(_adminQaAgo(x.createdAt)) + ' · week ' + _qaAdminEsc(x.weekIdx) + '</span></div>';
       if (x.league && x.league.name) {
-        html += '<div class="aj-q-league">🔗 ' + _qaAdminEsc(x.league.name) + (x.league.fmt ? ' · ' + _qaAdminEsc(x.league.fmt) : '') + '</div>';
+        html += '<div class="aj-q-league">🔗 ' + _qaAdminEsc(x.league.name) + (x.league.fmt ? ' · ' + _qaAdminEsc(x.league.fmt) : '') +
+          (x.league.rec ? ' · <b class="aj-q-rec" title="Their record when they asked">📊 ' + _qaAdminEsc(x.league.rec) + '</b>' : '') + '</div>';
       }
       if (x.q) html += '<div class="aj-q-note">"' + _qaAdminEsc(x.q) + '"</div>';
       let confirmLbl;
@@ -36323,7 +36325,7 @@ window.fmtHeight = fmtHeight;
         confirmLbl = 'CONFIRM PICK';
       }
       html += '<div class="aj-q-bar">' +
-        '<input type="text" id="adminQaNote-' + safeId + '" class="aj-input aj-q-noteinp" placeholder="Optional note to send with your ' + (x.type === 'lineup' ? 'lineup' : 'pick') + '" maxlength="1000">' +
+        '<input type="text" id="adminQaNote-' + safeId + '" class="aj-input aj-q-noteinp" placeholder="Optional note to send with your ' + (x.type === 'lineup' ? 'lineup' : 'pick') + '" maxlength="1000" oninput="window._adminQaNoteInput(\'' + safeId + '\',this)">' +
         '<button type="button" id="adminQaConfirm-' + safeId + '" class="aj-q-confirm" onclick="window._adminQaConfirm(\'' + safeId + '\')"' + (x.type === 'lineup' ? '' : ' disabled') + '>' + confirmLbl + '</button>' +
         '<button type="button" class="aj-q-skip" onclick="window._adminQaSkip(\'' + safeId + '\')" title="Show the next question — this one keeps its place in the queue">SKIP</button>' +
         '<button type="button" class="aj-q-del" onclick="window._adminQaDelete(\'' + safeId + '\')" title="Delete question (frees the member\'s weekly slot)">✕</button>' +
@@ -36359,8 +36361,23 @@ window.fmtHeight = fmtHeight;
       const docked = !!dock && document.documentElement.classList.contains('aj-onair') && document.documentElement.classList.contains('aj-qdock');
       if (dock) dock.innerHTML = docked ? side : '';
       list.innerHTML = '<div class="aj-qwrap"><div class="aj-qmain">' + _adminQaQueueCard(cur.id, cur.data, q.length) + upnext + '</div>' + (docked ? '' : side) + '</div>';
+      _adminQaRestore(cur.id, cur.data);
       fit();
     }
+    // Picked tile + typed note survive full redraws (Jack 2026-11-09, "it just
+    // deselects"): live-queue snapshots, auth / page-enter reloads and ON AIR
+    // re-fits all rebuild the card, which used to drop the .sel class Confirm
+    // reads. Kept per question id, like the lineup slots in _adminQaSlotState.
+    function _adminQaRestore(docId, x) {
+      const note = (window._adminQaNotes || {})[docId];
+      const noteEl = document.getElementById('adminQaNote-' + docId);
+      if (noteEl && note) noteEl.value = note;
+      const pick = (window._adminQaPicks || {})[docId];
+      if (x.type !== 'lineup' && typeof pick === 'number' && pick < (x.options || []).length) window._adminQaSelect(docId, pick);
+    }
+    window._adminQaNoteInput = function(docId, el) {
+      (window._adminQaNotes = window._adminQaNotes || {})[docId] = el.value;
+    };
     window._adminQaRenderQueue = _adminQaRenderQueue;
     function _adminQaSideHtml(q, ci) {
       return '<aside class="aj-qside"><div class="aj-qside-h">QUEUE <span>(' + q.length + ')</span></div>' +
@@ -36459,6 +36476,7 @@ window.fmtHeight = fmtHeight;
     window._adminQaSelect = function(docId, idx) {
       const card = document.getElementById('adminQaCard-' + docId);
       if (!card) return;
+      (window._adminQaPicks = window._adminQaPicks || {})[docId] = idx;
       let picked = null;
       card.querySelectorAll('.aj-choice').forEach(b => {
         const on = b.getAttribute('data-i') === String(idx);
@@ -36559,6 +36577,8 @@ window.fmtHeight = fmtHeight;
           window._adminQaPending = null;
           window._adminQaBusy = null;
           window._adminQaQueue = base.filter(r => r.id !== docId);
+          if (window._adminQaPicks) delete window._adminQaPicks[docId];
+          if (window._adminQaNotes) delete window._adminQaNotes[docId];
           const nq = window._adminQaQueue;
           window._adminQaCur = (nq[at] || nq[0] || {}).id || null;
           showAdminMsg(_qaTargets().msg, 'Answered ✓' + (nq.length ? ' — next one up' : ' — queue clear'), 'success');
@@ -73728,6 +73748,27 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     return fmtParts.join(' · ');
   }
 
+  // The asker's record in the attached league (2026-11-09, Jack): "6-3 · 2nd
+  // of 12 · PF 1104.2" from the synced snapshot's wins/losses/fpts. Standing =
+  // win% then PF, same order as the My Teams standings. '' before any game is
+  // played (all 0-0) or when the snapshot has no "my team".
+  function _qaRecordStr(lg) {
+    const teams = lg && Array.isArray(lg.teams) ? lg.teams.filter(Boolean) : [];
+    const me = teams.find(t => t.isMyTeam);
+    if (!me) return '';
+    const gp = t => (t.wins || 0) + (t.losses || 0) + (t.ties || 0);
+    if (!teams.some(t => gp(t) > 0)) return '';
+    const pct = t => gp(t) ? ((t.wins || 0) + 0.5 * (t.ties || 0)) / gp(t) : 0;
+    const ranked = teams.slice().sort((a, b) => (pct(b) - pct(a)) || ((Number(b.fpts) || 0) - (Number(a.fpts) || 0)));
+    const rank = ranked.indexOf(me) + 1;
+    const ord = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'));
+    let s = (me.wins || 0) + '-' + (me.losses || 0) + (me.ties ? '-' + me.ties : '');
+    if (rank > 0 && teams.length > 1) s += ' · ' + ord(rank) + ' of ' + teams.length;
+    if ((Number(me.fpts) || 0) > 0) s += ' · PF ' + (Math.round(Number(me.fpts) * 10) / 10).toFixed(1);
+    return s.slice(0, 60);
+  }
+  window._qaRecordStr = _qaRecordStr;
+
   function _qaLeagueOptions(selectedIdx) {
     const leagues = window._mtSavedLeagues || [];
     let html = '<option value="-1"' + (selectedIdx < 0 ? ' selected' : '') + '>No league attached</option>';
@@ -73746,9 +73787,12 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       return '<div class="aj-league-bar"><span class="aj-lbl">YOUR LEAGUE</span>' +
         '<span class="aj-league-empty">No synced leagues yet. <a href="#myteams" onclick="switchPage(\'myteams\');return false">Sync one on My Teams</a> so Jack sees your roster.</span></div>';
     }
+    const rec = _qaRecordStr(_qaSelLeague());
     return '<div class="aj-league-bar"><label class="aj-lbl" for="qaLeague">YOUR LEAGUE</label>' +
       '<select id="qaLeague" onchange="window._qaLeagueChanged()" title="Jack sees this league\'s roster and scoring with your question">' +
-      _qaLeagueOptions(_qaSelLeagueIdx()) + '</select></div>';
+      _qaLeagueOptions(_qaSelLeagueIdx()) + '</select>' +
+      (rec ? '<span class="aj-league-rec" title="Your record in this league — Jack sees it with your question">📊 ' + _jtEsc(rec) + '</span>' : '') +
+      '</div>';
   }
 
   // START/SIT · TRADE · LINEUP OPTIMIZER picker. Start/sit + lineup share
@@ -73906,8 +73950,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   //  - UP NEXT strip + an empty-queue CTA for viewers (main.css .aj-upnext).
   // Keys: 1-4 pick a tile (or open slot N on a lineup), Enter confirm (NEXT
   // during the reveal), N next, S skip, B bonus question, Q queue drawer,
-  // A stage shape, F fullscreen, Esc exit. Remembered (localStorage aj_onair,
-  // aj_onair_aspect) so a refresh mid-stream stays on air.
+  // A stage shape, F fullscreen, Esc exit. Remembered (sessionStorage aj_onair
+  // — this tab only; localStorage aj_onair_aspect) so a refresh mid-stream
+  // stays on air without turning other open windows on air.
   const _QA_ASPECTS = ['fit', '169', '11', '45', '916'];
   function _qaOnAirApply(on) {
     document.documentElement.classList.toggle('aj-onair', on);
@@ -74083,7 +74128,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   window._qaOnAir = function(on) {
     if (!_qaIsAdmin()) return;
     if (on == null) on = !document.documentElement.classList.contains('aj-onair');
-    _qaLsSet('aj_onair', on ? '1' : '0');
+    _qaOnAirSsSet(on ? '1' : '0');
     _qaOnAirApply(on);
     if (on) {
       _qaLsSet('aj_admin_view', 'inbox');
@@ -74101,11 +74146,27 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     } catch (_) {}
   };
   // Restore on load (admin only — _qaAdminSync runs once the account resolves).
-  const _qaOnAirRestore = () => { if (_qaIsAdmin() && _qaLsGet('aj_onair') === '1' && !document.documentElement.classList.contains('aj-onair')) window._qaOnAir(true); };
+  // Per TAB, not per browser (Jack 2026-11-09, "opens up the on air on both
+  // when I want to only open on one"): localStorage is shared by every tab /
+  // window, and _qaAdminSync re-runs this on each panel render, so ON AIR in
+  // one window flipped every other open window on air too. sessionStorage is
+  // this tab's alone and still survives a refresh mid-stream. The old shared
+  // localStorage flag is dropped so it can't turn other tabs on.
+  function _qaOnAirSsGet() { try { return sessionStorage.getItem('aj_onair'); } catch (_) { return null; } }
+  function _qaOnAirSsSet(v) { try { sessionStorage.setItem('aj_onair', v); } catch (_) {} }
+  try { localStorage.removeItem('aj_onair'); } catch (_) {}
+  const _qaOnAirRestore = () => { if (_qaIsAdmin() && _qaOnAirSsGet() === '1' && !document.documentElement.classList.contains('aj-onair')) window._qaOnAir(true); };
   document.addEventListener('keydown', e => {
     if (!document.documentElement.classList.contains('aj-onair')) return;
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     const t = e.target;
+    // Queue note box (Jack 2026-11-09, "closes the moment I type"): letters
+    // must type, not fire Q/A/F/B/S/1-9. Only Enter (= CONFIRM) and Escape
+    // (= leave the box, stay on air) act from inside it.
+    if (t && t.tagName === 'INPUT' && t.classList.contains('aj-q-noteinp')) {
+      if (e.key === 'Escape') { e.preventDefault(); t.blur(); return; }
+      if (e.key !== 'Enter') return;
+    }
     const typing = t && (t.tagName === 'TEXTAREA' || t.isContentEditable || (t.tagName === 'INPUT' && !t.classList.contains('aj-q-noteinp')));
     if (typing) return;
     const q = window._adminQaQueue || [];
@@ -74705,7 +74766,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     }
     return body +
       (x.q ? '<div style="font-size:.6875rem;color:var(--text2);font-style:italic;margin-top:2px">"' + _jtEsc(x.q) + '"</div>' : '') +
-      (x.league && x.league.name ? '<div style="font-size:.6875rem;color:var(--text2);margin-top:3px">🔗 ' + _jtEsc(x.league.name) + (x.league.fmt ? ' · ' + _jtEsc(x.league.fmt) : '') + '</div>' : '') +
+      (x.league && x.league.name ? '<div style="font-size:.6875rem;color:var(--text2);margin-top:3px">🔗 ' + _jtEsc(x.league.name) + (x.league.fmt ? ' · ' + _jtEsc(x.league.fmt) : '') + (x.league.rec ? ' · 📊 ' + _jtEsc(x.league.rec) : '') + '</div>' : '') +
       (x.status === 'answered' && x.answer ? '<div style="margin-top:6px;padding:7px 9px;background:rgba(245,158,11,.08);border-left:3px solid var(--accent);border-radius:4px;font-size:.72rem;color:var(--text)"><b>Jack:</b> ' + _jtEsc(x.answer) + '</div>' : '') +
       (x.status !== 'answered' ? '<div style="font-size:.6875rem;color:var(--text2);font-style:italic;margin-top:4px">Jack usually answers within a day or two — his ' + (x.type === 'lineup' ? 'lineup' : 'pick') + ' will show up right here.</div>' : '') +
       _qaSkipHtml(x);
@@ -74794,6 +74855,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         name: String(lg.name || 'League').slice(0, 80),
         fmt: _qaLeagueFmt(lg, true).slice(0, 80)
       };
+      const rec = _qaRecordStr(lg);
+      if (rec) payload.league.rec = rec;
       const roster = _qaMyPlayers(lg);
       if (roster.length) payload.roster = roster.slice(0, 60);
       // Trades carry both teams so Jack can pop either roster open and see
@@ -74818,9 +74881,16 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     // rules deny update, which is exactly the weekly quota. Lineup uses the
     // start/sit slot (they share one question a week).
     // Trade `slots` (lineup before/after view) needs the 2026-11-04 rules; if
-    // the rules deploy lands after the site, resend once without them.
+    // the rules deploy lands after the site, resend once without them. Same
+    // for league.rec (the asker's record, 2026-11-09 rules).
     const send = () => db.collection('qa_questions').doc(docId).set(payload).catch(e => {
-      if (e && e.code === 'permission-denied' && type === 'trade' && payload.slots) { delete payload.slots; return db.collection('qa_questions').doc(docId).set(payload); }
+      const tradeSlots = type === 'trade' && payload.slots;
+      const rec = payload.league && payload.league.rec;
+      if (e && e.code === 'permission-denied' && (tradeSlots || rec)) {
+        if (tradeSlots) delete payload.slots;
+        if (rec) delete payload.league.rec;
+        return db.collection('qa_questions').doc(docId).set(payload);
+      }
       throw e;
     });
     send()

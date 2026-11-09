@@ -25352,6 +25352,10 @@ function switchPage(page) {
   try {
     if (typeof window.gtag === 'function') {
       window.gtag('event', 'page_view', { page_path: '/' + (page || 'rankings'), page_title: page || 'rankings' });
+      // Signed-out Account shows the plan cards directly (2026-11-09), so count that as a premium view.
+      if (page === 'account' && !document.body.classList.contains('mff-signed-in')) {
+        window.gtag('event', 'premium_view', { ctx: 'signedout' });
+      }
     }
   } catch(_) {}
   _pageEnterHooks(page);
@@ -25722,9 +25726,15 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
     ['#btnSave', () => ['ranks_save', { version: typeof currentVersion === 'string' ? currentVersion : '' }]],
     ['#authGoogle', () => ['sign_in_start', { method: 'google' }]],
     ['#authSubmit', () => ['sign_in_start', { method: 'email' }]],
-    ['#globalPassBtn', () => ['premium_cta', { source: 'globalPassBtn', page: page() }]],
+    // 2026-11-09: the CTA id rides in `cta`, NOT `source` — GA4 treats `source`
+    // (and medium/campaign) as reserved traffic-source params, so a CTA click
+    // was rewriting the session's acquisition source to "globalPassBtn".
+    ['#globalPassBtn', () => ['premium_cta', { cta: 'globalPassBtn', page: page() }]],
     ['#globalAuthBar button', b => /sign\s*in/i.test(b.textContent) ? ['sign_in_open', { page: page() }] : null],
-    ['#premiumUpgradeBtn, .jt-locked-btn, .md-rank-src-tab.locked, .premium-wall-btn', b => ['premium_cta', { source: b.id || (b.className || '').split(' ')[0], page: page() }]],
+    ['#premiumUpgradeBtn, .jt-locked-btn, .md-rank-src-tab.locked, .premium-wall-btn', b => ['premium_cta', { cta: b.id || (b.className || '').split(' ')[0], page: page() }]],
+    // Signed in only: signed out, switchPage('account') already sent premium_view
+    // ctx=signedout and _openPremiumUpgrade's programmatic (hidden) tab click would double-count.
+    ['.acct-tab[data-acct-tab="premium"]', () => document.body.classList.contains('mff-signed-in') ? ['premium_view', { ctx: 'tab' }] : null],
     ['#mtSleeperImportBtn, #mtEspnImportBtn, #mtYahooImportBtn', b => ['league_import', { platform: b.id.replace(/^mt|ImportBtn$/g, '').toLowerCase() }]],
     ['#tcvFullscreenBtn', () => ['tier_cards_fullscreen', {}]],
     ['#sstDropdown', () => ['startsit_add', {}]],
@@ -42210,6 +42220,12 @@ window.fmtHeight = fmtHeight;
     // The Account page swaps its settings panels for a sign-in prompt when
     // signed out (CSS on this class); they used to show and just error.
     document.body.classList.toggle('mff-signed-in', !!user);
+    // Signed-out visitors still see the plan cards (2026-11-09); the button says
+    // what will happen. Its click handler stores the plan and opens sign-in.
+    try {
+      const ub = document.getElementById('premiumUpgradeBtn');
+      if (ub && !ub.disabled) ub.textContent = user ? 'UPGRADE NOW' : 'SIGN IN TO BUY';
+    } catch (_) {}
     // Re-check admin gating for the WEEKLY format tab — its IIFE-internal auth listener fails to
     // register because firebase.auth() throws when called before initializeApp.
     if (typeof window._weeklyAdminCheck === 'function') {

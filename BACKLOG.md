@@ -1,8 +1,20 @@
 # MyFantasyFootball — Backlog
 
-_Last updated: 2026-08-28_
+_Last updated: 2026-11-20_
 
 Running backlog for myfantasyfootball.co. Items are grouped by what's blocking them, then by effort. **Read DEPLOY_NOTES.md first** if any "Shipped" item below mentions Firestore rules — those features won't work in prod until rules are pushed.
+
+---
+
+## Built 2026-11-09, rebased 2026-11-20 — NOT LIVE until merged (site-audit proposals 1, 2, 4 = conversion queue C-20261109-1/2/3; Jack approved from `site_agent/reports/audit_2026-11-09.md`)
+
+Built on `worktree-site-audit-1109` (44e6c3d3, never merged); cherry-picked onto 11-20 `main` as branch `worktree-conversion-1109-ship` with `?v=2026-11-20-passview` on app.js + main.css (preload AND real tags). 11-20 fix: `premium_view ctx=tab` fires only signed in (signed out, `_openPremiumUpgrade`'s hidden-tab click double-counted on top of `ctx=signedout`). Re-verified signed out on a worktree preview at 1280px + 375px (gtag stubbed): header CTA -> plan cards + SIGN IN TO BUY -> auth modal with `mff_pending_upgrade`; `?premium_cancel=1` -> plan cards. Signed-in checkout hand-off still needs Jack.
+
+- **GA4 attribution fix** — `_mffTrack` `premium_cta` sent the CTA id as `source`, which GA4 treats as a reserved traffic-source param: 686 sessions in the 10-12..11-08 window were attributed to "globalPassBtn" / "premium-wall-btn" / "jt-locked-btn" / "md-rank-src-tab" and the Unassigned channel was +4650%. Param renamed to `cta`; `cta` registered as a GA4 custom dimension (`ga4_pull.py setup-dims`, fills from 11-09). New `premium_view` event (`ctx: tab | signedout`). `site_agent/ga4_pull.py` also gained a Campaigns (`sessionCampaignName`) table + campaign key-events table so UTM bets in `growth_<date>.md` can be scored.
+- **Signed-out Season Pass view** — `#account` signed out used to show only "Sign in to manage your account" (header ★ button + GET PREMIUM walls landed there: 354 CTA users, ~11 back from Stripe). Now the Premium panel stays visible signed out (CSS in main.css by `#acctSignedOutNote`), plan cards + price render, FREE PLAN badge + redeem box hide (`#premiumRedeemBox`), the button reads **SIGN IN TO BUY** (label synced in `updateAccountUI`) and its existing handler stores `mff_pending_upgrade` → sign-in → checkout. `_openSeasonPass()` preselects the Season card signed out too. BEST VALUE badge got `white-space:nowrap` (wrapped over YEARLY on narrow cards).
+- **In-season title / meta / og / tour copy** — static tags now lead with "Weekly Rankings, Start/Sit & Trade Calculator (Free)"; the sidebar phase script (index.html, `nav-draft-phase`) swaps `document.title` + meta description to draft-season copy Feb–Aug (skipped on `?player=` / `?ranks=` / `?daily=` URLs, which set their own). og:/twitter: tags are read without JS — **seasonal checklist: flip them by hand each Feb and Sep** (joins `_SEASON_KICKS_2026` + Season Pass dates). Tour welcome copy is now year-round.
+
+Still open from the 11-09 audit (not approved yet): #3 default WEEKLY board in-season, #5 Ask Jack signed-out hook, #6 checkout_start/return events, #7 Start/Sit Clear button + "add my starters", #8 ranks_edit_start, #9 app-split P2, #10 MORE-sheet draft label. Jack actions: GA4 unwanted referral `checkout.stripe.com`; publish the mff-social-agent OAuth app (token dies every 7 days in Testing status).
 
 ---
 

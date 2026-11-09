@@ -502,7 +502,9 @@ service cloud.firestore {
                     && (!('q' in request.resource.data) || (request.resource.data.q is string && request.resource.data.q.size() <= 1000))
                     && (!('league' in request.resource.data) || (
                           request.resource.data.league is map
-                          && request.resource.data.league.keys().hasOnly(['id','name','fmt'])
+                          && request.resource.data.league.keys().hasOnly(['id','name','fmt','rec'])
+                          // rec: the asker's record in that league ("6-3 · 2nd of 12 · PF 1104.2", 2026-11-09).
+                          && (!('rec' in request.resource.data.league) || (request.resource.data.league.rec is string && request.resource.data.league.rec.size() <= 60))
                           && (!('id' in request.resource.data.league) || (request.resource.data.league.id is string && request.resource.data.league.id.size() <= 60))
                           && (!('name' in request.resource.data.league) || (request.resource.data.league.name is string && request.resource.data.league.name.size() <= 80))
                           && (!('fmt' in request.resource.data.league) || (request.resource.data.league.fmt is string && request.resource.data.league.fmt.size() <= 80))

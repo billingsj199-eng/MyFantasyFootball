@@ -3392,6 +3392,8 @@ tbody td{font-size:.8125rem}
 .aj-lbl{font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text2);white-space:nowrap}
 .aj-league-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;margin-bottom:12px;background:var(--surface2,rgba(255,255,255,.03));border:1px solid var(--border);border-radius:10px}
 .aj-league-bar select{flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 9px;font-size:.78rem;min-height:40px}
+.aj-league-rec{font-size:.74rem;font-weight:700;color:var(--text);white-space:nowrap}
+.aj-q-rec{color:var(--text);font-weight:700}
 .aj-league-empty{font-size:.74rem;color:var(--text2)}
 .aj-league-empty a{color:var(--accent)}
 .aj-types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}

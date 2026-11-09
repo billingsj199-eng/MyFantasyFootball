@@ -1,6 +1,102 @@
 {
- "updated": "2026-11-08T23:13:21Z",
+ "updated": "2026-11-09T23:16:26Z",
  "items": [
+  {
+   "player": "Puka Nacua",
+   "team": "LAR",
+   "pos": "WR",
+   "date": "2026-11-09",
+   "headline": "Placed on IR with MCL/PCL knee sprains plus turf toe, out at least 4 games",
+   "take": "Season-altering loss for a top-5 fantasy WR; earliest return is Week 15 vs. Dallas - drop to waivers/IR slot and target the Rams' next-up WR off the wire.",
+   "url": "https://sicscore.com/news/rams-wr-puka-nacua-placed-on-ir-with-pcl-sprain-will-miss-at-least-four-games",
+   "tag": "injury",
+   "avail": {
+    "k": "ret",
+    "wk": 15
+   },
+   "src_type": "insider"
+  },
+  {
+   "player": "Puka Nacua",
+   "team": "LAR",
+   "pos": "WR",
+   "date": "2026-11-09",
+   "headline": "Dr. Chao flagged PCL re-injury risk on same knee pre-MRI",
+   "take": "Chao noted this is the same knee as Nacua's 2024 PCL sprain that cost him 5 games - his instinct to expect Nacua out tracked with the team's eventual IR move.",
+   "url": "https://www.yardbarker.com/nfl/articles/nfl_doctor_drops_worrying_update_on_puka_nacuas_knee_injury_slow_motion_footage_does_not_look_good/s1_17759_44534734",
+   "tag": "injury",
+   "src_type": "expert"
+  },
+  {
+   "player": "Cam Skattebo",
+   "team": "NYG",
+   "pos": "RB",
+   "date": "2026-11-08",
+   "headline": "Ruled out and missed Week 9 vs. Eagles with hamstring",
+   "take": "Devin Singletary handled the workload in his absence - monitor Wednesday's Week 10 report before trusting Skattebo again.",
+   "url": "https://www.giants.com/news/inactives-new-york-giants-philadelphia-eagles-week-9-cam-skattebo-charlie-jones-tyrone-tracy-jr",
+   "tag": "injury",
+   "avail": {
+    "k": "out",
+    "wk": 9
+   },
+   "src_type": "team"
+  },
+  {
+   "player": "J.J. McCarthy",
+   "team": "NYG",
+   "pos": "QB",
+   "date": "2026-11-08",
+   "headline": "Took hard hit, briefly left Sunday's win over Eagles before returning",
+   "take": "Jameis Winston relieved him for a few snaps, but McCarthy finished the 19-11 win - no designation yet, watch Wednesday's practice report for a head-injury listing before Week 10.",
+   "url": "https://www.cbssports.com/nfl/news/nfl-week-9-inactives-injury-tracker-updates-news/live/",
+   "tag": "injury",
+   "src_type": "report"
+  },
+  {
+   "player": "Jaylen Waddle",
+   "team": "DEN",
+   "pos": "WR",
+   "date": "2026-11-08",
+   "headline": "Ruled out with concussion vs. Panthers; Broncos have Week 10 bye",
+   "take": "Enters protocol with a bye-week cushion behind him, so there's a reasonable shot he clears in time for Week 11 - treat as a bench/FLEX-only until cleared.",
+   "url": "https://www.cbssports.com/nfl/news/nfl-week-9-inactives-injury-tracker-updates-news/live/",
+   "tag": "injury",
+   "src_type": "report"
+  },
+  {
+   "player": "Luther Burden III",
+   "team": "CHI",
+   "pos": "WR",
+   "date": "2026-11-08",
+   "headline": "Suffered concussion late in Sunday's loss",
+   "take": "Rookie WR now in protocol - check Wednesday's practice report before setting Week 10 lineups.",
+   "url": "https://www.nfl.com/news/notable-injuries-news-sunday-week-9-games-2026",
+   "tag": "injury",
+   "src_type": "report"
+  },
+  {
+   "player": "Harold Fannin Jr.",
+   "team": "CLE",
+   "pos": "TE",
+   "date": "2026-11-08",
+   "headline": "Hauled in 39-yard OT touchdown from Sanders in Week 9 loss to Saints",
+   "take": "Growing rapport with Sanders gives him streamable TE1 appeal as long as Watson stays out.",
+   "url": "https://www.neworleanssaints.com/game-day/2026/reg-week9/browns-at-saints/recap",
+   "tag": "riser",
+   "src_type": "report"
+  },
+  {
+   "player": "Shedeur Sanders",
+   "team": "CLE",
+   "pos": "QB",
+   "date": "2026-11-08",
+   "headline": "Battled in first career start, Browns fall 23-22 in OT to Saints",
+   "take": "Hit Fannin for a go-ahead OT TD but the 2-point try to win it failed - enough arm talent to stay streamable in 2QB/deep leagues with Watson out, low weekly ceiling behind a shaky O-line.",
+   "url": "https://www.neworleanssaints.com/game-day/2026/reg-week9/browns-at-saints/recap",
+   "tag": "other",
+   "src_type": "report"
+  },
   {
    "player": "Shedeur Sanders",
    "team": "CLE",
@@ -1133,23 +1229,6 @@
    "tag": "injury",
    "avail": {
     "k": "season"
-   },
-   "src_type": "insider"
-  },
-  {
-   "player": "Baker Mayfield",
-   "team": "TB",
-   "pos": "QB",
-   "date": "2026-10-17",
-   "headline": "Out Week 6 vs. Steelers with dislocated thumb, expected to miss roughly 3-6 weeks total",
-   "take": "Jalon Daniels gets a third straight start \u2014 Mayfield's return is a Week 9-11 question, not a Week 6 one",
-   "url": "https://www.tsn.ca/nfl/article/buccaneers-qb-mayfield-out-at-least-three-weeks-with-thumb-injury-n1-50052996/",
-   "tag": "injury",
-   "avail": {
-    "k": "weeks",
-    "lo": 3,
-    "hi": 6,
-    "unit": "w"
    },
    "src_type": "insider"
   },

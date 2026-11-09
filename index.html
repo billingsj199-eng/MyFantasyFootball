@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-11-04-askjack27" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-09-admincleanup" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-07-tlsuffix" as="script">
+<link rel="preload" href="app.js?v=2026-11-09-admincleanup" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-11-07" as="script">
 <link rel="preload" href="data/d.js?v=2026-11-07" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-11-04-askjack27">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-09-admincleanup">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -333,7 +333,6 @@ document.addEventListener('DOMContentLoaded', function(){ if (window._fbBootAuth
     });
 })();
 </script>
-<!-- html2canvas: lazy-loaded by admin Rankings Graphic Generator (only fetched when admin uses the tool) -->
 </head>
 <body>
 <div class="noise"></div>
@@ -819,24 +818,6 @@ PREMIUM ACTIVE
 </div>
 
 <div class="acct-section">
-<div class="acct-section-title">🛠️ Gift Badge</div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem">Grant any badge to a user by email.</div>
-<div class="acct-field">
-<label class="acct-label">User Email</label>
-<input type="email" class="acct-input" id="adminGiftBadgeEmail" placeholder="user@example.com">
-</div>
-<div class="acct-field">
-<label class="acct-label">Badge</label>
-<select id="adminGiftBadgeSelect" aria-label="Badge to gift" class="acct-input" style="padding:.55rem .75rem"></select>
-</div>
-<div style="display:flex;gap:8px;margin-top:.5rem">
-<button class="acct-btn acct-btn-primary" id="adminGiftBadgeBtn">GIFT BADGE</button>
-<button class="acct-btn acct-btn-outline" id="adminRevokeBadgeBtn">REVOKE</button>
-</div>
-<div class="acct-msg" id="adminGiftBadgeMsg"></div>
-</div>
-
-<div class="acct-section">
 <div class="acct-section-title">👑 Gift Premium Access</div>
 <div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem">Grant premium access to a user by email.</div>
 <div class="acct-field">
@@ -887,236 +868,23 @@ PREMIUM ACTIVE
 </div>
 
 <div class="acct-section">
-<div class="acct-section-title">💬 Ask Jack — Q&amp;A Inbox</div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">Premium member questions (per user per week, resets Tuesday: 1 trade + 1 start/sit or lineup). LOAD OPEN QUESTIONS runs the queue, oldest first: click the winner (or tap the starters), then CONFIRM. Your answer appears on the member's Ask Jack tab.</div>
-<div style="display:flex;gap:8px;margin-bottom:.5rem">
-<button class="acct-btn acct-btn-primary" id="adminQaRefreshBtn">LOAD OPEN QUESTIONS</button>
-<button class="acct-btn acct-btn-outline" id="adminQaAnsweredBtn">RECENTLY ANSWERED</button>
+<div class="acct-section-title">🏅 Gift Badge</div>
+<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem">Grant any badge to a user by email.</div>
+<div class="acct-field">
+<label class="acct-label">User Email</label>
+<input type="email" class="acct-input" id="adminGiftBadgeEmail" placeholder="user@example.com">
 </div>
-<div class="acct-msg" id="adminQaMsg"></div>
-<div id="adminQaList" style="display:flex;flex-direction:column;gap:.6rem"></div>
+<div class="acct-field">
+<label class="acct-label">Badge</label>
+<select id="adminGiftBadgeSelect" aria-label="Badge to gift" class="acct-input" style="padding:.55rem .75rem"></select>
+</div>
+<div style="display:flex;gap:8px;margin-top:.5rem">
+<button class="acct-btn acct-btn-primary" id="adminGiftBadgeBtn">GIFT BADGE</button>
+<button class="acct-btn acct-btn-outline" id="adminRevokeBadgeBtn">REVOKE</button>
+</div>
+<div class="acct-msg" id="adminGiftBadgeMsg"></div>
 </div>
 
-<div class="acct-section">
-<div class="acct-section-title">🎨 Rankings Graphic Generator</div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
-Build a stylized PNG of your top players (uses your personal board order). Pick a position and theme, preview, then download.
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-<div class="acct-field">
-<label class="acct-label">Rankings source</label>
-<select id="adminGfxSource" aria-label="Rankings graphic source" class="acct-input" style="padding:.55rem .75rem">
-<option value="jacks" selected>Jack's</option>
-<option value="mine">My Rankings</option>
-<option value="consensus">Consensus</option>
-</select>
-</div>
-<div class="acct-field">
-<label class="acct-label">Format</label>
-<select id="adminGfxFormat" aria-label="Rankings graphic scoring format" class="acct-input" style="padding:.55rem .75rem">
-<option value="redraft" selected>Redraft</option>
-<option value="superflex">Superflex</option>
-<option value="dynasty">Dynasty 1QB</option>
-<option value="dynastysf">Dynasty SF</option>
-</select>
-</div>
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-<div class="acct-field">
-<label class="acct-label">Position</label>
-<select id="adminGfxPos" aria-label="Rankings graphic position filter" class="acct-input" style="padding:.55rem .75rem">
-<option value="QB" selected>QB</option>
-<option value="RB">RB</option>
-<option value="WR">WR</option>
-<option value="TE">TE</option>
-<option value="ROOKIE">Rookies — All</option>
-<option value="ROOKIE_QB">Rookies — QB</option>
-<option value="ROOKIE_RB">Rookies — RB</option>
-<option value="ROOKIE_WR">Rookies — WR</option>
-<option value="ROOKIE_TE">Rookies — TE</option>
-<option value="ALL">Overall</option>
-<option value="DEVY">Devy (College)</option>
-</select>
-</div>
-<div class="acct-field">
-<label class="acct-label">Player count</label>
-<select id="adminGfxCount" aria-label="Rankings graphic player count" class="acct-input" style="padding:.55rem .75rem">
-<option value="12" selected>Top 12</option>
-<option value="24">Top 24</option>
-<option value="36">Top 36</option>
-<option value="48">Top 48</option>
-</select>
-</div>
-</div>
-<div class="acct-field">
-<label class="acct-label">Players per graphic (paginates if &lt; total count)</label>
-<select id="adminGfxPerPage" aria-label="Rankings graphic players per page" class="acct-input" style="padding:.55rem .75rem">
-<option value="12" selected>12 per page</option>
-<option value="24">24 per page</option>
-<option value="36">36 per page (single image)</option>
-</select>
-</div>
-<div class="acct-field">
-<label class="acct-label">Title (use [POS] as placeholder; use | for line breaks)</label>
-<input type="text" class="acct-input" id="adminGfxTitle" aria-label="Rankings graphic title" value="2026|FANTASY [POS]|RANKINGS">
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-<div class="acct-field">
-<label class="acct-label">Header theme</label>
-<select id="adminGfxTheme" aria-label="Rankings graphic theme" class="acct-input" style="padding:.55rem .75rem">
-<option value="purple" selected>Purple</option>
-<option value="blue">Blue</option>
-<option value="red">Red</option>
-<option value="green">Green</option>
-<option value="orange">Orange</option>
-<option value="dark">Dark</option>
-</select>
-</div>
-<div class="acct-field">
-<label class="acct-label">Accent color (corner triangle)</label>
-<input type="color" class="acct-input" id="adminGfxAccent" aria-label="Rankings graphic accent color" value="#facc15" style="height:38px;padding:.2rem .35rem">
-</div>
-</div>
-<div class="acct-field">
-<label class="acct-label">Position color (the [POS] text in the title)</label>
-<input type="color" class="acct-input" id="adminGfxPosColor" aria-label="Rankings graphic position color" value="#FFD700" style="height:38px;padding:.2rem .35rem">
-</div>
-<div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
-<button class="acct-btn acct-btn-outline" id="adminGfxPreviewBtn">PREVIEW</button>
-<button class="acct-btn acct-btn-primary" id="adminGfxDownloadBtn">DOWNLOAD PNG</button>
-</div>
-<div class="acct-msg" id="adminGfxMsg"></div>
-<div id="adminGfxPreviewWrap" style="margin-top:1rem;display:none;text-align:center;background:#000;padding:1rem;border-radius:6px;overflow:auto;max-height:600px"></div>
-</div>
-
-<div class="acct-section">
-<div class="acct-section-title">🏆 Drafted Team Graphic Generator</div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
-Build a stylized PNG of one of your drafted teams — pick from saved Sleeper leagues or your Underdog portfolio.
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-<div class="acct-field">
-<label class="acct-label">Source</label>
-<select id="adminTgfxSource" aria-label="Team graphic source" class="acct-input" style="padding:.55rem .75rem">
-<option value="myteams" selected>My Teams (Sleeper)</option>
-<option value="underdog">Underdog Portfolio</option>
-</select>
-</div>
-<div class="acct-field">
-<label class="acct-label">Team / Draft</label>
-<select id="adminTgfxTeam" aria-label="Team graphic team" class="acct-input" style="padding:.55rem .75rem">
-<option value="">— select source first —</option>
-</select>
-</div>
-</div>
-<div class="acct-field">
-<label class="acct-label">Title (use | for line breaks; [TEAM] is replaced with team/league name)</label>
-<input type="text" class="acct-input" id="adminTgfxTitle" aria-label="Team graphic title" value="MY|[TEAM]|DRAFT">
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-<div class="acct-field">
-<label class="acct-label">Header theme</label>
-<select id="adminTgfxTheme" aria-label="Team graphic theme" class="acct-input" style="padding:.55rem .75rem">
-<option value="purple" selected>Purple</option>
-<option value="blue">Blue</option>
-<option value="red">Red</option>
-<option value="green">Green</option>
-<option value="orange">Orange</option>
-<option value="dark">Dark</option>
-</select>
-</div>
-<div class="acct-field">
-<label class="acct-label">Accent color (corner triangle)</label>
-<input type="color" class="acct-input" id="adminTgfxAccent" aria-label="Team graphic accent color" value="#facc15" style="height:38px;padding:.2rem .35rem">
-</div>
-</div>
-<div class="acct-field">
-<label class="acct-label">Highlight color (round numbers / brand text)</label>
-<input type="color" class="acct-input" id="adminTgfxHighlight" aria-label="Team graphic highlight color" value="#FFD700" style="height:38px;padding:.2rem .35rem">
-</div>
-<div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
-<button class="acct-btn acct-btn-outline" id="adminTgfxPreviewBtn">PREVIEW</button>
-<button class="acct-btn acct-btn-primary" id="adminTgfxDownloadBtn">DOWNLOAD PNG</button>
-</div>
-<div class="acct-msg" id="adminTgfxMsg"></div>
-<div id="adminTgfxPreviewWrap" style="margin-top:1rem;display:none;text-align:center;background:#000;padding:1rem;border-radius:6px;overflow:auto;max-height:700px"></div>
-</div>
-
-<div class="acct-section">
-<div class="acct-section-title">📊 Exposure Graphic Generator (Underdog)</div>
-<div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">
-Build a stylized PNG of your most- or least-drafted Underdog players (% exposure across your portfolio). Filter by position.
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-<div class="acct-field">
-<label class="acct-label">Mode</label>
-<select id="adminExpgfxMode" aria-label="Exposure graphic mode" class="acct-input" style="padding:.55rem .75rem">
-<option value="most" selected>Most Drafted (highest exposure)</option>
-<option value="least">Least Drafted (lowest exposure)</option>
-</select>
-</div>
-<div class="acct-field">
-<label class="acct-label">Position</label>
-<select id="adminExpgfxPos" aria-label="Exposure graphic position filter" class="acct-input" style="padding:.55rem .75rem">
-<option value="ALL" selected>All Positions</option>
-<option value="QB">QB</option>
-<option value="RB">RB</option>
-<option value="WR">WR</option>
-<option value="TE">TE</option>
-</select>
-</div>
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-<div class="acct-field">
-<label class="acct-label">Player count</label>
-<select id="adminExpgfxCount" aria-label="Exposure graphic count" class="acct-input" style="padding:.55rem .75rem">
-<option value="12" selected>Top 12</option>
-<option value="24">Top 24</option>
-<option value="36">Top 36</option>
-</select>
-</div>
-<div class="acct-field">
-<label class="acct-label">Min drafts (filter out tiny samples)</label>
-<select id="adminExpgfxMinDrafts" aria-label="Exposure graphic minimum drafts" class="acct-input" style="padding:.55rem .75rem">
-<option value="1" selected>1+ draft</option>
-<option value="3">3+ drafts</option>
-<option value="5">5+ drafts</option>
-<option value="10">10+ drafts</option>
-</select>
-</div>
-</div>
-<div class="acct-field">
-<label class="acct-label">Title (use | for line breaks; [POS] is the position label)</label>
-<input type="text" class="acct-input" id="adminExpgfxTitle" aria-label="Exposure graphic title" value="MOST|DRAFTED|[POS]">
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-<div class="acct-field">
-<label class="acct-label">Header theme</label>
-<select id="adminExpgfxTheme" aria-label="Exposure graphic theme" class="acct-input" style="padding:.55rem .75rem">
-<option value="purple" selected>Purple</option>
-<option value="blue">Blue</option>
-<option value="red">Red</option>
-<option value="green">Green</option>
-<option value="orange">Orange</option>
-<option value="dark">Dark</option>
-</select>
-</div>
-<div class="acct-field">
-<label class="acct-label">Accent color (corner triangle)</label>
-<input type="color" class="acct-input" id="adminExpgfxAccent" aria-label="Exposure graphic accent color" value="#facc15" style="height:38px;padding:.2rem .35rem">
-</div>
-</div>
-<div class="acct-field">
-<label class="acct-label">Highlight color ([POS] / % text)</label>
-<input type="color" class="acct-input" id="adminExpgfxHighlight" aria-label="Exposure graphic highlight color" value="#FFD700" style="height:38px;padding:.2rem .35rem">
-</div>
-<div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
-<button class="acct-btn acct-btn-outline" id="adminExpgfxPreviewBtn">PREVIEW</button>
-<button class="acct-btn acct-btn-primary" id="adminExpgfxDownloadBtn">DOWNLOAD PNG</button>
-</div>
-<div class="acct-msg" id="adminExpgfxMsg"></div>
-<div id="adminExpgfxPreviewWrap" style="margin-top:1rem;display:none;text-align:center;background:#000;padding:1rem;border-radius:6px;overflow:auto;max-height:700px"></div>
-</div>
 
 </div>
 
@@ -7098,7 +6866,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-07-tlsuffix"></script>
+<script defer src="app.js?v=2026-11-09-admincleanup"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

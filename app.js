@@ -74979,8 +74979,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   //  - UP NEXT strip + an empty-queue CTA for viewers (main.css .aj-upnext).
   // Keys: 1-4 pick a tile (or open slot N on a lineup), Enter confirm (NEXT
   // during the reveal), N next, S skip, B bonus question, Q queue drawer,
-  // A stage shape, F fullscreen, Esc exit. Remembered (localStorage aj_onair,
-  // aj_onair_aspect) so a refresh mid-stream stays on air.
+  // A stage shape, F fullscreen, Esc exit. Remembered (sessionStorage aj_onair
+  // — this tab only; localStorage aj_onair_aspect) so a refresh mid-stream
+  // stays on air without turning other open windows on air.
   const _QA_ASPECTS = ['fit', '169', '11', '45', '916'];
   function _qaOnAirApply(on) {
     document.documentElement.classList.toggle('aj-onair', on);
@@ -75156,7 +75157,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   window._qaOnAir = function(on) {
     if (!_qaIsAdmin()) return;
     if (on == null) on = !document.documentElement.classList.contains('aj-onair');
-    _qaLsSet('aj_onair', on ? '1' : '0');
+    _qaOnAirSsSet(on ? '1' : '0');
     _qaOnAirApply(on);
     if (on) {
       _qaLsSet('aj_admin_view', 'inbox');
@@ -75174,7 +75175,16 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     } catch (_) {}
   };
   // Restore on load (admin only — _qaAdminSync runs once the account resolves).
-  const _qaOnAirRestore = () => { if (_qaIsAdmin() && _qaLsGet('aj_onair') === '1' && !document.documentElement.classList.contains('aj-onair')) window._qaOnAir(true); };
+  // Per TAB, not per browser (Jack 2026-11-09, "opens up the on air on both
+  // when I want to only open on one"): localStorage is shared by every tab /
+  // window, and _qaAdminSync re-runs this on each panel render, so ON AIR in
+  // one window flipped every other open window on air too. sessionStorage is
+  // this tab's alone and still survives a refresh mid-stream. The old shared
+  // localStorage flag is dropped so it can't turn other tabs on.
+  function _qaOnAirSsGet() { try { return sessionStorage.getItem('aj_onair'); } catch (_) { return null; } }
+  function _qaOnAirSsSet(v) { try { sessionStorage.setItem('aj_onair', v); } catch (_) {} }
+  try { localStorage.removeItem('aj_onair'); } catch (_) {}
+  const _qaOnAirRestore = () => { if (_qaIsAdmin() && _qaOnAirSsGet() === '1' && !document.documentElement.classList.contains('aj-onair')) window._qaOnAir(true); };
   document.addEventListener('keydown', e => {
     if (!document.documentElement.classList.contains('aj-onair')) return;
     if (e.altKey || e.ctrlKey || e.metaKey) return;

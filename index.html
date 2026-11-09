@@ -86,12 +86,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-11-09-admincleanup" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-09-waivers" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-09-admincleanup" as="script">
+<link rel="preload" href="app.js?v=2026-11-09-waivers" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -102,7 +102,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-11-07" as="script">
 <link rel="preload" href="data/d.js?v=2026-11-07" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-11-09-admincleanup">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-09-waivers">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -704,7 +704,7 @@ Prospect model position filters
 </div>
 <div class="premium-feat locked">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-Ask Jack — weekly start/sit &amp; trade Q&amp;A
+Ask Jack — weekly start/sit, waiver &amp; trade Q&amp;A
 </div>
 </div>
 <div style="display:flex;gap:10px;margin-top:.5rem;justify-content:center;flex-wrap:wrap">
@@ -788,7 +788,7 @@ Prospect model position filters
 </div>
 <div class="premium-feat">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-Ask Jack — weekly start/sit &amp; trade Q&amp;A
+Ask Jack — weekly start/sit, waiver &amp; trade Q&amp;A
 </div>
 </div>
 <div id="premiumBillingInfo" style="margin-top:1rem;padding:.85rem;border-radius:8px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15)">
@@ -6866,7 +6866,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-09-admincleanup"></script>
+<script defer src="app.js?v=2026-11-09-waivers"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

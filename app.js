@@ -4998,6 +4998,7 @@ window._ajInfoSet = function(key, val) {
     el.innerHTML = el.hasAttribute('data-ros') ? _ajPcardRosBodyHtml(el.getAttribute('data-name'), el.getAttribute('data-ros') || '') : _ajPcardBodyHtml(el.getAttribute('data-name'));
   });
   if (typeof window._ajTradeFooterRefresh === 'function') window._ajTradeFooterRefresh();
+  if (typeof window._adminQaWwRefreshAll === 'function') window._adminQaWwRefreshAll(); // waiver board re-sorts
 };
 window._ajInfoSyncBar = function() {
   const o = _ajInfoOpts();
@@ -5103,6 +5104,9 @@ function _ajPlayerInfo(d, o) {
   return out;
 }
 window._ajPlayerInfo = _ajPlayerInfo;
+window._ajRankFor = _ajRankFor;     // waiver-wire board (admin inbox)
+window._ajInfoOpts = _ajInfoOpts;
+window._ajFindPlayer = _ajFindPlayer;
 const _ajEsc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 function _ajInfoHtml(text) {
   const o = _ajInfoOpts();
@@ -35938,9 +35942,11 @@ window.fmtHeight = fmtHeight;
         ? '<span style="background:rgba(59,130,246,.15);color:var(--wr);padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">🔁 TRADE</span>'
         : type === 'lineup'
         ? '<span style="background:rgba(34,197,94,.15);color:var(--green);padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">📋 LINEUP</span>'
+        : type === 'waiver'
+        ? '<span style="background:rgba(168,85,247,.15);color:#c084fc;padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">🧲 WAIVER</span>'
         : '<span style="background:rgba(245,158,11,.15);color:var(--accent);padding:2px 7px;border-radius:4px;font-size:.6875rem;font-weight:700">🔀 START/SIT</span>';
     }
-    const _adminQaTypeName = t => t === 'trade' ? 'trade' : t === 'lineup' ? 'lineup' : 'start/sit';
+    const _adminQaTypeName = t => t === 'trade' ? 'trade' : t === 'lineup' ? 'lineup' : t === 'waiver' ? 'waiver' : 'start/sit';
     // Queue tier: premium (or legacy docs with no tier) → paid line skips → free.
     const _adminQaTierRank = x => x.tier === 'free' ? 2 : x.tier === 'skip' ? 1 : 0;
     window._adminQaGiveCredit = function(docId) {
@@ -36226,6 +36232,160 @@ window.fmtHeight = fmtHeight;
       return html;
     }
 
+    // ===== WAIVER WIRE (Jack 2026-11-09) =====
+    // Jack's side of a waiver question: what they're eyeing / would cut, a
+    // BEST AVAILABLE board of the league's free agents (every active player
+    // not in x.taken — the other rosters — or x.roster) sorted by board rank
+    // (the RANKS toggle's board) or this week's projection (the PROJ toggle's
+    // scoring), with a position filter, plus their roster as ROS tiles. Tap a
+    // board / eyeing tile to mark ADD, a roster tile to mark DROP; CONFIRM
+    // writes `adds` + `drops`. State is per question id, so redraws keep it.
+    const _wwKey = s => String(s || '').toLowerCase().replace(/\s+(jr\.?|sr\.?|ii|iii|iv|v)$/i, '').replace(/[.'’\-]/g, '').replace(/\s+/g, ' ').trim();
+    function _adminQaWwState(docId, x) {
+      const S = window._adminQaWw || (window._adminQaWw = {});
+      if (!S[docId]) S[docId] = {
+        adds: Array.isArray(x.adds) ? x.adds.slice() : [],
+        drops: Array.isArray(x.drops) ? x.drops.slice() : [],
+        sort: window._adminQaWwSort || 'rank', pos: 'ALL', more: false, pool: null, proj: {}
+      };
+      return S[docId];
+    }
+    // Positions the league starts (no K slot → no kickers on the board).
+    function _adminQaWwPositions(x) {
+      const all = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+      // Only slots we can read (IDP / unknown slots would let everyone in).
+      const KNOWN = /^(QB|RB|WR|TE|K|DST|DEF|D\/ST|FLEX|SUPER_FLEX|SUPERFLEX|Q\/W\/R\/T|W\/R\/T|RB\/WR\/TE|REC_FLEX|WRRB_FLEX|W\/R|W\/T)$/;
+      const slots = (Array.isArray(x.slots) ? x.slots : []).filter(sl => KNOWN.test(String(sl).toUpperCase()));
+      if (!slots.length) return all;
+      return all.filter(p => slots.some(sl => _adminQaSlotAllows(sl, p)));
+    }
+    function _adminQaWwPool(st, x) {
+      if (st.pool) return st.pool;
+      if (typeof D === 'undefined' || !Array.isArray(D) || !Array.isArray(x.taken) || !x.taken.length) return (st.pool = []);
+      const find = typeof window._ajFindPlayer === 'function' ? window._ajFindPlayer : () => null;
+      const gone = new Set(), goneKey = new Set();
+      x.taken.concat(x.roster || []).forEach(n => { goneKey.add(_wwKey(n)); const d = find(n); if (d) gone.add(d); });
+      const posOk = _adminQaWwPositions(x);
+      const out = typeof window._irIsOut === 'function' ? window._irIsOut : () => false;
+      st.pool = D.filter(d => d && d.n && d.t && !d._retired && !d._isFuturePick && posOk.indexOf(d.s) >= 0 &&
+        !gone.has(d) && !goneKey.has(_wwKey(d.n)) && !out(d.n));
+      return st.pool;
+    }
+    function _adminQaWwBoard(st, x) {
+      const o = typeof window._ajInfoOpts === 'function' ? window._ajInfoOpts() : { ver: 'jacks', scope: 'weekly', fmt: 'ppr' };
+      const rankOf = d => {
+        if (typeof window._ajRankFor !== 'function') return null;
+        const r = window._ajRankFor(d, o.ver, o.scope);
+        if (r && r.ovr) return r.ovr;
+        // Off this board (bye week, etc.): after everyone on it, in ROS order.
+        const ros = o.scope !== 'redraft' ? window._ajRankFor(d, o.ver, 'redraft') : null;
+        return ros && ros.ovr ? 100000 + ros.ovr : null;
+      };
+      let list = _adminQaWwPool(st, x).filter(d => st.pos === 'ALL' || d.s === st.pos || (st.pos === 'DST' && d.s === 'DEF'))
+        .map(d => ({ d, r: rankOf(d) })).filter(e => e.r != null).sort((a, b) => a.r - b.r).slice(0, 300);
+      if (st.sort === 'proj' && typeof window._ajPlayerInfo === 'function') {
+        const P = st.proj[o.fmt] || (st.proj[o.fmt] = {});
+        list.forEach(e => { if (!(e.d.n in P)) { const i = window._ajPlayerInfo(e.d, o); P[e.d.n] = (i && typeof i.proj === 'number') ? i.proj : -1; } e.p = P[e.d.n]; });
+        list.sort((a, b) => (b.p - a.p) || (a.r - b.r));
+      }
+      return list.map(e => e.d.n);
+    }
+    function _adminQaWwHtml(safeId, docId, x) {
+      const st = _adminQaWwState(docId, x);
+      const o = typeof window._ajInfoOpts === 'function' ? window._ajInfoOpts() : { ver: 'jacks', scope: 'weekly', fmt: 'ppr' };
+      const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || '';
+      const fmt = (x.league && x.league.fmt) || '';
+      const slotSum = typeof window._qaSlotSummary === 'function' ? window._qaSlotSummary : a => a.join(' · ');
+      const isAdd = n => st.adds.indexOf(n) >= 0, isDrop = n => st.drops.indexOf(n) >= 0;
+      const tile = (n, which, ros) => {
+        const on = which === 'adds' ? isAdd(n) : isDrop(n);
+        const js = 'window._adminQaWwToggle(\'' + safeId + '\',\'' + which + '\',this.getAttribute(\'data-name\'))';
+        const opts = { onclick: js, cls: on ? (which === 'adds' ? 'sel' : 'sel aj-ww-drop') : '' };
+        if (ros != null) opts.ros = ros;
+        return (typeof window._ajPlayerCardHtml === 'function' && window._ajPlayerCardHtml(n, opts)) ||
+          '<button type="button" class="aj-chip aj-chip-btn' + (on ? ' aj-chip-start' : '') + '" data-name="' + _qaAdminEsc(n) + '" onclick="' + js + '">' + _qaAdminEsc(n) + '</button>';
+      };
+      const eye = Array.isArray(x.options) ? x.options : [];
+      const cut = Array.isArray(x.dropOpts) ? x.dropOpts : [];
+      const roster = Array.isArray(x.roster) ? x.roster : [];
+      const seg = (key, val, lbl, cur) => '<button type="button" class="aj-ww-seg' + (cur === val ? ' on' : '') + '" onclick="window._adminQaWwSet(\'' + safeId + '\',\'' + key + '\',\'' + val + '\')">' + lbl + '</button>';
+      const verLbl = { jacks: "JACK'S", consensus: 'CONSENSUS', mine: 'MY RANKS' }[o.ver] || 'RANK';
+      const fmtLbl = { ppr: 'PPR', half: 'HALF', std: 'STD' }[o.fmt] || '';
+      let html = '<div class="aj-ww">';
+      html += '<div class="aj-slots-head">' + (Array.isArray(x.slots) && x.slots.length ? '<b>Lineup:</b> ' + _qaAdminEsc(slotSum(x.slots)) + ' &nbsp;·&nbsp; ' : '') +
+        (fmt ? _qaAdminEsc(fmt) + ' &nbsp;·&nbsp; ' : '') + roster.length + ' on their roster</div>';
+      // What they asked about.
+      if (eye.length) html += '<div class="aj-ww-h">THEY\'RE EYEING <span>· tap to add</span></div><div class="aj-pick aj-pick-tiles">' + eye.map(n => tile(n, 'adds')).join('') + '</div>';
+      if (cut.length) html += '<div class="aj-ww-h">THEY\'D DROP <span>· tap to drop</span></div><div class="aj-pick aj-pick-tiles">' + cut.map(n => tile(n, 'drops', fmt)).join('') + '</div>';
+      if (!eye.length && !cut.length) html += '<div class="aj-ww-general">🧲 General waiver check: pick their adds from the board.</div>';
+      // Best available.
+      html += '<div class="aj-ww-h">BEST AVAILABLE <span>· tap to add</span></div>';
+      if (!Array.isArray(x.taken) || !x.taken.length) {
+        html += '<div class="aj-pi-na">No league rosters came with this question, so there\'s no way to tell who\'s free. Go off their asks (or the note).</div>';
+      } else {
+        const posList = ['ALL'].concat(_adminQaWwPositions(x));
+        html += '<div class="aj-ww-bar">' +
+          seg('sort', 'rank', 'RANK · ' + verLbl + (o.scope === 'weekly' ? ' WK' : ' ROS'), st.sort) +
+          seg('sort', 'proj', 'PROJ WK ' + wk + ' · ' + fmtLbl, st.sort) +
+          '<span class="aj-ww-sep"></span>' + posList.map(p => seg('pos', p, p === 'DST' ? 'D/ST' : p, st.pos)).join('') + '</div>';
+        const board = _adminQaWwBoard(st, x);
+        const shown = board.slice(0, st.more ? 60 : 24);
+        html += shown.length
+          ? '<div class="aj-pick aj-pick-tiles aj-ww-board">' + shown.map(n => tile(n, 'adds')).join('') + '</div>' +
+            (board.length > shown.length || st.more ? '<button type="button" class="aj-add" onclick="window._adminQaWwSet(\'' + safeId + '\',\'more\',' + (st.more ? 'false' : 'true') + ')">' + (st.more ? 'show fewer' : 'show more (' + Math.min(60, board.length) + ')') + '</button>' : '')
+          : '<div class="aj-pi-na">Nobody ranked is free at ' + _qaAdminEsc(st.pos) + '.</div>';
+      }
+      // Their roster.
+      if (roster.length) {
+        const order = typeof window._ajSortByRank === 'function' ? window._ajSortByRank(roster, 'redraft') : roster;
+        html += '<details class="aj-ww-roster"' + (st.drops.length || cut.length || !eye.length ? ' open' : '') + '><summary class="aj-ww-h">THEIR ROSTER (' + roster.length + ') <span>· tap to drop · rest-of-season view</span></summary>' +
+          '<div class="aj-pick aj-pick-tiles">' + order.map(n => tile(n, 'drops', fmt)).join('') + '</div></details>';
+      }
+      html += '<div class="aj-ww-sum" id="adminQaWwSum-' + safeId + '"><b>ADD:</b> ' + (st.adds.length ? st.adds.map(_qaAdminEsc).join(', ') : '<span class="aj-pi-na">nobody (hold)</span>') +
+        ' &nbsp;·&nbsp; <b>DROP:</b> ' + (st.drops.length ? st.drops.map(_qaAdminEsc).join(', ') : '<span class="aj-pi-na">nobody</span>') + '</div>';
+      return html + '</div>';
+    }
+    function _adminQaWwRerender(docId) {
+      const q = (window._adminQaQueue || []).find(r => r.id === docId);
+      const box = document.getElementById('adminQaWwWrap-' + docId);
+      if (!q || !box) return;
+      const y = window.scrollY;
+      box.innerHTML = _adminQaWwHtml(_qaAdminEsc(docId), docId, q.data);
+      window.scrollTo(0, y);
+      const st = _adminQaWwState(docId, q.data);
+      const btn = document.getElementById('adminQaConfirm-' + docId);
+      if (btn && !btn.disabled) btn.textContent = st.adds.length ? 'CONFIRM: ADD ' + st.adds.join(', ').slice(0, 40) : 'CONFIRM: NO ADDS';
+    }
+    // RANKS / PROJ toggles change the board order → redraw any open board.
+    window._adminQaWwRefreshAll = function() {
+      document.querySelectorAll('[id^="adminQaWwWrap-"]').forEach(el => _adminQaWwRerender(el.id.slice('adminQaWwWrap-'.length)));
+    };
+    window._adminQaWwToggle = function(docId, which, name) {
+      const q = (window._adminQaQueue || []).find(r => r.id === docId);
+      if (!q || !name) return;
+      const st = _adminQaWwState(docId, q.data);
+      const arr = st[which];
+      const i = arr.indexOf(name);
+      if (i >= 0) arr.splice(i, 1);
+      else {
+        if (arr.length >= 4) { showAdminMsg(_qaTargets().msg, 'Up to 4 ' + (which === 'adds' ? 'adds' : 'drops') + ' — untap one first', 'error'); return; }
+        arr.push(name);
+        const other = which === 'adds' ? st.drops : st.adds;
+        const j = other.indexOf(name);
+        if (j >= 0) other.splice(j, 1);
+      }
+      _adminQaWwRerender(docId);
+    };
+    window._adminQaWwSet = function(docId, key, val) {
+      const q = (window._adminQaQueue || []).find(r => r.id === docId);
+      if (!q) return;
+      const st = _adminQaWwState(docId, q.data);
+      st[key] = val;
+      if (key === 'sort') window._adminQaWwSort = val;
+      if (key === 'pos') st.more = false;
+      _adminQaWwRerender(docId);
+    };
+
     function _adminQaRow(docId, x) {
       const typeChip = _adminQaTypeChip(x.type);
       const when = x.createdAt ? new Date(x.createdAt).toLocaleString() : '';
@@ -36246,7 +36406,13 @@ window.fmtHeight = fmtHeight;
       // Rank / projection / lines under each player (core _ajInfoHtml; the
       // RANKS / PROJ toggles on the Ask Jack tab re-fill these in place).
       const info = _adminQaInfo;
-      (x.options || []).forEach((o, i) => {
+      if (x.type === 'waiver') {
+        const L = (lbl, arr) => Array.isArray(arr) && arr.length ? '<div style="font-size:.72rem;margin:2px 0"><b>' + lbl + ':</b> ' + arr.map(_qaAdminEsc).join(', ') + '</div>' : '';
+        html += L('Eyeing', x.options) + L('Would drop', x.dropOpts) +
+          (!(x.options || []).length && !(x.dropOpts || []).length ? '<div style="font-size:.72rem;color:var(--text2)">🧲 General waiver check</div>' : '') +
+          (x.status === 'answered' ? L('⭐ Your adds', x.adds) + L('Your drops', x.drops) + (!(x.adds || []).length ? '<div style="font-size:.72rem;color:var(--text2)">You said hold (no adds)</div>' : '') : '');
+      }
+      (x.type === 'waiver' ? [] : (x.options || [])).forEach((o, i) => {
         const picked = x.status === 'answered' && x.pick === i;
         const sideTag = x.type === 'trade' ? '<span style="font-size:.6875rem;color:var(--text2)">' + (i === 0 ? 'THEY GIVE: ' : 'THEY GET: ') + '</span>' : '';
         html += '<div class="aj-opt"><div class="aj-opt-row">' +
@@ -36296,6 +36462,10 @@ window.fmtHeight = fmtHeight;
       if (x.type === 'lineup') {
         html += _adminQaRosterHtml(safeId, x, docId);
         confirmLbl = 'CONFIRM LINEUP';
+      } else if (x.type === 'waiver') {
+        html += '<div id="adminQaWwWrap-' + safeId + '">' + _adminQaWwHtml(safeId, docId, x) + '</div>';
+        const wst = _adminQaWwState(docId, x);
+        confirmLbl = wst.adds.length ? 'CONFIRM: ADD ' + _qaAdminEsc(wst.adds.join(', ').slice(0, 40)) : 'CONFIRM: NO ADDS';
       } else {
         // Start/sit: one big vertical card per option across the width (Start/Sit
         // tool look). Trade: THEY GIVE | THEY GET panels, each stacking that side's
@@ -36325,8 +36495,8 @@ window.fmtHeight = fmtHeight;
         confirmLbl = 'CONFIRM PICK';
       }
       html += '<div class="aj-q-bar">' +
-        '<input type="text" id="adminQaNote-' + safeId + '" class="aj-input aj-q-noteinp" placeholder="Optional note to send with your ' + (x.type === 'lineup' ? 'lineup' : 'pick') + '" maxlength="1000" oninput="window._adminQaNoteInput(\'' + safeId + '\',this)">' +
-        '<button type="button" id="adminQaConfirm-' + safeId + '" class="aj-q-confirm" onclick="window._adminQaConfirm(\'' + safeId + '\')"' + (x.type === 'lineup' ? '' : ' disabled') + '>' + confirmLbl + '</button>' +
+        '<input type="text" id="adminQaNote-' + safeId + '" class="aj-input aj-q-noteinp" placeholder="Optional note to send with your ' + (x.type === 'lineup' ? 'lineup' : x.type === 'waiver' ? 'adds' : 'pick') + '" maxlength="1000" oninput="window._adminQaNoteInput(\'' + safeId + '\',this)">' +
+        '<button type="button" id="adminQaConfirm-' + safeId + '" class="aj-q-confirm" onclick="window._adminQaConfirm(\'' + safeId + '\')"' + (x.type === 'lineup' || x.type === 'waiver' ? '' : ' disabled') + '>' + confirmLbl + '</button>' +
         '<button type="button" class="aj-q-skip" onclick="window._adminQaSkip(\'' + safeId + '\')" title="Show the next question — this one keeps its place in the queue">SKIP</button>' +
         '<button type="button" class="aj-q-del" onclick="window._adminQaDelete(\'' + safeId + '\')" title="Delete question (frees the member\'s weekly slot)">✕</button>' +
         '</div>' +
@@ -36373,7 +36543,7 @@ window.fmtHeight = fmtHeight;
       const noteEl = document.getElementById('adminQaNote-' + docId);
       if (noteEl && note) noteEl.value = note;
       const pick = (window._adminQaPicks || {})[docId];
-      if (x.type !== 'lineup' && typeof pick === 'number' && pick < (x.options || []).length) window._adminQaSelect(docId, pick);
+      if (x.type !== 'lineup' && x.type !== 'waiver' && typeof pick === 'number' && pick < (x.options || []).length) window._adminQaSelect(docId, pick);
     }
     window._adminQaNoteInput = function(docId, el) {
       (window._adminQaNotes = window._adminQaNotes || {})[docId] = el.value;
@@ -36506,6 +36676,10 @@ window.fmtHeight = fmtHeight;
         rows.forEach((r, i) => setTimeout(() => r.classList.add('aj-win'), reduced ? 0 : 90 * i));
         const head = card.querySelector('.aj-slots-head');
         if (head) head.insertAdjacentHTML('beforeend', '<span class="aj-stamp aj-stamp-win aj-stamp-inline">LINEUP SET</span>');
+      } else if (x.type === 'waiver') {
+        card.querySelectorAll('.aj-ww .aj-pcard.sel').forEach(t => t.classList.add(t.classList.contains('aj-ww-drop') ? 'aj-lose' : 'aj-win'));
+        const sum = card.querySelector('.aj-ww-sum');
+        if (sum) sum.insertAdjacentHTML('beforeend', '<span class="aj-stamp aj-stamp-win aj-stamp-inline">' + ((patch.adds || []).length ? 'WAIVERS SET' : 'HOLD') + '</span>');
       } else {
         card.querySelectorAll('.aj-choice').forEach(ch => {
           const win = parseInt(ch.getAttribute('data-i'), 10) === patch.pick;
@@ -36539,6 +36713,10 @@ window.fmtHeight = fmtHeight;
         if (!L.starters.length) { showAdminMsg(_qaTargets().msg, 'Fill the slots with the players you\'d start first', 'error'); return; }
         patch.starters = L.starters.slice(0, 30);
         if (L.lineup) patch.lineup = L.lineup;
+      } else if (entry.data.type === 'waiver') {
+        const wst = _adminQaWwState(docId, entry.data);
+        patch.adds = wst.adds.slice(0, 4);
+        patch.drops = wst.drops.slice(0, 4);
       } else {
         const sel = document.querySelector('#adminQaCard-' + CSS.escape(docId) + ' .aj-choice.sel');
         if (!sel) { showAdminMsg(_qaTargets().msg, 'Click the winner first', 'error'); return; }
@@ -36588,7 +36766,7 @@ window.fmtHeight = fmtHeight;
           settled = true; clearTimeout(t1); clearTimeout(t2);
           window._adminQaBusy = null;
           if (window._adminQaPending) { const p = window._adminQaPending; window._adminQaPending = null; window._adminQaQueue = p.some(r => r.id === docId) ? p : (window._adminQaQueue || q); }
-          if (btn) { btn.disabled = false; btn.textContent = entry.data.type === 'lineup' ? 'CONFIRM LINEUP' : 'CONFIRM PICK'; }
+          if (btn) { btn.disabled = false; btn.textContent = entry.data.type === 'lineup' ? 'CONFIRM LINEUP' : entry.data.type === 'waiver' ? 'CONFIRM WAIVERS' : 'CONFIRM PICK'; }
           showAdminMsg(_qaTargets().msg, 'Answer error: ' + e.message, 'error');
         });
     };
@@ -73490,9 +73668,14 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   const QA_TYPES = {
     startsit: { label: 'START / SIT', name: 'start/sit', icon: '🔀', slot: 'startsit', blurb: 'Which player do I start?', ask: 'Which players are you deciding between?' },
     trade:    { label: 'TRADE',       name: 'trade',     icon: '🔁', slot: 'trade',    blurb: 'Should I take this deal?', ask: 'Lay out both sides — Jack picks the side he likes better.' },
-    lineup:   { label: 'LINEUP OPTIMIZER', name: 'lineup', icon: '📋', slot: 'startsit', blurb: 'Jack sets your whole lineup', ask: 'Jack sets your starting lineup from your synced roster.' }
+    lineup:   { label: 'LINEUP OPTIMIZER', name: 'lineup', icon: '📋', slot: 'startsit', blurb: 'Jack sets your whole lineup', ask: 'Jack sets your starting lineup from your synced roster.' },
+    // Waiver wire (2026-11-09, Jack): shares the start/sit slot. Members can
+    // name players to add / drop, or — with a synced league — leave both blank
+    // and Jack scans that league's free agents (the question carries every
+    // rostered name as `taken`). Jack answers with `adds` + `drops` lists.
+    waiver:   { label: 'WAIVER WIRE', name: 'waiver', icon: '🧲', slot: 'startsit', blurb: 'Who should I pick up?', ask: 'Who are you eyeing, and who would you cut?' }
   };
-  const QA_TYPE_ORDER = ['startsit', 'trade', 'lineup'];
+  const QA_TYPE_ORDER = ['startsit', 'trade', 'waiver', 'lineup'];
   const _qaType = t => QA_TYPES[t] || QA_TYPES.startsit;
   function _qaSlotOf(type) { return type === 'trade' ? 'trade' : 'startsit'; }
   function _qaWeekIdx() { return Math.floor((Date.now() - QA_WEEK_ANCHOR) / QA_WEEK_MS); }
@@ -73862,7 +74045,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const otherNames = [];
     teams.forEach(t => {
       if (!t || t.isMyTeam) return;
-      (t.players || []).forEach(n => { if (typeof n === 'string') otherNames.push(n); });
+      _qaTeamPlayers(t).forEach(n => otherNames.push(n));
     });
     otherNames.sort();
     if (myNames.length) _qaEnsureDatalist('qaRosterMine', myNames);
@@ -73878,6 +74061,20 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const get = document.getElementById('qaOpt-trade-1');
     if (give) _setList(give, myNames.length ? 'qaRosterMine' : 'qaPlayerList');
     if (get) _setList(get, otherNames.length ? 'qaRosterOthers' : 'qaPlayerList');
+    // Waiver ADD inputs: players nobody in the league rosters (synced league only).
+    if (document.getElementById('qaOpt-waiver-0')) {
+      let free = null;
+      if (myNames.length && typeof D !== 'undefined' && Array.isArray(D)) {
+        const key = s => String(s).toLowerCase().replace(/\s+(jr\.?|sr\.?|ii|iii|iv|v)$/i, '').replace(/[.'’\-]/g, '').replace(/\s+/g, ' ').trim();
+        const taken = new Set(myNames.concat(otherNames).map(key));
+        free = D.filter(p => p && p.n && p.t && !p._retired && !p._isFuturePick && !taken.has(key(p.n))).map(p => p.n);
+        _qaEnsureDatalist('qaRosterFree', free);
+      }
+      for (let i = 0; i < 4; i++) {
+        const el = document.getElementById('qaOpt-waiver-' + i);
+        if (el) _setList(el, free ? 'qaRosterFree' : 'qaPlayerList');
+      }
+    }
   }
 
   // Admin view (2026-11-04, Jack): MEMBER VIEW / INBOX toggle on the Ask Jack
@@ -74236,7 +74433,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">' +
         '<span class="jt-badge">PREMIUM</span>' +
         // No "ASK JACK" title here: the tab's page header already says it.
-        '<span style="font-size:.6875rem;color:var(--text2);font-style:italic">2 questions every week: 1 trade + 1 start/sit or lineup</span>' +
+        '<span style="font-size:.6875rem;color:var(--text2);font-style:italic">2 questions every week: 1 trade + 1 start/sit, waiver or lineup</span>' +
       '</div>';
     const freeHeader =
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">' +
@@ -74282,12 +74479,12 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         '<div class="aj-card">' + premHeader +
         '<div class="jt-locked-wrap" style="margin-top:8px">' +
           '<div class="jt-locked-content" style="filter:blur(3px);pointer-events:none;padding:18px">' +
-            '<div style="font-size:.8rem;color:var(--text2)">Who do I start — Puka Nacua or Nico Collins? &nbsp;·&nbsp; Should I take this trade? &nbsp;·&nbsp; Set my lineup</div>' +
+            '<div style="font-size:.8rem;color:var(--text2)">Who do I start — Puka Nacua or Nico Collins? &nbsp;·&nbsp; Should I take this trade? &nbsp;·&nbsp; Who do I grab off waivers? &nbsp;·&nbsp; Set my lineup</div>' +
           '</div>' +
           '<div class="jt-locked-overlay">' +
             '<div class="jt-locked-icon">&#128274;</div>' +
             '<div class="jt-locked-label">PREMIUM FEATURE</div>' +
-            '<div class="jt-locked-desc">Every week, send Jack a trade plus a start/sit or a full-lineup question. He makes the call right from your synced roster.</div>' +
+            '<div class="jt-locked-desc">Every week, send Jack a trade plus a start/sit, waiver-wire or full-lineup question. He makes the call right from your synced roster.</div>' +
             '<button class="jt-locked-btn" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{const t=document.querySelector(\'[data-acct-tab=premium]\');if(t)t.click();},150)">UPGRADE TO PRO</button>' +
             '<div class="aj-locked-free">Not premium? When Jack is live streaming he opens free questions — 1 a day — right here.</div>' +
           '</div>' +
@@ -74382,7 +74579,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     } else if (used) {
       pane += '<div class="aj-used-note">' + (mode === 'free'
           ? 'You get one free question a day, and today\'s went to your ' + _qaType(used.type).name + ' question. New free question tomorrow (midnight ET).'
-          : 'Start/sit and lineup share one question a week, and this week\'s went to your ' + _qaType(used.type).name + ' question. ' + _qaResetLabel().replace(/^n/, 'N') + '.') + '</div>' +
+          : 'Start/sit, waiver and lineup share one question a week, and this week\'s went to your ' + _qaType(used.type).name + ' question. ' + _qaResetLabel().replace(/^n/, 'N') + '.') + '</div>' +
         '<div class="aj-used-q"><div class="aj-used-q-lbl">' + _qaType(used.type).icon + ' ' + _qaType(used.type).label + '</div>' + _qaSubmittedHtml(used) + '</div>';
     } else {
       pane += sel === 'lineup' ? _qaLineupFormHtml(_qaSelLeague()) : _qaFormHtml(sel);
@@ -74436,10 +74633,11 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       let el = document.getElementById(id);
       // Extra start/sit inputs (3rd/4th player) don't exist on a fresh
       // rebuild — re-add slots until the captured id comes back.
-      if (!el && /^qaOpt-startsit-[23]$/.test(id)) {
+      const xm = !el && /^qaOpt-(startsit|waiver)-[23]$/.exec(id);
+      if (xm) {
         let guard = 0;
-        while (!el && guard++ < 2 && document.getElementById('qaExtraOpts-startsit')) {
-          window._qaAddOption('startsit');
+        while (!el && guard++ < 2 && document.getElementById('qaExtraOpts-' + xm[1])) {
+          window._qaAddOption(xm[1]);
           el = document.getElementById(id);
         }
       }
@@ -74635,9 +74833,52 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     return [side('trade-0'), side('trade-1')];
   }
 
+  // Waiver wire form: typed ADD names (free agents suggested when a league is
+  // synced) + DROP picks from the synced roster (typed without one). With a
+  // synced league both are optional — a blank send is a general "who should
+  // I grab?" and Jack scans the league's free agents in his inbox.
+  function _qaWaiverFormHtml(lg) {
+    const mine = _qaMyPlayers(lg);
+    const synced = !!(lg && mine.length);
+    const cnt = k => _qaPickCount(k, 4, 'picked').replace('class="aj-pickcnt"', 'class="aj-pickcnt" data-what="picked"');
+    return '<div class="aj-ask">' + QA_TYPES.waiver.ask +
+        (synced ? ' Or leave it blank: Jack scans ' + _jtEsc(lg.name || 'your league') + '\'s free agents and sees your roster, lineup and record.' : '') + '</div>' +
+      '<div class="aj-side-lbl">ADD: PLAYERS YOU\'RE EYEING' + (synced ? ' <span class="aj-side-ros">· optional</span>' : '') + '</div>' +
+      _qaOptionInput('waiver', 0, synced ? 'e.g. a free agent in your league' : 'e.g. Tyjae Spears') +
+      _qaOptionInput('waiver', 1, 'Another one (optional)') +
+      '<div id="qaExtraOpts-waiver"></div>' +
+      '<button onclick="window._qaAddOption(\'waiver\')" id="qaAddBtn-waiver" class="aj-add">+ add a 3rd player</button>' +
+      '<div class="aj-side-lbl">DROP: WHO YOU\'D CUT <span class="aj-side-ros">· optional' + (synced ? ' · rest-of-season view' : '') + '</span>' + (synced ? ' · ' + cnt('waiver-drop') : '') + '</div>' +
+      (synced
+        ? _qaChipsHtml('waiver-drop', mine, 4, _qaLeagueFmt(lg, true))
+        : '<input type="text" list="qaPlayerList" id="qaDrop-waiver-0" placeholder="e.g. Rashid Shaheed" maxlength="120" class="aj-input">' +
+          '<input type="text" list="qaPlayerList" id="qaDrop-waiver-1" placeholder="Another one (optional)" maxlength="120" class="aj-input">') +
+      _qaNoteInput('waiver', 'Optional context (FAAB left, waiver priority, what you need…)') +
+      _qaSendBtn('waiver', false);
+  }
+  // Member view of a waiver question: what they sent, then Jack's ADD / DROP.
+  function _qaWaiverSubmittedHtml(x) {
+    const tiles = (names, cls) => '<div class="aj-pick aj-pick-tiles">' + names.map(n =>
+      ((typeof window._ajPlayerCardHtml === 'function') && window._ajPlayerCardHtml(n, { cls: cls || '' })) ||
+      '<span class="aj-chip' + (cls === 'sel' ? ' aj-chip-start' : '') + '">' + _jtEsc(n) + '</span>').join('') + '</div>';
+    const eye = Array.isArray(x.options) ? x.options : [];
+    const cut = Array.isArray(x.dropOpts) ? x.dropOpts : [];
+    if (x.status === 'answered') {
+      const A = Array.isArray(x.adds) ? x.adds : [];
+      const Dr = Array.isArray(x.drops) ? x.drops : [];
+      return '<div class="aj-lineup-lbl">JACK SAYS ADD</div>' +
+        (A.length ? tiles(A, 'sel') : '<div class="aj-lineup-meta">Nobody worth a claim right now. Hold your spot.</div>') +
+        (Dr.length ? '<div class="aj-lineup-lbl aj-ww-droplbl">DROP</div>' + tiles(Dr, 'aj-ww-drop') : '');
+    }
+    if (!eye.length && !cut.length) return '<div class="aj-lineup-meta">General waiver check: Jack scans your league\'s free agents and picks your adds.</div>';
+    return (eye.length ? '<div class="aj-side-lbl">EYEING</div>' + tiles(eye) : '<div class="aj-lineup-meta">Jack scans your league\'s free agents for adds.</div>') +
+      (cut.length ? '<div class="aj-side-lbl">WOULD DROP</div>' + tiles(cut) : '');
+  }
+
   function _qaFormHtml(type) {
     // Synced league with my roster on it → tap-to-pick forms (no typing).
     const lgR = _qaSelLeague();
+    if (type === 'waiver') return _qaWaiverFormHtml(lgR);
     if (lgR && _qaMyPlayers(lgR).length && (type === 'startsit' || type === 'trade')) return _qaRosterFormHtml(type, lgR);
     let opts = '';
     if (type === 'startsit') {
@@ -74726,7 +74967,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   }
 
   function _qaSubmittedHtml(x) {
-    let body = _qaSubmittedCardsHtml(x) || '';
+    let body = x.type === 'waiver' ? _qaWaiverSubmittedHtml(x) : (_qaSubmittedCardsHtml(x) || '');
     if (body) {
       // card view built above — only the trailing lines follow
     } else if (x.type === 'lineup') {
@@ -74829,6 +75070,22 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       if (!lg || roster.length < 2) { say('Pick a league with your roster on it first.'); return; }
       const slots = _qaStarterSlots(lg);
       if (slots.length) payload.slots = slots.map(s => s.slice(0, 12));
+    } else if (type === 'waiver') {
+      const typed = prefix => {
+        const out = [];
+        for (let i = 0; i < 4; i++) {
+          const el = document.getElementById(prefix + i);
+          const v = el && el.value.trim();
+          if (v && out.indexOf(v) < 0) out.push(v.slice(0, 120));
+        }
+        return out;
+      };
+      const adds = typed('qaOpt-waiver-');
+      const drops = document.getElementById('qaPick-waiver-drop') ? _qaPicks('waiver-drop').slice(0, 4) : typed('qaDrop-waiver-');
+      const synced = !!(lg && _qaMyPlayers(lg).length);
+      if (!adds.length && !synced) { say('Type at least one player you\'re eyeing, or pick a synced league at the top and Jack will scan your waiver wire.'); return; }
+      if (adds.length) payload.options = adds;
+      if (drops.length) payload.dropOpts = drops;
     } else {
       let options = _qaPickedOptions(type);
       if (options) {
@@ -74873,6 +75130,15 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         const tslots = _qaStarterSlots(lg);
         if (tslots.length) payload.slots = tslots.map(s => s.slice(0, 12));
       }
+      // Waivers: every name rostered elsewhere in the league, so Jack's inbox
+      // can list who's actually available, + the starting slots (lineup format).
+      if (type === 'waiver') {
+        const taken = [];
+        (Array.isArray(lg.teams) ? lg.teams : []).forEach(t => { if (t && !t.isMyTeam) _qaTeamPlayers(t).forEach(n => taken.push(String(n).slice(0, 60))); });
+        if (taken.length) payload.taken = taken.slice(0, 600);
+        const wslots = _qaStarterSlots(lg);
+        if (wslots.length) payload.slots = wslots.map(s => s.slice(0, 12));
+      }
     }
 
     const btn = document.getElementById('qaSendBtn-' + type);
@@ -74899,6 +75165,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         // Sent: clear this type's typed drafts so they don't come back next week.
         const drafts = window._qaDrafts || {};
         Object.keys(drafts).forEach(id => { if (id.indexOf('-' + type) > 0) delete drafts[id]; });
+        // Blank the live inputs too: the re-render below re-captures drafts
+        // from the DOM before swapping it, which brought sent names back.
+        document.querySelectorAll('#mtAskJack input[id^="qa"]').forEach(el => { if (el.id.indexOf('-' + type) > 0) el.value = ''; });
         _qaClearPicks(type);
         if (typeof toast === 'function') toast('Sent! Jack\'s ' + (type === 'lineup' ? 'lineup' : 'pick') + ' will show up here.');
         window._qaRenderPanel();
@@ -74908,7 +75177,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         if (e && e.code === 'permission-denied') {
           say(mode === 'free'
             ? 'Looks like today\'s free question is already used, or Jack just closed free questions. New one tomorrow at midnight ET.'
-            : 'Looks like this week\'s ' + (type === 'trade' ? 'trade' : 'start/sit + lineup') + ' question is already used (or the week just rolled over — refresh and try again).');
+            : 'Looks like this week\'s ' + (type === 'trade' ? 'trade' : 'start/sit + waiver + lineup') + ' question is already used (or the week just rolled over — refresh and try again).');
         } else {
           say('Couldn\'t send: ' + (e && e.message || 'unknown error'));
         }

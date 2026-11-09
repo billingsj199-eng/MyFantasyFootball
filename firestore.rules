@@ -397,8 +397,8 @@ service cloud.firestore {
     }
     // qa_questions: the "Ask Jack" Q&A. Two kinds of question (2026-11-04):
     //  PREMIUM — {uid}_{weekIdx}_{slot}, tier 'premium'. 2 per week (Tuesday
-    //    reset): 1 trade + 1 start/sit OR lineup (those two share the 'startsit'
-    //    slot). weekIdx = floor((now - anchor) / 7d).
+    //    reset): 1 trade + 1 start/sit OR lineup OR waiver (those three share
+    //    the 'startsit' slot). weekIdx = floor((now - anchor) / 7d).
     //  FREE — {uid}_d{dayIdx}, tier 'free'. 1 per day for any signed-in member,
     //    only while shared/askjack_settings.freeOpen is true (Jack flips it on
     //    when he's live). dayIdx = floor((now - anchor) / 1d).
@@ -467,12 +467,21 @@ service cloud.firestore {
                       || isJack());
       allow create: if request.auth != null
                     && request.resource.data.uid == request.auth.uid
-                    && request.resource.data.type in ['startsit', 'trade', 'lineup']
+                    && request.resource.data.type in ['startsit', 'trade', 'lineup', 'waiver']
                     && request.resource.data.weekIdx is int
                     && request.resource.data.weekIdx == (request.time.toMillis() - 1767675600000) / 604800000
                     && (qaPremiumCreate() || qaFreeCreate() || qaAdminCreate() || qaCreditCreate())
                     && request.resource.data.status == 'open'
-                    && request.resource.data.keys().hasOnly(['uid','name','type','weekIdx','status','createdAt','options','q','league','roster','slots','tier','dayIdx','testN','credit','team','partner'])
+                    && request.resource.data.keys().hasOnly(['uid','name','type','weekIdx','status','createdAt','options','q','league','roster','slots','tier','dayIdx','testN','credit','team','partner','dropOpts','taken'])
+                    // Waivers (2026-11-09): dropOpts = who they'd cut, taken = every name on the league's OTHER rosters (Jack's free-agent board).
+                    && (!('dropOpts' in request.resource.data) || (
+                          request.resource.data.type == 'waiver'
+                          && request.resource.data.dropOpts is list && request.resource.data.dropOpts.size() <= 4
+                       ))
+                    && (!('taken' in request.resource.data) || (
+                          request.resource.data.type == 'waiver'
+                          && request.resource.data.taken is list && request.resource.data.taken.size() <= 600
+                       ))
                     // Trades: team = the asker's team label, partner = the other team + its roster (both optional).
                     && (!('team' in request.resource.data) || (request.resource.data.team is string && request.resource.data.team.size() <= 80))
                     && (!('partner' in request.resource.data) || (
@@ -488,6 +497,14 @@ service cloud.firestore {
                              && 'roster' in request.resource.data
                              && request.resource.data.roster.size() >= 2
                              && (!('slots' in request.resource.data) || (request.resource.data.slots is list && request.resource.data.slots.size() <= 20)))
+                          : (request.resource.data.type == 'waiver'
+                          // Waiver: options = players they're eyeing, 0-4 (none = "scan my league's free agents").
+                          ? ((!('slots' in request.resource.data) || (request.resource.data.slots is list && request.resource.data.slots.size() <= 20))
+                             && (!('options' in request.resource.data) || (
+                                   request.resource.data.options is list
+                                   && request.resource.data.options.size() >= 1
+                                   && request.resource.data.options.size() <= 4
+                                   && (request.resource.data.options[0] is string && request.resource.data.options[0].size() <= 200))))
                           // Trades may carry the league's starting slots too (lineup before/after view).
                           : ((!('slots' in request.resource.data) || (request.resource.data.type == 'trade' && request.resource.data.slots is list && request.resource.data.slots.size() <= 20))
                              && request.resource.data.options is list
@@ -496,7 +513,7 @@ service cloud.firestore {
                              && (request.resource.data.options[0] is string && request.resource.data.options[0].size() <= 200)
                              && (request.resource.data.options[1] is string && request.resource.data.options[1].size() <= 200)
                              && (request.resource.data.options.size() < 3 || (request.resource.data.options[2] is string && request.resource.data.options[2].size() <= 200))
-                             && (request.resource.data.options.size() < 4 || (request.resource.data.options[3] is string && request.resource.data.options[3].size() <= 200))))
+                             && (request.resource.data.options.size() < 4 || (request.resource.data.options[3] is string && request.resource.data.options[3].size() <= 200)))))
                     && (request.resource.data.name is string && request.resource.data.name.size() <= 120)
                     && (request.resource.data.createdAt is string && request.resource.data.createdAt.size() <= 32)
                     && (!('q' in request.resource.data) || (request.resource.data.q is string && request.resource.data.q.size() <= 1000))

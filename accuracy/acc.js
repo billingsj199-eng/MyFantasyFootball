@@ -11,9 +11,13 @@
   const POOL_N = { QB: 24, RB: 48, WR: 60, TE: 24 };   // pool = union of each source's top-N at the position
   const HIT_K = { QB: 12, RB: 24, WR: 24, TE: 12 };   // "hit" = source top-K that finished top-K
   const MIN_PROJ = 5;                                  // weekly pool floor (site consensus or MFF sim PPR)
+  // 'jack' = Jack's final redraft board before the W1 kickoff, read live from
+  // Firestore (loadJackPre). 'adp' = the site's blended market ADP (d.js `a`),
+  // which data built before 2026-11-10 stored under pre.jack — see preVal().
   const SRC_PRE = [
-    { k: 'jack', l: "Jack's original board" }, { k: 'sl', l: 'Sleeper' }, { k: 'fp', l: 'FantasyPros ECR' },
-    { k: 'ud', l: 'Underdog ADP' }, { k: 'espn', l: 'ESPN' }, { k: 'cbs', l: 'CBS' }, { k: 'yahoo', l: 'Yahoo' }];
+    { k: 'jack', l: "Jack's final board" }, { k: 'sl', l: 'Sleeper' }, { k: 'fp', l: 'FantasyPros ECR' },
+    { k: 'ud', l: 'Underdog ADP' }, { k: 'espn', l: 'ESPN' }, { k: 'cbs', l: 'CBS' }, { k: 'yahoo', l: 'Yahoo' },
+    { k: 'adp', l: 'Market ADP' }];
   const SRC_PJ = [
     { k: 'sim', l: 'MFF sim' }, { k: 'clay', l: 'Mike Clay' }, { k: 'sl', l: 'Sleeper' }, { k: 'espn', l: 'ESPN' }, { k: 'cbs', l: 'CBS' }];
   const SRC_WK = [
@@ -31,7 +35,7 @@
   const pct = (x) => isNum(x) ? Math.round(x * 100) + '%' : '—';
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  const S = { season: null, weeks: {}, jack: {}, jackMeta: {}, tab: 'season', user: null,
+  const S = { season: null, weeks: {}, jack: {}, jackMeta: {}, jackPre: null, tab: 'season', user: null,
     ctl: { pos: 'RB', basis: 'total', n: 0, wk: 0, wpos: 'ALL', metric: 'mae', tpos: 'ALL', q: '', rwk: 0, rkind: 'ALL' } };
 
   // ------------------------------------------------------------------ auth
@@ -76,6 +80,10 @@
     try { S.record = await getJSON('data/record_' + SEASON + '.json'); } catch (e) { S.record = null; }
     bindTabs();
     render();
+    setStatus('Reading Jack\'s preseason board…');
+    try { await loadJackPre(); }
+    catch (e) { console.warn('[acc] jack preseason', e); S.jackPre = { ovr: {}, meta: { error: (e && (e.code || e.message)) || 'error' } }; }
+    render();
     setStatus('Reading Jack\'s weekly boards…');
     for (const w of played) {
       try { await loadJackWeek(w.week); }
@@ -83,6 +91,50 @@
       render();
     }
     setStatus('Updated ' + new Date(S.season.updated).toLocaleString());
+  }
+
+  // Jack's final preseason board: the newest rankings_history save strictly
+  // before the W1 opener's kickoff that carries jacks.redraft._order (names in
+  // overall order). Walks back one day at a time (ascending documentId queries
+  // only — descending needs an index this project doesn't have). Cached in
+  // localStorage once the opener has kicked off, since it can never change.
+  async function loadJackPre() {
+    const key = 'acc_jackpre_' + SEASON;
+    try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && c.ovr && c.meta && c.meta.id) { S.jackPre = c; return; } } catch (e) { /* ignore */ }
+    const w1 = S.season.weeks.find((w) => w.week === 1);
+    if (!w1 || !w1.first) { S.jackPre = { ovr: {}, meta: { error: 'no W1 kickoff' } }; return; }
+    const ko = new Date(w1.first).getTime(); const koId = idOf(ko);
+    const col = firebase.firestore().collection('rankings_history').orderBy(firebase.firestore.FieldPath.documentId());
+    let best = null;
+    for (let back = 0; back < 30 && !best; back++) {
+      const snap = await col.startAt(idOf(ko - (back + 1) * 86400e3)).endAt(idOf(ko - back * 86400e3)).get();
+      snap.forEach((doc) => {
+        if (doc.id >= koId) return;
+        try {
+          const d = doc.data(); const r = (JSON.parse(d.data || '{}').jacks || {}).redraft;
+          if (r && Array.isArray(r._order) && r._order.length && (!best || doc.id > best.id)) best = { id: doc.id, at: d.updatedAt || null, order: r._order };
+        } catch (e) { /* skip bad doc */ }
+      });
+    }
+    if (!best) { S.jackPre = { ovr: {}, meta: { error: 'no redraft board saved in the 30 days before the W1 kickoff' } }; return; }
+    const ovr = {};
+    best.order.forEach((n, i) => { if (typeof n === 'string' && !(n in ovr)) ovr[n] = i + 1; });
+    S.jackPre = { ovr, meta: { id: best.id, at: best.at, n: best.order.length } };
+    if (Date.now() > ko) { try { localStorage.setItem(key, JSON.stringify(S.jackPre)); } catch (e) { /* quota */ } }
+  }
+  // Preseason value for one source (overall rank, or ADP for ud/adp).
+  function preVal(n, k) {
+    const pre = (S.season.players[n] || {}).pre || {};
+    if (k === 'jack') return S.jackPre ? S.jackPre.ovr[n] : undefined;
+    if (k === 'adp') return isNum(pre.adp) ? pre.adp : pre.jack;   // legacy data: market ADP stored as pre.jack
+    return pre[k];
+  }
+  function jackPreNote() {
+    const m = S.jackPre && S.jackPre.meta;
+    if (!m) return 'Jack\'s final board is still loading.';
+    if (m.error) return 'Jack\'s final board could not be loaded (' + m.error + ').';
+    const t = m.at ? new Date(m.at) : null;
+    return 'Jack = his final redraft board, saved ' + (t && isFinite(t) ? t.toLocaleString() : m.id) + ' (the last save before the Week 1 kickoff, rankings_history/' + m.id + '). Market ADP = the site\'s blended ADP that day.';
   }
 
   // Jack's weekly board per game: newest rankings_history save before the game's
@@ -204,8 +256,8 @@
     // position rank per source over everyone at the position who has that source's value
     const posRank = {};
     SRC_PRE.forEach(({ k }) => {
-      const has = names.filter((n) => P[n].pre && isNum(P[n].pre[k]));
-      has.sort((a, b) => P[a].pre[k] - P[b].pre[k]);
+      const has = names.filter((n) => isNum(preVal(n, k)));
+      has.sort((a, b) => preVal(a, k) - preVal(b, k));
       posRank[k] = {}; has.forEach((n, i) => { posRank[k][n] = i + 1; });
     });
     const gamesPlayed = Math.max(...S.season.weeks.filter((w) => w.played > 0).map((w) => w.week), 0);
@@ -242,7 +294,7 @@
       const lab = SRC_PRE.find((z) => z.k === x.s).l;
       html.push('<tr' + (x.s === 'jack' ? ' class="me"' : '') + '><td class="l">' + esc(lab) + '</td><td>' + x.has + '/' + x.n + '</td><td>' + f2(x.rho) + '</td><td>' + f1(x.mae) + '</td><td>' + x.hits + '/' + x.K + ' <span class="muted">(' + pct(x.hitPct) + ')</span></td><td>' + (x.s === 'jack' ? '—' : x.h2h.join('-')) + '</td></tr>');
     });
-    html.push('</tbody></table></div><p class="note">Pool = every player any source ranked top-' + N + ' at ' + esc(c.pos) + ' on ' + esc(S.season.preseason.consDay) + ' (the day of the Week 1 opener). Within the pool each source is re-ranked 1..n; players a source left unranked share the bottom rank. ρ = Spearman rank correlation with the actual finish. Avg rank miss = mean |source rank − actual rank|. Hits = of the source\'s top-' + HIT_K[c.pos] + ', how many actually finished top-' + HIT_K[c.pos] + '. vs Jack = players where the source\'s rank miss was smaller / larger / equal. Players with no games count as 0 points on the season-total basis.</p></div>');
+    html.push('</tbody></table></div><p class="note">Pool = every player any source ranked top-' + N + ' at ' + esc(c.pos) + ' on ' + esc(S.season.preseason.consDay) + ' (the day of the Week 1 opener). Within the pool each source is re-ranked 1..n; players a source left unranked share the bottom rank. ρ = Spearman rank correlation with the actual finish. Avg rank miss = mean |source rank − actual rank|. Hits = of the source\'s top-' + HIT_K[c.pos] + ', how many actually finished top-' + HIT_K[c.pos] + '. vs Jack = players where the source\'s rank miss was smaller / larger / equal. Players with no games count as 0 points on the season-total basis. ' + esc(jackPreNote()) + '</p></div>');
 
     // season projections
     const pj = {};
@@ -257,7 +309,7 @@
     // player table
     const sk = S.sort.season || { k: 'act', d: -1 };
     const cols = [{ k: 'n', l: 'Player', left: true }, { k: 'tm', l: 'Tm', left: true }, { k: 'act', l: c.basis === 'ppg' ? 'PPG' : 'Pts' }, { k: 'g', l: 'G' }, { k: 'actRank', l: 'Fin' }]
-      .concat(SRC_PRE.map((s) => ({ k: 'r_' + s.k, l: s.l.replace("Jack's original board", 'Jack').replace('FantasyPros ECR', 'FP').replace('Underdog ADP', 'UD') })));
+      .concat(SRC_PRE.map((s) => ({ k: 'r_' + s.k, l: s.l.replace("Jack's final board", 'Jack').replace('Market ADP', 'ADP').replace('FantasyPros ECR', 'FP').replace('Underdog ADP', 'UD') })));
     const trs = rows.map((r, i) => {
       const o = { n: r.n, tm: r.tm || '', act: r.act, g: r.g, actRank: m.jack ? m.jack.actRank[i] : (m[srcs.find((s) => m[s])] || {}).actRank[i] };
       srcs.forEach((s) => { o['r_' + s] = m[s] ? (isNum(r.r[s]) ? m[s].rk[i] : null) : null; });
@@ -473,7 +525,7 @@
       const p = P[n];
       html.push('<div class="card"><h2>' + esc(n) + ' <span class="pill">' + p.pos + (p.tm ? ' · ' + p.tm : '') + '</span></h2>');
       if (p.pre) {
-        html.push('<table><thead><tr>' + SRC_PRE.map((s) => '<th>' + esc(s.l) + '</th>').join('') + '</tr></thead><tbody><tr>' + SRC_PRE.map((s) => '<td>' + (isNum(p.pre[s.k]) ? (s.k === 'ud' ? p.pre[s.k].toFixed(1) + ' ADP' : '#' + p.pre[s.k] + ' ovr') : '—') + '</td>').join('') + '</tr></tbody></table>');
+        html.push('<table><thead><tr>' + SRC_PRE.map((s) => '<th>' + esc(s.l) + '</th>').join('') + '</tr></thead><tbody><tr>' + SRC_PRE.map((s) => { const v = preVal(n, s.k); return '<td>' + (isNum(v) ? (s.k === 'ud' ? v.toFixed(1) + ' ADP' : '#' + v + ' ovr') : '—') + '</td>'; }).join('') + '</tr></tbody></table>');
       }
       if (p.pj) html.push('<p class="note">Preseason PPG projections: ' + SRC_PJ.map((s) => esc(s.l) + ' ' + f1(p.pj[s.k])).join(' · ') + '</p>');
       html.push('</div>');

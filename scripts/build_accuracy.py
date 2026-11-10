@@ -3,9 +3,15 @@
 build_accuracy.py — data build for the admin-only ACCURACY tracker (/accuracy/).
 
 Tracks, against real full-PPR results (QB/RB/WR/TE only):
-  * Jack's ORIGINAL season-long board + every site's preseason rank/ADP
-    (Sleeper, FantasyPros, Underdog, ESPN, CBS, Yahoo) — one frozen snapshot
-    taken from data/cons_rank_history.json on the day of the W1 opener.
+  * Every site's preseason rank/ADP (market ADP, Sleeper, FantasyPros,
+    Underdog, ESPN, CBS, Yahoo) — one frozen snapshot taken from
+    data/cons_rank_history.json on the day of the W1 opener. Stored under
+    pre.adp / sl / fp / ud / espn / cbs / yahoo. NOTE: field `a` in d.js is
+    the site's blended MARKET ADP, not Jack's board — builds before
+    2026-11-10 mislabeled it pre.jack.
+  * Jack's own final preseason board is NOT built here: the page reads the
+    last rankings_history save before the W1 kickoff (jacks.redraft._order)
+    from Firestore, like the weekly boards below.
   * Preseason SEASON projections (MFF sim, Mike Clay, Sleeper, ESPN, CBS) —
     frozen from the last commit before the W1 opener (PRESEASON_COMMIT).
   * WEEKLY projections per site (Sleeper/ESPN/CBS/FantasyPros + FP expert
@@ -206,6 +212,15 @@ def build_preseason(idx):
     if os.path.exists(p):
         pre = json.load(open(p, encoding='utf-8'))
         if pre.get('commit') == PRESEASON_COMMIT and pre.get('consDay') == PRESEASON_CONS_DAY:
+            # Caches written before 2026-11-10 stored d.js `a` (market ADP) as
+            # 'jack'. The 09-09 day has since rolled out of cons_rank_history,
+            # so migrate the cache in place instead of re-extracting.
+            if any('jack' in r for r in pre.get('ranks', {}).values()):
+                for r in pre['ranks'].values():
+                    if 'jack' in r:
+                        r['adp'] = r.pop('jack')
+                json.dump(pre, open(p, 'w', encoding='utf-8'), separators=(',', ':'))
+                print('preseason: migrated cached pre.jack -> pre.adp (market ADP)')
             return pre
     print(f'preseason: extracting from commit {PRESEASON_COMMIT} + cons day {PRESEASON_CONS_DAY}')
     cons = json.load(open(os.path.join(ROOT, 'data', f'cons_rank_history.json'), encoding='utf-8'))
@@ -213,7 +228,8 @@ def build_preseason(idx):
     if not day:
         raise SystemExit(f'cons_rank_history has no day {PRESEASON_CONS_DAY}')
     fields = cons['fields']  # ['a','slR','fpR','udA','espnAdp','cbsAdp','yahooAdp']
-    src_keys = {'a': 'jack', 'slR': 'sl', 'fpR': 'fp', 'udA': 'ud', 'espnAdp': 'espn', 'cbsAdp': 'cbs', 'yahooAdp': 'yahoo'}
+    # 'a' = the site's blended market ADP (NOT Jack's board — see module docstring)
+    src_keys = {'a': 'adp', 'slR': 'sl', 'fpR': 'fp', 'udA': 'ud', 'espnAdp': 'espn', 'cbsAdp': 'cbs', 'yahooAdp': 'yahoo'}
     ranks = {}
     for name, vals in day['f'].items():
         hit = idx.get(name, 'cons_rank_history')

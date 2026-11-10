@@ -14,8 +14,14 @@ async function bootRankings(page) {
   });
   await page.goto('/');
   await expect(page.locator('#tbody tr[data-idx]').first()).toBeVisible({ timeout: 60_000 });
-  // Progressive render appends the tail on the next tick — settle it.
-  await page.waitForFunction(() => document.querySelectorAll('#tbody tr[data-idx]').length > 200);
+  // Progressive render appends the tail on idle — settle it. Phones (<=600px,
+  // 2026-10-17) never append on idle: the tail waits for the reader to scroll
+  // near it, so there the first ~120-row chunk IS the settled state (the
+  // scroll-in is pinned by its own test in the mobile block).
+  await page.waitForFunction(() => {
+    const phone = window.matchMedia('(max-width:600px)').matches;
+    return document.querySelectorAll('#tbody tr[data-idx]').length > (phone ? 100 : 200);
+  });
 }
 
 test.describe('rankings page', () => {
@@ -139,16 +145,22 @@ test.describe('rankings page', () => {
 
   test('sticky header stack stays flush through the view-options toggle', async ({ page }) => {
     await bootRankings(page);
+    // The sticky row is .stats-row since the 2026-10-08 row collapse: .stats-bar
+    // (the counts) is now a static child inside it, inset by the row's padding,
+    // so measuring the bar reads that padding as a gap. Guard the premise so a
+    // future restructure fails here instead of as a mystery offset.
+    expect(await page.evaluate(() =>
+      getComputedStyle(document.querySelector('#pageRankings .stats-row')).position)).toBe('sticky');
     const gapAfter = async () => page.evaluate(() => new Promise(r => {
       const pg = document.getElementById('pageRankings');
       pg.scrollTop = 600;
       requestAnimationFrame(() => requestAnimationFrame(() => {
         const c = pg.querySelector('.controls').getBoundingClientRect();
-        const s = pg.querySelector('.stats-bar').getBoundingClientRect();
+        const s = pg.querySelector('.stats-row').getBoundingClientRect();
         r(Math.round(s.top - c.bottom) || 0); // || 0 normalizes -0 (Object.is)
       }));
     }));
-    // Collapsed (default): stats-bar flush under the controls block.
+    // Collapsed (default): stats row flush under the controls block.
     expect(await gapAfter()).toBe(0);
     // Expand: the sticky scoring row joins the stack — offset must grow with it
     // (the 2026-08-28 regression: the wrap hides it via PARENT display, which
@@ -170,7 +182,7 @@ test.describe('rankings page', () => {
       }));
     }));
     expect(scoring.h).toBeGreaterThan(0);
-    expect(expandedGap).toBe(scoring.h); // stats-bar sits exactly below the scoring row
+    expect(expandedGap).toBe(scoring.h); // stats row sits exactly below the scoring row
     expect(scoring.pinGap).toBe(0);      // ...and the scoring row is actually docked in that slot
     // Collapse again: back to flush (this was the user-visible gap bug).
     await page.evaluate(() => { document.getElementById('pageRankings').scrollTop = 0; window._toggleViewOpts(); });
@@ -249,5 +261,20 @@ test.describe('mobile', () => {
     await bar.locator('.nav-btn[data-page="rankings"]').click();
     await page.waitForFunction(() =>
       document.querySelector('.page.active').id === 'pageRankings');
+  });
+
+  test('rankings tail is held back until the reader scrolls near it', async ({ page }) => {
+    await bootRankings(page);
+    const count = () => page.locator('#tbody tr[data-idx]').count();
+    // No idle append on phones (2026-10-17: all ~570 rows were enough DOM for iOS
+    // Safari to discard the backgrounded tab). Desktop's idle timeout is 1.2s —
+    // well past it, the phone must still be on the first chunk.
+    await page.waitForTimeout(2500);
+    expect(await count()).toBeLessThan(200);
+    // Scrolling to the end of what's built hands out the rest, 100 rows at a time.
+    await expect.poll(async () => {
+      await page.evaluate(() => document.getElementById('tbody').lastElementChild.scrollIntoView({ block: 'end' }));
+      return count();
+    }, { timeout: 20_000 }).toBeGreaterThan(400);
   });
 });

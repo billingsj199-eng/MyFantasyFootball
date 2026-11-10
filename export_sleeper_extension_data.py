@@ -18,7 +18,7 @@ SLEEPER_JSON = "sleeper_nfl.json"
 # Drew Lock — Darnold out 4-6 wks; Cooper Rush — started W1 for PIT). They
 # ship at the END of the board rank so the helpers know them; once Jack ranks
 # a name the board lookup wins and the entry here is a no-op. Delete when ranked.
-BOARD_EXTRAS = ["Drew Lock", "Cooper Rush"]
+BOARD_EXTRAS = ["Drew Lock", "Cooper Rush", "Raheim Sanders", "Tyler Goodson"]
 # Jack's live per-mode boards (superflex/dynasty/dynastysf) — public-read Firestore doc
 FIRESTORE_URL = (
     "https://firestore.googleapis.com/v1/projects/jackb933-website/databases/(default)"
@@ -496,9 +496,10 @@ def write_sim_pack():
 
       data/sim_pack.js      — verbatim concat of mike_clay_projections.js +
                               player_weekly_sigma.js + clay_team_grades_2026.js
-                              (each already declares the global the engine
-                              expects: MIKE_CLAY_PROJ / PLAYER_WEEKLY_SIGMA /
-                              window.CLAY_TEAM_GRADES_2026)
+                              + ../sim_lab/data/sim_tuning.js (each already
+                              declares the global the engine expects:
+                              MIKE_CLAY_PROJ / PLAYER_WEEKLY_SIGMA /
+                              window.CLAY_TEAM_GRADES_2026 / window.SIM_TUNING)
       engine_sim.js         — verbatim copy of ../sim_lab/engine.js (source of
                               truth stays sim_lab; this copy step prevents drift)
       data/sim_overrides.js — verbatim copy of ../sim_lab/overrides.js
@@ -509,6 +510,11 @@ def write_sim_pack():
         "data/mike_clay_projections.js",
         "data/player_weekly_sigma.js",
         "data/clay_team_grades_2026.js",
+        # 2026-10-07: the Tuesday tuner's knobs (window.SIM_TUNING — per-position
+        # market weight, belowW/aboveW, atdJuice, sigma/TD multipliers). Without
+        # it the extension engine ran on its built-in defaults (.70 market weight
+        # everywhere) and never matched the site's shipped numbers.
+        "../sim_lab/data/sim_tuning.js",
     ]
     missing = [p for p in pack_srcs if not os.path.exists(p)]
     if missing:
@@ -519,6 +525,16 @@ def write_sim_pack():
         for p in pack_srcs:
             parts.append("\n// ---- " + p + " ----\n")
             parts.append(open(p, encoding="utf-8").read())
+        # 2026-10-09 (Jack: "sync the extensions with the depth files"): the ESPN depth charts (window.SIM_DEPTH_2026) and the
+        # depth-chart pool (window.SIM_DEPTH_POOL) - without them the extension engine kept Clay's sheet as its player list
+        # (no Pierce / Sanders rows, released kickers kept, chart teams + spellings only from Sleeper). Optional: a missing
+        # file is skipped with a warning, never blocking the pack.
+        for p in ("../sim_lab/data/sim_depth.js", "../sim_lab/data/sim_depth_pool.js", "../sim_lab/data/sim_stat_shape.js"):   # + game-log stat lines (2026-10-09)
+            if os.path.exists(p):
+                parts.append("\n// ---- " + p + " ----\n")
+                parts.append(open(p, encoding="utf-8").read())
+            else:
+                print("WARN: sim_pack without", p)
         for pack_dst in ("sleeper-extension/data/sim_pack.js",
                          "espn-extension/data/sim_pack.js",
                          "yahoo-extension/data/sim_pack.js"):

@@ -126,7 +126,11 @@
         : 'Sign in at myfantasyfootball.co in this same Chrome profile with a Premium account to unlock.') + '</div>' +
       '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#00ceb8;color:#fff;border-radius:6px;padding:7px 14px;font-weight:700;text-decoration:none;font-size:12px">' +
       (stale ? 'Re-sync with MyFantasyFootball' : signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
-      '<div style="color:#6b7280;font-size:10px;margin-top:10px">Unlocks automatically — open the site signed in, in this Chrome profile, and revisit (or keep a tab open) at least once a day.</div></div>';
+      // League sync is FREE (Jack 2026-10-06): the site's My Teams imports
+      // Sleeper leagues by league ID or username, no extension or premium needed.
+      '<div style="margin-top:12px;padding:8px 10px;border:1px solid #1d7a34;border-radius:6px;background:rgba(34,197,94,.08);color:#d1fae5;font-size:11px;text-align:left">' +
+        '<b style="color:#22c55e">League sync is FREE.</b> On myfantasyfootball.co, open My Teams and paste your Sleeper league ID or username. Every league imports, private ones too.</div>' +
+      '<div style="color:#6b7280;font-size:10px;margin-top:10px">The draft and season helper unlocks automatically — open the site signed in, in this Chrome profile, and revisit (or keep a tab open) at least once a day.</div></div>';
   }
   function gateInit(onChange) {
     try {
@@ -282,6 +286,43 @@
     const sv = state.scoringVals;
     return ((sv.recPts - 1) * (p.cRec || 0) + (sv.passTd - 4) * (p.cPtd || 0) +
       ((sv.teBonus && p.s === 'TE') ? sv.teBonus * (p.cRec || 0) : 0)) / p.cGm;
+  }
+
+  // SIMS tab = the site's Sim Lab only (2026-10-09, Jack: "make sure extensions have only sim rest of season
+  // logic"). The bundled engine runs on a Clay-only pack (no 2026 games, usage, injuries news or the shadow base),
+  // so its own weekly means were preseason numbers. simLeague's opts.meanFor swaps in the site's exported weekly row
+  // (PPR frame + this league's scoring delta) for every remaining week; 0 = not playing; no row = engine fallback.
+  // the site sim export's timestamp: a cached SIMS run is reused only while the site's numbers are unchanged
+  function _simStamp() { return (state.simProj && state.simProj.updated) || ''; }
+  // rest-of-season total off the site sim: the remaining weeks' rows (each already priced for availability)
+  // + this league's scoring delta per game played. null = no sim rows for him.
+  function simRosTotal(p) {
+    const ix = simProjIdx(); if (!ix || !state.simProj) return null;
+    const cw = state.simProj.currentWeek || 1, key = simKeyFor(p), d = simLeagueDeltaPg(p);
+    let tot = 0, any = false;
+    for (const w of Object.keys(ix.weeks)) {
+      if (+w < cw) continue;
+      const r = ix.weeks[w][key];
+      if (r && typeof r[1] === 'number') { any = true; if (r[1] > 0) tot += r[1] + d; }
+    }
+    return any ? Math.round(tot * 10) / 10 : null;
+  }
+  let _simExtByNorm = null;
+  function simMeanForEngine(ep, wk) {
+    const ix = simProjIdx();
+    const m = ix && ix.weeks[wk];
+    if (!m) return undefined;
+    const key = ep.isDST ? 'dst_' + String(ep.tm || '').toLowerCase() : norm(ep.name);
+    const r = m[key];
+    if (!r || typeof r[1] !== 'number') return undefined;
+    if (!(r[1] > 0)) return 0;
+    if (!_simExtByNorm || _simExtByNorm.n !== state.players.length) {
+      const mp = Object.create(null);
+      for (const p of state.players) { if (p && p.n) { const k = norm(p.n); if (mp[k] === undefined) mp[k] = p; } }
+      _simExtByNorm = { n: state.players.length, mp };
+    }
+    const xp = ep.isDST ? null : _simExtByNorm.mp[key];
+    return Math.max(0, r[1] + (xp ? simLeagueDeltaPg(xp) : 0));
   }
 
   // Single lookup path for every Sleeper-name → site-player match (pick
@@ -729,7 +770,8 @@
         const sp = _six.season[simKeyFor(p)];
         if (sp && typeof sp[1] === 'number') {
           p.pPg = Math.round((sp[1] + simLeagueDeltaPg(p)) * 10) / 10;
-          p.szn = Math.round(p.pPg * p.cGm * 10) / 10;
+          const _ros = simRosTotal(p);   // rest of season, not Clay's full-season game count
+          p.szn = _ros != null ? _ros : Math.round(p.pPg * p.cGm * 10) / 10;
         }
       }
       // scDelta = per-game PPG shift this league's scoring gives the player
@@ -1696,6 +1738,8 @@
   // Same math as app.js _wkSchedAdjust / _mtObservedFpa / _wkOppBlendTable — keep in sync.
   const OPP_FADE_GAMES = 4;   // fallback only: Clay prior gone once the opponent has this many final games
   const OPP_PRIOR_K = { QB: 3, RB: 4, WR: 6, TE: 2, DST: 2 };   // last season is worth k games of this one
+  // 2026-11-05 (site app.js _MT_FPA_RAW_POS): RB grade reads RAW points allowed - 2015-25 backtest, adjusted lost 10 of 11 seasons
+  const OPP_RAW_POS = { RB: true };
   const OPP_ABBR_FIX = { WSH: 'WAS', LA: 'LAR', JAC: 'JAX', OAK: 'LV', SD: 'LAC' };
   let _oppGradeCache = null;
   function oppSchedAdjust(games, K) {
@@ -1734,7 +1778,7 @@
     const gp = (t) => (acc[t] ? Object.keys(acc[t].wks).length : 0);
     const perGame = {};
     Object.keys(acc).forEach((t) => { perGame[t] = acc[t].pts / gp(t); });
-    const S = oppSchedAdjust(games, 1);
+    const S = OPP_RAW_POS[pos] ? null : oppSchedAdjust(games, 1);   // RB: raw points allowed (site _MT_FPA_RAW_POS)
     if (S) Object.keys(perGame).forEach((t) => { if (typeof S.dE[t] === 'number') perGame[t] = S.mu + S.dE[t]; });
     const zOf = (m) => {
       const ks = Object.keys(m).filter((t) => typeof m[t] === 'number');
@@ -2898,7 +2942,7 @@
     // and rookie/injury designations through SIM_SLEEPER_META.
     if (!window.SIM_SLEEPER) {
       window.SIM_SLEEPER = { players: state.players.filter((p) => p.sid && p.s !== 'PICK').map((p) => ({
-        n: p.n, sid: p.sid, a: p.a, age: p.age, ktc1qb: p.ktc1qb, ktcSf: p.ktcSf })) };
+        n: p.n, sid: p.sid, a: p.a, age: p.age, ktc1qb: p.ktc1qb, ktcSf: p.ktcSf, sTm: p.sTm })) };   // sTm: current team for the engine's CHART TEAMS fallback (2026-10-09)
     }
     const meta = {};
     for (const sid of Object.keys(state.slMeta)) {
@@ -3044,7 +3088,7 @@
       teams, sims: PK_SIMS, seed: PK_SEED, scoring: inp.scoring,
       schedule: inp.sched, players: inp.players, pairsByWeek: inp.pairsByWeek, regWeeks: inp.regWeeks,
       playoffTeams: inp.playoffTeams, playoffStart: inp.playoffStart, lineupSlots: inp.slots,
-      unavailable: inp.unavailable, currentWeek: inp.curWeek,
+      unavailable: inp.unavailable, currentWeek: inp.curWeek, meanFor: simMeanForEngine,
     });
   }
   async function ensurePickSim() {
@@ -3052,8 +3096,8 @@
     const ps = state.pickSim;
     if (!lid || !simAvailable() || !state.seasonRosters.length) return;
     if (ps.leagueId === lid &&
-      (ps.status === 'running' || (ps.status === 'done' && ps.recHash === pkRecHash()))) return;
-    ps.leagueId = lid; ps.status = 'running'; ps.note = '';
+      (ps.status === 'running' || (ps.status === 'done' && ps.recHash === pkRecHash() && ps.su === _simStamp()))) return;
+    ps.leagueId = lid; ps.status = 'running'; ps.note = ''; ps.su = _simStamp();
     render();
     await new Promise((r) => setTimeout(r, 30)); // let the status paint before the sync sim
     try {
@@ -3065,7 +3109,7 @@
       try { // day+records-keyed cache: finish distributions barely move intraday
         const saved = await store.get([cacheKey]);
         const c = saved[cacheKey];
-        if (c && c.v === 2 && c.day === day && c.recHash === recHash && c.placeCounts) {
+        if (c && c.v === 3 && c.day === day && c.recHash === recHash && c.su === _simStamp() && c.placeCounts) {
           Object.assign(ps, { status: 'done', placeCounts: c.placeCounts, results: c.results,
             sims: c.sims || PK_SIMS, recHash, synthPairs: !!c.synthPairs });
           render();
@@ -3095,7 +3139,7 @@
         };
       });
       Object.assign(ps, { status: 'done', placeCounts, results, sims: PK_SIMS, recHash });
-      store.set({ [cacheKey]: { v: 2, day, recHash, placeCounts, results, sims: PK_SIMS, synthPairs: ps.synthPairs } });
+      store.set({ [cacheKey]: { v: 3, su: _simStamp(), day, recHash, placeCounts, results, sims: PK_SIMS, synthPairs: ps.synthPairs } });
     } catch (e) {
       ps.status = 'error';
       ps.note = e.message || String(e);
@@ -4342,7 +4386,7 @@
         <button id="mff-pk-rerun" style="background:#26304d;border:none;color:#eef1f9;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600">RE-RUN SIM</button>
         <span style="font-size:9px;color:#8b94b3">${statTxt}</span>
       </div>
-      <div style="font-size:9px;color:#8b94b3;margin-top:6px;line-height:1.35">Standings/odds = ${PK_SIMS.toLocaleString()} Monte Carlo seasons (Clay projections × Vegas lines, league-scored, real matchups${ps.synthPairs ? ' — synth round-robin until Sleeper publishes them' : ''}). ${dyn ? `Pick values: draft order = inverse simmed standings; each pick's EV integrates the owner-of-record team's FULL finish distribution over the KTC ${sf ? 'Superflex' : '1QB'} Early/Mid/Late curve — collapse-tail risk earns extra credit (early slots are convex). 2028s regress 50% toward league average; ~2029s are extrapolated off the 2028 curve (KTC has no anchors there yet). ` : ''}Assumes rest-of-season rosters as-is; players without a Clay projection score 0 in the sim.</div>`;
+      <div style="font-size:9px;color:#8b94b3;margin-top:6px;line-height:1.35">Standings/odds = ${PK_SIMS.toLocaleString()} Monte Carlo seasons (the site's Sim Lab rest-of-season weekly projections, league-scored, real matchups${ps.synthPairs ? ' — synth round-robin until Sleeper publishes them' : ''}). ${dyn ? `Pick values: draft order = inverse simmed standings; each pick's EV integrates the owner-of-record team's FULL finish distribution over the KTC ${sf ? 'Superflex' : '1QB'} Early/Mid/Late curve — collapse-tail risk earns extra credit (early slots are convex). 2028s regress 50% toward league average; ~2029s are extrapolated off the 2028 curve (KTC has no anchors there yet). ` : ''}Assumes rest-of-season rosters as-is; players outside the site sim fall back to the bundled engine (Clay).</div>`;
   }
 
   function seasonHTML() {
@@ -4563,7 +4607,7 @@
       ['Sleeper ' + modeLbl, p[mk.sl] == null ? null : '#' + p[mk.sl]],
       ['ADP ' + modeLbl, p[mk.adp]],
       ['Proj PPG (Clay, ' + state.scoringLabel + ')', p.pPg],
-      ['Proj Season', p.szn],
+      ['Proj ROS', p.szn],
       ['Ceiling PPG', p.cPpg],
       ['VOR' + (sfMode ? ' (SF)' : ''), p[mk.vor]],
       ['Upside' + (sfMode ? ' (SF)' : ''), p[mk.up]],
@@ -5044,7 +5088,7 @@
         pills.push(pillHTML('★', '#1e3a5f', '#58a7ff', 'STACK with ' + mates.map((m) => m.name).join(', ')));
       }
       if (p.pPg != null) {
-        pills.push(pillHTML(p.pPg + 'ppg', '#26304d', '#00ceb8', 'Clay projection: ' + p.pPg + ' PPG (' + state.scoringLabel + ')' + (p.szn != null ? ' · ' + p.szn + ' season pts' : '')));
+        pills.push(pillHTML(p.pPg + 'ppg', '#26304d', '#00ceb8', 'Sim rest-of-season: ' + p.pPg + ' PPG (' + state.scoringLabel + ')' + (p.szn != null ? ' · ' + p.szn + ' pts left' : '')));
       }
       const sos = sosData && p.sTm && sosData[p.sTm] && sosData[p.sTm][p.s];
       if (sos) {

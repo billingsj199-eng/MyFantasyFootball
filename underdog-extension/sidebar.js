@@ -137,6 +137,12 @@
       <div class="lock-msg" id="mff-lock-msg">Sign in at myfantasyfootball.co to unlock the draft helper.</div>
       <a class="start-btn" id="mff-lock-btn" href="https://myfantasyfootball.co" target="_blank" rel="noopener noreferrer">Open MyFantasyFootball</a>
       <div class="lock-status" id="mff-lock-status"></div>
+      <!-- v0.18.24: portfolio sync is FREE (Jack 2026-10-06). applyPremiumGate
+           moves #mff-portfolio-block (same button/status ids + handlers) in
+           here while locked and back to Settings when premium unlocks. -->
+      <div id="mff-lock-free" style="margin-top:12px;padding:8px 10px;border:1px solid #1d7a34;border-radius:6px;background:rgba(34,197,94,.08);color:#d1fae5;font-size:11px;line-height:1.45;text-align:left">
+        <b style="color:#22c55e">Portfolio sync is FREE.</b> Click Sync from Underdog below, then open My Teams on myfantasyfootball.co to see your Underdog teams.
+      </div>
     </div>
     <!-- v0.9.22: Setup screen removed from default flow. The slot auto-
          detects from Underdog's draft ribbon; if it's wrong the user can
@@ -267,10 +273,17 @@
       <h3 style="margin-top:6px">Draft Slot</h3>
       <div class="slot-row" id="mff-slot-grid-settings"></div>
 
+      <div id="mff-portfolio-home"><div id="mff-portfolio-block">
       <h3 style="margin-top:8px">Portfolio</h3>
       <button id="mff-sync-btn" class="start-btn" style="margin-bottom:4px">Sync from Underdog</button>
       <div id="mff-sync-status" style="font-size:10px;color:#8a8d96;line-height:1.4"></div>
       <div id="mff-portfolio-diag" style="font-size:9px;color:#8a8d96;line-height:1.4;margin-top:4px;opacity:.85"></div>
+      </div></div>
+
+      <h3 style="margin-top:8px">BBM Overall Leaderboard</h3>
+      <button id="mff-lbq-btn" class="start-btn" style="margin-bottom:4px">Pull my draft groups (~2 min)</button>
+      <button id="mff-lb-btn" class="start-btn" style="margin-bottom:4px">Pull full leaderboard (~3 hrs)</button>
+      <div id="mff-lb-status" style="font-size:10px;color:#8a8d96;line-height:1.4">Every team's roster + points for the Sim Lab overall-standings sim. One request at a time; leave this tab open. Press again to stop and save.</div>
     </div>
   </div>
 </div>`;
@@ -776,6 +789,43 @@
     if (syncBtn) {
       syncBtn.addEventListener("click", () => {
         if (typeof syncPortfolioFromUnderdog === "function") syncPortfolioFromUnderdog();
+      });
+    }
+
+    // v0.18.20: full-leaderboard pull (the work happens in injected.js, MAIN
+    // world — this is just the button, its status line, and the pacing relay).
+    const lbBtn = document.getElementById("mff-lb-btn");
+    const lbqBtn = document.getElementById("mff-lbq-btn");
+    if (lbqBtn) {
+      lbqBtn.addEventListener("click", () => {
+        window.postMessage({ source: 'mff-lbpull', cmd: 'start', mode: 'mypods' }, '*');
+      });
+    }
+    if (lbBtn) {
+      let lbRunning = false;
+      lbBtn.addEventListener("click", () => {
+        window.postMessage({ source: 'mff-lbpull', cmd: lbRunning ? 'stop' : 'start' }, '*');
+        if (lbRunning) lbBtn.textContent = 'Stopping…';
+      });
+      window.addEventListener('message', (ev) => {
+        if (ev.source !== window || !ev.data) return;
+        if (ev.data.source === 'mff-lbpull-status') {
+          lbRunning = !!ev.data.running;
+          const st = document.getElementById('mff-lb-status');
+          if (st) st.textContent = ev.data.text;
+          lbBtn.textContent = lbRunning ? 'Stop + save what is pulled' : 'Pull full leaderboard (~3 hrs)';
+        } else if (ev.data.source === 'mff-lb-sleep') {
+          // The page's own timers crawl when the tab is hidden; the background
+          // worker's don't. Only a real 'ok' wakes the puller — a failed relay
+          // stays silent and the puller's own timer covers it.
+          const id = ev.data.id;
+          try {
+            chrome.runtime.sendMessage({ type: 'mff-sleep', ms: ev.data.ms }, (res) => {
+              if (chrome.runtime.lastError || res !== 'ok') return;
+              window.postMessage({ source: 'mff-lb-wake', id }, '*');
+            });
+          } catch (_) {}
+        }
       });
     }
 
@@ -6331,6 +6381,12 @@
       'mff-setup', 'mff-tabs', 'mff-pick-line',
       'mff-roster-wrap', 'mff-recs-wrap', 'mff-projections-wrap', 'mff-settings-wrap'
     ];
+
+    // Free portfolio sync: the Portfolio block lives on the lock screen while
+    // locked, in Settings once unlocked (re-parenting keeps its listeners).
+    const portBlock = document.getElementById('mff-portfolio-block');
+    const portDest = isPremium ? document.getElementById('mff-portfolio-home') : lockEl;
+    if (portBlock && portDest && portBlock.parentNode !== portDest) portDest.appendChild(portBlock);
 
     if (!isPremium) {
       if (lockEl) lockEl.style.display = '';

@@ -268,7 +268,10 @@ Run it after every rankings/KTC refresh, then reload the extension.
 
 The same run also rebuilds the PICKS-tab sim bundle: `data/sim_pack.js`
 (verbatim concat of `data/mike_clay_projections.js` +
-`data/player_weekly_sigma.js` + `data/clay_team_grades_2026.js`) and syncs
+`data/player_weekly_sigma.js` + `data/clay_team_grades_2026.js` +
+`../sim_lab/data/sim_tuning.js` — the Tuesday tuner's `window.SIM_TUNING`
+knobs, added 2026-10-07 so the extension sims use the site's market
+weights / belowW / aboveW / atdJuice instead of engine defaults) and syncs
 `engine_sim.js` + `data/sim_overrides.js` from `../sim_lab/` (edit the
 sim_lab originals, never the copies).
 

@@ -500,9 +500,15 @@ should tint by matchup. The "Wk. 3" label matches the mock week — edit it to
       fmp.innerHTML = html;
     })();
 
-    var s = document.createElement('script');
-    s.src = 'sidebar.js?t=' + Date.now(); // bust the browser cache on every harness reload
-    document.body.appendChild(s);
+    // optional: drop a copy of the site's data/sim_proj_2026.json here as _mock_sim_proj.json to test the
+    // sim-first paths (SIMS tab meanFor, ROS totals); absent = the harness runs without site sims as before
+    fetch('_mock_sim_proj.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+      .then(function (sp) {
+        if (sp) window.__MFF_MOCK.simProj = sp;
+        var s = document.createElement('script');
+        s.src = 'sidebar.js?t=' + Date.now(); // bust the browser cache on every harness reload
+        document.body.appendChild(s);
+      });
     setInterval(function () { if (made < SCRIPT.length) made++; }, 4000);
     document.getElementById('advance').addEventListener('click', function () {
       if (made < SCRIPT.length) made++;

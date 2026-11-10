@@ -97,6 +97,61 @@
   // keeps working regardless of which host UD's app calls.
   var UD_HOST_RE = /(underdogfantasy|underdogsports)\.com/;
 
+  // v0.18.19: API discovery log. Records the SHAPE (never headers/tokens) of
+  // every JSON response Underdog's own app loads, one entry per endpoint
+  // pattern, so we can find what the tournament leaderboard screen calls
+  // (endpoint unknown — shouldCache below never matched it). Passive only:
+  // nothing here issues a request. Read it from DevTools on the Underdog tab:
+  //   copy(__mffApiLog())
+  var PATHLOG_KEY = '__mffUDPathLog_v1';
+  var PATHLOG_STD = ['product', 'product_experience_id', 'state_config_id'];
+  var LB_RE = /(leaderboard|standing|rank|tournament_round)/i;
+  window.__mffUDPathLog = (function () {
+    try { return JSON.parse(sessionStorage.getItem(PATHLOG_KEY)) || {}; } catch (_) { return {}; }
+  })();
+  var _pathLogTimer = null;
+  function savePathLog() {
+    if (_pathLogTimer) return;
+    _pathLogTimer = setTimeout(function () {
+      _pathLogTimer = null;
+      try { sessionStorage.setItem(PATHLOG_KEY, JSON.stringify(window.__mffUDPathLog)); } catch (_) {}
+    }, 500);
+  }
+  function shapeOf(v, d) {
+    if (v === null) return 'null';
+    if (Array.isArray(v)) return '[' + v.length + ']' + (v.length && d > 0 ? ' of ' + JSON.stringify(shapeOf(v[0], d - 1)) : '');
+    if (typeof v === 'object') {
+      if (d <= 0) return '{..}';
+      var o = {};
+      Object.keys(v).slice(0, 40).forEach(function (k) { o[k] = shapeOf(v[k], d - 1); });
+      return o;
+    }
+    return typeof v;
+  }
+  function logApi(url, status, text, via) {
+    try {
+      var u = new URL(url, location.href);
+      if (!UD_HOST_RE.test(u.hostname)) return;
+      if (!text || (text.charAt(0) !== '{' && text.charAt(0) !== '[')) return;
+      var norm = u.pathname
+        .replace(/[0-9a-f]{8}-[0-9a-f-]{27,}/gi, '<id>')
+        .replace(/\/\d+(?=\/|$)/g, '/<n>');
+      var qs = [];
+      u.searchParams.forEach(function (v, k) { if (PATHLOG_STD.indexOf(k) < 0) qs.push(k + '=' + v); });
+      var isLb = LB_RE.test(norm);
+      var e = window.__mffUDPathLog[norm] || (window.__mffUDPathLog[norm] = { n: 0 });
+      e.n++; e.via = via; e.host = u.hostname; e.last = u.pathname; e.qs = qs.join('&');
+      e.status = status; e.bytes = text.length; e.ts = Date.now();
+      if (e.n <= 3 || isLb) e.shape = shapeOf(JSON.parse(text), 4);
+      if (isLb) {
+        e.sample = text.slice(0, 1500);
+        if (e.n === 1) console.log('[MFF/inject] leaderboard-like endpoint:', u.pathname + u.search);
+      }
+      savePathLog();
+    } catch (_) {}
+  }
+  window.__mffApiLog = function () { return JSON.stringify(window.__mffUDPathLog, null, 1); };
+
   function shouldCache(url) {
     if (!url || !UD_HOST_RE.test(url)) return false;
     var p = pathOf(url);
@@ -173,6 +228,17 @@
   XMLHttpRequest.prototype.send = function () {
     try {
       var url = this.__mffUrl || '';
+      // v0.18.19: discovery log for every UD JSON response (see logApi).
+      if (url && !this.__mffSelfFetch) {
+        var lx = this;
+        this.addEventListener('load', function () {
+          try {
+            var txt = (lx.responseType === '' || lx.responseType === 'text') ? lx.responseText
+                    : (lx.responseType === 'json' && lx.response ? JSON.stringify(lx.response) : '');
+            logApi(url, lx.status, txt, 'xhr');
+          } catch (_) {}
+        });
+      }
       // v0.9.54: skip our own self-fetch XHRs from polluting the captured
       // UD-headers cache. Without this flag, our 2-header mainfetch XHR
       // would overwrite UD's 11-header capture for the same URL prefix
@@ -264,7 +330,20 @@
         if (auth) captureToken(auth, 'fetch');
       }
     } catch (_) {}
-    return _origFetch.apply(this, arguments);
+    var p = _origFetch.apply(this, arguments);
+    // v0.18.19: discovery log (JSON responses only; the page's own promise
+    // is returned untouched).
+    try {
+      if (url && UD_HOST_RE.test(url)) {
+        p.then(function (res) {
+          try {
+            if (!/json/i.test(res.headers.get('content-type') || '')) return;
+            res.clone().text().then(function (t) { logApi(url, res.status, t, 'fetch'); }).catch(function () {});
+          } catch (_) {}
+        }).catch(function () {});
+      }
+    } catch (_) {}
+    return p;
   };
 
   // --- Sidebar → MAIN-world handler ---
@@ -454,5 +533,402 @@
     try { window.__mffSyncDiag = ev.data.summary; } catch (_) {}
   });
 
-  console.log('[MFF/inject] passive XHR-snoop + main-world XHR fetch ready (v0.10.47, full UD headers + fresh request-id + query params + paginated-list merge)');
+  // ==========================================================================
+  // v0.18.20: OVERALL-LEADERBOARD PULL (Sim Lab "overall standings" input).
+  // Jack asked for this explicitly (10-01): one full pull so every exact team
+  // is in the sim, points refreshed weekly from stats afterwards.
+  //
+  // /v1/tournament_rounds/<round>/leaderboard?page=N returns 50 entries per
+  // page — place, points, regular-season payout AND each entry's 18
+  // appearance ids (its roster). BBM VII is ~13,450 pages, so the full pull
+  // is ~13,600 requests, one at a time, `delayMs` apart (~3 hours). Runs ONLY
+  // from the Settings button (or __mffPullLeaderboard()); nothing here fires
+  // on its own, and it stops on the first auth error or repeated failure.
+  //
+  // Page order keeps a stopped pull usable: every page through the paid
+  // places first, then the rest in 32 evenly spread passes — so at any point
+  // the pages in hand are a uniform sample, and each page's weight (how many
+  // leaderboard pages it stands for) is just its gap to its neighbours.
+  // A finished pull has every weight = 1. Pressing the button again in the
+  // same tab continues where a stopped pull left off.
+  //
+  // Output: a downloaded mff_bbm_leaderboard_<stamp>.json
+  //   { kind:'mff_ud_leaderboard', v:3, pulledAt, round, tournament, me,
+  //     total, perPage, lastPage, complete, pages:[[page, weight]...],
+  //     apps:[[name, pos, seasonPts]...],             // appearance dictionary
+  //     entries:[[page, place, points, payout, username, [appIdx x18], pod]...],
+  //     mine:[{draftId, entryId, title, points, podPlace, payoutText, apps, pod}],
+  //     nPods }
+  // v3 (0.18.22): `pod` = an index standing for the entry's draft id — which
+  // 12 teams drafted together. The Round-1 advance (top 2 of each draft) and
+  // so the whole playoff sim hang on it; v2 files don't carry it.
+  //
+  // QUICK MODE (0.18.23), opts.mode = 'mypods': only the user's OWN drafts —
+  // the drafts list plus one /v2/drafts/<id> each (~150 requests, a couple of
+  // minutes), no leaderboard pages. Saves mff_bbm_mypods_<stamp>.json, kind
+  // 'mff_ud_mypods': mine[] as above plus `podRosters` = all 12 rosters of
+  // that draft. Sim Lab lays those real draft groups over a field file that
+  // has none, which makes the user's own advance / playoff odds exact without
+  // pulling 13,000 pages again.
+  // ==========================================================================
+  var LB_API = 'https://api.underdogfantasy.com';
+  var LB_STATS = 'https://stats.underdogfantasy.com';
+  var LB_PASSES = [0, 16, 8, 24, 4, 20, 12, 28, 2, 18, 10, 26, 6, 22, 14, 30,
+                   1, 17, 9, 25, 5, 21, 13, 29, 3, 19, 11, 27, 7, 23, 15, 31];
+  var _lb = { running: false, stop: false, st: null };
+
+  // Promise GET with the same header replay as the mff-mainfetch handler.
+  function udGet(url, timeoutMs) {
+    return new Promise(function (resolve) {
+      url = _ensureParams(url);
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.__mffSelfFetch = true;
+        xhr.open('GET', url, true);
+        xhr.withCredentials = false;
+        var udHdrs = lookupUDHeaders(url) || {};
+        var setNames = {};
+        for (var k in udHdrs) {
+          if (!udHdrs.hasOwnProperty(k)) continue;
+          var v = udHdrs[k];
+          if (k.toLowerCase() === 'client-request-id') {
+            v = (window.crypto && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : (Date.now() + '-' + Math.random().toString(36).slice(2));
+          }
+          try { xhr.setRequestHeader(k, v); setNames[k.toLowerCase()] = true; } catch (_) {}
+        }
+        if (!setNames['accept']) { try { xhr.setRequestHeader('Accept', 'application/json'); } catch (_) {} }
+        if (!setNames['authorization'] && window.__mffUDAuth) {
+          try { xhr.setRequestHeader('Authorization', window.__mffUDAuth); } catch (_) {}
+        }
+        xhr.timeout = timeoutMs || 20000;
+        xhr.onload = function () {
+          try {
+            if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+              resolve({ ok: true, status: xhr.status, data: JSON.parse(xhr.responseText) });
+            } else {
+              resolve({ ok: false, status: xhr.status, body: (xhr.responseText || '').slice(0, 200) });
+            }
+          } catch (e) { resolve({ ok: false, error: 'parse-err: ' + ((e && e.message) || e) }); }
+        };
+        xhr.onerror = function () { resolve({ ok: false, error: 'xhr-network-error' }); };
+        xhr.ontimeout = function () { resolve({ ok: false, error: 'xhr-timeout' }); };
+        xhr.send();
+      } catch (e) { resolve({ ok: false, error: (e && e.message) || String(e) }); }
+    });
+  }
+  // Pacing delay. A hidden tab's own timers get throttled to as little as
+  // one per minute, which would stretch a 3-hour pull into days — so the
+  // sidebar also relays the wait to the background worker (not throttled)
+  // and whichever fires first ends the sleep. Neither can fire early.
+  var _lbSleepId = 0;
+  function lbSleep(ms) {
+    return new Promise(function (resolve) {
+      var id = ++_lbSleepId, done = false;
+      function fin() {
+        if (done) return;
+        done = true;
+        window.removeEventListener('message', onMsg);
+        resolve();
+      }
+      function onMsg(ev) { if (ev.data && ev.data.source === 'mff-lb-wake' && ev.data.id === id) fin(); }
+      window.addEventListener('message', onMsg);
+      setTimeout(fin, ms);
+      try { window.postMessage({ source: 'mff-lb-sleep', id: id, ms: ms }, '*'); } catch (_) {}
+    });
+  }
+  function lbStatus(text, extra) {
+    var msg = { source: 'mff-lbpull-status', text: text, running: _lb.running };
+    if (extra) for (var k in extra) msg[k] = extra[k];
+    try { window.postMessage(msg, '*'); } catch (_) {}
+    console.log('[MFF/leaderboard] ' + text);
+  }
+  // One request at a time, `delayMs` apart. Auth errors abort at once;
+  // timeouts / 408 / 429 / 5xx back off and retry twice, then abort.
+  async function lbGet(url, o) {
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (_lb.stop) throw new Error('stopped');
+      await lbSleep(attempt ? 10000 * attempt : o.delayMs);
+      var r = await udGet(url, 25000);
+      if (r.ok) return r.data;
+      if (r.status === 401 || r.status === 403) throw new Error('Underdog returned ' + r.status + ' (signed out?) — refresh the tab and press the button again');
+      if (r.status && r.status !== 408 && r.status !== 429 && r.status < 500) throw new Error('HTTP ' + r.status + ' for ' + pathOf(url));
+      console.warn('[MFF/leaderboard] retry', attempt + 1, pathOf(url), r.status || r.error);
+    }
+    throw new Error('gave up on ' + pathOf(url) + ' after 3 tries');
+  }
+  function lbCached(re) {
+    var keys = Object.keys(window.__mffUDCache);
+    for (var i = 0; i < keys.length; i++) {
+      if (re.test(keys[i]) && window.__mffUDCache[keys[i]] && window.__mffUDCache[keys[i]].data) return window.__mffUDCache[keys[i]].data;
+    }
+    return null;
+  }
+
+  async function lbFindRound(o) {
+    var rounds = [], seen = {};
+    function take(list) {
+      (list || []).forEach(function (r) {
+        if (r && r.id && !seen[r.id]) { seen[r.id] = 1; rounds.push(r); }
+      });
+    }
+    Object.keys(window.__mffUDCache).forEach(function (k) {
+      if (/^\/v1\/user\/slates\/[^/]+\/tournament_rounds$/.test(k)) take((window.__mffUDCache[k].data || {}).tournament_rounds);
+    });
+    function pick() {
+      var c = rounds.filter(function (r) {
+        return r.leaderboard_enabled && r.tournament && o.title.test(r.tournament.title || '');
+      }).sort(function (a, b) { return (a.number || 0) - (b.number || 0); });
+      return c[0] || null;
+    }
+    var hit = pick();
+    if (hit) return hit;
+    lbStatus('Looking up live tournaments…');
+    var live = await lbGet(LB_API + '/v2/user/sports/nfl/live_slates?best_ball=true', o);
+    var slates = (live && live.slates) || [];
+    for (var i = 0; i < slates.length; i++) {
+      var tr = await lbGet(LB_API + '/v1/user/slates/' + slates[i].id + '/tournament_rounds', o);
+      take(tr && tr.tournament_rounds);
+      hit = pick();
+      if (hit) return hit;
+    }
+    var withLb = rounds.filter(function (r) { return r.leaderboard_enabled; })
+      .map(function (r) { return (r.tournament && r.tournament.title) || r.title; });
+    throw new Error('No live tournament round with a leaderboard matched ' + o.title +
+      (withLb.length ? ' (leaderboards exist for: ' + withLb.join(', ') + ')' : ''));
+  }
+
+  // appearance id -> [name, pos, seasonPts] for the round's slate.
+  async function lbAppearanceMap(round, o) {
+    var slate = round.slate_id;
+    var esc = String(slate).replace(/[^a-f0-9-]/gi, '');
+    var apps = lbCached(new RegExp('^/v1/slates/' + esc + '/scoring_types/[^/]+/appearances$'));
+    var players = lbCached(new RegExp('^/v[12]/slates/' + esc + '/players$'));
+    if (!players) {
+      lbStatus('Loading the player list…');
+      players = await lbGet(LB_STATS + '/v1/slates/' + slate + '/players', o);
+    }
+    if (!apps) {
+      lbStatus('Loading player appearances…');
+      var styles = await lbGet(LB_STATS + '/v1/contest_styles', o);
+      var csId = round.tournament && round.tournament.contest_style_id;
+      var cs = ((styles && styles.contest_styles) || []).filter(function (c) { return c.id === csId; })[0];
+      if (!cs || !cs.scoring_type_id) throw new Error('could not resolve the scoring type for this contest');
+      apps = await lbGet(LB_STATS + '/v1/slates/' + slate + '/scoring_types/' + cs.scoring_type_id + '/appearances', o);
+    }
+    var pById = {};
+    ((players && players.players) || []).forEach(function (p) { pById[p.id] = p; });
+    var map = {}, n = 0;
+    ((apps && apps.appearances) || []).forEach(function (a) {
+      var p = pById[a.player_id];
+      if (!p) return;
+      var name = ((p.first_name || '') + ' ' + (p.last_name || '')).trim();
+      var pts = a.score && a.score.points != null ? +a.score.points : null;
+      map[a.id] = [name, p.position_name || p.position_display_name || '', pts];
+      n++;
+    });
+    if (!n) throw new Error('player list came back empty');
+    return map;
+  }
+
+  // Weights from whatever pages are in hand: each page stands for the
+  // leaderboard pages nearer to it than to any other pulled page.
+  function lbPageWeights(st) {
+    var pgs = Object.keys(st.got).map(Number).sort(function (a, b) { return a - b; });
+    var L = st.out.lastPage || pgs[pgs.length - 1];
+    return pgs.map(function (p, i) {
+      var lo = i === 0 ? 0.5 : (pgs[i - 1] + p) / 2;
+      var hi = i === pgs.length - 1 ? L + 0.5 : (p + pgs[i + 1]) / 2;
+      return [p, +(hi - lo).toFixed(3)];
+    });
+  }
+
+  async function lbPull(opts) {
+    if (_lb.running) { lbStatus('Already running.'); return null; }
+    var o = { title: /best ball mania/i, delayMs: 450, minDense: 100, maxDense: 300 };
+    if (opts) for (var k in opts) o[k] = opts[k];
+    _lb.running = true; _lb.stop = false;
+    var quick = o.mode === 'mypods';
+    var st = quick ? null : _lb.st, t0 = Date.now(), reqs = 0, err = null;
+    try {
+      var round = await lbFindRound(o);
+      var tName = (round.tournament && round.tournament.title) || round.title || 'tournament';
+      // continue a stopped pull of the same round (same tab, under 12h old)
+      if (!st || st.roundId !== round.id || st.out.complete || Date.now() - st.startedAt > 12 * 3600000) {
+        var meUser = (lbCached(/^\/v1\/user$/) || {}).user || {};
+        st = {
+          roundId: round.id, startedAt: Date.now(), got: {}, denseEnd: 0, appIx: {}, mineDone: false,
+          podIx: {}, nPods: 0,
+          appMap: await lbAppearanceMap(round, o),
+          out: {
+            kind: quick ? 'mff_ud_mypods' : 'mff_ud_leaderboard', v: 3, pulledAt: new Date().toISOString(),
+            round: { id: round.id, title: round.title, number: round.number, description: round.description },
+            tournament: { id: round.tournament && round.tournament.id, title: tName,
+                          entry_count: round.tournament && round.tournament.entry_count },
+            me: { userId: meUser.id || null, username: meUser.username || null },
+            total: null, perPage: null, lastPage: null, complete: false,
+            pages: [], apps: [], entries: [], mine: []
+          }
+        };
+        if (quick) _lb.quick = st; else _lb.st = st; // a quick pull never disturbs a full pull in progress
+      } else {
+        lbStatus(tName + ': continuing — ' + Object.keys(st.got).length + ' pages already in hand.');
+      }
+      var out = st.out;
+      window.__mffLbExport = out;
+      var ix = function (id) {
+        if (st.appIx[id] !== undefined) return st.appIx[id];
+        st.appIx[id] = out.apps.length;
+        out.apps.push(st.appMap[id] || ['?' + id, '', null]);
+        return st.appIx[id];
+      };
+      var podOf = function (draftId) { // draft id -> small int (-1 = none)
+        if (!draftId) return -1;
+        if (st.podIx[draftId] === undefined) st.podIx[draftId] = st.nPods++;
+        return st.podIx[draftId];
+      };
+
+      // --- my entries: list (points / pod place), then each draft's picks ---
+      if (!st.mineDone) {
+        var myDrafts = [];
+        for (var pg = 1; pg && pg < 200; ) {
+          var dl = await lbGet(LB_API + '/v1/user/tournament_rounds/' + round.id + '/drafts?page=' + pg, o);
+          reqs++;
+          myDrafts = myDrafts.concat((dl && dl.drafts) || []);
+          pg = dl && dl.meta && dl.meta.next ? dl.meta.next : 0;
+          lbStatus(tName + ': found ' + myDrafts.length + ' of your entries…');
+        }
+        out.mine = [];
+        for (var d = 0; d < myDrafts.length; d++) {
+          var md = myDrafts[d];
+          var hit = window.__mffUDCache['/v2/drafts/' + md.id];
+          var dd = hit && hit.data;
+          if (!dd) { dd = await lbGet(LB_API + '/v2/drafts/' + md.id, o); reqs++; }
+          var allPicks = (dd && dd.draft && dd.draft.picks) || [];
+          var picks = allPicks.filter(function (p) {
+            return p.draft_entry_id === md.user_draft_entry_id;
+          });
+          // every roster of this draft (mine included), for the quick mode
+          var byEntry = {}, podRosters = [];
+          allPicks.forEach(function (p) {
+            if (!byEntry[p.draft_entry_id]) podRosters.push(byEntry[p.draft_entry_id] = []);
+            byEntry[p.draft_entry_id].push(ix(p.appearance_id));
+          });
+          out.mine.push({
+            podRosters: quick ? podRosters : undefined,
+            draftId: md.id, entryId: md.user_draft_entry_id, title: md.title || null,
+            points: +md.user_draft_entry_points || 0, podPlace: md.user_draft_entry_place || null,
+            payoutText: md.user_draft_entry_payout_text || null,
+            apps: picks.map(function (p) { return ix(p.appearance_id); }), pod: podOf(md.id)
+          });
+          if (d % 5 === 4 || d === myDrafts.length - 1) lbStatus(tName + ': your rosters ' + (d + 1) + '/' + myDrafts.length);
+        }
+        st.mineDone = true;
+      }
+      if (quick) { out.complete = true; throw { quickDone: true }; }
+
+      // --- leaderboard pages ---
+      var base = LB_API + '/v1/tournament_rounds/' + round.id + '/leaderboard?page=';
+      var nGot = Object.keys(st.got).length, tPages = Date.now(), nThisRun = 0;
+      var getPage = async function (page) {
+        var data = await lbGet(base + page, o);
+        reqs++; nThisRun++;
+        var list = (data && data.tournament_round_entries) || [];
+        st.got[page] = 1; nGot++;
+        for (var i = 0; i < list.length; i++) {
+          var e = list[i];
+          out.entries.push([page, e.place, +e.points || 0, +e.payout || 0,
+            e.username || (e.user && e.user.username) || '', (e.appearance_ids || []).map(ix), podOf(e.draft_id)]);
+        }
+        if (page === 1 && !out.lastPage) {
+          out.perPage = list.length || 50;
+          var cnt = data && data.meta && +data.meta.count, ec = +out.tournament.entry_count || 0;
+          // meta.count is the entry total on the list endpoints seen so far;
+          // if it ever turns out to be a page count, entry_count catches it.
+          out.total = (cnt && ec && Math.abs(cnt - ec) > ec * 0.05 &&
+                       Math.abs(cnt * out.perPage - ec) < ec * 0.05) ? ec : (cnt || ec || null);
+          out.lastPage = out.total ? Math.ceil(out.total / out.perPage) : null;
+        }
+        if (nThisRun % 10 === 0 || page === 1) {
+          var left = out.lastPage ? out.lastPage - nGot : 0;
+          var per = (Date.now() - tPages) / nThisRun;
+          lbStatus(tName + ': ' + nGot + (out.lastPage ? ' of ' + out.lastPage : '') + ' leaderboard pages · ' +
+            out.entries.length.toLocaleString() + ' teams' +
+            (left > 0 ? ' · about ' + Math.max(1, Math.round(left * per / 60000)) + ' min left' : '') +
+            ' — press again to stop and save what is pulled');
+        }
+        return { list: list, next: data && data.meta && data.meta.next };
+      };
+      // dense: every page until the leaderboard's payouts reach $0
+      while (!st.denseDone) {
+        var page = st.denseEnd + 1;
+        var r = st.got[page] ? null : await getPage(page);
+        st.denseEnd = page;
+        if (!r) continue;
+        var lastPay = r.list.length ? (+r.list[r.list.length - 1].payout || 0) : 0;
+        if (!r.list.length || !r.next || (out.lastPage && page >= out.lastPage) ||
+            (page >= o.minDense && lastPay <= 0) || page >= o.maxDense) st.denseDone = true;
+      }
+      // the rest, in 32 evenly spread passes
+      if (out.lastPage) {
+        for (var ps = 0; ps < LB_PASSES.length; ps++) {
+          for (var p2 = st.denseEnd + 1 + LB_PASSES[ps]; p2 <= out.lastPage; p2 += 32) {
+            if (!st.got[p2]) await getPage(p2);
+          }
+        }
+        out.complete = nGot >= out.lastPage;
+      }
+    } catch (e) {
+      err = (e && e.quickDone) ? null : ((e && e.message) || String(e));
+    }
+    _lb.running = false;
+    var o2 = st && st.out;
+    if (quick) {
+      if (o2 && o2.mine.length && !err) {
+        var qname = lbSave(st);
+        lbStatus('Done — your ' + o2.mine.length + ' draft groups (' + reqs + ' requests in ' + Math.round((Date.now() - t0) / 1000) +
+          's) → ' + qname + ' in Downloads. Load it in Sim Lab → BEST BALL → OVERALL STANDINGS, same file box.', { done: true });
+      } else {
+        lbStatus('Nothing saved' + (err ? ': ' + err : '.'), { done: true });
+      }
+      return o2 || null;
+    }
+    if (o2 && o2.entries.length && o2.mine.length) {
+      var fname = lbSave();
+      lbStatus((o2.complete ? 'Done — the whole field: ' : (err === 'stopped' ? 'Stopped — ' : 'Stopped (' + err + ') — ')) +
+        o2.entries.length.toLocaleString() + ' teams + ' + o2.mine.length + ' of yours, ' + reqs + ' requests in ' +
+        Math.round((Date.now() - t0) / 60000) + ' min → ' + fname + ' in Downloads. Load it in Sim Lab → BEST BALL → OVERALL STANDINGS.' +
+        (o2.complete ? '' : ' Press the button again to continue from here.'), { done: true });
+    } else {
+      lbStatus('Nothing saved' + (err ? ': ' + err : '.'), { done: true });
+    }
+    return o2 || null;
+  }
+  function lbSave(which) {
+    var st = which || _lb.st;
+    if (!st || !st.out) return null;
+    var out = st.out, quick = out.kind === 'mff_ud_mypods';
+    if (!quick) { out.pages = lbPageWeights(st); out.nPods = st.nPods; }
+    var fname = (quick ? 'mff_bbm_mypods_' : 'mff_bbm_leaderboard_') + out.pulledAt.replace(/[-:]/g, '').replace('T', '_').slice(0, 13) +
+      (out.complete ? '' : '_partial') + '.json';
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(out)], { type: 'application/json' }));
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { try { URL.revokeObjectURL(a.href); } catch (_) {} }, 120000);
+    return fname;
+  }
+  window.__mffPullLeaderboard = lbPull;
+  window.__mffStopLeaderboard = function () { _lb.stop = true; };
+  window.__mffSaveLeaderboard = lbSave;
+  window.addEventListener('message', function (ev) {
+    if (!ev.data || ev.data.source !== 'mff-lbpull') return;
+    if (ev.data.cmd === 'stop') { _lb.stop = true; return; }
+    if (ev.data.cmd === 'start') lbPull(ev.data.mode === 'mypods' ? { mode: 'mypods' } : null);
+  });
+
+  console.log('[MFF/inject] passive XHR-snoop + main-world XHR fetch ready (v0.18.23, full UD headers + fresh request-id + query params + paginated-list merge + API discovery log + leaderboard pull)');
 })();

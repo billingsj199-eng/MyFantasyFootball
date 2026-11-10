@@ -88,7 +88,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return true;
 });
 
-console.log('[MFF/bg] background worker ready (v0.15.1)');
+// v0.18.20: pacing timer for the leaderboard pull. A hidden tab throttles its
+// own timers to as little as one a minute; the worker's are not throttled, so
+// the puller's between-request wait is relayed here. ms is capped.
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (!msg || msg.type !== 'mff-sleep') return false;
+  setTimeout(() => sendResponse('ok'), Math.max(0, Math.min(30000, +msg.ms || 0)));
+  return true;
+});
+
+console.log('[MFF/bg] background worker ready (v0.18.20)');
 
 // --- Live Vegas refresh (v0.10.52) -----------------------------------------
 // Plain fetch of the site's machine-readable betting lines JSON (written by

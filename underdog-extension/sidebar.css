@@ -326,6 +326,30 @@
   box-shadow: none;
 }
 
+/* v0.18.21: leaderboard-pull button — deliberately the quiet secondary look
+   (a ~3-hour action that should not read as the panel's primary button) */
+#mff-lb-btn,
+#mff-lbq-btn {
+  display: block;
+  width: 100%;
+  background: #1c1e24;
+  color: #c9cbd1;
+  border: 1px solid #3a3d45;
+  padding: 8px 14px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+#mff-lb-btn:hover,
+#mff-lbq-btn:hover {
+  background: #2a2d35;
+}
+
 /* Status bar — compact single row, secondary to recs */
 #mff-status {
   display: grid;

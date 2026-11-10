@@ -66,7 +66,11 @@
         : 'Sign in at myfantasyfootball.co in this same Chrome profile with a Premium account to unlock.') + '</div>' +
       '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#7d2eff;color:#fff;border-radius:6px;padding:7px 14px;font-weight:700;text-decoration:none;font-size:12px">' +
       (stale ? 'Re-sync with MyFantasyFootball' : signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
-      '<div style="color:#6b7280;font-size:10px;margin-top:10px">Unlocks automatically — open the site signed in, in this Chrome profile, and revisit (or keep a tab open) at least once a day.</div></div>';
+      // League sync is FREE (Jack 2026-10-06): yahoo-export.js's export button
+      // has no gate — say so, or free users read this lock as "the whole helper is paid".
+      '<div style="margin-top:12px;padding:8px 10px;border:1px solid #1d7a34;border-radius:6px;background:rgba(34,197,94,.08);color:#d1fae5;font-size:11px;text-align:left">' +
+        '<b style="color:#22c55e">League sync is FREE.</b> Open your league on Yahoo and click the purple <b>Export league to MFF</b> button (bottom-right), then open My Teams on myfantasyfootball.co. Works for private leagues too.</div>' +
+      '<div style="color:#6b7280;font-size:10px;margin-top:10px">The draft and season helper unlocks automatically — open the site signed in, in this Chrome profile, and revisit (or keep a tab open) at least once a day.</div></div>';
   }
   function gateInit(onChange) {
     try {

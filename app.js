@@ -18467,6 +18467,27 @@ const _ROUTE_EST_TIP = ' title="Estimated: snap share × routes-per-snap ratio f
 // incomplete coverage (a real team throws far more than the thresholds).
 let _teamTgtSeasonCache = null;
 document.addEventListener('mff:retireddata', () => { _teamTgtSeasonCache = null; });
+// Mid-season team change (trade / release + signing): the season share has to
+// count each week against the team he played THAT week for — the season-level
+// team is his new club from the day the roster sync lands, so the old sum put
+// his old-team targets / carries over the new team's totals. Returns
+// [{wk, tm}] only when his weekly rows span 2+ teams; null = single team, use
+// the plain path. 2026+ only: earlier seasons' row tm was re-stamped with later
+// teams (see _fgWeekTeam), 2026 rows are written per game with the real team.
+function _rowTeamWeeks(playerName, yr, tm, teamTable) {
+  if (+yr < 2026 || !playerName || !teamTable || typeof WEEKLY_STATS === 'undefined') return null;
+  const ws = WEEKLY_STATS[playerName];
+  const rows = ws && ws.seasons && ws.seasons[yr];
+  if (!rows || !rows.length) return null;
+  let moved = false;
+  const out = rows.map(w => {
+    const t = w.tm && w.tm.trim();
+    const use = (t && teamTable[t]) ? t : tm;
+    if (use !== tm) moved = true;
+    return { wk: String(w.wk), tm: use };
+  });
+  return moved ? out : null;
+}
 function _tsPctSeason(tm, yr, tgt, playerName) {
   if (tgt == null || !tm) return null;
   // Exact denominator from nflverse team weekly stats (1999+, in snap_counts.js).
@@ -18481,7 +18502,9 @@ function _tsPctSeason(tm, yr, tgt, playerName) {
       played = new Set(WEEKLY_STATS[playerName].seasons[yr].map(w => String(w.wk)));
     }
     let tot = 0;
-    for (const k in wks) { if (!played || played.has(k)) tot += wks[k]; }
+    const byTm = _rowTeamWeeks(playerName, yr, tm, TEAM_TGT[yr]);
+    if (byTm) byTm.forEach(x => { tot += TEAM_TGT[yr][x.tm][x.wk] || 0; });
+    else for (const k in wks) { if (!played || played.has(k)) tot += wks[k]; }
     // Threshold mirrors _carPctSeason: a single played week (~20-40 team
     // targets) must count, else the TOT row reads a dash in Week 1 (RB fix 2026-09-14).
     if (tot >= (played ? 10 : 100)) return tgt / tot * 100;
@@ -18556,7 +18579,9 @@ function _carPctSeason(tm, yr, ra, playerName) {
     played = new Set(WEEKLY_STATS[playerName].seasons[yr].map(w => String(w.wk)));
   }
   let tot = 0;
-  for (const k in wks) { if (!played || played.has(k)) tot += wks[k]; }
+  const byTm = _rowTeamWeeks(playerName, yr, tm, TEAM_CAR[yr]);
+  if (byTm) byTm.forEach(x => { tot += TEAM_CAR[yr][x.tm][x.wk] || 0; });
+  else for (const k in wks) { if (!played || played.has(k)) tot += wks[k]; }
   if (tot < (played ? 10 : 50)) return null;
   return ra / tot * 100;
 }
@@ -18841,11 +18866,31 @@ function buildWeeklyTable(d, season, scoringFormat, withChart) {
   adjusted.forEach(w => { _byWk[w.wk] = w; });
   const _seasonLen = _sched ? 18 : _seasonWeekCount(season);
   const _maxWk = adjusted.length ? Math.max(...adjusted.map(w => w.wk)) : 0;
+  // Mid-season team change: a week he missed BEFORE his last game belongs to the
+  // club he was on then (its bye / opponent), not to his new team's slate — a
+  // WR dealt after Week 9 whose old team was off in Week 6 read "@GB" there.
+  // Weeks after his last game follow his current team (_sched).
+  const _schedAt = (() => {
+    const tmOf = w => (w.tm && w.tm.trim()) || '';
+    const played = adjusted.filter(tmOf).sort((x, y) => x.wk - y.wk);
+    const cur = d.t && typeof teamAbbr === 'function' ? teamAbbr(d.t) : '';   // FA: every game was for a former club
+    if (+season !== 2026 || typeof getNflScheduleForTeam !== 'function' || !played.some(w => tmOf(w) !== cur)) return () => _sched;
+    const cache = {};
+    return wk => {
+      if (wk > played[played.length - 1].wk) return _sched;
+      let near = played[0];
+      played.forEach(w => { if (w.wk < wk) near = w; });
+      const tm = tmOf(near);
+      if (!(tm in cache)) cache[tm] = getNflScheduleForTeam(tm) || _sched;
+      return cache[tm];
+    };
+  })();
   const full = [];
   for (let wk = 1; wk <= Math.max(_seasonLen, _maxWk); wk++) {
     if (_byWk[wk]) { full.push(_byWk[wk]); continue; }
     if (wk > _seasonLen) continue;
-    const g = _sched ? _sched[wk] : null;
+    const _sw = _schedAt(wk);
+    const g = _sw ? _sw[wk] : null;
     if (g && g.bye) full.push({ wk, _bye: true });
     else if (g) full.push({ wk, opp: (g.home ? '' : '@') + g.opp, _upcoming: true });
     else full.push({ wk, _dnp: true });

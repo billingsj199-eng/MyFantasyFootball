@@ -1011,6 +1011,13 @@
   // NOT centered: subtracting the live season-to-date league mean graded
   // weaker (-0.34%) than the plain form, so QB matches RB/WR/TE exactly.
   // Data: SIM_QB_TDLUCK_2026. Kill: window.SIM_TD_LUCK_QB = false.
+  // TD LUCK OFF BY DEFAULT (2026-11-10, Jack: "remove td luck I feel like it doesnt actually have correlation"). The layer's code and data stay;
+  // the existing kill switch is simply set when nothing else set it, so tdLuckAdj() returns 0 for RB / WR / TE / QB everywhere it is read
+  // (live mean, shadow, market-rate fallback, season + league sims, NOTES chips, the export's luck[4]). On / off read the same day
+  // (research_tdluck_onoff.py, tdluck_onoff.log, shadow replica 2019-25 next game): board -0.09% (4/7), TE -0.67% (6/7), QB -0.24% (4/7),
+  // RB -0.18% (4/7), WR +0.19% WORSE (2/7). RESTORE: delete the next line (or set window.SIM_TD_LUCK = true before engine.js loads).
+  // Backup engine.js.bak_pre_tdluckoff_20261110.
+  if (typeof window !== 'undefined' && window.SIM_TD_LUCK === undefined) window.SIM_TD_LUCK = false;
   var TDLUCK_K = 0.75;        // RB (backtest_rb_role.py)
   var TDLUCK_K_REC = 1.0;     // WR/TE (backtest_wr_tdluck.py)
   var TDLUCK_K_QB = 0.5;      // QB passing (backtest_qb_tdluck.py)

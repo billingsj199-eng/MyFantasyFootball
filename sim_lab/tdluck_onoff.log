@@ -1,0 +1,82 @@
+=== H  HISTORY 2019-25, honest shadow replica (BR.shadow_current luck on vs off), top-150 ADP, half-PPR ===
+
+--- H1 NEXT GAME (10,268 rows, 7,851 moved by the layer) ---
+  cell                        n   p-s |luck| | MSE on vs off  yrs        fwd |  wtd MSE | MAE on vs off  yrs | act/on act/off | off closer | rank on    off
+  ALL moved rows           7851   804   0.33 |        -0.12% 4/7  -0.24% 3/4 |   +0.02% |        -0.12% 5/7 |  1.007   1.000 |        50% |  0.3900 0.3862
+  QB moved rows            1361   121   0.30 |        -0.28% 4/7  -0.52% 2/4 |   -0.40% |        -0.11% 4/7 |  0.998   0.992 |        49% |  0.3153 0.3091
+  RB moved rows            2737   281   0.36 |        -0.22% 4/7  -0.41% 3/4 |   +0.14% |        -0.22% 4/7 |  1.000   0.995 |        50% |  0.5162 0.5151
+  WR moved rows            2747   308   0.29 |        +0.26% 2/7  +0.24% 1/4 |   +0.33% |        +0.11% 2/7 |  1.011   1.003 |        51% |  0.3823 0.3854
+  TE moved rows            1006    94   0.39 |        -0.77% 6/7  -0.77% 3/4 |   -0.83% |        -0.51% 6/7 |  1.041   1.033 |        48% |  0.3439 0.3327
+  ALL rows (board)        10268   832   0.26 |        -0.09% 4/7  -0.18% 3/4 |   +0.02% |        -0.09% 5/7 |  1.014   1.009 |        46% |  0.4017 0.3990
+  QB all rows              1573   125   0.26 |        -0.24% 4/7  -0.45% 2/4 |   -0.34% |        -0.09% 4/7 |  1.004   1.000 |        49% |  0.3415 0.3366
+  RB all rows              3507   290   0.28 |        -0.18% 4/7  -0.32% 3/4 |   +0.11% |        -0.17% 4/7 |  1.005   1.001 |        45% |  0.5192 0.5177
+  WR all rows              4031   322   0.20 |        +0.19% 2/7  +0.17% 1/4 |   +0.23% |        +0.08% 2/7 |  1.021   1.016 |        46% |  0.3761 0.3781
+  TE all rows              1157    95   0.34 |        -0.67% 6/7  -0.67% 3/4 |   -0.73% |        -0.44% 6/7 |  1.045   1.038 |        48% |  0.3679 0.3613
+  (negative % = the layer makes the number better; 'yrs' = seasons the layer wins; 'off closer' = share of rows where the number WITHOUT the layer was nearer the actual)
+
+  raw signal: season-to-date TDs under expected per game (xTD - TD)/g vs the miss of the OFF number (actual - off), 3+ games played
+  pos       n | pearson r  spearman |   best-fit strength b (se) | act / off by tercile of (xTD - TD)/g: lucky (most TDs over) / middle / unlucky
+  ALL    8406 |    +0.050    +0.047 |        +0.74 (0.19)           | 0.984 / 1.002 / 1.030   with the layer: 1.019 / 1.006 / 1.001
+  QB     1295 |    +0.076    +0.076 |        +1.49 (0.63)           | 0.960 / 1.013 / 1.021   with the layer: 0.983 / 1.020 / 1.005
+  RB     2872 |    +0.054    +0.057 |        +0.83 (0.29)           | 0.972 / 1.000 / 1.038   with the layer: 1.013 / 0.999 / 1.001
+  WR     3280 |    +0.012    +0.013 |        +0.03 (0.36)           | 1.005 / 1.000 / 0.996   with the layer: 1.042 / 1.005 / 0.973
+  TE      959 |    +0.110    +0.110 |        +1.19 (0.41)           | 0.976 / 1.021 / 1.157   with the layer: 1.041 / 1.021 / 1.103
+  (r > 0 and unlucky tercile above 1 = players short on touchdowns go on to beat the number without the layer, i.e. the signal is real; b near 1 = sized right)
+
+--- H2 REST OF SEASON per game (5,493 checkpoints with 3-10 games played and 4+ left) ---
+  cell                        n   p-s |luck| | MSE on vs off  yrs        fwd |  wtd MSE | MAE on vs off  yrs | act/on act/off | off closer | rank on    off
+  ALL moved rows           4540   773   0.32 |        -0.33% 5/7  -0.99% 3/4 |   +0.44% |        -0.21% 5/7 |  1.015   1.010 |        49% |  0.5811 0.5798
+  QB moved rows             733   115   0.31 |        -3.06% 6/7  -3.62% 4/4 |   -3.66% |        -1.50% 5/7 |  0.999   0.993 |        46% |  0.4593 0.4524
+  RB moved rows            1617   267   0.37 |        -0.12% 3/7  -1.20% 2/4 |   +1.72% |        -0.05% 3/7 |  1.013   1.009 |        48% |  0.6658 0.6605
+  WR moved rows            1636   298   0.24 |        +1.79% 2/7  +1.38% 1/4 |   +2.26% |        +0.59% 2/7 |  1.019   1.013 |        53% |  0.6107 0.6164
+  TE moved rows             554    93   0.39 |        -3.01% 5/7  -3.47% 3/4 |   -3.56% |        -1.29% 4/7 |  1.056   1.049 |        46% |  0.5737 0.5757
+  ALL rows (board)         5493   805   0.27 |        -0.26% 5/7  -0.81% 3/4 |   +0.41% |        -0.17% 5/7 |  1.014   1.010 |        48% |  0.5917 0.5909
+  QB all rows               833   118   0.28 |        -2.65% 6/7  -3.16% 4/4 |   -3.22% |        -1.30% 5/7 |  0.999   0.994 |        45% |  0.4905 0.4849
+  RB all rows              1876   279   0.32 |        -0.10% 3/7  -1.03% 2/4 |   +1.58% |        -0.03% 3/7 |  1.016   1.013 |        47% |  0.6732 0.6709
+  WR all rows              2166   314   0.19 |        +1.43% 2/7  +1.13% 1/4 |   +1.87% |        +0.45% 2/7 |  1.015   1.010 |        51% |  0.6124 0.6166
+  TE all rows               618    94   0.35 |        -2.67% 5/7  -3.15% 3/4 |   -3.24% |        -1.14% 4/7 |  1.051   1.045 |        46% |  0.5764 0.5763
+  (negative % = the layer makes the number better; 'yrs' = seasons the layer wins; 'off closer' = share of rows where the number WITHOUT the layer was nearer the actual)
+
+  raw signal: season-to-date TDs under expected per game (xTD - TD)/g vs the miss of the OFF number (actual - off), 3+ games played
+  pos       n | pearson r  spearman |   best-fit strength b (se) | act / off by tercile of (xTD - TD)/g: lucky (most TDs over) / middle / unlucky
+  ALL    5369 |    +0.087    +0.060 |        +0.66 (0.13)           | 0.994 / 1.008 / 1.030   with the layer: 1.026 / 1.011 / 1.002
+  QB      817 |    +0.202    +0.191 |        +2.20 (0.39)           | 0.960 / 0.997 / 1.040   with the layer: 0.982 / 1.003 / 1.023
+  RB     1841 |    +0.078    +0.067 |        +0.56 (0.19)           | 0.984 / 1.024 / 1.041   with the layer: 1.024 / 1.023 / 1.002
+  WR     2098 |    -0.042    -0.050 |        -0.50 (0.26)           | 1.027 / 0.999 / 0.986   with the layer: 1.056 / 1.002 / 0.967
+  TE      613 |    +0.183    +0.200 |        +1.21 (0.26)           | 0.956 / 1.062 / 1.136   with the layer: 1.017 / 1.062 / 1.083
+  (r > 0 and unlucky tercile above 1 = players short on touchdowns go on to beat the number without the layer, i.e. the signal is real; b near 1 = sized right)
+
+=== L  2026 LOCK ROWS W2-9: 2,183 QB/RB/WR/TE player-weeks with a stored luck term, 1,604 moved by 0.05+ (half-PPR) ===
+
+--- L1 SHIPPED number (market blend: (1 - market weight) x luck inside it) ---
+  cell                 n |move| |  MSE on     off on vs off | MAE on    off on vs off | weeks on better | act/on act/off | off closer
+  ALL moved         1604   0.21 |   35.80   36.02    -0.61% |  4.567  4.580    -0.29% |       6/8       |  0.995   0.991 |        50%
+  QB moved           194   0.15 |   55.08   54.95    +0.24% |  6.028  6.025    +0.04% |       4/8       |  0.975   0.973 |        47%
+  RB moved           419   0.29 |   38.04   38.63    -1.53% |  4.695  4.699    -0.09% |       7/8       |  0.985   0.987 |        52%
+  WR moved           632   0.14 |   34.83   34.85    -0.04% |  4.456  4.462    -0.14% |       3/8       |  1.031   1.028 |        51%
+  TE moved           359   0.28 |   24.46   24.79    -1.35% |  3.823  3.867    -1.13% |       6/8       |  0.967   0.948 |        45%
+
+--- L2 MODEL number before the book anchor ---
+  cell                 n |move| |  MSE on     off on vs off | MAE on    off on vs off | weeks on better | act/on act/off | off closer
+  ALL moved         1604   0.34 |   36.03   36.40    -1.01% |  4.548  4.570    -0.49% |       7/8       |  1.019   1.012 |        50%
+  QB moved           194   0.36 |   56.06   55.92    +0.24% |  6.010  6.016    -0.10% |       5/8       |  1.017   1.011 |        48%
+  RB moved           419   0.37 |   38.00   38.81    -2.09% |  4.655  4.664    -0.20% |       8/8       |  0.995   0.996 |        52%
+  WR moved           632   0.29 |   35.51   35.66    -0.41% |  4.487  4.496    -0.20% |       6/8       |  1.050   1.046 |        51%
+  TE moved           359   0.38 |   23.83   24.34    -2.10% |  3.741  3.810    -1.82% |       6/8       |  0.998   0.970 |        44%
+  (negative % = the layer helped in 2026)
+
+--- L3 raw signal 2026: as-of-week (xTD - TD)/g (3+ games in the luck file) vs next week's miss of the shipped number WITHOUT the layer ---
+  pos      n | pearson r  spearman |  best-fit strength b (se) on the stored luck | act / off by tercile: lucky / middle / unlucky
+  ALL   1267 |    +0.097    +0.111 |                  +1.83 (0.43)                 | 0.926 / 1.056 / 1.069
+  QB     149 |    -0.045    -0.037 |                  -0.60 (1.42)                 | 0.984 / 0.944 / 0.970
+  RB     311 |    +0.158    +0.107 |                  +2.25 (0.76)                 | 0.933 / 1.101 / 1.140
+  WR     527 |    +0.115    +0.110 |                  +2.56 (0.87)                 | 0.926 / 1.119 / 1.100
+  TE     280 |    +0.158    +0.176 |                  +1.68 (0.70)                 | 0.887 / 0.843 / 1.142
+
+--- L4 rest of season 2026: (xTD - TD)/g through W5 vs (average actual W6-9, 3+ games) - (W6 number without the layer) ---
+  ALL  n  178 | pearson r +0.149  spearman +0.201
+  RB   n   38 | pearson r +0.180  spearman +0.135
+  WR   n   73 | pearson r +0.270  spearman +0.334
+  TE   n   44 | pearson r +0.277  spearman +0.293
+
+Limitations: 2026 lock rows store the LIVE-side luck term (x (1 - usage lam)); since 10-08 the published base is the shadow, whose term is the same sign scaled by its own weight on points, so L1 / L2 are close but not exact after W5. H uses the harness replica of the shadow (no book anchor, no volume / box context).

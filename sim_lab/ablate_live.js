@@ -33,7 +33,8 @@ for (const wk of [5, 8]) {
   for (const [grp, sw, lab] of LAYERS) {
     if (wk === 8 && grp !== 'ROS') continue;
     if (wk === 5 && grp === 'ROS') continue;
-    global[sw] = false; const alt = run(wk); delete global[sw];
+    // Restore the switch to what it was (a layer that is off by default, e.g. SIM_TD_LUCK, must not come back on for the later layers).
+    const prev = global[sw]; global[sw] = false; const alt = run(wk); if (prev === undefined) delete global[sw]; else global[sw] = prev;
     const mv = top.map(n => [n, base[n][0] - (alt[n] ? alt[n][0] : base[n][0]), base[n]]).filter(x => Math.abs(x[1]) >= 0.1);
     mv.sort((a, b) => b[1] - a[1]);
     res.push({ wk, grp, sw, lab, n: mv.length, of: top.length, up: mv.filter(x => x[1] > 0).length, dn: mv.filter(x => x[1] < 0).length,

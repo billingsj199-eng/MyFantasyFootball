@@ -113,18 +113,31 @@ def build_indexes(players):
     retirement) simply goes unmatched and is left for manual handling.
     """
     by_name, by_espn = {}, {}
+    by_name_any.clear()
     for p in players.values():
         if not p.get('active') or p.get('full_name') == 'Duplicate Player':
             continue
         pos = p.get('position')
+        fn = p.get('full_name')
+        # Any-position index for the fallback in match_player: Sleeper files
+        # some fantasy players under another position (Travis Hunter is a DB
+        # with WR eligibility, Velus Jones Jr. a WR we list at RB), so the
+        # name+position join above never saw them and their team never moved.
+        if fn and (pos in FANTASY_POS
+                   or FANTASY_POS & set(p.get('fantasy_positions') or [])):
+            by_name_any.setdefault(norm_name(fn), []).append(p)
         if pos not in FANTASY_POS:
             continue
-        fn = p.get('full_name')
         if fn:
             by_name.setdefault((norm_name(fn), norm_pos(pos)), []).append(p)
         if p.get('espn_id'):
             by_espn.setdefault(str(p['espn_id']), []).append(p)
     return by_name, by_espn
+
+
+# norm name -> active Sleeper records with any fantasy eligibility (filled by
+# build_indexes; module-level so match_player's signature stays unchanged).
+by_name_any = {}
 
 
 def espn_id_of(d):
@@ -148,6 +161,11 @@ def match_player(d, by_name, by_espn):
         hits = by_espn.get(eid, [])
         if len(hits) == 1:
             return hits[0], 'espn'
+    # Last resort: exactly one active, fantasy-eligible Sleeper record carries
+    # this name under a different position (two or more = leave it alone).
+    hits = by_name_any.get(norm_name(name), [])
+    if len(hits) == 1:
+        return hits[0], 'name-anypos'
     return None, 'unmatched'
 
 

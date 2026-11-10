@@ -1,6 +1,94 @@
 {
- "updated": "2026-11-09T23:16:26Z",
+ "updated": "2026-11-10T23:17:00Z",
  "items": [
+  {
+   "player": "Kirk Cousins",
+   "team": "MIN",
+   "pos": "QB",
+   "date": "2026-11-10",
+   "headline": "Elevated to Vikings' QB1 on the depth chart after Kyler Murray's hamstring injury",
+   "take": "Took over Monday night's loss at Buffalo and now sits atop Minnesota's QB depth chart - a streamable floor play for Vikings pass-catchers (Justin Jefferson, Jordan Addison, T.J. Hockenson) until Murray's hamstring clears.",
+   "url": "https://www.espn.com/nfl/recap/_/gameId/401873051",
+   "tag": "role",
+   "src_type": "report"
+  },
+  {
+   "player": "Kyler Murray",
+   "team": "MIN",
+   "pos": "QB",
+   "date": "2026-11-09",
+   "headline": "Missed Monday night's 23-6 loss at Buffalo with a hamstring injury",
+   "take": "Kirk Cousins took over in his absence and has since been bumped ahead of him to QB1 on the depth chart - a real QB competition now, not just a one-week absence; confirm his practice status before Week 10.",
+   "url": "https://www.espn.com/nfl/recap/_/gameId/401873051",
+   "tag": "injury",
+   "src_type": "report"
+  },
+  {
+   "player": "Marvin Harrison Jr.",
+   "team": "HOU",
+   "pos": "WR",
+   "date": "2026-11-10",
+   "headline": "Cardinals trade him to Texans at the deadline for 2027 2nd- and 6th-round picks",
+   "take": "Leaves an Arizona offense where he managed just 5/13 targets for 85 yards and a TD in 4 games; lands in a crowded Houston WR room (Nico Collins, Stefon Diggs) - dynasty buy-low, not an immediate redraft target.",
+   "url": "https://www.espn.com/nfl/story/_/id/50043471/2026-trade-deadline-updates-latest-news-deals-terms",
+   "tag": "transaction",
+   "src_type": "report"
+  },
+  {
+   "player": "Keenan Allen",
+   "team": "SF",
+   "pos": "WR",
+   "date": "2026-11-10",
+   "headline": "Colts trade him to 49ers at the deadline for a 2027 6th-round pick",
+   "take": "Leaves Indianapolis after 40/351/1 TD this year; joins San Francisco as depth/insurance behind Deebo Samuel and Ricky Pearsall - low-end WR4/5 value right away.",
+   "url": "https://sports.yahoo.com/nfl/article/2026-nfl-trade-deadline-tracker-grades-analysis-and-details-from-every-key-deal-233619744.html",
+   "tag": "transaction",
+   "src_type": "report"
+  },
+  {
+   "player": "Josh Downs",
+   "team": "KC",
+   "pos": "WR",
+   "date": "2026-11-10",
+   "headline": "Colts trade him to Chiefs at the deadline for 2027 4th- and 5th-round picks",
+   "take": "Lands after weeks of trade buzz; Kansas City views him as a long-term complement to Rashee Rice and Xavier Worthy - dynasty stash, deep-league watch in redraft given the target competition.",
+   "url": "https://sports.yahoo.com/nfl/article/2026-nfl-trade-deadline-tracker-grades-analysis-and-details-from-every-key-deal-233619744.html",
+   "tag": "transaction",
+   "src_type": "report"
+  },
+  {
+   "player": "Jacoby Brissett",
+   "team": "BAL",
+   "pos": "QB",
+   "date": "2026-11-10",
+   "headline": "Trade with Cardinals officially finalized; in line to start at QB1 for Baltimore in Week 10",
+   "take": "Ends the Joe Fagnano stopgap - a steadier veteran arm under center is a modest efficiency boost for Zay Flowers and the Ravens' pass-catchers, though Brissett himself isn't a fantasy start.",
+   "url": "https://www.espn.com/nfl/story/_/id/50400123/ravens-complete-trade-cardinals-qb-jacoby-brissett",
+   "tag": "role",
+   "src_type": "report"
+  },
+  {
+   "player": "J.J. McCarthy",
+   "team": "NYG",
+   "pos": "QB",
+   "date": "2026-11-10",
+   "headline": "Hit that forced him out Sunday is a hip pointer, not a head injury; limited at Monday's practice",
+   "take": "Corrects last session's open question - Harbaugh says the team 'feels fairly good' about him playing Thursday's short week vs. Washington, but confirm Wednesday's final practice report before trusting him.",
+   "url": "https://www.espn.com/nfl/story/_/id/50433758/giants-feel-fairly-good-qb-mccarthy-playing-thursday",
+   "tag": "injury",
+   "src_type": "team"
+  },
+  {
+   "player": "Cam Skattebo",
+   "team": "NYG",
+   "pos": "RB",
+   "date": "2026-11-10",
+   "headline": "Hamstring trending in the right direction ahead of Thursday's short week vs. Washington",
+   "take": "No official Tuesday designation yet on the short week - Devin Singletary stays the hedge until Wednesday's practice report firms up his status.",
+   "url": "https://www.si.com/nfl/giants/onsi/giants-injury-report-skattebo-mccarthy-commanders-week-10-01m713bthb55",
+   "tag": "injury",
+   "src_type": "report"
+  },
   {
    "player": "Puka Nacua",
    "team": "LAR",
@@ -1089,17 +1177,6 @@
    "src_type": "expert"
   },
   {
-   "player": "Mike Evans",
-   "team": "SF",
-   "pos": "WR",
-   "date": "2026-10-19",
-   "headline": "Aggravated Achilles late in MNF win over WAS, ruled out; Shanahan: not long-term",
-   "take": "No firm timetable yet, but the coach's comment is a reassuring sign -- recheck Friday's report before locking Week 7 lineups",
-   "url": "https://www.cbssports.com/nfl/news/mike-evans-injury-update-achilles-49ers/",
-   "tag": "injury",
-   "src_type": "team"
-  },
-  {
    "player": "Rashee Rice",
    "team": "KC",
    "pos": "WR",
@@ -1281,21 +1358,6 @@
    "src_type": "insider"
   },
   {
-   "player": "Xavier Legette",
-   "team": "CAR",
-   "pos": "WR",
-   "date": "2026-10-03",
-   "headline": "Placed on IR with the Week 2 knee injury; out at least 4 games (Carolina has a Week 5 bye)",
-   "take": "No faster path back than Week 8 vs. Denver -- drop him in shallower leagues; Tetairoa McMillan and Hunter Renfrow absorb his snaps",
-   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-10-03/xavier-legette-hits-ir-with-knee-injury",
-   "tag": "injury",
-   "avail": {
-    "k": "ret",
-    "wk": 8
-   },
-   "src_type": "team"
-  },
-  {
    "player": "Travis Etienne",
    "team": "NO",
    "pos": "RB",
@@ -1363,36 +1425,6 @@
    "tag": "injury",
    "avail": {
     "k": "season"
-   }
-  },
-  {
-   "player": "Alec Pierce",
-   "team": "IND",
-   "pos": "WR",
-   "date": "2026-09-23",
-   "headline": "Officially placed on IR after aggravating heel injury, out at least 4 weeks",
-   "take": "More looks for Josh Downs and Colts' other WRs in the interim",
-   "url": "https://www.nbcsports.com/fantasy/football/player-news/2026-09-23/alec-pierce-heel-lands-on-injured-reserve",
-   "tag": "injury",
-   "avail": {
-    "k": "weeks",
-    "lo": 4,
-    "hi": 6,
-    "unit": "w"
-   }
-  },
-  {
-   "player": "David Njoku",
-   "team": "LAC",
-   "pos": "TE",
-   "date": "2026-09-21",
-   "headline": "Placed on IR with fibula injury; earliest return is Week 8 vs. Rams",
-   "take": "A real multi-week drop, not a week-to-week watch -- Chargers' TE room (Charlie Kolar also on IR) is now barren.",
-   "url": "https://www.espn.com/nfl/story/_/id/50000682/chargers-placing-tes-david-njoku-charlie-kolar-ir",
-   "tag": "injury",
-   "avail": {
-    "k": "ret",
-    "wk": 8
    }
   }
  ]

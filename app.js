@@ -25192,6 +25192,17 @@ document.addEventListener('mff:latedata', () => {
     }
   } catch (e) {}
 });
+// Weekly core slice (index.html _loadWeeklyCore: fpa_2026 + weekly_stats_active) landed. The
+// board repaints itself in _mergeWeeklyStatsActive; a card opened before it shows P-SOS ranks
+// built without points allowed (Clay prior only), so redraw it (2026-11-12).
+document.addEventListener('mff:weeklycore', () => {
+  try {
+    if (modal && modal.classList.contains('open') && window._cardOpenName && typeof window.openPlayerCard === 'function') {
+      const d = D.find(p => p.n === window._cardOpenName);
+      if (d) window.openPlayerCard(d);
+    }
+  } catch (e) {}
+});
 
 function renderSearchChips() {
   const el = document.getElementById('lgChips');
@@ -64837,8 +64848,13 @@ const _MT_FPA_RAW_POS = { RB: true };
 let _mtFpaCache = null;
 var _mtObservedFpa = function _mtObservedFpa() {
   const _src = (window.FPA_2026 && window.FPA_2026.weeks) || null;
-  if (_mtFpaCache && _mtFpaCache.src === _src) return _mtFpaCache;
-  _mtFpaCache = { weeksPlayed: 0, share: 0, z: null, src: _src };
+  // 2026-11-12: key on EVERY input, not just FPA_2026. Keyed on the FPA file alone, a read made
+  // before the lazy weekly stats landed cached "no data" (src null) and never rebuilt once
+  // WEEKLY_STATS_ACTIVE (the board-only fallback) or the prior arrived.
+  const _ws = (typeof WEEKLY_STATS_ACTIVE !== 'undefined') ? WEEKLY_STATS_ACTIVE : (window.WEEKLY_STATS_ACTIVE || null);
+  const _pr = window['FPA_PRIOR_' + (((window.FPA_2026 && +window.FPA_2026.season) || 2026) - 1)] || null;
+  if (_mtFpaCache && _mtFpaCache.src === _src && _mtFpaCache.ws === _ws && _mtFpaCache.pr === _pr) return _mtFpaCache;
+  _mtFpaCache = { weeksPlayed: 0, share: 0, z: null, src: _src, ws: _ws, pr: _pr };
   const useTdn = window.MFF_OPP_TDN_OFF !== true;
   let tdn = false;
   // 2026-09-14: prefer the COMPLETE-league table (data/fpa_2026.js, built by
@@ -64967,7 +64983,7 @@ var _mtObservedFpa = function _mtObservedFpa() {
     Object.keys(z[pos]).sort((a, b) => z[pos][a] - z[pos][b]).forEach((t, i) => { rank[pos][t] = i + 1; });
   });
   if (Object.keys(z).length) _mtFpaCache = { weeksPlayed: maxWk, share: blended ? 1 : share, z, adjusted: !!_mtFpaCache.adjusted,
-                                             blended, w: wIn, rank, tdn, src: _src };
+                                             blended, w: wIn, rank, tdn, src: _src, ws: _ws, pr: _pr };
   return _mtFpaCache;
 };
 window._mtObservedFpa = _mtObservedFpa; // console inspection / testing
@@ -65250,7 +65266,40 @@ window._sosSetRange = function(range) {
 // -> { label, color, ... }. posKey in {'QB','RB','WR','TE','OVERALL'};
 // OVERALL is the fallback for K/DST/other. Default window is W15-17.
 const _mtPlayoffSosCache = {};
+// INPUT GUARD (2026-11-12). The #rankings board builds every position's SOS ~4s into a
+// load, before the lazy points-allowed file (data/fpa_2026.js) and WEEKLY_STATS_ACTIVE
+// have landed, so those first ranks are Clay-prior-only (TE: TEN #1 / CIN #4 / NYG #13
+// instead of TEN #7 / CIN #8 / NYG #4). The caches used to be dropped only on
+// mff:weeklydata, which fires after the whole ~28 MB staggered bundle (never on phones).
+// Now every cache downstream of the SOS inputs is dropped whenever one of those inputs
+// changes identity: points allowed, weekly stats, last-season prior, game lines, Clay
+// grades, the board, the schedule. Called at the top of each builder (never mid-build).
+let _mtSosInputs = null;
+var _mtSosInputsGuard = function _mtSosInputsGuard() {
+  const FP = window.FPA_2026;
+  const cur = [
+    (FP && FP.weeks) || null,
+    (typeof WEEKLY_STATS_ACTIVE !== 'undefined') ? WEEKLY_STATS_ACTIVE : (window.WEEKLY_STATS_ACTIVE || null),
+    window['FPA_PRIOR_' + (((FP && +FP.season) || 2026) - 1)] || null,
+    (window.BETTING_2026 && window.BETTING_2026.gameTotals) || null,
+    window.CLAY_TEAM_GRADES_2026 || null,
+    Array.isArray(window.D) ? window.D : null,
+    (typeof window.getPlayoffOpponents === 'function') ? window.getPlayoffOpponents : null,
+  ];
+  if (_mtSosInputs && cur.every((v, i) => v === _mtSosInputs[i])) return;
+  const first = !_mtSosInputs;
+  _mtSosInputs = cur;
+  if (first) return;
+  _mtFpaCache = null;
+  _mtDstByAbbrCache = null;
+  _mtImplBaseCache = null;
+  _mtSprBaseCache = null;
+  _mtOppImplBaseCache = null;
+  Object.keys(_mtPlayoffSosCache).forEach(k => { delete _mtPlayoffSosCache[k]; });
+  Object.keys(_mtPlayoffSosWeeklyCache).forEach(k => { delete _mtPlayoffSosWeeklyCache[k]; });
+};
 var _mtBuildPlayoffSos = function _mtBuildPlayoffSos(pos, weeks) {
+  _mtSosInputsGuard();
   const wks = (Array.isArray(weeks) && weeks.length) ? weeks : [15, 16, 17];
   const posKey = _mtPosKey(pos);
   const isDstView = posKey === 'DST';
@@ -65464,6 +65513,7 @@ var _mtGetPlayoffSos = function _mtGetPlayoffSos(teamRaw, pos, weeks) {
 // for 2026 — no byes — but the fallback is here just in case).
 const _mtPlayoffSosWeeklyCache = {};
 var _mtBuildPlayoffSosWeekly = function _mtBuildPlayoffSosWeekly(pos, week) {
+  _mtSosInputsGuard();
   const posKey = _mtPosKey(pos);
   const isDstView = posKey === 'DST';
   const mix = _mtSignalMix(posKey);

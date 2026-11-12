@@ -91,7 +91,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-10-trades" as="script">
+<link rel="preload" href="app.js?v=2026-11-12-psos" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -6663,11 +6663,19 @@ function _injectScripts(files, tag, opts) {
 window._loadWeeklyCore = function(opts) {
   if (window._weeklyCorePromise) return window._weeklyCorePromise;
   window._weeklyCorePromise = _injectScripts([
+    // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py, ~72 KB) —
+    // feeds _mtObservedFpa, i.e. every pSOS rank on the board and the cards. Moved into the core
+    // slice 2026-11-12: in the full bundle it never reached phones, and on desktop the board
+    // painted Clay-prior-only pSOS ranks and never repainted. The merge below re-renders the
+    // board once this lands (app.js _mtSosInputsGuard drops the stale SOS caches).
+    'data/fpa_2026.js?v=2026-11-12-0900',
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer); the ACTIVE
     // merge also still listens on mff:weeklydata (idempotent).
     'data/weekly_stats_active.js?v=2026-11-12-0900'
   ], 'WeeklyCore', opts).then(function() {
     try { _mergeWeeklyStatsActive(); } catch (e) { console.warn('[WeeklyCore] merge failed:', e); }
+    // app.js repaints an open player card (its P-SOS boxes read fpa_2026)
+    try { document.dispatchEvent(new Event('mff:weeklycore')); } catch (e) {}
   });
   return window._weeklyCorePromise;
 };
@@ -6675,10 +6683,7 @@ window._loadWeeklyCore = function(opts) {
 window._loadWeeklyData = function(opts) {
   if (window._weeklyDataPromise) return window._weeklyDataPromise;
   var files = [
-    // (weekly_stats_active loads first via _loadWeeklyCore above)
-    // Complete-league fantasy points allowed per defense/week (pull_postgame_stats.py) —
-    // feeds _mtObservedFpa (SOS in-season blend). Same lazy bundle so it lands before mff:weeklydata.
-    'data/fpa_2026.js?v=2026-11-12-0900',
+    // (weekly_stats_active + fpa_2026 load first via _loadWeeklyCore above)
     // Full-field Best Ball Mania VII advance rate by player (scripts/bbm_field_adv.py, Tue) —
     // My Teams > Underdog > DRAFT BOARD "OVERALL ADV RATE".
     'data/bbm_field_adv.js?v=2026-11-10-0757',
@@ -6866,7 +6871,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-10-trades"></script>
+<script defer src="app.js?v=2026-11-12-psos"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

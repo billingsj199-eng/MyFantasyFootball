@@ -229,6 +229,9 @@
   "birth": "2005-06-24",
   "src": "wikidata:Q141138305"
  },
+ "Justin Bowick": {
+  "miss": "2026-11-12"
+ },
  "KJ Duff": {
   "at": "2026-09-30",
   "birth": "2005-12-06",
@@ -295,6 +298,11 @@
  },
  "Makhi Hughes": {
   "miss": "2026-10-17"
+ },
+ "Marquis Johnson": {
+  "at": "2026-11-12",
+  "birth": "2004-09-15",
+  "src": "wikidata:Q135992385"
  },
  "Michael Masunas": {
   "at": "2026-11-02",
@@ -366,6 +374,11 @@
   "birth": "2002-08-24",
   "src": "wikidata:Q136260093"
  },
+ "Turbo Richard": {
+  "at": "2026-11-12",
+  "birth": "2006-01-26",
+  "src": "wikipedia:Turbo_Richard"
+ },
  "Walker Eget": {
   "at": "2026-10-17",
   "birth": "2003-07-05",
@@ -382,5 +395,8 @@
  },
  "Wyatt Young": {
   "miss": "2026-11-02"
+ },
+ "Yannick Smith": {
+  "miss": "2026-11-12"
  }
 }

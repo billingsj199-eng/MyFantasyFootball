@@ -12,7 +12,7 @@
    - Firebase / ESPN / Sleeper / Cloudflare APIs → bypass entirely.
    Bump SW_VERSION when changing SW logic so old caches get wiped on activate. */
 
-const SW_VERSION   = '2026-08-31a';
+const SW_VERSION   = '2026-11-13a';
 // How long a navigation waits for the network before falling back to the cached
 // shell. Long enough to win on any normal connection, short enough that a dead
 // one doesn't feel broken.
@@ -108,7 +108,14 @@ async function navigationNetworkFirst(req, cacheName, event) {
   // for every distinct shared URL.
   const key = new URL(req.url).pathname;
 
-  const network = fetch(req)
+  // cache: 'no-cache' revalidates with the server every time (a cheap 304
+  // when nothing changed). A plain fetch(req) honoured GitHub Pages'
+  // max-age=600, so for up to 10 minutes after a deploy the "network" answer
+  // was really the browser's HTTP cache and fixes looked like they hadn't
+  // shipped (Jack 2026-11-13). Any browser that rejects the init on a
+  // navigation request falls back to the old plain fetch.
+  const network = fetch(req, { cache: 'no-cache' })
+    .catch(() => fetch(req))
     .then((res) => {
       if (res && res.ok) cache.put(key, res.clone()).catch(() => {});
       return res;

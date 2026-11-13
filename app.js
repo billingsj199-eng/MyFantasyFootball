@@ -36586,8 +36586,16 @@ window.fmtHeight = fmtHeight;
       const dock = document.getElementById('ajOnAirQueue');
       const docked = !!dock && document.documentElement.classList.contains('aj-onair') && document.documentElement.classList.contains('aj-qdock');
       if (dock) dock.innerHTML = docked ? side : '';
+      // A redraw while Jack is typing in the note box keeps him in it, caret
+      // and all (same question only — a new card starts unfocused).
+      const act = document.activeElement;
+      const typing = act && act.id === 'adminQaNote-' + cur.id ? { s: act.selectionStart, e: act.selectionEnd } : null;
       list.innerHTML = '<div class="aj-qwrap"><div class="aj-qmain">' + _adminQaQueueCard(cur.id, cur.data, q.length) + upnext + '</div>' + (docked ? '' : side) + '</div>';
       _adminQaRestore(cur.id, cur.data);
+      if (typing) {
+        const inp = document.getElementById('adminQaNote-' + cur.id);
+        if (inp) { try { inp.focus({ preventScroll: true }); inp.setSelectionRange(typing.s, typing.e); } catch (_) {} }
+      }
       fit();
     }
     // Picked tile + typed note survive full redraws (Jack 2026-11-09, "it just
@@ -36846,7 +36854,9 @@ window.fmtHeight = fmtHeight;
     }
     function _adminQaListen(db, listEl, msgEl) {
       if (_adminQaUnsub && _adminQaListenEl === listEl) {
-        if (!window._adminQaBusy && typeof window._adminQaRevealResolve !== 'function') _adminQaRenderQueue();
+        // Lite: keeps the card (picks, note, open slot picker) when the one
+        // on screen is still queued; falls back to a full draw otherwise.
+        if (!window._adminQaBusy && typeof window._adminQaRevealResolve !== 'function') _adminQaRenderQueueLite();
         return;
       }
       _adminQaUnlisten();
@@ -74247,6 +74257,12 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   // stays on air without turning other open windows on air.
   const _QA_ASPECTS = ['fit', '169', '11', '45', '916'];
   function _qaOnAirApply(on) {
+    // _qaAdminSync re-applies the current state on EVERY panel render (auth
+    // churn, league syncs, settings loads). Only an actual on → off switch
+    // may redraw the queue: the redraw used to run on each of those renders
+    // while off air too, rebuilding the card and kicking the cursor out of the
+    // note box mid-word (Jack 2026-11-13, "it deselects when I type").
+    const wasOn = document.documentElement.classList.contains('aj-onair');
     document.documentElement.classList.toggle('aj-onair', on);
     const b = document.querySelector('.aj-onair-btn');
     if (b) { b.classList.toggle('on', on); b.textContent = on ? '🔴 ON AIR' : '⚫ ON AIR'; }
@@ -74259,8 +74275,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const list = document.getElementById('ajInboxList');
       if (list) Array.from(list.children).forEach(el => { el.style.width = ''; el.style.minHeight = ''; el.style.transform = ''; delete el.dataset.ajScale; });
       // Put a docked queue back into the page layout; unpin the pop-ups.
-      if (typeof window._adminQaRenderQueue === 'function' && list && list.querySelector('.aj-qwrap')) window._adminQaRenderQueue();
-      if (typeof window._qaOnAirPin === 'function') window._qaOnAirPin();
+      if (wasOn && typeof window._adminQaRenderQueue === 'function' && list && list.querySelector('.aj-qwrap')) window._adminQaRenderQueue();
+      if (wasOn && typeof window._qaOnAirPin === 'function') window._qaOnAirPin();
     }
   }
   // A new stage shape or window size re-measures (drops the per-card scale lock).
@@ -75126,6 +75142,27 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     }
   };
 
+  // Real players only (Jack 2026-11-13, "I don't want random fill ins"): every
+  // typed name has to resolve to a player card. Trade sides may also carry
+  // draft picks ("2027 1st", "late 2nd") and FAAB ("$15 FAAB"); pieces are
+  // split on + , / & "and" the way Jack's cards split them. Returns the
+  // pieces that didn't match. While the player pool hasn't loaded yet
+  // nothing is rejected — the cards can't be checked either.
+  const _QA_PICK_RE = /^(?:20\d\d\s*)?(?:(?:early|mid|late)\s*)?(?:1st|2nd|3rd|4th)(?:\s*(?:round|rd))?(?:\s*pick)?(?:\s*20\d\d)?$/i;
+  const _QA_FAAB_RE = /^\$?\s*\d{1,4}\s*(?:\$\s*)?(?:faab|fab)(?:\s*bucks)?$/i;
+  function _qaUnknownPieces(text, allowPicks) {
+    const s = String(text || '').trim();
+    if (!s || typeof _ajFindPlayer !== 'function' || typeof D === 'undefined' || !Array.isArray(D) || !D.length) return [];
+    if (_ajFindPlayer(s)) return [];
+    return s.split(/\s*(?:\+|,|\/|&|\band\b)\s*/i).map(p => p.trim()).filter(Boolean)
+      .filter(p => !_ajFindPlayer(p) && !(allowPicks && (_QA_PICK_RE.test(p) || _QA_FAAB_RE.test(p))));
+  }
+  function _qaUnknownMsg(bad) {
+    const shown = bad.slice(0, 3).map(b => '"' + b.slice(0, 40) + '"').join(', ');
+    return 'We couldn\'t find ' + shown + (bad.length > 3 ? ' and ' + (bad.length - 3) + ' more' : '') +
+      ' — pick real players from the suggestions as you type (full name, e.g. "Bijan Robinson").';
+  }
+
   window._qaSubmit = function(type) {
     if (!QA_TYPES[type]) return;
     const msg = document.getElementById('qaMsg-' + type);
@@ -75176,7 +75213,10 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         return out;
       };
       const adds = typed('qaOpt-waiver-');
-      const drops = document.getElementById('qaPick-waiver-drop') ? _qaPicks('waiver-drop').slice(0, 4) : typed('qaDrop-waiver-');
+      const dropChips = !!document.getElementById('qaPick-waiver-drop');
+      const drops = dropChips ? _qaPicks('waiver-drop').slice(0, 4) : typed('qaDrop-waiver-');
+      const badW = [].concat(...adds.map(a => _qaUnknownPieces(a, false)), ...(dropChips ? [] : drops.map(d => _qaUnknownPieces(d, false))));
+      if (badW.length) { say(_qaUnknownMsg(badW)); return; }
       const synced = !!(lg && _qaMyPlayers(lg).length);
       if (!adds.length && !synced) { say('Type at least one player you\'re eyeing, or pick a synced league at the top and Jack will scan your waiver wire.'); return; }
       if (adds.length) payload.options = adds;
@@ -75186,6 +75226,12 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       if (options) {
         if (type === 'startsit' && options.length < 2) { say('Tap at least 2 players to choose between.'); return; }
         if (type === 'trade' && (!options[0] || !options[1])) { say('Pick what you give and what you get.'); return; }
+        // Tiles are real by construction; the "anything else" boxes on a
+        // trade side take players, draft picks or FAAB only.
+        if (type === 'trade') {
+          const badX = [].concat(...['trade-0', 'trade-1'].map(k => _qaUnknownPieces((document.getElementById('qaExtra-' + k) || {}).value, true)));
+          if (badX.length) { say(_qaUnknownMsg(badX)); return; }
+        }
       } else {
         options = [];
         for (let i = 0; i < 4; i++) {
@@ -75195,6 +75241,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
         }
         if (type === 'startsit' && options.length < 2) { say('Enter at least 2 players to choose between.'); return; }
         if (type === 'trade' && options.length < 2) { say('Fill in both sides of the trade.'); return; }
+        const badT = [].concat(...options.map(o => _qaUnknownPieces(o, type === 'trade')));
+        if (badT.length) { say(_qaUnknownMsg(badT)); return; }
       }
       payload.options = options;
     }

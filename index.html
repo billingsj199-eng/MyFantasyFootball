@@ -6668,10 +6668,10 @@ window._loadWeeklyCore = function(opts) {
     // slice 2026-11-12: in the full bundle it never reached phones, and on desktop the board
     // painted Clay-prior-only pSOS ranks and never repainted. The merge below re-renders the
     // board once this lands (app.js _mtSosInputsGuard drops the stale SOS caches).
-    'data/fpa_2026.js?v=2026-11-12-0900',
+    'data/fpa_2026.js?v=2026-11-12-1900',
     // weekly_stats_active joined the lazy bundle 2026-07-20 (was eager defer); the ACTIVE
     // merge also still listens on mff:weeklydata (idempotent).
-    'data/weekly_stats_active.js?v=2026-11-12-0900'
+    'data/weekly_stats_active.js?v=2026-11-12-1900'
   ], 'WeeklyCore', opts).then(function() {
     try { _mergeWeeklyStatsActive(); } catch (e) { console.warn('[WeeklyCore] merge failed:', e); }
     // app.js repaints an open player card (its P-SOS boxes read fpa_2026)
@@ -6696,9 +6696,9 @@ window._loadWeeklyData = function(opts) {
     'data/all_players_weekly_4.js?v=2026-07-21b',
     'data/all_players_weekly_5.js?v=2026-07-21',
     // Snap % for the player card career/game-log tables (nflverse, 2012+)
-    'data/snap_counts.js?v=2026-11-12-0900',
+    'data/snap_counts.js?v=2026-11-12-1900',
     // Route participation % (RT%) for the game log (scripts/pull_route_pct.py)
-    'data/route_pct.js?v=2026-11-12-0900',
+    'data/route_pct.js?v=2026-11-12-1900',
     // Team usage counts for the card TEAM tab (scripts/build_team_usage.py, nflverse pbp)
     'data/team_usage_2026.js?v=2026-11-12-0717',
     // Defense zone heat map for the card MATCHUP tab (scripts/build_def_zones.py, nflverse pbp)

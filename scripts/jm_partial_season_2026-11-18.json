@@ -1,0 +1,15668 @@
+{
+ "date": "2026-11-18",
+ "devy": false,
+ "exp": null,
+ "ns": [
+  0,
+  3,
+  5,
+  7,
+  9
+ ],
+ "eligible": 368,
+ "results": {
+  "0": {
+   "QB": {
+    "n": 38,
+    "stab": 0.9302249345527186,
+    "absd": 5.384210526315789,
+    "tier": 0.15789473684210525,
+    "rhoN": 0.5914215958488035,
+    "rhoFull": 0.642308738922122,
+    "meanShift": -4.889473684210526
+   },
+   "RB": {
+    "n": 98,
+    "stab": 0.8838308806651534,
+    "absd": 8.280612244897961,
+    "tier": 0.4489795918367347,
+    "rhoN": 0.6185680030690398,
+    "rhoFull": 0.6674988953688809,
+    "meanShift": -8.194897959183674
+   },
+   "WR": {
+    "n": 164,
+    "stab": 0.9300527670214284,
+    "absd": 6.712195121951215,
+    "tier": 0.3231707317073171,
+    "rhoN": 0.5658895357522365,
+    "rhoFull": 0.5855689064434104,
+    "meanShift": -6.642682926829265
+   },
+   "TE": {
+    "n": 67,
+    "stab": 0.9080123744071388,
+    "absd": 5.940298507462686,
+    "tier": 0.29850746268656714,
+    "rhoN": 0.5753347837592457,
+    "rhoFull": 0.6202420258417786,
+    "meanShift": -5.934328358208956
+   }
+  },
+  "3": {
+   "QB": {
+    "n": 39,
+    "stab": 0.9821772202258725,
+    "absd": 3.01025641025641,
+    "tier": 0.07692307692307693,
+    "rhoN": 0.6366007853116066,
+    "rhoFull": 0.6502605775374939,
+    "meanShift": -1.230769230769231
+   },
+   "RB": {
+    "n": 98,
+    "stab": 0.9668030082332273,
+    "absd": 4.383673469387755,
+    "tier": 0.3163265306122449,
+    "rhoN": 0.665335142461887,
+    "rhoFull": 0.6674988953688809,
+    "meanShift": -3.740816326530614
+   },
+   "WR": {
+    "n": 164,
+    "stab": 0.9796875074905619,
+    "absd": 2.8835365853658548,
+    "tier": 0.1524390243902439,
+    "rhoN": 0.5812220025167806,
+    "rhoFull": 0.5855689064434104,
+    "meanShift": -1.615243902439025
+   },
+   "TE": {
+    "n": 67,
+    "stab": 0.9445641764332801,
+    "absd": 3.183582089552237,
+    "tier": 0.1791044776119403,
+    "rhoN": 0.6418571308952259,
+    "rhoFull": 0.6202420258417786,
+    "meanShift": -1.6044776119402986
+   }
+  },
+  "5": {
+   "QB": {
+    "n": 39,
+    "stab": 0.9887105768757578,
+    "absd": 2.4435897435897442,
+    "tier": 0.07692307692307693,
+    "rhoN": 0.6362350092828946,
+    "rhoFull": 0.6502605775374939,
+    "meanShift": -0.6948717948717957
+   },
+   "RB": {
+    "n": 98,
+    "stab": 0.9721623586911146,
+    "absd": 3.7255102040816332,
+    "tier": 0.20408163265306123,
+    "rhoN": 0.667929205380419,
+    "rhoFull": 0.6674988953688809,
+    "meanShift": -3.229591836734693
+   },
+   "WR": {
+    "n": 164,
+    "stab": 0.9874329510255109,
+    "absd": 2.023780487804876,
+    "tier": 0.11585365853658537,
+    "rhoN": 0.5853794860768273,
+    "rhoFull": 0.5855689064434104,
+    "meanShift": -1.2067073170731701
+   },
+   "TE": {
+    "n": 67,
+    "stab": 0.9698980304511803,
+    "absd": 2.220895522388059,
+    "tier": 0.11940298507462686,
+    "rhoN": 0.6371675366814314,
+    "rhoFull": 0.6202420258417786,
+    "meanShift": -1.1999999999999997
+   }
+  },
+  "7": {
+   "QB": {
+    "n": 39,
+    "stab": 0.9943296881328473,
+    "absd": 1.6692307692307684,
+    "tier": 0.05128205128205128,
+    "rhoN": 0.648538318103526,
+    "rhoFull": 0.6502605775374939,
+    "meanShift": -0.9974358974358976
+   },
+   "RB": {
+    "n": 98,
+    "stab": 0.9868939529189726,
+    "absd": 1.9357142857142855,
+    "tier": 0.10204081632653061,
+    "rhoN": 0.6576138994555203,
+    "rhoFull": 0.6674988953688809,
+    "meanShift": -1.4540816326530606
+   },
+   "WR": {
+    "n": 164,
+    "stab": 0.9946034112726926,
+    "absd": 1.331097560975609,
+    "tier": 0.09146341463414634,
+    "rhoN": 0.5873819169107846,
+    "rhoFull": 0.5855689064434104,
+    "meanShift": -0.6469512195121947
+   },
+   "TE": {
+    "n": 67,
+    "stab": 0.9877273684119298,
+    "absd": 1.0597014925373136,
+    "tier": 0.07462686567164178,
+    "rhoN": 0.6088466657155172,
+    "rhoFull": 0.6202420258417786,
+    "meanShift": -0.6955223880597019
+   }
+  },
+  "9": {
+   "QB": {
+    "n": 39,
+    "stab": 0.9981266784095869,
+    "absd": 0.9512820512820502,
+    "tier": 0,
+    "rhoN": 0.6557296578561984,
+    "rhoFull": 0.6502605775374939,
+    "meanShift": -0.5000000000000003
+   },
+   "RB": {
+    "n": 98,
+    "stab": 0.9931107037993057,
+    "absd": 1.086734693877551,
+    "tier": 0.04081632653061224,
+    "rhoN": 0.6715004309775311,
+    "rhoFull": 0.6674988953688809,
+    "meanShift": -0.4989795918367347
+   },
+   "WR": {
+    "n": 164,
+    "stab": 0.9982090994394722,
+    "absd": 0.7554878048780488,
+    "tier": 0.03048780487804878,
+    "rhoN": 0.583127703408386,
+    "rhoFull": 0.5855689064434104,
+    "meanShift": -0.35182926829268296
+   },
+   "TE": {
+    "n": 67,
+    "stab": 0.9931654460918324,
+    "absd": 0.5731343283582092,
+    "tier": 0.05970149253731343,
+    "rhoN": 0.6121021913524455,
+    "rhoFull": 0.6202420258417786,
+    "meanShift": -0.3671641791044779
+   }
+  }
+ },
+ "full": [
+  [
+   "Corey Davis",
+   "WR",
+   2017,
+   83.5,
+   "Starter"
+  ],
+  [
+   "Christian McCaffrey",
+   "RB",
+   2017,
+   93.2,
+   "Generational"
+  ],
+  [
+   "John Ross",
+   "WR",
+   2017,
+   69.6,
+   "Starter"
+  ],
+  [
+   "O.J. Howard",
+   "TE",
+   2017,
+   73.4,
+   "Starter"
+  ],
+  [
+   "Evan Engram",
+   "TE",
+   2017,
+   89.5,
+   "Top Prospect"
+  ],
+  [
+   "David Njoku",
+   "TE",
+   2017,
+   80.7,
+   "Top Prospect"
+  ],
+  [
+   "Zay Jones",
+   "WR",
+   2017,
+   59,
+   "Starter"
+  ],
+  [
+   "Dalvin Cook",
+   "RB",
+   2017,
+   79.8,
+   "Top Prospect"
+  ],
+  [
+   "Gerald Everett",
+   "TE",
+   2017,
+   66.3,
+   "Starter"
+  ],
+  [
+   "Joe Mixon",
+   "RB",
+   2017,
+   77,
+   "Top Prospect"
+  ],
+  [
+   "DeShone Kizer",
+   "QB",
+   2017,
+   55.1,
+   "Contributor"
+  ],
+  [
+   "JuJu Smith-Schuster",
+   "WR",
+   2017,
+   63.8,
+   "Starter"
+  ],
+  [
+   "Alvin Kamara",
+   "RB",
+   2017,
+   68.2,
+   "Starter"
+  ],
+  [
+   "Taywan Taylor",
+   "WR",
+   2017,
+   58.8,
+   "Starter"
+  ],
+  [
+   "ArDarius Stewart",
+   "WR",
+   2017,
+   50.5,
+   "Contributor"
+  ],
+  [
+   "Chris Godwin",
+   "WR",
+   2017,
+   59,
+   "Starter"
+  ],
+  [
+   "Kareem Hunt",
+   "RB",
+   2017,
+   62.1,
+   "Starter"
+  ],
+  [
+   "Kenny Golladay",
+   "WR",
+   2017,
+   43.3,
+   "Depth"
+  ],
+  [
+   "Jonnu Smith",
+   "TE",
+   2017,
+   66.4,
+   "Starter"
+  ],
+  [
+   "C.J. Beathard",
+   "QB",
+   2017,
+   19.8,
+   "Long Shot"
+  ],
+  [
+   "James Conner",
+   "RB",
+   2017,
+   57.1,
+   "Contributor"
+  ],
+  [
+   "Amara Darboh",
+   "WR",
+   2017,
+   29.4,
+   "Lottery Ticket"
+  ],
+  [
+   "Dede Westbrook",
+   "WR",
+   2017,
+   41.9,
+   "Depth"
+  ],
+  [
+   "Josh Reynolds",
+   "WR",
+   2017,
+   43.5,
+   "Depth"
+  ],
+  [
+   "Michael Roberts",
+   "TE",
+   2017,
+   38.1,
+   "Depth"
+  ],
+  [
+   "Josh Malone",
+   "WR",
+   2017,
+   34.3,
+   "Depth"
+  ],
+  [
+   "Ryan Switzer",
+   "WR",
+   2017,
+   36.1,
+   "Depth"
+  ],
+  [
+   "Joshua Dobbs",
+   "QB",
+   2017,
+   52,
+   "Contributor"
+  ],
+  [
+   "Jehu Chesson",
+   "WR",
+   2017,
+   26.2,
+   "Lottery Ticket"
+  ],
+  [
+   "Chad Hansen",
+   "WR",
+   2017,
+   32.4,
+   "Depth"
+  ],
+  [
+   "Marlon Mack",
+   "RB",
+   2017,
+   37.5,
+   "Depth"
+  ],
+  [
+   "Jake Butt",
+   "TE",
+   2017,
+   37,
+   "Depth"
+  ],
+  [
+   "Jordan Leggett",
+   "TE",
+   2017,
+   33.4,
+   "Lottery Ticket"
+  ],
+  [
+   "Jeremy Sprinkle",
+   "TE",
+   2017,
+   28.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Jeremy McNichols",
+   "RB",
+   2017,
+   40,
+   "Depth"
+  ],
+  [
+   "Shelton Gibson",
+   "WR",
+   2017,
+   30.6,
+   "Lottery Ticket"
+  ],
+  [
+   "Rodney Adams",
+   "WR",
+   2017,
+   28,
+   "Lottery Ticket"
+  ],
+  [
+   "Nathan Peterman",
+   "QB",
+   2017,
+   21.4,
+   "Long Shot"
+  ],
+  [
+   "Isaiah McKenzie",
+   "WR",
+   2017,
+   23.6,
+   "Long Shot"
+  ],
+  [
+   "Trent Taylor",
+   "WR",
+   2017,
+   32,
+   "Depth"
+  ],
+  [
+   "T.J. Logan",
+   "RB",
+   2017,
+   28.5,
+   "Lottery Ticket"
+  ],
+  [
+   "Aaron Jones",
+   "RB",
+   2017,
+   36.4,
+   "Depth"
+  ],
+  [
+   "Elijah McGuire",
+   "RB",
+   2017,
+   36.7,
+   "Depth"
+  ],
+  [
+   "Robert Davis",
+   "WR",
+   2017,
+   30.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Stacy Coley",
+   "WR",
+   2017,
+   32.2,
+   "Depth"
+  ],
+  [
+   "Isaiah Ford",
+   "WR",
+   2017,
+   34.5,
+   "Depth"
+  ],
+  [
+   "Mason Schreck",
+   "TE",
+   2017,
+   24,
+   "Lottery Ticket"
+  ],
+  [
+   "Baker Mayfield",
+   "QB",
+   2018,
+   85.9,
+   "Top Prospect"
+  ],
+  [
+   "Saquon Barkley",
+   "RB",
+   2018,
+   93.6,
+   "Generational"
+  ],
+  [
+   "Josh Allen",
+   "QB",
+   2018,
+   69,
+   "Starter"
+  ],
+  [
+   "Josh Rosen",
+   "QB",
+   2018,
+   51.8,
+   "Contributor"
+  ],
+  [
+   "Hayden Hurst",
+   "TE",
+   2018,
+   51.9,
+   "Contributor"
+  ],
+  [
+   "Calvin Ridley",
+   "WR",
+   2018,
+   79.8,
+   "Starter"
+  ],
+  [
+   "Rashaad Penny",
+   "RB",
+   2018,
+   71.4,
+   "Starter"
+  ],
+  [
+   "Courtland Sutton",
+   "WR",
+   2018,
+   62.4,
+   "Starter"
+  ],
+  [
+   "Mike Gesicki",
+   "TE",
+   2018,
+   72.7,
+   "Starter"
+  ],
+  [
+   "Kerryon Johnson",
+   "RB",
+   2018,
+   60.1,
+   "Contributor"
+  ],
+  [
+   "Dante Pettis",
+   "WR",
+   2018,
+   52.8,
+   "Contributor"
+  ],
+  [
+   "James Washington",
+   "WR",
+   2018,
+   44,
+   "Contributor"
+  ],
+  [
+   "D.J. Chark",
+   "WR",
+   2018,
+   32.6,
+   "Depth"
+  ],
+  [
+   "Royce Freeman",
+   "RB",
+   2018,
+   67,
+   "Starter"
+  ],
+  [
+   "Michael Gallup",
+   "WR",
+   2018,
+   59.3,
+   "Starter"
+  ],
+  [
+   "Mark Andrews",
+   "TE",
+   2018,
+   62.8,
+   "Starter"
+  ],
+  [
+   "Tre'Quan Smith",
+   "WR",
+   2018,
+   38.9,
+   "Depth"
+  ],
+  [
+   "Jordan Akins",
+   "TE",
+   2018,
+   33.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Nyheim Hines",
+   "RB",
+   2018,
+   38.1,
+   "Depth"
+  ],
+  [
+   "Antonio Callaway",
+   "WR",
+   2018,
+   41.7,
+   "Depth"
+  ],
+  [
+   "DaeSean Hamilton",
+   "WR",
+   2018,
+   41.3,
+   "Depth"
+  ],
+  [
+   "Will Dissly",
+   "TE",
+   2018,
+   3.5,
+   "Long Shot"
+  ],
+  [
+   "Ito Smith",
+   "RB",
+   2018,
+   44.8,
+   "Depth"
+  ],
+  [
+   "Kalen Ballage",
+   "RB",
+   2018,
+   32.1,
+   "Lottery Ticket"
+  ],
+  [
+   "Jaleel Scott",
+   "WR",
+   2018,
+   28,
+   "Lottery Ticket"
+  ],
+  [
+   "J'Mon Moore",
+   "WR",
+   2018,
+   27.3,
+   "Lottery Ticket"
+  ],
+  [
+   "Dalton Schultz",
+   "TE",
+   2018,
+   13,
+   "Long Shot"
+  ],
+  [
+   "Troy Fumagalli",
+   "TE",
+   2018,
+   30.3,
+   "Lottery Ticket"
+  ],
+  [
+   "Jaylen Samuels",
+   "RB",
+   2018,
+   38,
+   "Depth"
+  ],
+  [
+   "Jordan Wilkins",
+   "RB",
+   2018,
+   29.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Mike White",
+   "QB",
+   2018,
+   10.3,
+   "Long Shot"
+  ],
+  [
+   "Marquez Valdes-Scantling",
+   "WR",
+   2018,
+   15.7,
+   "Long Shot"
+  ],
+  [
+   "Damion Ratley",
+   "WR",
+   2018,
+   8.1,
+   "Long Shot"
+  ],
+  [
+   "John Kelly",
+   "RB",
+   2018,
+   19.5,
+   "Long Shot"
+  ],
+  [
+   "Deon Cain",
+   "WR",
+   2018,
+   31.5,
+   "Lottery Ticket"
+  ],
+  [
+   "Ray-Ray McCloud",
+   "WR",
+   2018,
+   4.8,
+   "Long Shot"
+  ],
+  [
+   "Russell Gage",
+   "WR",
+   2018,
+   22.4,
+   "Long Shot"
+  ],
+  [
+   "Luke Falk",
+   "QB",
+   2018,
+   27.3,
+   "Lottery Ticket"
+  ],
+  [
+   "Boston Scott",
+   "RB",
+   2018,
+   30.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Equanimeous St. Brown",
+   "WR",
+   2018,
+   30.4,
+   "Lottery Ticket"
+  ],
+  [
+   "Braxton Berrios",
+   "WR",
+   2018,
+   21.8,
+   "Long Shot"
+  ],
+  [
+   "Jordan Thomas",
+   "TE",
+   2018,
+   0,
+   "Long Shot"
+  ],
+  [
+   "Javon Wims",
+   "WR",
+   2018,
+   17.5,
+   "Long Shot"
+  ],
+  [
+   "Marcell Ateman",
+   "WR",
+   2018,
+   28.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Bo Scarbrough",
+   "RB",
+   2018,
+   27,
+   "Lottery Ticket"
+  ],
+  [
+   "Logan Woodside",
+   "QB",
+   2018,
+   24.5,
+   "Lottery Ticket"
+  ],
+  [
+   "Auden Tate",
+   "WR",
+   2018,
+   29.9,
+   "Lottery Ticket"
+  ],
+  [
+   "Trey Quinn",
+   "WR",
+   2018,
+   30.1,
+   "Lottery Ticket"
+  ],
+  [
+   "Kyler Murray",
+   "QB",
+   2019,
+   82.9,
+   "Top Prospect"
+  ],
+  [
+   "T.J. Hockenson",
+   "TE",
+   2019,
+   82.8,
+   "Top Prospect"
+  ],
+  [
+   "Noah Fant",
+   "TE",
+   2019,
+   86,
+   "Top Prospect"
+  ],
+  [
+   "Josh Jacobs",
+   "RB",
+   2019,
+   81.6,
+   "Top Prospect"
+  ],
+  [
+   "Marquise Brown",
+   "WR",
+   2019,
+   80.5,
+   "Starter"
+  ],
+  [
+   "N'Keal Harry",
+   "WR",
+   2019,
+   82.4,
+   "Starter"
+  ],
+  [
+   "Deebo Samuel",
+   "WR",
+   2019,
+   70.1,
+   "Starter"
+  ],
+  [
+   "Irv Smith Jr.",
+   "TE",
+   2019,
+   67.8,
+   "Starter"
+  ],
+  [
+   "A.J. Brown",
+   "WR",
+   2019,
+   71,
+   "Starter"
+  ],
+  [
+   "Miles Sanders",
+   "RB",
+   2019,
+   46.3,
+   "Contributor"
+  ],
+  [
+   "Mecole Hardman",
+   "WR",
+   2019,
+   32,
+   "Depth"
+  ],
+  [
+   "Parris Campbell",
+   "WR",
+   2019,
+   56.5,
+   "Starter"
+  ],
+  [
+   "Andy Isabella",
+   "WR",
+   2019,
+   42.4,
+   "Depth"
+  ],
+  [
+   "Diontae Johnson",
+   "WR",
+   2019,
+   45.3,
+   "Contributor"
+  ],
+  [
+   "Josh Oliver",
+   "TE",
+   2019,
+   54.4,
+   "Starter"
+  ],
+  [
+   "Darrell Henderson",
+   "RB",
+   2019,
+   59.3,
+   "Contributor"
+  ],
+  [
+   "David Montgomery",
+   "RB",
+   2019,
+   49.7,
+   "Contributor"
+  ],
+  [
+   "Devin Singletary",
+   "RB",
+   2019,
+   64.2,
+   "Starter"
+  ],
+  [
+   "Jace Sternberger",
+   "TE",
+   2019,
+   39.8,
+   "Depth"
+  ],
+  [
+   "Terry McLaurin",
+   "WR",
+   2019,
+   39.6,
+   "Depth"
+  ],
+  [
+   "Damien Harris",
+   "RB",
+   2019,
+   53.2,
+   "Contributor"
+  ],
+  [
+   "Miles Boykin",
+   "WR",
+   2019,
+   32.5,
+   "Depth"
+  ],
+  [
+   "Will Grier",
+   "QB",
+   2019,
+   41.2,
+   "Depth"
+  ],
+  [
+   "Alexander Mattison",
+   "RB",
+   2019,
+   44.4,
+   "Depth"
+  ],
+  [
+   "Hakeem Butler",
+   "WR",
+   2019,
+   28.3,
+   "Lottery Ticket"
+  ],
+  [
+   "Justice Hill",
+   "RB",
+   2019,
+   42.6,
+   "Depth"
+  ],
+  [
+   "Riley Ridley",
+   "WR",
+   2019,
+   23.8,
+   "Long Shot"
+  ],
+  [
+   "Tony Pollard",
+   "RB",
+   2019,
+   39.7,
+   "Depth"
+  ],
+  [
+   "Foster Moreau",
+   "TE",
+   2019,
+   38.6,
+   "Depth"
+  ],
+  [
+   "Ryquell Armstead",
+   "RB",
+   2019,
+   28.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Zach Gentry",
+   "TE",
+   2019,
+   24.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Hunter Renfrow",
+   "WR",
+   2019,
+   30.6,
+   "Lottery Ticket"
+  ],
+  [
+   "Qadree Ollison",
+   "RB",
+   2019,
+   30.2,
+   "Lottery Ticket"
+  ],
+  [
+   "Jordan Scarlett",
+   "RB",
+   2019,
+   22.4,
+   "Long Shot"
+  ],
+  [
+   "Darius Slayton",
+   "WR",
+   2019,
+   23.8,
+   "Long Shot"
+  ],
+  [
+   "KeeSean Johnson",
+   "WR",
+   2019,
+   30.8,
+   "Lottery Ticket"
+  ],
+  [
+   "Travis Fulgham",
+   "WR",
+   2019,
+   19.2,
+   "Long Shot"
+  ],
+  [
+   "Trace McSorley",
+   "QB",
+   2019,
+   47.9,
+   "Contributor"
+  ],
+  [
+   "Travis Homer",
+   "RB",
+   2019,
+   31.9,
+   "Lottery Ticket"
+  ],
+  [
+   "Kelvin Harmon",
+   "WR",
+   2019,
+   32.6,
+   "Depth"
+  ],
+  [
+   "Scott Miller",
+   "WR",
+   2019,
+   31.9,
+   "Lottery Ticket"
+  ],
+  [
+   "Darwin Thompson",
+   "RB",
+   2019,
+   36.1,
+   "Depth"
+  ],
+  [
+   "Isaac Nauta",
+   "TE",
+   2019,
+   0.6,
+   "Long Shot"
+  ],
+  [
+   "Tommy Sweeney",
+   "TE",
+   2019,
+   16.2,
+   "Long Shot"
+  ],
+  [
+   "Myles Gaskin",
+   "RB",
+   2019,
+   37.2,
+   "Depth"
+  ],
+  [
+   "Terry Godwin",
+   "WR",
+   2019,
+   14.3,
+   "Long Shot"
+  ],
+  [
+   "Olabisi Johnson",
+   "WR",
+   2019,
+   28.5,
+   "Lottery Ticket"
+  ],
+  [
+   "Justin Herbert",
+   "QB",
+   2020,
+   80,
+   "Top Prospect"
+  ],
+  [
+   "Henry Ruggs III",
+   "WR",
+   2020,
+   77.4,
+   "Starter"
+  ],
+  [
+   "CeeDee Lamb",
+   "WR",
+   2020,
+   91.1,
+   "Generational"
+  ],
+  [
+   "Jalen Reagor",
+   "WR",
+   2020,
+   72.5,
+   "Starter"
+  ],
+  [
+   "Brandon Aiyuk",
+   "WR",
+   2020,
+   61.1,
+   "Starter"
+  ],
+  [
+   "Clyde Edwards-Helaire",
+   "RB",
+   2020,
+   71,
+   "Starter"
+  ],
+  [
+   "Tee Higgins",
+   "WR",
+   2020,
+   78.3,
+   "Starter"
+  ],
+  [
+   "Michael Pittman Jr.",
+   "WR",
+   2020,
+   74.8,
+   "Starter"
+  ],
+  [
+   "D'Andre Swift",
+   "RB",
+   2020,
+   78.6,
+   "Top Prospect"
+  ],
+  [
+   "Jonathan Taylor",
+   "RB",
+   2020,
+   81.8,
+   "Top Prospect"
+  ],
+  [
+   "Cole Kmet",
+   "TE",
+   2020,
+   57.2,
+   "Starter"
+  ],
+  [
+   "Chase Claypool",
+   "WR",
+   2020,
+   50.8,
+   "Contributor"
+  ],
+  [
+   "Cam Akers",
+   "RB",
+   2020,
+   58.2,
+   "Contributor"
+  ],
+  [
+   "Jalen Hurts",
+   "QB",
+   2020,
+   73,
+   "Starter"
+  ],
+  [
+   "J.K. Dobbins",
+   "RB",
+   2020,
+   71.8,
+   "Starter"
+  ],
+  [
+   "Van Jefferson",
+   "WR",
+   2020,
+   43.3,
+   "Depth"
+  ],
+  [
+   "Denzel Mims",
+   "WR",
+   2020,
+   53,
+   "Contributor"
+  ],
+  [
+   "AJ Dillon",
+   "RB",
+   2020,
+   56.7,
+   "Contributor"
+  ],
+  [
+   "Ke'Shawn Vaughn",
+   "RB",
+   2020,
+   53.7,
+   "Contributor"
+  ],
+  [
+   "Bryan Edwards",
+   "WR",
+   2020,
+   58.3,
+   "Starter"
+  ],
+  [
+   "Zack Moss",
+   "RB",
+   2020,
+   61.2,
+   "Contributor"
+  ],
+  [
+   "Devin Asiasi",
+   "TE",
+   2020,
+   36.6,
+   "Depth"
+  ],
+  [
+   "Devin Duvernay",
+   "WR",
+   2020,
+   40.5,
+   "Depth"
+  ],
+  [
+   "Darrynton Evans",
+   "RB",
+   2020,
+   45.9,
+   "Depth"
+  ],
+  [
+   "Josiah Deguara",
+   "TE",
+   2020,
+   42,
+   "Depth"
+  ],
+  [
+   "Joshua Kelley",
+   "RB",
+   2020,
+   43.5,
+   "Depth"
+  ],
+  [
+   "Harrison Bryant",
+   "TE",
+   2020,
+   49.6,
+   "Contributor"
+  ],
+  [
+   "Jacob Eason",
+   "QB",
+   2020,
+   0,
+   "Long Shot"
+  ],
+  [
+   "Colby Parkinson",
+   "TE",
+   2020,
+   43.9,
+   "Depth"
+  ],
+  [
+   "Brycen Hopkins",
+   "TE",
+   2020,
+   42.7,
+   "Depth"
+  ],
+  [
+   "Antonio Gandy-Golden",
+   "WR",
+   2020,
+   34.9,
+   "Depth"
+  ],
+  [
+   "DeeJay Dallas",
+   "RB",
+   2020,
+   30.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Tyler Johnson",
+   "WR",
+   2020,
+   36.2,
+   "Depth"
+  ],
+  [
+   "Quintez Cephus",
+   "WR",
+   2020,
+   31.8,
+   "Lottery Ticket"
+  ],
+  [
+   "Jake Fromm",
+   "QB",
+   2020,
+   5.4,
+   "Long Shot"
+  ],
+  [
+   "John Hightower",
+   "WR",
+   2020,
+   25.4,
+   "Long Shot"
+  ],
+  [
+   "Jason Huntley",
+   "RB",
+   2020,
+   32.5,
+   "Lottery Ticket"
+  ],
+  [
+   "Darnell Mooney",
+   "WR",
+   2020,
+   30,
+   "Lottery Ticket"
+  ],
+  [
+   "K.J. Osborn",
+   "WR",
+   2020,
+   25.3,
+   "Long Shot"
+  ],
+  [
+   "Donovan Peoples-Jones",
+   "WR",
+   2020,
+   30.6,
+   "Lottery Ticket"
+  ],
+  [
+   "Jake Luton",
+   "QB",
+   2020,
+   0,
+   "Long Shot"
+  ],
+  [
+   "Quez Watkins",
+   "WR",
+   2020,
+   30.6,
+   "Lottery Ticket"
+  ],
+  [
+   "James Proche",
+   "WR",
+   2020,
+   31.6,
+   "Lottery Ticket"
+  ],
+  [
+   "Isaiah Hodgins",
+   "WR",
+   2020,
+   36.1,
+   "Depth"
+  ],
+  [
+   "Dezmon Patmon",
+   "WR",
+   2020,
+   30.1,
+   "Lottery Ticket"
+  ],
+  [
+   "Freddie Swain",
+   "WR",
+   2020,
+   23.9,
+   "Long Shot"
+  ],
+  [
+   "Jauan Jennings",
+   "WR",
+   2020,
+   32.2,
+   "Depth"
+  ],
+  [
+   "K.J. Hill",
+   "WR",
+   2020,
+   28.8,
+   "Lottery Ticket"
+  ],
+  [
+   "Eno Benjamin",
+   "RB",
+   2020,
+   36.6,
+   "Depth"
+  ],
+  [
+   "Malcolm Perry",
+   "RB",
+   2020,
+   34.3,
+   "Depth"
+  ],
+  [
+   "Tyrie Cleveland",
+   "WR",
+   2020,
+   7.5,
+   "Long Shot"
+  ],
+  [
+   "Zach Wilson",
+   "QB",
+   2021,
+   76.9,
+   "Starter"
+  ],
+  [
+   "Ja'Marr Chase",
+   "WR",
+   2021,
+   95.5,
+   "Generational"
+  ],
+  [
+   "Javonte Williams",
+   "RB",
+   2021,
+   79,
+   "Top Prospect"
+  ],
+  [
+   "Hunter Long",
+   "TE",
+   2021,
+   57.2,
+   "Starter"
+  ],
+  [
+   "Dyami Brown",
+   "WR",
+   2021,
+   57.9,
+   "Starter"
+  ],
+  [
+   "Nico Collins",
+   "WR",
+   2021,
+   51,
+   "Contributor"
+  ],
+  [
+   "Anthony Schwartz",
+   "WR",
+   2021,
+   41.5,
+   "Depth"
+  ],
+  [
+   "Dez Fitzpatrick",
+   "WR",
+   2021,
+   37.1,
+   "Depth"
+  ],
+  [
+   "Kene Nwangwu",
+   "RB",
+   2021,
+   0,
+   "Long Shot"
+  ],
+  [
+   "Kylen Granson",
+   "TE",
+   2021,
+   44.1,
+   "Depth"
+  ],
+  [
+   "Tylan Wallace",
+   "WR",
+   2021,
+   44.6,
+   "Contributor"
+  ],
+  [
+   "Jacob Harris",
+   "WR",
+   2021,
+   15.2,
+   "Long Shot"
+  ],
+  [
+   "Kenneth Gainwell",
+   "RB",
+   2021,
+   40.2,
+   "Depth"
+  ],
+  [
+   "Elijah Mitchell",
+   "RB",
+   2021,
+   36.1,
+   "Depth"
+  ],
+  [
+   "Khalil Herbert",
+   "RB",
+   2021,
+   29.6,
+   "Lottery Ticket"
+  ],
+  [
+   "Sam Ehlinger",
+   "QB",
+   2021,
+   48.4,
+   "Contributor"
+  ],
+  [
+   "Seth Williams",
+   "WR",
+   2021,
+   32.7,
+   "Depth"
+  ],
+  [
+   "Dazz Newsome",
+   "WR",
+   2021,
+   33.8,
+   "Depth"
+  ],
+  [
+   "Dax Milne",
+   "WR",
+   2021,
+   13.5,
+   "Long Shot"
+  ],
+  [
+   "Garrett Wilson",
+   "WR",
+   2022,
+   88,
+   "Top Prospect"
+  ],
+  [
+   "Chris Olave",
+   "WR",
+   2022,
+   91.2,
+   "Generational"
+  ],
+  [
+   "Jameson Williams",
+   "WR",
+   2022,
+   87.2,
+   "Top Prospect"
+  ],
+  [
+   "Jahan Dotson",
+   "WR",
+   2022,
+   81.7,
+   "Starter"
+  ],
+  [
+   "Treylon Burks",
+   "WR",
+   2022,
+   74,
+   "Starter"
+  ],
+  [
+   "Kenny Pickett",
+   "QB",
+   2022,
+   50,
+   "Contributor"
+  ],
+  [
+   "Breece Hall",
+   "RB",
+   2022,
+   80.7,
+   "Top Prospect"
+  ],
+  [
+   "Kenneth Walker III",
+   "RB",
+   2022,
+   70.9,
+   "Starter"
+  ],
+  [
+   "Wan'Dale Robinson",
+   "WR",
+   2022,
+   64,
+   "Starter"
+  ],
+  [
+   "Tyquan Thornton",
+   "WR",
+   2022,
+   51.5,
+   "Contributor"
+  ],
+  [
+   "Alec Pierce",
+   "WR",
+   2022,
+   42.4,
+   "Depth"
+  ],
+  [
+   "Skyy Moore",
+   "WR",
+   2022,
+   49.5,
+   "Contributor"
+  ],
+  [
+   "Trey McBride",
+   "TE",
+   2022,
+   66.6,
+   "Starter"
+  ],
+  [
+   "James Cook",
+   "RB",
+   2022,
+   52.2,
+   "Contributor"
+  ],
+  [
+   "Jelani Woods",
+   "TE",
+   2022,
+   48,
+   "Contributor"
+  ],
+  [
+   "Desmond Ridder",
+   "QB",
+   2022,
+   62.8,
+   "Starter"
+  ],
+  [
+   "Greg Dulcich",
+   "TE",
+   2022,
+   62.3,
+   "Starter"
+  ],
+  [
+   "Malik Willis",
+   "QB",
+   2022,
+   52.8,
+   "Contributor"
+  ],
+  [
+   "Jalen Tolbert",
+   "WR",
+   2022,
+   47.3,
+   "Contributor"
+  ],
+  [
+   "Rachaad White",
+   "RB",
+   2022,
+   68.2,
+   "Starter"
+  ],
+  [
+   "Tyrion Davis-Price",
+   "RB",
+   2022,
+   31.9,
+   "Lottery Ticket"
+  ],
+  [
+   "David Bell",
+   "WR",
+   2022,
+   58.9,
+   "Starter"
+  ],
+  [
+   "Danny Gray",
+   "WR",
+   2022,
+   35.6,
+   "Depth"
+  ],
+  [
+   "Dameon Pierce",
+   "RB",
+   2022,
+   37.5,
+   "Depth"
+  ],
+  [
+   "Daniel Bellinger",
+   "TE",
+   2022,
+   39.6,
+   "Depth"
+  ],
+  [
+   "Zamir White",
+   "RB",
+   2022,
+   32.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Isaiah Spiller",
+   "RB",
+   2022,
+   46,
+   "Contributor"
+  ],
+  [
+   "Erik Ezukanma",
+   "WR",
+   2022,
+   38.8,
+   "Depth"
+  ],
+  [
+   "Charlie Kolar",
+   "TE",
+   2022,
+   48.7,
+   "Contributor"
+  ],
+  [
+   "Jake Ferguson",
+   "TE",
+   2022,
+   42,
+   "Depth"
+  ],
+  [
+   "Hassan Haskins",
+   "RB",
+   2022,
+   41.5,
+   "Depth"
+  ],
+  [
+   "Romeo Doubs",
+   "WR",
+   2022,
+   41.7,
+   "Depth"
+  ],
+  [
+   "Calvin Austin III",
+   "WR",
+   2022,
+   34.6,
+   "Depth"
+  ],
+  [
+   "Isaiah Likely",
+   "TE",
+   2022,
+   50.5,
+   "Contributor"
+  ],
+  [
+   "Chigoziem Okonkwo",
+   "TE",
+   2022,
+   33.3,
+   "Lottery Ticket"
+  ],
+  [
+   "Sam Howell",
+   "QB",
+   2022,
+   53.8,
+   "Contributor"
+  ],
+  [
+   "Khalil Shakir",
+   "WR",
+   2022,
+   34.7,
+   "Depth"
+  ],
+  [
+   "Cole Turner",
+   "TE",
+   2022,
+   35.2,
+   "Depth"
+  ],
+  [
+   "Tyler Allgeier",
+   "RB",
+   2022,
+   36.7,
+   "Depth"
+  ],
+  [
+   "Snoop Conner",
+   "RB",
+   2022,
+   28.3,
+   "Lottery Ticket"
+  ],
+  [
+   "Jerome Ford",
+   "RB",
+   2022,
+   37.3,
+   "Depth"
+  ],
+  [
+   "Kyle Philips",
+   "WR",
+   2022,
+   29.3,
+   "Lottery Ticket"
+  ],
+  [
+   "Kyren Williams",
+   "RB",
+   2022,
+   35.9,
+   "Depth"
+  ],
+  [
+   "Ty Chandler",
+   "RB",
+   2022,
+   33.4,
+   "Lottery Ticket"
+  ],
+  [
+   "Tyler Badie",
+   "RB",
+   2022,
+   33.5,
+   "Lottery Ticket"
+  ],
+  [
+   "Grant Calcaterra",
+   "TE",
+   2022,
+   37.5,
+   "Depth"
+  ],
+  [
+   "Keaontay Ingram",
+   "RB",
+   2022,
+   28.9,
+   "Lottery Ticket"
+  ],
+  [
+   "Trestan Ebner",
+   "RB",
+   2022,
+   21.2,
+   "Long Shot"
+  ],
+  [
+   "Connor Heyward",
+   "TE",
+   2022,
+   31.4,
+   "Lottery Ticket"
+  ],
+  [
+   "Nick Muse",
+   "TE",
+   2022,
+   28.2,
+   "Lottery Ticket"
+  ],
+  [
+   "Bo Melton",
+   "WR",
+   2022,
+   19.7,
+   "Long Shot"
+  ],
+  [
+   "Samori Toure",
+   "WR",
+   2022,
+   19.2,
+   "Long Shot"
+  ],
+  [
+   "Brock Purdy",
+   "QB",
+   2022,
+   41.7,
+   "Depth"
+  ],
+  [
+   "C.J. Stroud",
+   "QB",
+   2023,
+   67.8,
+   "Starter"
+  ],
+  [
+   "Anthony Richardson",
+   "QB",
+   2023,
+   75,
+   "Starter"
+  ],
+  [
+   "Bijan Robinson",
+   "RB",
+   2023,
+   93.9,
+   "Generational"
+  ],
+  [
+   "Jahmyr Gibbs",
+   "RB",
+   2023,
+   90.9,
+   "Generational"
+  ],
+  [
+   "Quentin Johnston",
+   "WR",
+   2023,
+   71.4,
+   "Starter"
+  ],
+  [
+   "Zay Flowers",
+   "WR",
+   2023,
+   65.7,
+   "Starter"
+  ],
+  [
+   "Jordan Addison",
+   "WR",
+   2023,
+   81.3,
+   "Starter"
+  ],
+  [
+   "Dalton Kincaid",
+   "TE",
+   2023,
+   69.8,
+   "Starter"
+  ],
+  [
+   "Will Levis",
+   "QB",
+   2023,
+   39.2,
+   "Depth"
+  ],
+  [
+   "Sam LaPorta",
+   "TE",
+   2023,
+   74.8,
+   "Top Prospect"
+  ],
+  [
+   "Michael Mayer",
+   "TE",
+   2023,
+   68.9,
+   "Starter"
+  ],
+  [
+   "Jonathan Mingo",
+   "WR",
+   2023,
+   53.2,
+   "Contributor"
+  ],
+  [
+   "Jayden Reed",
+   "WR",
+   2023,
+   62.4,
+   "Starter"
+  ],
+  [
+   "Zach Charbonnet",
+   "RB",
+   2023,
+   67,
+   "Starter"
+  ],
+  [
+   "Rashee Rice",
+   "WR",
+   2023,
+   55.9,
+   "Starter"
+  ],
+  [
+   "Luke Schoonmaker",
+   "TE",
+   2023,
+   38.5,
+   "Depth"
+  ],
+  [
+   "Brenton Strange",
+   "TE",
+   2023,
+   52.9,
+   "Contributor"
+  ],
+  [
+   "Hendon Hooker",
+   "QB",
+   2023,
+   46.2,
+   "Contributor"
+  ],
+  [
+   "Tank Dell",
+   "WR",
+   2023,
+   52.7,
+   "Contributor"
+  ],
+  [
+   "Kendre Miller",
+   "RB",
+   2023,
+   60.6,
+   "Contributor"
+  ],
+  [
+   "Jalin Hyatt",
+   "WR",
+   2023,
+   51.5,
+   "Contributor"
+  ],
+  [
+   "Josh Downs",
+   "WR",
+   2023,
+   59.3,
+   "Starter"
+  ],
+  [
+   "De'Von Achane",
+   "RB",
+   2023,
+   63.8,
+   "Starter"
+  ],
+  [
+   "Tank Bigsby",
+   "RB",
+   2023,
+   55.5,
+   "Contributor"
+  ],
+  [
+   "Darnell Washington",
+   "TE",
+   2023,
+   53.1,
+   "Contributor"
+  ],
+  [
+   "Tre Tucker",
+   "WR",
+   2023,
+   18.8,
+   "Long Shot"
+  ],
+  [
+   "Roschon Johnson",
+   "RB",
+   2023,
+   40.8,
+   "Depth"
+  ],
+  [
+   "Derius Davis",
+   "WR",
+   2023,
+   21.7,
+   "Long Shot"
+  ],
+  [
+   "Charlie Jones Jr.",
+   "WR",
+   2023,
+   27.2,
+   "Lottery Ticket"
+  ],
+  [
+   "Tyler Scott",
+   "WR",
+   2023,
+   36.4,
+   "Depth"
+  ],
+  [
+   "Aidan O'Connell",
+   "QB",
+   2023,
+   0,
+   "Long Shot"
+  ],
+  [
+   "Clayton Tune",
+   "QB",
+   2023,
+   47.6,
+   "Contributor"
+  ],
+  [
+   "Dorian Thompson-Robinson",
+   "QB",
+   2023,
+   44.4,
+   "Depth"
+  ],
+  [
+   "Israel Abanikanda",
+   "RB",
+   2023,
+   38.5,
+   "Depth"
+  ],
+  [
+   "Josh Whyle",
+   "TE",
+   2023,
+   35,
+   "Depth"
+  ],
+  [
+   "Sean Clifford",
+   "QB",
+   2023,
+   38.1,
+   "Depth"
+  ],
+  [
+   "Will Mallory",
+   "TE",
+   2023,
+   35.8,
+   "Depth"
+  ],
+  [
+   "Jaren Hall",
+   "QB",
+   2023,
+   22.2,
+   "Long Shot"
+  ],
+  [
+   "Payne Durham",
+   "TE",
+   2023,
+   30.9,
+   "Lottery Ticket"
+  ],
+  [
+   "Eric Gray",
+   "RB",
+   2023,
+   34.9,
+   "Depth"
+  ],
+  [
+   "Davis Allen",
+   "TE",
+   2023,
+   33.5,
+   "Lottery Ticket"
+  ],
+  [
+   "Evan Hull",
+   "RB",
+   2023,
+   32.4,
+   "Lottery Ticket"
+  ],
+  [
+   "Parker Washington",
+   "WR",
+   2023,
+   36.7,
+   "Depth"
+  ],
+  [
+   "Kayshon Boutte",
+   "WR",
+   2023,
+   37.5,
+   "Depth"
+  ],
+  [
+   "Tanner McKee",
+   "QB",
+   2023,
+   8.7,
+   "Long Shot"
+  ],
+  [
+   "Trey Palmer",
+   "WR",
+   2023,
+   33.1,
+   "Depth"
+  ],
+  [
+   "A.T. Perry",
+   "WR",
+   2023,
+   26,
+   "Lottery Ticket"
+  ],
+  [
+   "Elijah Higgins",
+   "TE",
+   2023,
+   37.3,
+   "Depth"
+  ],
+  [
+   "Xavier Hutchinson",
+   "WR",
+   2023,
+   33.6,
+   "Depth"
+  ],
+  [
+   "Andrei Iosivas",
+   "WR",
+   2023,
+   11.1,
+   "Long Shot"
+  ],
+  [
+   "Deuce Vaughn",
+   "RB",
+   2023,
+   40.9,
+   "Depth"
+  ],
+  [
+   "Jalen Brooks",
+   "WR",
+   2023,
+   5.3,
+   "Long Shot"
+  ],
+  [
+   "Brayden Willis",
+   "TE",
+   2023,
+   26.1,
+   "Lottery Ticket"
+  ],
+  [
+   "Ronnie Bell",
+   "WR",
+   2023,
+   32.1,
+   "Depth"
+  ],
+  [
+   "Jayden Daniels",
+   "QB",
+   2024,
+   91.3,
+   "Generational"
+  ],
+  [
+   "Drake Maye",
+   "QB",
+   2024,
+   88.8,
+   "Top Prospect"
+  ],
+  [
+   "Marvin Harrison Jr.",
+   "WR",
+   2024,
+   92.8,
+   "Generational"
+  ],
+  [
+   "Malik Nabers",
+   "WR",
+   2024,
+   92.1,
+   "Generational"
+  ],
+  [
+   "Rome Odunze",
+   "WR",
+   2024,
+   90.2,
+   "Generational"
+  ],
+  [
+   "Brock Bowers",
+   "TE",
+   2024,
+   95.2,
+   "Generational"
+  ],
+  [
+   "Brian Thomas Jr.",
+   "WR",
+   2024,
+   74.6,
+   "Starter"
+  ],
+  [
+   "Xavier Worthy",
+   "WR",
+   2024,
+   79.9,
+   "Starter"
+  ],
+  [
+   "Ricky Pearsall",
+   "WR",
+   2024,
+   57,
+   "Starter"
+  ],
+  [
+   "Xavier Legette",
+   "WR",
+   2024,
+   52,
+   "Contributor"
+  ],
+  [
+   "Keon Coleman",
+   "WR",
+   2024,
+   73.9,
+   "Starter"
+  ],
+  [
+   "Ja'Lynn Polk",
+   "WR",
+   2024,
+   70.7,
+   "Starter"
+  ],
+  [
+   "Jonathon Brooks",
+   "RB",
+   2024,
+   74.1,
+   "Starter"
+  ],
+  [
+   "Adonai Mitchell",
+   "WR",
+   2024,
+   63.8,
+   "Starter"
+  ],
+  [
+   "Ben Sinnott",
+   "TE",
+   2024,
+   64.2,
+   "Starter"
+  ],
+  [
+   "Malachi Corley",
+   "WR",
+   2024,
+   51.5,
+   "Contributor"
+  ],
+  [
+   "Trey Benson",
+   "RB",
+   2024,
+   60.2,
+   "Contributor"
+  ],
+  [
+   "Jermaine Burton",
+   "WR",
+   2024,
+   48.4,
+   "Contributor"
+  ],
+  [
+   "Tip Reiman",
+   "TE",
+   2024,
+   21.1,
+   "Lottery Ticket"
+  ],
+  [
+   "MarShawn Lloyd",
+   "RB",
+   2024,
+   46.4,
+   "Contributor"
+  ],
+  [
+   "Luke McCaffrey",
+   "WR",
+   2024,
+   36.3,
+   "Depth"
+  ],
+  [
+   "Ja'Tavion Sanders",
+   "TE",
+   2024,
+   55.9,
+   "Starter"
+  ],
+  [
+   "Troy Franklin",
+   "WR",
+   2024,
+   56,
+   "Starter"
+  ],
+  [
+   "Theo Johnson",
+   "TE",
+   2024,
+   42.2,
+   "Depth"
+  ],
+  [
+   "Javon Baker",
+   "WR",
+   2024,
+   41.2,
+   "Depth"
+  ],
+  [
+   "Jaylen Wright",
+   "RB",
+   2024,
+   38.9,
+   "Depth"
+  ],
+  [
+   "Will Shipley",
+   "RB",
+   2024,
+   43.8,
+   "Depth"
+  ],
+  [
+   "Isaac Guerendo",
+   "RB",
+   2024,
+   38.1,
+   "Depth"
+  ],
+  [
+   "Jared Wiley",
+   "TE",
+   2024,
+   38.6,
+   "Depth"
+  ],
+  [
+   "Braelon Allen",
+   "RB",
+   2024,
+   46.9,
+   "Contributor"
+  ],
+  [
+   "Jacob Cowing",
+   "WR",
+   2024,
+   37.5,
+   "Depth"
+  ],
+  [
+   "Anthony Gould",
+   "WR",
+   2024,
+   15.1,
+   "Long Shot"
+  ],
+  [
+   "Audric Estime",
+   "RB",
+   2024,
+   40.3,
+   "Depth"
+  ],
+  [
+   "Spencer Rattler",
+   "QB",
+   2024,
+   35.8,
+   "Depth"
+  ],
+  [
+   "Ainias Smith",
+   "WR",
+   2024,
+   33.1,
+   "Depth"
+  ],
+  [
+   "Jamari Thrash",
+   "WR",
+   2024,
+   29.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Rasheen Ali",
+   "RB",
+   2024,
+   37.8,
+   "Depth"
+  ],
+  [
+   "Kimani Vidal",
+   "RB",
+   2024,
+   32.7,
+   "Lottery Ticket"
+  ],
+  [
+   "Jha'Quan Jackson",
+   "WR",
+   2024,
+   17.5,
+   "Long Shot"
+  ],
+  [
+   "Malik Washington",
+   "WR",
+   2024,
+   32.8,
+   "Depth"
+  ],
+  [
+   "Jase McClellan",
+   "RB",
+   2024,
+   32.5,
+   "Lottery Ticket"
+  ],
+  [
+   "Casey Washington",
+   "WR",
+   2024,
+   11,
+   "Long Shot"
+  ],
+  [
+   "Joe Milton",
+   "QB",
+   2024,
+   14.4,
+   "Long Shot"
+  ],
+  [
+   "Jawhar Jordan",
+   "RB",
+   2024,
+   32.5,
+   "Lottery Ticket"
+  ],
+  [
+   "Dylan Laube",
+   "RB",
+   2024,
+   43.7,
+   "Depth"
+  ],
+  [
+   "Jordan Whittington",
+   "WR",
+   2024,
+   26.2,
+   "Lottery Ticket"
+  ],
+  [
+   "Jaheim Bell",
+   "TE",
+   2024,
+   41.4,
+   "Depth"
+  ],
+  [
+   "Devaughn Vele",
+   "WR",
+   2024,
+   13.8,
+   "Long Shot"
+  ],
+  [
+   "Devin Culp",
+   "TE",
+   2024,
+   29.9,
+   "Lottery Ticket"
+  ]
+ ],
+ "byN": {
+  "0": [
+   [
+    "Corey Davis",
+    "WR",
+    2017,
+    83.5,
+    "Starter"
+   ],
+   [
+    "Christian McCaffrey",
+    "RB",
+    2017,
+    91.1,
+    "Generational"
+   ],
+   [
+    "John Ross",
+    "WR",
+    2017,
+    43.7,
+    "Depth"
+   ],
+   [
+    "O.J. Howard",
+    "TE",
+    2017,
+    73,
+    "Starter"
+   ],
+   [
+    "Evan Engram",
+    "TE",
+    2017,
+    79.3,
+    "Top Prospect"
+   ],
+   [
+    "David Njoku",
+    "TE",
+    2017,
+    50.9,
+    "Contributor"
+   ],
+   [
+    "Zay Jones",
+    "WR",
+    2017,
+    53.6,
+    "Contributor"
+   ],
+   [
+    "Dalvin Cook",
+    "RB",
+    2017,
+    77.4,
+    "Top Prospect"
+   ],
+   [
+    "Gerald Everett",
+    "TE",
+    2017,
+    64.3,
+    "Starter"
+   ],
+   [
+    "Joe Mixon",
+    "RB",
+    2017,
+    59.1,
+    "Contributor"
+   ],
+   [
+    "DeShone Kizer",
+    "QB",
+    2017,
+    49.3,
+    "Contributor"
+   ],
+   [
+    "JuJu Smith-Schuster",
+    "WR",
+    2017,
+    63.6,
+    "Starter"
+   ],
+   [
+    "Alvin Kamara",
+    "RB",
+    2017,
+    56.6,
+    "Contributor"
+   ],
+   [
+    "Taywan Taylor",
+    "WR",
+    2017,
+    56.5,
+    "Starter"
+   ],
+   [
+    "ArDarius Stewart",
+    "WR",
+    2017,
+    41.8,
+    "Depth"
+   ],
+   [
+    "Chris Godwin",
+    "WR",
+    2017,
+    56,
+    "Starter"
+   ],
+   [
+    "Kareem Hunt",
+    "RB",
+    2017,
+    60.5,
+    "Contributor"
+   ],
+   [
+    "Kenny Golladay",
+    "WR",
+    2017,
+    37,
+    "Depth"
+   ],
+   [
+    "Jonnu Smith",
+    "TE",
+    2017,
+    66.5,
+    "Starter"
+   ],
+   [
+    "C.J. Beathard",
+    "QB",
+    2017,
+    21.9,
+    "Long Shot"
+   ],
+   [
+    "James Conner",
+    "RB",
+    2017,
+    55.6,
+    "Contributor"
+   ],
+   [
+    "Amara Darboh",
+    "WR",
+    2017,
+    25.4,
+    "Long Shot"
+   ],
+   [
+    "Dede Westbrook",
+    "WR",
+    2017,
+    26,
+    "Lottery Ticket"
+   ],
+   [
+    "Josh Reynolds",
+    "WR",
+    2017,
+    42.7,
+    "Depth"
+   ],
+   [
+    "Michael Roberts",
+    "TE",
+    2017,
+    32.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Josh Malone",
+    "WR",
+    2017,
+    5.4,
+    "Long Shot"
+   ],
+   [
+    "Ryan Switzer",
+    "WR",
+    2017,
+    30.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Joshua Dobbs",
+    "QB",
+    2017,
+    51,
+    "Contributor"
+   ],
+   [
+    "Jehu Chesson",
+    "WR",
+    2017,
+    26.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Chad Hansen",
+    "WR",
+    2017,
+    3.6,
+    "Long Shot"
+   ],
+   [
+    "Marlon Mack",
+    "RB",
+    2017,
+    34.9,
+    "Depth"
+   ],
+   [
+    "Jake Butt",
+    "TE",
+    2017,
+    36.9,
+    "Depth"
+   ],
+   [
+    "Jordan Leggett",
+    "TE",
+    2017,
+    32.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Jeremy Sprinkle",
+    "TE",
+    2017,
+    28.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Jeremy McNichols",
+    "RB",
+    2017,
+    39.4,
+    "Depth"
+   ],
+   [
+    "Shelton Gibson",
+    "WR",
+    2017,
+    29.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Rodney Adams",
+    "WR",
+    2017,
+    23.4,
+    "Long Shot"
+   ],
+   [
+    "Nathan Peterman",
+    "QB",
+    2017,
+    1.4,
+    "Long Shot"
+   ],
+   [
+    "Isaiah McKenzie",
+    "WR",
+    2017,
+    3.4,
+    "Long Shot"
+   ],
+   [
+    "Trent Taylor",
+    "WR",
+    2017,
+    30.6,
+    "Lottery Ticket"
+   ],
+   [
+    "T.J. Logan",
+    "RB",
+    2017,
+    20.4,
+    "Long Shot"
+   ],
+   [
+    "Aaron Jones",
+    "RB",
+    2017,
+    34,
+    "Depth"
+   ],
+   [
+    "Elijah McGuire",
+    "RB",
+    2017,
+    37.3,
+    "Depth"
+   ],
+   [
+    "Robert Davis",
+    "WR",
+    2017,
+    30.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Stacy Coley",
+    "WR",
+    2017,
+    31.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Ford",
+    "WR",
+    2017,
+    34.2,
+    "Depth"
+   ],
+   [
+    "Mason Schreck",
+    "TE",
+    2017,
+    7.1,
+    "Long Shot"
+   ],
+   [
+    "Baker Mayfield",
+    "QB",
+    2018,
+    85.4,
+    "Top Prospect"
+   ],
+   [
+    "Saquon Barkley",
+    "RB",
+    2018,
+    92,
+    "Generational"
+   ],
+   [
+    "Josh Allen",
+    "QB",
+    2018,
+    65.5,
+    "Starter"
+   ],
+   [
+    "Josh Rosen",
+    "QB",
+    2018,
+    46.8,
+    "Contributor"
+   ],
+   [
+    "Hayden Hurst",
+    "TE",
+    2018,
+    49.8,
+    "Contributor"
+   ],
+   [
+    "Calvin Ridley",
+    "WR",
+    2018,
+    74.8,
+    "Starter"
+   ],
+   [
+    "Rashaad Penny",
+    "RB",
+    2018,
+    59.1,
+    "Contributor"
+   ],
+   [
+    "Courtland Sutton",
+    "WR",
+    2018,
+    61.9,
+    "Starter"
+   ],
+   [
+    "Mike Gesicki",
+    "TE",
+    2018,
+    70.9,
+    "Starter"
+   ],
+   [
+    "Kerryon Johnson",
+    "RB",
+    2018,
+    48.3,
+    "Contributor"
+   ],
+   [
+    "Dante Pettis",
+    "WR",
+    2018,
+    51.8,
+    "Contributor"
+   ],
+   [
+    "James Washington",
+    "WR",
+    2018,
+    42.3,
+    "Depth"
+   ],
+   [
+    "D.J. Chark",
+    "WR",
+    2018,
+    32.6,
+    "Depth"
+   ],
+   [
+    "Royce Freeman",
+    "RB",
+    2018,
+    67.3,
+    "Starter"
+   ],
+   [
+    "Michael Gallup",
+    "WR",
+    2018,
+    55.5,
+    "Starter"
+   ],
+   [
+    "Mark Andrews",
+    "TE",
+    2018,
+    51.5,
+    "Contributor"
+   ],
+   [
+    "Tre'Quan Smith",
+    "WR",
+    2018,
+    33.2,
+    "Depth"
+   ],
+   [
+    "Jordan Akins",
+    "TE",
+    2018,
+    33.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Nyheim Hines",
+    "RB",
+    2018,
+    17.2,
+    "Long Shot"
+   ],
+   [
+    "Antonio Callaway",
+    "WR",
+    2018,
+    14.7,
+    "Long Shot"
+   ],
+   [
+    "DaeSean Hamilton",
+    "WR",
+    2018,
+    40.4,
+    "Depth"
+   ],
+   [
+    "Will Dissly",
+    "TE",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Ito Smith",
+    "RB",
+    2018,
+    43.9,
+    "Depth"
+   ],
+   [
+    "Kalen Ballage",
+    "RB",
+    2018,
+    32.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaleel Scott",
+    "WR",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "J'Mon Moore",
+    "WR",
+    2018,
+    23.1,
+    "Long Shot"
+   ],
+   [
+    "Dalton Schultz",
+    "TE",
+    2018,
+    11.7,
+    "Long Shot"
+   ],
+   [
+    "Troy Fumagalli",
+    "TE",
+    2018,
+    29.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaylen Samuels",
+    "RB",
+    2018,
+    36.8,
+    "Depth"
+   ],
+   [
+    "Jordan Wilkins",
+    "RB",
+    2018,
+    8.7,
+    "Long Shot"
+   ],
+   [
+    "Mike White",
+    "QB",
+    2018,
+    8.6,
+    "Long Shot"
+   ],
+   [
+    "Marquez Valdes-Scantling",
+    "WR",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Damion Ratley",
+    "WR",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "John Kelly",
+    "RB",
+    2018,
+    9.8,
+    "Long Shot"
+   ],
+   [
+    "Deon Cain",
+    "WR",
+    2018,
+    31.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Ray-Ray McCloud",
+    "WR",
+    2018,
+    4.5,
+    "Long Shot"
+   ],
+   [
+    "Russell Gage",
+    "WR",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Luke Falk",
+    "QB",
+    2018,
+    27.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Boston Scott",
+    "RB",
+    2018,
+    21.3,
+    "Long Shot"
+   ],
+   [
+    "Equanimeous St. Brown",
+    "WR",
+    2018,
+    30,
+    "Lottery Ticket"
+   ],
+   [
+    "Braxton Berrios",
+    "WR",
+    2018,
+    6.7,
+    "Long Shot"
+   ],
+   [
+    "Jordan Thomas",
+    "TE",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Javon Wims",
+    "WR",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Marcell Ateman",
+    "WR",
+    2018,
+    23.9,
+    "Long Shot"
+   ],
+   [
+    "Bo Scarbrough",
+    "RB",
+    2018,
+    22.7,
+    "Long Shot"
+   ],
+   [
+    "Logan Woodside",
+    "QB",
+    2018,
+    24.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Auden Tate",
+    "WR",
+    2018,
+    7.8,
+    "Long Shot"
+   ],
+   [
+    "Trey Quinn",
+    "WR",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Kyler Murray",
+    "QB",
+    2019,
+    38.7,
+    "Depth"
+   ],
+   [
+    "T.J. Hockenson",
+    "TE",
+    2019,
+    55.1,
+    "Starter"
+   ],
+   [
+    "Noah Fant",
+    "TE",
+    2019,
+    84.2,
+    "Top Prospect"
+   ],
+   [
+    "Josh Jacobs",
+    "RB",
+    2019,
+    62.6,
+    "Starter"
+   ],
+   [
+    "Marquise Brown",
+    "WR",
+    2019,
+    74.3,
+    "Starter"
+   ],
+   [
+    "N'Keal Harry",
+    "WR",
+    2019,
+    81.9,
+    "Starter"
+   ],
+   [
+    "Deebo Samuel",
+    "WR",
+    2019,
+    67.9,
+    "Starter"
+   ],
+   [
+    "Irv Smith Jr.",
+    "TE",
+    2019,
+    40.3,
+    "Depth"
+   ],
+   [
+    "A.J. Brown",
+    "WR",
+    2019,
+    69.2,
+    "Starter"
+   ],
+   [
+    "Miles Sanders",
+    "RB",
+    2019,
+    27,
+    "Lottery Ticket"
+   ],
+   [
+    "Mecole Hardman",
+    "WR",
+    2019,
+    25.1,
+    "Long Shot"
+   ],
+   [
+    "Parris Campbell",
+    "WR",
+    2019,
+    44.8,
+    "Contributor"
+   ],
+   [
+    "Andy Isabella",
+    "WR",
+    2019,
+    38.3,
+    "Depth"
+   ],
+   [
+    "Diontae Johnson",
+    "WR",
+    2019,
+    45,
+    "Contributor"
+   ],
+   [
+    "Josh Oliver",
+    "TE",
+    2019,
+    48.1,
+    "Contributor"
+   ],
+   [
+    "Darrell Henderson",
+    "RB",
+    2019,
+    51.4,
+    "Contributor"
+   ],
+   [
+    "David Montgomery",
+    "RB",
+    2019,
+    45.6,
+    "Depth"
+   ],
+   [
+    "Devin Singletary",
+    "RB",
+    2019,
+    65.6,
+    "Starter"
+   ],
+   [
+    "Jace Sternberger",
+    "TE",
+    2019,
+    14.1,
+    "Long Shot"
+   ],
+   [
+    "Terry McLaurin",
+    "WR",
+    2019,
+    27.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Damien Harris",
+    "RB",
+    2019,
+    50.9,
+    "Contributor"
+   ],
+   [
+    "Miles Boykin",
+    "WR",
+    2019,
+    10.8,
+    "Long Shot"
+   ],
+   [
+    "Will Grier",
+    "QB",
+    2019,
+    36.4,
+    "Depth"
+   ],
+   [
+    "Alexander Mattison",
+    "RB",
+    2019,
+    40.4,
+    "Depth"
+   ],
+   [
+    "Hakeem Butler",
+    "WR",
+    2019,
+    19.6,
+    "Long Shot"
+   ],
+   [
+    "Justice Hill",
+    "RB",
+    2019,
+    42.6,
+    "Depth"
+   ],
+   [
+    "Riley Ridley",
+    "WR",
+    2019,
+    8.6,
+    "Long Shot"
+   ],
+   [
+    "Tony Pollard",
+    "RB",
+    2019,
+    35,
+    "Depth"
+   ],
+   [
+    "Foster Moreau",
+    "TE",
+    2019,
+    37.6,
+    "Depth"
+   ],
+   [
+    "Ryquell Armstead",
+    "RB",
+    2019,
+    21.1,
+    "Long Shot"
+   ],
+   [
+    "Zach Gentry",
+    "TE",
+    2019,
+    13.5,
+    "Long Shot"
+   ],
+   [
+    "Hunter Renfrow",
+    "WR",
+    2019,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "Qadree Ollison",
+    "RB",
+    2019,
+    27.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Jordan Scarlett",
+    "RB",
+    2019,
+    17,
+    "Long Shot"
+   ],
+   [
+    "Darius Slayton",
+    "WR",
+    2019,
+    18.8,
+    "Long Shot"
+   ],
+   [
+    "KeeSean Johnson",
+    "WR",
+    2019,
+    29.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Travis Fulgham",
+    "WR",
+    2019,
+    3,
+    "Long Shot"
+   ],
+   [
+    "Trace McSorley",
+    "QB",
+    2019,
+    45.7,
+    "Depth"
+   ],
+   [
+    "Travis Homer",
+    "RB",
+    2019,
+    29.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Kelvin Harmon",
+    "WR",
+    2019,
+    31.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Scott Miller",
+    "WR",
+    2019,
+    30.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Darwin Thompson",
+    "RB",
+    2019,
+    6.6,
+    "Long Shot"
+   ],
+   [
+    "Isaac Nauta",
+    "TE",
+    2019,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Tommy Sweeney",
+    "TE",
+    2019,
+    16,
+    "Long Shot"
+   ],
+   [
+    "Myles Gaskin",
+    "RB",
+    2019,
+    37,
+    "Depth"
+   ],
+   [
+    "Terry Godwin",
+    "WR",
+    2019,
+    14.9,
+    "Long Shot"
+   ],
+   [
+    "Olabisi Johnson",
+    "WR",
+    2019,
+    23.6,
+    "Long Shot"
+   ],
+   [
+    "Justin Herbert",
+    "QB",
+    2020,
+    80.7,
+    "Top Prospect"
+   ],
+   [
+    "Henry Ruggs III",
+    "WR",
+    2020,
+    75.6,
+    "Starter"
+   ],
+   [
+    "CeeDee Lamb",
+    "WR",
+    2020,
+    89.2,
+    "Top Prospect"
+   ],
+   [
+    "Jalen Reagor",
+    "WR",
+    2020,
+    74.2,
+    "Starter"
+   ],
+   [
+    "Brandon Aiyuk",
+    "WR",
+    2020,
+    40.9,
+    "Depth"
+   ],
+   [
+    "Clyde Edwards-Helaire",
+    "RB",
+    2020,
+    43.8,
+    "Depth"
+   ],
+   [
+    "Tee Higgins",
+    "WR",
+    2020,
+    74.7,
+    "Starter"
+   ],
+   [
+    "Michael Pittman Jr.",
+    "WR",
+    2020,
+    58.6,
+    "Starter"
+   ],
+   [
+    "D'Andre Swift",
+    "RB",
+    2020,
+    68.8,
+    "Starter"
+   ],
+   [
+    "Jonathan Taylor",
+    "RB",
+    2020,
+    77.5,
+    "Top Prospect"
+   ],
+   [
+    "Cole Kmet",
+    "TE",
+    2020,
+    28.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Chase Claypool",
+    "WR",
+    2020,
+    25.8,
+    "Long Shot"
+   ],
+   [
+    "Cam Akers",
+    "RB",
+    2020,
+    48.9,
+    "Contributor"
+   ],
+   [
+    "Jalen Hurts",
+    "QB",
+    2020,
+    69.2,
+    "Starter"
+   ],
+   [
+    "J.K. Dobbins",
+    "RB",
+    2020,
+    62.1,
+    "Starter"
+   ],
+   [
+    "Van Jefferson",
+    "WR",
+    2020,
+    37.3,
+    "Depth"
+   ],
+   [
+    "Denzel Mims",
+    "WR",
+    2020,
+    51.4,
+    "Contributor"
+   ],
+   [
+    "AJ Dillon",
+    "RB",
+    2020,
+    53.7,
+    "Contributor"
+   ],
+   [
+    "Ke'Shawn Vaughn",
+    "RB",
+    2020,
+    53.4,
+    "Contributor"
+   ],
+   [
+    "Bryan Edwards",
+    "WR",
+    2020,
+    55.6,
+    "Starter"
+   ],
+   [
+    "Zack Moss",
+    "RB",
+    2020,
+    55.5,
+    "Contributor"
+   ],
+   [
+    "Devin Asiasi",
+    "TE",
+    2020,
+    10.1,
+    "Long Shot"
+   ],
+   [
+    "Devin Duvernay",
+    "WR",
+    2020,
+    24.1,
+    "Long Shot"
+   ],
+   [
+    "Darrynton Evans",
+    "RB",
+    2020,
+    27.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Josiah Deguara",
+    "TE",
+    2020,
+    39.9,
+    "Depth"
+   ],
+   [
+    "Joshua Kelley",
+    "RB",
+    2020,
+    43.8,
+    "Depth"
+   ],
+   [
+    "Harrison Bryant",
+    "TE",
+    2020,
+    48,
+    "Contributor"
+   ],
+   [
+    "Colby Parkinson",
+    "TE",
+    2020,
+    42.6,
+    "Depth"
+   ],
+   [
+    "Brycen Hopkins",
+    "TE",
+    2020,
+    40,
+    "Depth"
+   ],
+   [
+    "Antonio Gandy-Golden",
+    "WR",
+    2020,
+    33.5,
+    "Depth"
+   ],
+   [
+    "DeeJay Dallas",
+    "RB",
+    2020,
+    25.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyler Johnson",
+    "WR",
+    2020,
+    34.9,
+    "Depth"
+   ],
+   [
+    "Quintez Cephus",
+    "WR",
+    2020,
+    29.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Jake Fromm",
+    "QB",
+    2020,
+    6.6,
+    "Long Shot"
+   ],
+   [
+    "John Hightower",
+    "WR",
+    2020,
+    21.4,
+    "Long Shot"
+   ],
+   [
+    "Jason Huntley",
+    "RB",
+    2020,
+    28.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Darnell Mooney",
+    "WR",
+    2020,
+    29.9,
+    "Lottery Ticket"
+   ],
+   [
+    "K.J. Osborn",
+    "WR",
+    2020,
+    25.3,
+    "Long Shot"
+   ],
+   [
+    "Donovan Peoples-Jones",
+    "WR",
+    2020,
+    30.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Jake Luton",
+    "QB",
+    2020,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Quez Watkins",
+    "WR",
+    2020,
+    29.5,
+    "Lottery Ticket"
+   ],
+   [
+    "James Proche",
+    "WR",
+    2020,
+    30.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Hodgins",
+    "WR",
+    2020,
+    33.4,
+    "Depth"
+   ],
+   [
+    "Dezmon Patmon",
+    "WR",
+    2020,
+    29.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Freddie Swain",
+    "WR",
+    2020,
+    11.6,
+    "Long Shot"
+   ],
+   [
+    "Jauan Jennings",
+    "WR",
+    2020,
+    29.8,
+    "Lottery Ticket"
+   ],
+   [
+    "K.J. Hill",
+    "WR",
+    2020,
+    28.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Eno Benjamin",
+    "RB",
+    2020,
+    37,
+    "Depth"
+   ],
+   [
+    "Malcolm Perry",
+    "RB",
+    2020,
+    31.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyrie Cleveland",
+    "WR",
+    2020,
+    7.5,
+    "Long Shot"
+   ],
+   [
+    "Zach Wilson",
+    "QB",
+    2021,
+    60.4,
+    "Starter"
+   ],
+   [
+    "Ja'Marr Chase",
+    "WR",
+    2021,
+    55.9,
+    "Starter"
+   ],
+   [
+    "Javonte Williams",
+    "RB",
+    2021,
+    57.3,
+    "Contributor"
+   ],
+   [
+    "Hunter Long",
+    "TE",
+    2021,
+    48.2,
+    "Contributor"
+   ],
+   [
+    "Dyami Brown",
+    "WR",
+    2021,
+    55.8,
+    "Starter"
+   ],
+   [
+    "Nico Collins",
+    "WR",
+    2021,
+    44.7,
+    "Contributor"
+   ],
+   [
+    "Anthony Schwartz",
+    "WR",
+    2021,
+    25.9,
+    "Long Shot"
+   ],
+   [
+    "Dez Fitzpatrick",
+    "WR",
+    2021,
+    36.9,
+    "Depth"
+   ],
+   [
+    "Kene Nwangwu",
+    "RB",
+    2021,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Kylen Granson",
+    "TE",
+    2021,
+    37.6,
+    "Depth"
+   ],
+   [
+    "Tylan Wallace",
+    "WR",
+    2021,
+    44.7,
+    "Contributor"
+   ],
+   [
+    "Jacob Harris",
+    "WR",
+    2021,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Kenneth Gainwell",
+    "RB",
+    2021,
+    9.5,
+    "Long Shot"
+   ],
+   [
+    "Elijah Mitchell",
+    "RB",
+    2021,
+    36.1,
+    "Depth"
+   ],
+   [
+    "Khalil Herbert",
+    "RB",
+    2021,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Sam Ehlinger",
+    "QB",
+    2021,
+    48.6,
+    "Contributor"
+   ],
+   [
+    "Seth Williams",
+    "WR",
+    2021,
+    33,
+    "Depth"
+   ],
+   [
+    "Dazz Newsome",
+    "WR",
+    2021,
+    33.7,
+    "Depth"
+   ],
+   [
+    "Dax Milne",
+    "WR",
+    2021,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Garrett Wilson",
+    "WR",
+    2022,
+    83.2,
+    "Starter"
+   ],
+   [
+    "Chris Olave",
+    "WR",
+    2022,
+    90.7,
+    "Generational"
+   ],
+   [
+    "Jameson Williams",
+    "WR",
+    2022,
+    75.9,
+    "Starter"
+   ],
+   [
+    "Jahan Dotson",
+    "WR",
+    2022,
+    76.9,
+    "Starter"
+   ],
+   [
+    "Treylon Burks",
+    "WR",
+    2022,
+    69.5,
+    "Starter"
+   ],
+   [
+    "Kenny Pickett",
+    "QB",
+    2022,
+    46.3,
+    "Contributor"
+   ],
+   [
+    "Breece Hall",
+    "RB",
+    2022,
+    73.9,
+    "Starter"
+   ],
+   [
+    "Kenneth Walker III",
+    "RB",
+    2022,
+    55.3,
+    "Contributor"
+   ],
+   [
+    "Wan'Dale Robinson",
+    "WR",
+    2022,
+    44,
+    "Contributor"
+   ],
+   [
+    "Tyquan Thornton",
+    "WR",
+    2022,
+    43.1,
+    "Depth"
+   ],
+   [
+    "Alec Pierce",
+    "WR",
+    2022,
+    35.9,
+    "Depth"
+   ],
+   [
+    "Skyy Moore",
+    "WR",
+    2022,
+    42.5,
+    "Depth"
+   ],
+   [
+    "Trey McBride",
+    "TE",
+    2022,
+    65.5,
+    "Starter"
+   ],
+   [
+    "James Cook",
+    "RB",
+    2022,
+    44.2,
+    "Depth"
+   ],
+   [
+    "Jelani Woods",
+    "TE",
+    2022,
+    31.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Desmond Ridder",
+    "QB",
+    2022,
+    63.3,
+    "Starter"
+   ],
+   [
+    "Greg Dulcich",
+    "TE",
+    2022,
+    58.5,
+    "Starter"
+   ],
+   [
+    "Malik Willis",
+    "QB",
+    2022,
+    49.7,
+    "Contributor"
+   ],
+   [
+    "Jalen Tolbert",
+    "WR",
+    2022,
+    42.8,
+    "Depth"
+   ],
+   [
+    "Rachaad White",
+    "RB",
+    2022,
+    26.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyrion Davis-Price",
+    "RB",
+    2022,
+    24.4,
+    "Lottery Ticket"
+   ],
+   [
+    "David Bell",
+    "WR",
+    2022,
+    57.1,
+    "Starter"
+   ],
+   [
+    "Danny Gray",
+    "WR",
+    2022,
+    29.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Dameon Pierce",
+    "RB",
+    2022,
+    24.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Daniel Bellinger",
+    "TE",
+    2022,
+    28.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Zamir White",
+    "RB",
+    2022,
+    27.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Spiller",
+    "RB",
+    2022,
+    46.2,
+    "Contributor"
+   ],
+   [
+    "Erik Ezukanma",
+    "WR",
+    2022,
+    38.3,
+    "Depth"
+   ],
+   [
+    "Charlie Kolar",
+    "TE",
+    2022,
+    48.2,
+    "Contributor"
+   ],
+   [
+    "Jake Ferguson",
+    "TE",
+    2022,
+    41.9,
+    "Depth"
+   ],
+   [
+    "Hassan Haskins",
+    "RB",
+    2022,
+    30,
+    "Lottery Ticket"
+   ],
+   [
+    "Romeo Doubs",
+    "WR",
+    2022,
+    40.1,
+    "Depth"
+   ],
+   [
+    "Calvin Austin III",
+    "WR",
+    2022,
+    32.5,
+    "Depth"
+   ],
+   [
+    "Isaiah Likely",
+    "TE",
+    2022,
+    48.3,
+    "Contributor"
+   ],
+   [
+    "Chigoziem Okonkwo",
+    "TE",
+    2022,
+    27.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Sam Howell",
+    "QB",
+    2022,
+    43.7,
+    "Depth"
+   ],
+   [
+    "Khalil Shakir",
+    "WR",
+    2022,
+    34.1,
+    "Depth"
+   ],
+   [
+    "Cole Turner",
+    "TE",
+    2022,
+    34.4,
+    "Depth"
+   ],
+   [
+    "Tyler Allgeier",
+    "RB",
+    2022,
+    29.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Snoop Conner",
+    "RB",
+    2022,
+    20.8,
+    "Long Shot"
+   ],
+   [
+    "Jerome Ford",
+    "RB",
+    2022,
+    28.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Kyle Philips",
+    "WR",
+    2022,
+    25.7,
+    "Long Shot"
+   ],
+   [
+    "Kyren Williams",
+    "RB",
+    2022,
+    32.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Ty Chandler",
+    "RB",
+    2022,
+    1.3,
+    "Long Shot"
+   ],
+   [
+    "Tyler Badie",
+    "RB",
+    2022,
+    23.6,
+    "Long Shot"
+   ],
+   [
+    "Grant Calcaterra",
+    "TE",
+    2022,
+    36.7,
+    "Depth"
+   ],
+   [
+    "Keaontay Ingram",
+    "RB",
+    2022,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Trestan Ebner",
+    "RB",
+    2022,
+    18.9,
+    "Long Shot"
+   ],
+   [
+    "Connor Heyward",
+    "TE",
+    2022,
+    31.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Nick Muse",
+    "TE",
+    2022,
+    26,
+    "Lottery Ticket"
+   ],
+   [
+    "Bo Melton",
+    "WR",
+    2022,
+    18.4,
+    "Long Shot"
+   ],
+   [
+    "Samori Toure",
+    "WR",
+    2022,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Brock Purdy",
+    "QB",
+    2022,
+    42.8,
+    "Depth"
+   ],
+   [
+    "C.J. Stroud",
+    "QB",
+    2023,
+    62.9,
+    "Starter"
+   ],
+   [
+    "Anthony Richardson",
+    "QB",
+    2023,
+    52.7,
+    "Contributor"
+   ],
+   [
+    "Bijan Robinson",
+    "RB",
+    2023,
+    92.9,
+    "Generational"
+   ],
+   [
+    "Jahmyr Gibbs",
+    "RB",
+    2023,
+    84.2,
+    "Top Prospect"
+   ],
+   [
+    "Quentin Johnston",
+    "WR",
+    2023,
+    67.2,
+    "Starter"
+   ],
+   [
+    "Zay Flowers",
+    "WR",
+    2023,
+    63.1,
+    "Starter"
+   ],
+   [
+    "Jordan Addison",
+    "WR",
+    2023,
+    81.6,
+    "Starter"
+   ],
+   [
+    "Dalton Kincaid",
+    "TE",
+    2023,
+    61.6,
+    "Starter"
+   ],
+   [
+    "Will Levis",
+    "QB",
+    2023,
+    42.7,
+    "Depth"
+   ],
+   [
+    "Sam LaPorta",
+    "TE",
+    2023,
+    74.2,
+    "Top Prospect"
+   ],
+   [
+    "Michael Mayer",
+    "TE",
+    2023,
+    68.8,
+    "Starter"
+   ],
+   [
+    "Jonathan Mingo",
+    "WR",
+    2023,
+    45.1,
+    "Contributor"
+   ],
+   [
+    "Jayden Reed",
+    "WR",
+    2023,
+    63,
+    "Starter"
+   ],
+   [
+    "Zach Charbonnet",
+    "RB",
+    2023,
+    54.8,
+    "Contributor"
+   ],
+   [
+    "Rashee Rice",
+    "WR",
+    2023,
+    46.3,
+    "Contributor"
+   ],
+   [
+    "Luke Schoonmaker",
+    "TE",
+    2023,
+    26.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Brenton Strange",
+    "TE",
+    2023,
+    39.9,
+    "Depth"
+   ],
+   [
+    "Hendon Hooker",
+    "QB",
+    2023,
+    46.1,
+    "Contributor"
+   ],
+   [
+    "Tank Dell",
+    "WR",
+    2023,
+    49.5,
+    "Contributor"
+   ],
+   [
+    "Kendre Miller",
+    "RB",
+    2023,
+    45,
+    "Depth"
+   ],
+   [
+    "Jalin Hyatt",
+    "WR",
+    2023,
+    28.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Josh Downs",
+    "WR",
+    2023,
+    57.2,
+    "Starter"
+   ],
+   [
+    "De'Von Achane",
+    "RB",
+    2023,
+    52.9,
+    "Contributor"
+   ],
+   [
+    "Tank Bigsby",
+    "RB",
+    2023,
+    53.3,
+    "Contributor"
+   ],
+   [
+    "Darnell Washington",
+    "TE",
+    2023,
+    39.2,
+    "Depth"
+   ],
+   [
+    "Tre Tucker",
+    "WR",
+    2023,
+    4.2,
+    "Long Shot"
+   ],
+   [
+    "Roschon Johnson",
+    "RB",
+    2023,
+    39.3,
+    "Depth"
+   ],
+   [
+    "Derius Davis",
+    "WR",
+    2023,
+    13,
+    "Long Shot"
+   ],
+   [
+    "Charlie Jones Jr.",
+    "WR",
+    2023,
+    27.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyler Scott",
+    "WR",
+    2023,
+    13,
+    "Long Shot"
+   ],
+   [
+    "Aidan O'Connell",
+    "QB",
+    2023,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Clayton Tune",
+    "QB",
+    2023,
+    41.8,
+    "Depth"
+   ],
+   [
+    "Dorian Thompson-Robinson",
+    "QB",
+    2023,
+    41.3,
+    "Depth"
+   ],
+   [
+    "Israel Abanikanda",
+    "RB",
+    2023,
+    22,
+    "Long Shot"
+   ],
+   [
+    "Josh Whyle",
+    "TE",
+    2023,
+    35,
+    "Depth"
+   ],
+   [
+    "Sean Clifford",
+    "QB",
+    2023,
+    37.9,
+    "Depth"
+   ],
+   [
+    "Will Mallory",
+    "TE",
+    2023,
+    35.3,
+    "Depth"
+   ],
+   [
+    "Jaren Hall",
+    "QB",
+    2023,
+    12.9,
+    "Long Shot"
+   ],
+   [
+    "Payne Durham",
+    "TE",
+    2023,
+    30.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Eric Gray",
+    "RB",
+    2023,
+    31.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Davis Allen",
+    "TE",
+    2023,
+    24.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Evan Hull",
+    "RB",
+    2023,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Parker Washington",
+    "WR",
+    2023,
+    36.9,
+    "Depth"
+   ],
+   [
+    "Kayshon Boutte",
+    "WR",
+    2023,
+    37.9,
+    "Depth"
+   ],
+   [
+    "Tanner McKee",
+    "QB",
+    2023,
+    6.3,
+    "Long Shot"
+   ],
+   [
+    "Trey Palmer",
+    "WR",
+    2023,
+    18.5,
+    "Long Shot"
+   ],
+   [
+    "A.T. Perry",
+    "WR",
+    2023,
+    24.3,
+    "Long Shot"
+   ],
+   [
+    "Elijah Higgins",
+    "TE",
+    2023,
+    36,
+    "Depth"
+   ],
+   [
+    "Xavier Hutchinson",
+    "WR",
+    2023,
+    32.4,
+    "Depth"
+   ],
+   [
+    "Andrei Iosivas",
+    "WR",
+    2023,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Deuce Vaughn",
+    "RB",
+    2023,
+    41.1,
+    "Depth"
+   ],
+   [
+    "Jalen Brooks",
+    "WR",
+    2023,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Brayden Willis",
+    "TE",
+    2023,
+    17.5,
+    "Long Shot"
+   ],
+   [
+    "Ronnie Bell",
+    "WR",
+    2023,
+    31.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Jayden Daniels",
+    "QB",
+    2024,
+    88.5,
+    "Top Prospect"
+   ],
+   [
+    "Drake Maye",
+    "QB",
+    2024,
+    85.2,
+    "Top Prospect"
+   ],
+   [
+    "Marvin Harrison Jr.",
+    "WR",
+    2024,
+    92.4,
+    "Generational"
+   ],
+   [
+    "Malik Nabers",
+    "WR",
+    2024,
+    82.2,
+    "Starter"
+   ],
+   [
+    "Rome Odunze",
+    "WR",
+    2024,
+    84,
+    "Top Prospect"
+   ],
+   [
+    "Brock Bowers",
+    "TE",
+    2024,
+    95.1,
+    "Generational"
+   ],
+   [
+    "Brian Thomas Jr.",
+    "WR",
+    2024,
+    49.6,
+    "Contributor"
+   ],
+   [
+    "Xavier Worthy",
+    "WR",
+    2024,
+    80.4,
+    "Starter"
+   ],
+   [
+    "Ricky Pearsall",
+    "WR",
+    2024,
+    52.8,
+    "Contributor"
+   ],
+   [
+    "Xavier Legette",
+    "WR",
+    2024,
+    39.6,
+    "Depth"
+   ],
+   [
+    "Keon Coleman",
+    "WR",
+    2024,
+    70.7,
+    "Starter"
+   ],
+   [
+    "Ja'Lynn Polk",
+    "WR",
+    2024,
+    56.9,
+    "Starter"
+   ],
+   [
+    "Jonathon Brooks",
+    "RB",
+    2024,
+    58.8,
+    "Contributor"
+   ],
+   [
+    "Adonai Mitchell",
+    "WR",
+    2024,
+    57.5,
+    "Starter"
+   ],
+   [
+    "Ben Sinnott",
+    "TE",
+    2024,
+    58.4,
+    "Starter"
+   ],
+   [
+    "Malachi Corley",
+    "WR",
+    2024,
+    50.4,
+    "Contributor"
+   ],
+   [
+    "Trey Benson",
+    "RB",
+    2024,
+    50.2,
+    "Contributor"
+   ],
+   [
+    "Jermaine Burton",
+    "WR",
+    2024,
+    45.3,
+    "Contributor"
+   ],
+   [
+    "Tip Reiman",
+    "TE",
+    2024,
+    16.2,
+    "Long Shot"
+   ],
+   [
+    "MarShawn Lloyd",
+    "RB",
+    2024,
+    33.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Luke McCaffrey",
+    "WR",
+    2024,
+    32,
+    "Depth"
+   ],
+   [
+    "Ja'Tavion Sanders",
+    "TE",
+    2024,
+    52.7,
+    "Contributor"
+   ],
+   [
+    "Troy Franklin",
+    "WR",
+    2024,
+    49.9,
+    "Contributor"
+   ],
+   [
+    "Theo Johnson",
+    "TE",
+    2024,
+    41.9,
+    "Depth"
+   ],
+   [
+    "Javon Baker",
+    "WR",
+    2024,
+    37,
+    "Depth"
+   ],
+   [
+    "Jaylen Wright",
+    "RB",
+    2024,
+    34.8,
+    "Depth"
+   ],
+   [
+    "Will Shipley",
+    "RB",
+    2024,
+    44.4,
+    "Depth"
+   ],
+   [
+    "Isaac Guerendo",
+    "RB",
+    2024,
+    20.4,
+    "Long Shot"
+   ],
+   [
+    "Jared Wiley",
+    "TE",
+    2024,
+    35.7,
+    "Depth"
+   ],
+   [
+    "Braelon Allen",
+    "RB",
+    2024,
+    46.5,
+    "Contributor"
+   ],
+   [
+    "Jacob Cowing",
+    "WR",
+    2024,
+    33.9,
+    "Depth"
+   ],
+   [
+    "Anthony Gould",
+    "WR",
+    2024,
+    3.9,
+    "Long Shot"
+   ],
+   [
+    "Audric Estime",
+    "RB",
+    2024,
+    34.3,
+    "Depth"
+   ],
+   [
+    "Spencer Rattler",
+    "QB",
+    2024,
+    35.6,
+    "Depth"
+   ],
+   [
+    "Ainias Smith",
+    "WR",
+    2024,
+    33,
+    "Depth"
+   ],
+   [
+    "Jamari Thrash",
+    "WR",
+    2024,
+    29.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Rasheen Ali",
+    "RB",
+    2024,
+    36.8,
+    "Depth"
+   ],
+   [
+    "Kimani Vidal",
+    "RB",
+    2024,
+    29.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Jha'Quan Jackson",
+    "WR",
+    2024,
+    17.4,
+    "Long Shot"
+   ],
+   [
+    "Malik Washington",
+    "WR",
+    2024,
+    29.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Jase McClellan",
+    "RB",
+    2024,
+    31.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Casey Washington",
+    "WR",
+    2024,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Joe Milton",
+    "QB",
+    2024,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Jawhar Jordan",
+    "RB",
+    2024,
+    20.2,
+    "Long Shot"
+   ],
+   [
+    "Dylan Laube",
+    "RB",
+    2024,
+    36.1,
+    "Depth"
+   ],
+   [
+    "Jordan Whittington",
+    "WR",
+    2024,
+    26.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaheim Bell",
+    "TE",
+    2024,
+    41.1,
+    "Depth"
+   ],
+   [
+    "Devaughn Vele",
+    "WR",
+    2024,
+    12.7,
+    "Long Shot"
+   ],
+   [
+    "Devin Culp",
+    "TE",
+    2024,
+    30,
+    "Lottery Ticket"
+   ]
+  ],
+  "3": [
+   [
+    "Corey Davis",
+    "WR",
+    2017,
+    83.8,
+    "Starter"
+   ],
+   [
+    "Christian McCaffrey",
+    "RB",
+    2017,
+    92,
+    "Generational"
+   ],
+   [
+    "John Ross",
+    "WR",
+    2017,
+    64.4,
+    "Starter"
+   ],
+   [
+    "O.J. Howard",
+    "TE",
+    2017,
+    75.4,
+    "Top Prospect"
+   ],
+   [
+    "Evan Engram",
+    "TE",
+    2017,
+    83.4,
+    "Top Prospect"
+   ],
+   [
+    "David Njoku",
+    "TE",
+    2017,
+    75.3,
+    "Top Prospect"
+   ],
+   [
+    "Zay Jones",
+    "WR",
+    2017,
+    57.5,
+    "Starter"
+   ],
+   [
+    "Dalvin Cook",
+    "RB",
+    2017,
+    77.8,
+    "Top Prospect"
+   ],
+   [
+    "Gerald Everett",
+    "TE",
+    2017,
+    67.7,
+    "Starter"
+   ],
+   [
+    "Joe Mixon",
+    "RB",
+    2017,
+    69.7,
+    "Starter"
+   ],
+   [
+    "DeShone Kizer",
+    "QB",
+    2017,
+    54,
+    "Contributor"
+   ],
+   [
+    "JuJu Smith-Schuster",
+    "WR",
+    2017,
+    63.8,
+    "Starter"
+   ],
+   [
+    "Alvin Kamara",
+    "RB",
+    2017,
+    58.3,
+    "Contributor"
+   ],
+   [
+    "Taywan Taylor",
+    "WR",
+    2017,
+    57.2,
+    "Starter"
+   ],
+   [
+    "ArDarius Stewart",
+    "WR",
+    2017,
+    48.7,
+    "Contributor"
+   ],
+   [
+    "Chris Godwin",
+    "WR",
+    2017,
+    61.7,
+    "Starter"
+   ],
+   [
+    "Kareem Hunt",
+    "RB",
+    2017,
+    61.5,
+    "Contributor"
+   ],
+   [
+    "Kenny Golladay",
+    "WR",
+    2017,
+    43,
+    "Depth"
+   ],
+   [
+    "Jonnu Smith",
+    "TE",
+    2017,
+    66.5,
+    "Starter"
+   ],
+   [
+    "C.J. Beathard",
+    "QB",
+    2017,
+    21.3,
+    "Long Shot"
+   ],
+   [
+    "James Conner",
+    "RB",
+    2017,
+    56.6,
+    "Contributor"
+   ],
+   [
+    "Amara Darboh",
+    "WR",
+    2017,
+    31.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Dede Westbrook",
+    "WR",
+    2017,
+    34,
+    "Depth"
+   ],
+   [
+    "Josh Reynolds",
+    "WR",
+    2017,
+    45.2,
+    "Contributor"
+   ],
+   [
+    "Michael Roberts",
+    "TE",
+    2017,
+    39.7,
+    "Depth"
+   ],
+   [
+    "Josh Malone",
+    "WR",
+    2017,
+    35.1,
+    "Depth"
+   ],
+   [
+    "Ryan Switzer",
+    "WR",
+    2017,
+    34.3,
+    "Depth"
+   ],
+   [
+    "Joshua Dobbs",
+    "QB",
+    2017,
+    53.1,
+    "Contributor"
+   ],
+   [
+    "Jehu Chesson",
+    "WR",
+    2017,
+    26.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Chad Hansen",
+    "WR",
+    2017,
+    31.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Marlon Mack",
+    "RB",
+    2017,
+    34.9,
+    "Depth"
+   ],
+   [
+    "Jake Butt",
+    "TE",
+    2017,
+    38.8,
+    "Depth"
+   ],
+   [
+    "Jordan Leggett",
+    "TE",
+    2017,
+    32.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Jeremy Sprinkle",
+    "TE",
+    2017,
+    28.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Jeremy McNichols",
+    "RB",
+    2017,
+    40,
+    "Depth"
+   ],
+   [
+    "Shelton Gibson",
+    "WR",
+    2017,
+    30.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Rodney Adams",
+    "WR",
+    2017,
+    29.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Nathan Peterman",
+    "QB",
+    2017,
+    19.8,
+    "Long Shot"
+   ],
+   [
+    "Isaiah McKenzie",
+    "WR",
+    2017,
+    26.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Trent Taylor",
+    "WR",
+    2017,
+    31.6,
+    "Lottery Ticket"
+   ],
+   [
+    "T.J. Logan",
+    "RB",
+    2017,
+    31.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Aaron Jones",
+    "RB",
+    2017,
+    34.3,
+    "Depth"
+   ],
+   [
+    "Elijah McGuire",
+    "RB",
+    2017,
+    37.1,
+    "Depth"
+   ],
+   [
+    "Robert Davis",
+    "WR",
+    2017,
+    30.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Stacy Coley",
+    "WR",
+    2017,
+    32,
+    "Depth"
+   ],
+   [
+    "Isaiah Ford",
+    "WR",
+    2017,
+    35.3,
+    "Depth"
+   ],
+   [
+    "Mason Schreck",
+    "TE",
+    2017,
+    20,
+    "Lottery Ticket"
+   ],
+   [
+    "Baker Mayfield",
+    "QB",
+    2018,
+    86,
+    "Top Prospect"
+   ],
+   [
+    "Saquon Barkley",
+    "RB",
+    2018,
+    93.3,
+    "Generational"
+   ],
+   [
+    "Josh Allen",
+    "QB",
+    2018,
+    64.6,
+    "Starter"
+   ],
+   [
+    "Josh Rosen",
+    "QB",
+    2018,
+    53.4,
+    "Contributor"
+   ],
+   [
+    "Hayden Hurst",
+    "TE",
+    2018,
+    53.1,
+    "Contributor"
+   ],
+   [
+    "Calvin Ridley",
+    "WR",
+    2018,
+    78.4,
+    "Starter"
+   ],
+   [
+    "Rashaad Penny",
+    "RB",
+    2018,
+    66.7,
+    "Starter"
+   ],
+   [
+    "Courtland Sutton",
+    "WR",
+    2018,
+    63,
+    "Starter"
+   ],
+   [
+    "Mike Gesicki",
+    "TE",
+    2018,
+    74.9,
+    "Top Prospect"
+   ],
+   [
+    "Kerryon Johnson",
+    "RB",
+    2018,
+    56.1,
+    "Contributor"
+   ],
+   [
+    "Dante Pettis",
+    "WR",
+    2018,
+    52.2,
+    "Contributor"
+   ],
+   [
+    "James Washington",
+    "WR",
+    2018,
+    43.1,
+    "Depth"
+   ],
+   [
+    "D.J. Chark",
+    "WR",
+    2018,
+    32.6,
+    "Depth"
+   ],
+   [
+    "Royce Freeman",
+    "RB",
+    2018,
+    68.3,
+    "Starter"
+   ],
+   [
+    "Michael Gallup",
+    "WR",
+    2018,
+    58.6,
+    "Starter"
+   ],
+   [
+    "Mark Andrews",
+    "TE",
+    2018,
+    55.5,
+    "Starter"
+   ],
+   [
+    "Tre'Quan Smith",
+    "WR",
+    2018,
+    37,
+    "Depth"
+   ],
+   [
+    "Jordan Akins",
+    "TE",
+    2018,
+    33.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Nyheim Hines",
+    "RB",
+    2018,
+    32,
+    "Lottery Ticket"
+   ],
+   [
+    "Antonio Callaway",
+    "WR",
+    2018,
+    43.8,
+    "Depth"
+   ],
+   [
+    "DaeSean Hamilton",
+    "WR",
+    2018,
+    41.7,
+    "Depth"
+   ],
+   [
+    "Will Dissly",
+    "TE",
+    2018,
+    27.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Ito Smith",
+    "RB",
+    2018,
+    44.3,
+    "Depth"
+   ],
+   [
+    "Kalen Ballage",
+    "RB",
+    2018,
+    33.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaleel Scott",
+    "WR",
+    2018,
+    23.1,
+    "Long Shot"
+   ],
+   [
+    "J'Mon Moore",
+    "WR",
+    2018,
+    25.6,
+    "Long Shot"
+   ],
+   [
+    "Dalton Schultz",
+    "TE",
+    2018,
+    13.6,
+    "Long Shot"
+   ],
+   [
+    "Troy Fumagalli",
+    "TE",
+    2018,
+    33.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaylen Samuels",
+    "RB",
+    2018,
+    38.3,
+    "Depth"
+   ],
+   [
+    "Jordan Wilkins",
+    "RB",
+    2018,
+    21.1,
+    "Long Shot"
+   ],
+   [
+    "Mike White",
+    "QB",
+    2018,
+    9.3,
+    "Long Shot"
+   ],
+   [
+    "Marquez Valdes-Scantling",
+    "WR",
+    2018,
+    16,
+    "Long Shot"
+   ],
+   [
+    "Damion Ratley",
+    "WR",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "John Kelly",
+    "RB",
+    2018,
+    27,
+    "Lottery Ticket"
+   ],
+   [
+    "Deon Cain",
+    "WR",
+    2018,
+    31.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Ray-Ray McCloud",
+    "WR",
+    2018,
+    23.8,
+    "Long Shot"
+   ],
+   [
+    "Russell Gage",
+    "WR",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Luke Falk",
+    "QB",
+    2018,
+    27.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Boston Scott",
+    "RB",
+    2018,
+    26,
+    "Lottery Ticket"
+   ],
+   [
+    "Equanimeous St. Brown",
+    "WR",
+    2018,
+    30.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Braxton Berrios",
+    "WR",
+    2018,
+    23.1,
+    "Long Shot"
+   ],
+   [
+    "Jordan Thomas",
+    "TE",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Javon Wims",
+    "WR",
+    2018,
+    12.1,
+    "Long Shot"
+   ],
+   [
+    "Marcell Ateman",
+    "WR",
+    2018,
+    28.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Bo Scarbrough",
+    "RB",
+    2018,
+    25.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Logan Woodside",
+    "QB",
+    2018,
+    23.8,
+    "Long Shot"
+   ],
+   [
+    "Auden Tate",
+    "WR",
+    2018,
+    31.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Trey Quinn",
+    "WR",
+    2018,
+    23.8,
+    "Long Shot"
+   ],
+   [
+    "Kyler Murray",
+    "QB",
+    2019,
+    70.9,
+    "Starter"
+   ],
+   [
+    "T.J. Hockenson",
+    "TE",
+    2019,
+    68.6,
+    "Starter"
+   ],
+   [
+    "Noah Fant",
+    "TE",
+    2019,
+    85.9,
+    "Top Prospect"
+   ],
+   [
+    "Josh Jacobs",
+    "RB",
+    2019,
+    72.4,
+    "Starter"
+   ],
+   [
+    "Marquise Brown",
+    "WR",
+    2019,
+    77.6,
+    "Starter"
+   ],
+   [
+    "N'Keal Harry",
+    "WR",
+    2019,
+    84,
+    "Top Prospect"
+   ],
+   [
+    "Deebo Samuel",
+    "WR",
+    2019,
+    69.3,
+    "Starter"
+   ],
+   [
+    "Irv Smith Jr.",
+    "TE",
+    2019,
+    65.2,
+    "Starter"
+   ],
+   [
+    "A.J. Brown",
+    "WR",
+    2019,
+    69.9,
+    "Starter"
+   ],
+   [
+    "Miles Sanders",
+    "RB",
+    2019,
+    45.3,
+    "Depth"
+   ],
+   [
+    "Mecole Hardman",
+    "WR",
+    2019,
+    47,
+    "Contributor"
+   ],
+   [
+    "Parris Campbell",
+    "WR",
+    2019,
+    54.5,
+    "Starter"
+   ],
+   [
+    "Andy Isabella",
+    "WR",
+    2019,
+    39.6,
+    "Depth"
+   ],
+   [
+    "Diontae Johnson",
+    "WR",
+    2019,
+    46.6,
+    "Contributor"
+   ],
+   [
+    "Josh Oliver",
+    "TE",
+    2019,
+    54.7,
+    "Starter"
+   ],
+   [
+    "Darrell Henderson",
+    "RB",
+    2019,
+    56.4,
+    "Contributor"
+   ],
+   [
+    "David Montgomery",
+    "RB",
+    2019,
+    47.3,
+    "Contributor"
+   ],
+   [
+    "Devin Singletary",
+    "RB",
+    2019,
+    64.9,
+    "Starter"
+   ],
+   [
+    "Jace Sternberger",
+    "TE",
+    2019,
+    14.1,
+    "Long Shot"
+   ],
+   [
+    "Terry McLaurin",
+    "WR",
+    2019,
+    38.2,
+    "Depth"
+   ],
+   [
+    "Damien Harris",
+    "RB",
+    2019,
+    54.2,
+    "Contributor"
+   ],
+   [
+    "Miles Boykin",
+    "WR",
+    2019,
+    22.5,
+    "Long Shot"
+   ],
+   [
+    "Will Grier",
+    "QB",
+    2019,
+    40.1,
+    "Depth"
+   ],
+   [
+    "Alexander Mattison",
+    "RB",
+    2019,
+    42.1,
+    "Depth"
+   ],
+   [
+    "Hakeem Butler",
+    "WR",
+    2019,
+    27.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Justice Hill",
+    "RB",
+    2019,
+    42.6,
+    "Depth"
+   ],
+   [
+    "Riley Ridley",
+    "WR",
+    2019,
+    22.6,
+    "Long Shot"
+   ],
+   [
+    "Tony Pollard",
+    "RB",
+    2019,
+    35.8,
+    "Depth"
+   ],
+   [
+    "Foster Moreau",
+    "TE",
+    2019,
+    38.8,
+    "Depth"
+   ],
+   [
+    "Ryquell Armstead",
+    "RB",
+    2019,
+    21.5,
+    "Long Shot"
+   ],
+   [
+    "Zach Gentry",
+    "TE",
+    2019,
+    19.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Hunter Renfrow",
+    "WR",
+    2019,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "Qadree Ollison",
+    "RB",
+    2019,
+    29.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Jordan Scarlett",
+    "RB",
+    2019,
+    20.5,
+    "Long Shot"
+   ],
+   [
+    "Darius Slayton",
+    "WR",
+    2019,
+    28.1,
+    "Lottery Ticket"
+   ],
+   [
+    "KeeSean Johnson",
+    "WR",
+    2019,
+    29.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Travis Fulgham",
+    "WR",
+    2019,
+    2.8,
+    "Long Shot"
+   ],
+   [
+    "Trace McSorley",
+    "QB",
+    2019,
+    49.1,
+    "Contributor"
+   ],
+   [
+    "Travis Homer",
+    "RB",
+    2019,
+    28.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Kelvin Harmon",
+    "WR",
+    2019,
+    31.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Scott Miller",
+    "WR",
+    2019,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "Darwin Thompson",
+    "RB",
+    2019,
+    10.7,
+    "Long Shot"
+   ],
+   [
+    "Isaac Nauta",
+    "TE",
+    2019,
+    0.8,
+    "Long Shot"
+   ],
+   [
+    "Tommy Sweeney",
+    "TE",
+    2019,
+    17,
+    "Long Shot"
+   ],
+   [
+    "Myles Gaskin",
+    "RB",
+    2019,
+    37.1,
+    "Depth"
+   ],
+   [
+    "Terry Godwin",
+    "WR",
+    2019,
+    14.5,
+    "Long Shot"
+   ],
+   [
+    "Olabisi Johnson",
+    "WR",
+    2019,
+    32.4,
+    "Depth"
+   ],
+   [
+    "Justin Herbert",
+    "QB",
+    2020,
+    84.5,
+    "Top Prospect"
+   ],
+   [
+    "Henry Ruggs III",
+    "WR",
+    2020,
+    83.6,
+    "Starter"
+   ],
+   [
+    "CeeDee Lamb",
+    "WR",
+    2020,
+    90.6,
+    "Generational"
+   ],
+   [
+    "Jalen Reagor",
+    "WR",
+    2020,
+    73.5,
+    "Starter"
+   ],
+   [
+    "Brandon Aiyuk",
+    "WR",
+    2020,
+    54.6,
+    "Starter"
+   ],
+   [
+    "Clyde Edwards-Helaire",
+    "RB",
+    2020,
+    53.5,
+    "Contributor"
+   ],
+   [
+    "Tee Higgins",
+    "WR",
+    2020,
+    79.5,
+    "Starter"
+   ],
+   [
+    "Michael Pittman Jr.",
+    "WR",
+    2020,
+    61.8,
+    "Starter"
+   ],
+   [
+    "D'Andre Swift",
+    "RB",
+    2020,
+    68.7,
+    "Starter"
+   ],
+   [
+    "Jonathan Taylor",
+    "RB",
+    2020,
+    81,
+    "Top Prospect"
+   ],
+   [
+    "Cole Kmet",
+    "TE",
+    2020,
+    53.4,
+    "Contributor"
+   ],
+   [
+    "Chase Claypool",
+    "WR",
+    2020,
+    44.6,
+    "Contributor"
+   ],
+   [
+    "Cam Akers",
+    "RB",
+    2020,
+    58.2,
+    "Contributor"
+   ],
+   [
+    "Jalen Hurts",
+    "QB",
+    2020,
+    72.7,
+    "Starter"
+   ],
+   [
+    "J.K. Dobbins",
+    "RB",
+    2020,
+    69.7,
+    "Starter"
+   ],
+   [
+    "Van Jefferson",
+    "WR",
+    2020,
+    43.1,
+    "Depth"
+   ],
+   [
+    "Denzel Mims",
+    "WR",
+    2020,
+    54.7,
+    "Starter"
+   ],
+   [
+    "AJ Dillon",
+    "RB",
+    2020,
+    55.8,
+    "Contributor"
+   ],
+   [
+    "Ke'Shawn Vaughn",
+    "RB",
+    2020,
+    52.1,
+    "Contributor"
+   ],
+   [
+    "Bryan Edwards",
+    "WR",
+    2020,
+    56.4,
+    "Starter"
+   ],
+   [
+    "Zack Moss",
+    "RB",
+    2020,
+    56.9,
+    "Contributor"
+   ],
+   [
+    "Devin Asiasi",
+    "TE",
+    2020,
+    32.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Devin Duvernay",
+    "WR",
+    2020,
+    37.3,
+    "Depth"
+   ],
+   [
+    "Darrynton Evans",
+    "RB",
+    2020,
+    41.9,
+    "Depth"
+   ],
+   [
+    "Josiah Deguara",
+    "TE",
+    2020,
+    42.5,
+    "Depth"
+   ],
+   [
+    "Joshua Kelley",
+    "RB",
+    2020,
+    40.6,
+    "Depth"
+   ],
+   [
+    "Harrison Bryant",
+    "TE",
+    2020,
+    48.1,
+    "Contributor"
+   ],
+   [
+    "Jacob Eason",
+    "QB",
+    2020,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Colby Parkinson",
+    "TE",
+    2020,
+    44,
+    "Depth"
+   ],
+   [
+    "Brycen Hopkins",
+    "TE",
+    2020,
+    44.2,
+    "Depth"
+   ],
+   [
+    "Antonio Gandy-Golden",
+    "WR",
+    2020,
+    34.3,
+    "Depth"
+   ],
+   [
+    "DeeJay Dallas",
+    "RB",
+    2020,
+    31.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyler Johnson",
+    "WR",
+    2020,
+    36.3,
+    "Depth"
+   ],
+   [
+    "Quintez Cephus",
+    "WR",
+    2020,
+    31.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Jake Fromm",
+    "QB",
+    2020,
+    21.1,
+    "Long Shot"
+   ],
+   [
+    "John Hightower",
+    "WR",
+    2020,
+    20.5,
+    "Long Shot"
+   ],
+   [
+    "Jason Huntley",
+    "RB",
+    2020,
+    28.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Darnell Mooney",
+    "WR",
+    2020,
+    30,
+    "Lottery Ticket"
+   ],
+   [
+    "K.J. Osborn",
+    "WR",
+    2020,
+    27,
+    "Lottery Ticket"
+   ],
+   [
+    "Donovan Peoples-Jones",
+    "WR",
+    2020,
+    30.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Jake Luton",
+    "QB",
+    2020,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Quez Watkins",
+    "WR",
+    2020,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "James Proche",
+    "WR",
+    2020,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Hodgins",
+    "WR",
+    2020,
+    35.9,
+    "Depth"
+   ],
+   [
+    "Dezmon Patmon",
+    "WR",
+    2020,
+    30.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Freddie Swain",
+    "WR",
+    2020,
+    12.1,
+    "Long Shot"
+   ],
+   [
+    "Jauan Jennings",
+    "WR",
+    2020,
+    32,
+    "Depth"
+   ],
+   [
+    "K.J. Hill",
+    "WR",
+    2020,
+    28.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Eno Benjamin",
+    "RB",
+    2020,
+    35.9,
+    "Depth"
+   ],
+   [
+    "Malcolm Perry",
+    "RB",
+    2020,
+    33.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyrie Cleveland",
+    "WR",
+    2020,
+    10.6,
+    "Long Shot"
+   ],
+   [
+    "Zach Wilson",
+    "QB",
+    2021,
+    73,
+    "Starter"
+   ],
+   [
+    "Ja'Marr Chase",
+    "WR",
+    2021,
+    91.4,
+    "Generational"
+   ],
+   [
+    "Javonte Williams",
+    "RB",
+    2021,
+    71.2,
+    "Starter"
+   ],
+   [
+    "Hunter Long",
+    "TE",
+    2021,
+    58.2,
+    "Starter"
+   ],
+   [
+    "Dyami Brown",
+    "WR",
+    2021,
+    56.2,
+    "Starter"
+   ],
+   [
+    "Nico Collins",
+    "WR",
+    2021,
+    47.1,
+    "Contributor"
+   ],
+   [
+    "Anthony Schwartz",
+    "WR",
+    2021,
+    42.5,
+    "Depth"
+   ],
+   [
+    "Dez Fitzpatrick",
+    "WR",
+    2021,
+    36.9,
+    "Depth"
+   ],
+   [
+    "Kene Nwangwu",
+    "RB",
+    2021,
+    1.5,
+    "Long Shot"
+   ],
+   [
+    "Kylen Granson",
+    "TE",
+    2021,
+    37.5,
+    "Depth"
+   ],
+   [
+    "Tylan Wallace",
+    "WR",
+    2021,
+    44.5,
+    "Contributor"
+   ],
+   [
+    "Jacob Harris",
+    "WR",
+    2021,
+    11.3,
+    "Long Shot"
+   ],
+   [
+    "Kenneth Gainwell",
+    "RB",
+    2021,
+    34.8,
+    "Depth"
+   ],
+   [
+    "Elijah Mitchell",
+    "RB",
+    2021,
+    36.3,
+    "Depth"
+   ],
+   [
+    "Khalil Herbert",
+    "RB",
+    2021,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Sam Ehlinger",
+    "QB",
+    2021,
+    48.4,
+    "Contributor"
+   ],
+   [
+    "Seth Williams",
+    "WR",
+    2021,
+    33,
+    "Depth"
+   ],
+   [
+    "Dazz Newsome",
+    "WR",
+    2021,
+    33.5,
+    "Depth"
+   ],
+   [
+    "Dax Milne",
+    "WR",
+    2021,
+    8.7,
+    "Long Shot"
+   ],
+   [
+    "Garrett Wilson",
+    "WR",
+    2022,
+    84.9,
+    "Top Prospect"
+   ],
+   [
+    "Chris Olave",
+    "WR",
+    2022,
+    90.8,
+    "Generational"
+   ],
+   [
+    "Jameson Williams",
+    "WR",
+    2022,
+    79.8,
+    "Starter"
+   ],
+   [
+    "Jahan Dotson",
+    "WR",
+    2022,
+    77.9,
+    "Starter"
+   ],
+   [
+    "Treylon Burks",
+    "WR",
+    2022,
+    69.6,
+    "Starter"
+   ],
+   [
+    "Kenny Pickett",
+    "QB",
+    2022,
+    50,
+    "Contributor"
+   ],
+   [
+    "Breece Hall",
+    "RB",
+    2022,
+    74.3,
+    "Starter"
+   ],
+   [
+    "Kenneth Walker III",
+    "RB",
+    2022,
+    69,
+    "Starter"
+   ],
+   [
+    "Wan'Dale Robinson",
+    "WR",
+    2022,
+    40.6,
+    "Depth"
+   ],
+   [
+    "Tyquan Thornton",
+    "WR",
+    2022,
+    50.1,
+    "Contributor"
+   ],
+   [
+    "Alec Pierce",
+    "WR",
+    2022,
+    37.8,
+    "Depth"
+   ],
+   [
+    "Skyy Moore",
+    "WR",
+    2022,
+    46.4,
+    "Contributor"
+   ],
+   [
+    "Trey McBride",
+    "TE",
+    2022,
+    67.1,
+    "Starter"
+   ],
+   [
+    "James Cook",
+    "RB",
+    2022,
+    51,
+    "Contributor"
+   ],
+   [
+    "Jelani Woods",
+    "TE",
+    2022,
+    27.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Desmond Ridder",
+    "QB",
+    2022,
+    63.2,
+    "Starter"
+   ],
+   [
+    "Greg Dulcich",
+    "TE",
+    2022,
+    61.4,
+    "Starter"
+   ],
+   [
+    "Malik Willis",
+    "QB",
+    2022,
+    54,
+    "Contributor"
+   ],
+   [
+    "Jalen Tolbert",
+    "WR",
+    2022,
+    43,
+    "Depth"
+   ],
+   [
+    "Rachaad White",
+    "RB",
+    2022,
+    55.8,
+    "Contributor"
+   ],
+   [
+    "Tyrion Davis-Price",
+    "RB",
+    2022,
+    24.7,
+    "Lottery Ticket"
+   ],
+   [
+    "David Bell",
+    "WR",
+    2022,
+    58.9,
+    "Starter"
+   ],
+   [
+    "Danny Gray",
+    "WR",
+    2022,
+    34.9,
+    "Depth"
+   ],
+   [
+    "Dameon Pierce",
+    "RB",
+    2022,
+    31.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Daniel Bellinger",
+    "TE",
+    2022,
+    42.6,
+    "Depth"
+   ],
+   [
+    "Zamir White",
+    "RB",
+    2022,
+    29.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Spiller",
+    "RB",
+    2022,
+    46.1,
+    "Contributor"
+   ],
+   [
+    "Erik Ezukanma",
+    "WR",
+    2022,
+    39.5,
+    "Depth"
+   ],
+   [
+    "Charlie Kolar",
+    "TE",
+    2022,
+    48.2,
+    "Contributor"
+   ],
+   [
+    "Jake Ferguson",
+    "TE",
+    2022,
+    42,
+    "Depth"
+   ],
+   [
+    "Hassan Haskins",
+    "RB",
+    2022,
+    39,
+    "Depth"
+   ],
+   [
+    "Romeo Doubs",
+    "WR",
+    2022,
+    40.2,
+    "Depth"
+   ],
+   [
+    "Calvin Austin III",
+    "WR",
+    2022,
+    34.9,
+    "Depth"
+   ],
+   [
+    "Isaiah Likely",
+    "TE",
+    2022,
+    50.3,
+    "Contributor"
+   ],
+   [
+    "Chigoziem Okonkwo",
+    "TE",
+    2022,
+    31.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Sam Howell",
+    "QB",
+    2022,
+    49.8,
+    "Contributor"
+   ],
+   [
+    "Khalil Shakir",
+    "WR",
+    2022,
+    34.4,
+    "Depth"
+   ],
+   [
+    "Cole Turner",
+    "TE",
+    2022,
+    34.4,
+    "Depth"
+   ],
+   [
+    "Tyler Allgeier",
+    "RB",
+    2022,
+    33.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Snoop Conner",
+    "RB",
+    2022,
+    24.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Jerome Ford",
+    "RB",
+    2022,
+    34.1,
+    "Depth"
+   ],
+   [
+    "Kyle Philips",
+    "WR",
+    2022,
+    28.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Kyren Williams",
+    "RB",
+    2022,
+    34.1,
+    "Depth"
+   ],
+   [
+    "Ty Chandler",
+    "RB",
+    2022,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Tyler Badie",
+    "RB",
+    2022,
+    31.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Grant Calcaterra",
+    "TE",
+    2022,
+    38.8,
+    "Depth"
+   ],
+   [
+    "Keaontay Ingram",
+    "RB",
+    2022,
+    1.4,
+    "Long Shot"
+   ],
+   [
+    "Trestan Ebner",
+    "RB",
+    2022,
+    28.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Connor Heyward",
+    "TE",
+    2022,
+    31.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Nick Muse",
+    "TE",
+    2022,
+    26.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Bo Melton",
+    "WR",
+    2022,
+    19.3,
+    "Long Shot"
+   ],
+   [
+    "Samori Toure",
+    "WR",
+    2022,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Brock Purdy",
+    "QB",
+    2022,
+    42.5,
+    "Depth"
+   ],
+   [
+    "C.J. Stroud",
+    "QB",
+    2023,
+    66.1,
+    "Starter"
+   ],
+   [
+    "Anthony Richardson",
+    "QB",
+    2023,
+    52.9,
+    "Contributor"
+   ],
+   [
+    "Bijan Robinson",
+    "RB",
+    2023,
+    93.8,
+    "Generational"
+   ],
+   [
+    "Jahmyr Gibbs",
+    "RB",
+    2023,
+    86.9,
+    "Top Prospect"
+   ],
+   [
+    "Quentin Johnston",
+    "WR",
+    2023,
+    67.4,
+    "Starter"
+   ],
+   [
+    "Zay Flowers",
+    "WR",
+    2023,
+    64.1,
+    "Starter"
+   ],
+   [
+    "Jordan Addison",
+    "WR",
+    2023,
+    81.6,
+    "Starter"
+   ],
+   [
+    "Dalton Kincaid",
+    "TE",
+    2023,
+    65.2,
+    "Starter"
+   ],
+   [
+    "Will Levis",
+    "QB",
+    2023,
+    42.3,
+    "Depth"
+   ],
+   [
+    "Sam LaPorta",
+    "TE",
+    2023,
+    74.4,
+    "Top Prospect"
+   ],
+   [
+    "Michael Mayer",
+    "TE",
+    2023,
+    68.8,
+    "Starter"
+   ],
+   [
+    "Jonathan Mingo",
+    "WR",
+    2023,
+    47.3,
+    "Contributor"
+   ],
+   [
+    "Jayden Reed",
+    "WR",
+    2023,
+    62.4,
+    "Starter"
+   ],
+   [
+    "Zach Charbonnet",
+    "RB",
+    2023,
+    61.5,
+    "Contributor"
+   ],
+   [
+    "Rashee Rice",
+    "WR",
+    2023,
+    56,
+    "Starter"
+   ],
+   [
+    "Luke Schoonmaker",
+    "TE",
+    2023,
+    26.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Brenton Strange",
+    "TE",
+    2023,
+    56,
+    "Starter"
+   ],
+   [
+    "Hendon Hooker",
+    "QB",
+    2023,
+    46,
+    "Contributor"
+   ],
+   [
+    "Tank Dell",
+    "WR",
+    2023,
+    49.9,
+    "Contributor"
+   ],
+   [
+    "Kendre Miller",
+    "RB",
+    2023,
+    52.6,
+    "Contributor"
+   ],
+   [
+    "Jalin Hyatt",
+    "WR",
+    2023,
+    44.6,
+    "Contributor"
+   ],
+   [
+    "Josh Downs",
+    "WR",
+    2023,
+    57.3,
+    "Starter"
+   ],
+   [
+    "De'Von Achane",
+    "RB",
+    2023,
+    57.6,
+    "Contributor"
+   ],
+   [
+    "Tank Bigsby",
+    "RB",
+    2023,
+    54.5,
+    "Contributor"
+   ],
+   [
+    "Darnell Washington",
+    "TE",
+    2023,
+    41.4,
+    "Depth"
+   ],
+   [
+    "Tre Tucker",
+    "WR",
+    2023,
+    8.5,
+    "Long Shot"
+   ],
+   [
+    "Roschon Johnson",
+    "RB",
+    2023,
+    40.1,
+    "Depth"
+   ],
+   [
+    "Derius Davis",
+    "WR",
+    2023,
+    27.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Charlie Jones Jr.",
+    "WR",
+    2023,
+    27.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyler Scott",
+    "WR",
+    2023,
+    30.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Aidan O'Connell",
+    "QB",
+    2023,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Clayton Tune",
+    "QB",
+    2023,
+    46,
+    "Contributor"
+   ],
+   [
+    "Dorian Thompson-Robinson",
+    "QB",
+    2023,
+    42.7,
+    "Depth"
+   ],
+   [
+    "Israel Abanikanda",
+    "RB",
+    2023,
+    30.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Josh Whyle",
+    "TE",
+    2023,
+    35,
+    "Depth"
+   ],
+   [
+    "Sean Clifford",
+    "QB",
+    2023,
+    41.3,
+    "Depth"
+   ],
+   [
+    "Will Mallory",
+    "TE",
+    2023,
+    35.3,
+    "Depth"
+   ],
+   [
+    "Jaren Hall",
+    "QB",
+    2023,
+    14.8,
+    "Long Shot"
+   ],
+   [
+    "Payne Durham",
+    "TE",
+    2023,
+    30.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Eric Gray",
+    "RB",
+    2023,
+    31.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Davis Allen",
+    "TE",
+    2023,
+    24.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Evan Hull",
+    "RB",
+    2023,
+    35.3,
+    "Depth"
+   ],
+   [
+    "Parker Washington",
+    "WR",
+    2023,
+    36.6,
+    "Depth"
+   ],
+   [
+    "Kayshon Boutte",
+    "WR",
+    2023,
+    37.4,
+    "Depth"
+   ],
+   [
+    "Tanner McKee",
+    "QB",
+    2023,
+    5.3,
+    "Long Shot"
+   ],
+   [
+    "Trey Palmer",
+    "WR",
+    2023,
+    32.3,
+    "Depth"
+   ],
+   [
+    "A.T. Perry",
+    "WR",
+    2023,
+    25,
+    "Long Shot"
+   ],
+   [
+    "Elijah Higgins",
+    "TE",
+    2023,
+    36.5,
+    "Depth"
+   ],
+   [
+    "Xavier Hutchinson",
+    "WR",
+    2023,
+    34.4,
+    "Depth"
+   ],
+   [
+    "Andrei Iosivas",
+    "WR",
+    2023,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Deuce Vaughn",
+    "RB",
+    2023,
+    41.3,
+    "Depth"
+   ],
+   [
+    "Jalen Brooks",
+    "WR",
+    2023,
+    1.5,
+    "Long Shot"
+   ],
+   [
+    "Brayden Willis",
+    "TE",
+    2023,
+    26,
+    "Lottery Ticket"
+   ],
+   [
+    "Ronnie Bell",
+    "WR",
+    2023,
+    33.1,
+    "Depth"
+   ],
+   [
+    "Jayden Daniels",
+    "QB",
+    2024,
+    90,
+    "Generational"
+   ],
+   [
+    "Drake Maye",
+    "QB",
+    2024,
+    85.1,
+    "Top Prospect"
+   ],
+   [
+    "Marvin Harrison Jr.",
+    "WR",
+    2024,
+    92.5,
+    "Generational"
+   ],
+   [
+    "Malik Nabers",
+    "WR",
+    2024,
+    90.8,
+    "Generational"
+   ],
+   [
+    "Rome Odunze",
+    "WR",
+    2024,
+    87.3,
+    "Top Prospect"
+   ],
+   [
+    "Brock Bowers",
+    "TE",
+    2024,
+    95.1,
+    "Generational"
+   ],
+   [
+    "Brian Thomas Jr.",
+    "WR",
+    2024,
+    65.5,
+    "Starter"
+   ],
+   [
+    "Xavier Worthy",
+    "WR",
+    2024,
+    80.5,
+    "Starter"
+   ],
+   [
+    "Ricky Pearsall",
+    "WR",
+    2024,
+    56.1,
+    "Starter"
+   ],
+   [
+    "Xavier Legette",
+    "WR",
+    2024,
+    50.9,
+    "Contributor"
+   ],
+   [
+    "Keon Coleman",
+    "WR",
+    2024,
+    72.6,
+    "Starter"
+   ],
+   [
+    "Ja'Lynn Polk",
+    "WR",
+    2024,
+    70.7,
+    "Starter"
+   ],
+   [
+    "Jonathon Brooks",
+    "RB",
+    2024,
+    60.5,
+    "Contributor"
+   ],
+   [
+    "Adonai Mitchell",
+    "WR",
+    2024,
+    60.4,
+    "Starter"
+   ],
+   [
+    "Ben Sinnott",
+    "TE",
+    2024,
+    63.6,
+    "Starter"
+   ],
+   [
+    "Malachi Corley",
+    "WR",
+    2024,
+    50.8,
+    "Contributor"
+   ],
+   [
+    "Trey Benson",
+    "RB",
+    2024,
+    53.6,
+    "Contributor"
+   ],
+   [
+    "Jermaine Burton",
+    "WR",
+    2024,
+    45.5,
+    "Contributor"
+   ],
+   [
+    "Tip Reiman",
+    "TE",
+    2024,
+    16.8,
+    "Long Shot"
+   ],
+   [
+    "MarShawn Lloyd",
+    "RB",
+    2024,
+    39.4,
+    "Depth"
+   ],
+   [
+    "Luke McCaffrey",
+    "WR",
+    2024,
+    33.4,
+    "Depth"
+   ],
+   [
+    "Ja'Tavion Sanders",
+    "TE",
+    2024,
+    57.3,
+    "Starter"
+   ],
+   [
+    "Troy Franklin",
+    "WR",
+    2024,
+    52.4,
+    "Contributor"
+   ],
+   [
+    "Theo Johnson",
+    "TE",
+    2024,
+    41.6,
+    "Depth"
+   ],
+   [
+    "Javon Baker",
+    "WR",
+    2024,
+    42.1,
+    "Depth"
+   ],
+   [
+    "Jaylen Wright",
+    "RB",
+    2024,
+    37.8,
+    "Depth"
+   ],
+   [
+    "Will Shipley",
+    "RB",
+    2024,
+    44.2,
+    "Depth"
+   ],
+   [
+    "Isaac Guerendo",
+    "RB",
+    2024,
+    37.7,
+    "Depth"
+   ],
+   [
+    "Jared Wiley",
+    "TE",
+    2024,
+    36,
+    "Depth"
+   ],
+   [
+    "Braelon Allen",
+    "RB",
+    2024,
+    48.2,
+    "Contributor"
+   ],
+   [
+    "Jacob Cowing",
+    "WR",
+    2024,
+    36.6,
+    "Depth"
+   ],
+   [
+    "Anthony Gould",
+    "WR",
+    2024,
+    18.3,
+    "Long Shot"
+   ],
+   [
+    "Audric Estime",
+    "RB",
+    2024,
+    38.3,
+    "Depth"
+   ],
+   [
+    "Spencer Rattler",
+    "QB",
+    2024,
+    35.7,
+    "Depth"
+   ],
+   [
+    "Ainias Smith",
+    "WR",
+    2024,
+    33,
+    "Depth"
+   ],
+   [
+    "Jamari Thrash",
+    "WR",
+    2024,
+    30.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Rasheen Ali",
+    "RB",
+    2024,
+    37.8,
+    "Depth"
+   ],
+   [
+    "Kimani Vidal",
+    "RB",
+    2024,
+    30.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Jha'Quan Jackson",
+    "WR",
+    2024,
+    23,
+    "Long Shot"
+   ],
+   [
+    "Malik Washington",
+    "WR",
+    2024,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Jase McClellan",
+    "RB",
+    2024,
+    34,
+    "Depth"
+   ],
+   [
+    "Casey Washington",
+    "WR",
+    2024,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Joe Milton",
+    "QB",
+    2024,
+    5,
+    "Long Shot"
+   ],
+   [
+    "Jawhar Jordan",
+    "RB",
+    2024,
+    29.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Dylan Laube",
+    "RB",
+    2024,
+    41.4,
+    "Depth"
+   ],
+   [
+    "Jordan Whittington",
+    "WR",
+    2024,
+    26.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaheim Bell",
+    "TE",
+    2024,
+    41.8,
+    "Depth"
+   ],
+   [
+    "Devaughn Vele",
+    "WR",
+    2024,
+    12.6,
+    "Long Shot"
+   ],
+   [
+    "Devin Culp",
+    "TE",
+    2024,
+    30,
+    "Lottery Ticket"
+   ]
+  ],
+  "5": [
+   [
+    "Corey Davis",
+    "WR",
+    2017,
+    83.5,
+    "Starter"
+   ],
+   [
+    "Christian McCaffrey",
+    "RB",
+    2017,
+    90.9,
+    "Generational"
+   ],
+   [
+    "John Ross",
+    "WR",
+    2017,
+    65,
+    "Starter"
+   ],
+   [
+    "O.J. Howard",
+    "TE",
+    2017,
+    74.3,
+    "Top Prospect"
+   ],
+   [
+    "Evan Engram",
+    "TE",
+    2017,
+    83.6,
+    "Top Prospect"
+   ],
+   [
+    "David Njoku",
+    "TE",
+    2017,
+    75.3,
+    "Top Prospect"
+   ],
+   [
+    "Zay Jones",
+    "WR",
+    2017,
+    57.6,
+    "Starter"
+   ],
+   [
+    "Dalvin Cook",
+    "RB",
+    2017,
+    79.4,
+    "Top Prospect"
+   ],
+   [
+    "Gerald Everett",
+    "TE",
+    2017,
+    67.2,
+    "Starter"
+   ],
+   [
+    "Joe Mixon",
+    "RB",
+    2017,
+    69,
+    "Starter"
+   ],
+   [
+    "DeShone Kizer",
+    "QB",
+    2017,
+    54.1,
+    "Contributor"
+   ],
+   [
+    "JuJu Smith-Schuster",
+    "WR",
+    2017,
+    64.3,
+    "Starter"
+   ],
+   [
+    "Alvin Kamara",
+    "RB",
+    2017,
+    56.1,
+    "Contributor"
+   ],
+   [
+    "Taywan Taylor",
+    "WR",
+    2017,
+    57.6,
+    "Starter"
+   ],
+   [
+    "ArDarius Stewart",
+    "WR",
+    2017,
+    49.3,
+    "Contributor"
+   ],
+   [
+    "Chris Godwin",
+    "WR",
+    2017,
+    59.2,
+    "Starter"
+   ],
+   [
+    "Kareem Hunt",
+    "RB",
+    2017,
+    60.7,
+    "Contributor"
+   ],
+   [
+    "Kenny Golladay",
+    "WR",
+    2017,
+    43.4,
+    "Depth"
+   ],
+   [
+    "Jonnu Smith",
+    "TE",
+    2017,
+    66.5,
+    "Starter"
+   ],
+   [
+    "C.J. Beathard",
+    "QB",
+    2017,
+    20.9,
+    "Long Shot"
+   ],
+   [
+    "James Conner",
+    "RB",
+    2017,
+    56.9,
+    "Contributor"
+   ],
+   [
+    "Amara Darboh",
+    "WR",
+    2017,
+    30.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Dede Westbrook",
+    "WR",
+    2017,
+    39.6,
+    "Depth"
+   ],
+   [
+    "Josh Reynolds",
+    "WR",
+    2017,
+    44.3,
+    "Contributor"
+   ],
+   [
+    "Michael Roberts",
+    "TE",
+    2017,
+    37.1,
+    "Depth"
+   ],
+   [
+    "Josh Malone",
+    "WR",
+    2017,
+    33,
+    "Depth"
+   ],
+   [
+    "Ryan Switzer",
+    "WR",
+    2017,
+    35.7,
+    "Depth"
+   ],
+   [
+    "Joshua Dobbs",
+    "QB",
+    2017,
+    53,
+    "Contributor"
+   ],
+   [
+    "Jehu Chesson",
+    "WR",
+    2017,
+    26.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Chad Hansen",
+    "WR",
+    2017,
+    31.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Marlon Mack",
+    "RB",
+    2017,
+    36.4,
+    "Depth"
+   ],
+   [
+    "Jake Butt",
+    "TE",
+    2017,
+    37.8,
+    "Depth"
+   ],
+   [
+    "Jordan Leggett",
+    "TE",
+    2017,
+    33.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Jeremy Sprinkle",
+    "TE",
+    2017,
+    28.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Jeremy McNichols",
+    "RB",
+    2017,
+    38.4,
+    "Depth"
+   ],
+   [
+    "Shelton Gibson",
+    "WR",
+    2017,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Rodney Adams",
+    "WR",
+    2017,
+    28.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Nathan Peterman",
+    "QB",
+    2017,
+    19.4,
+    "Long Shot"
+   ],
+   [
+    "Isaiah McKenzie",
+    "WR",
+    2017,
+    26.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Trent Taylor",
+    "WR",
+    2017,
+    32,
+    "Depth"
+   ],
+   [
+    "T.J. Logan",
+    "RB",
+    2017,
+    30.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Aaron Jones",
+    "RB",
+    2017,
+    34.3,
+    "Depth"
+   ],
+   [
+    "Elijah McGuire",
+    "RB",
+    2017,
+    36.9,
+    "Depth"
+   ],
+   [
+    "Robert Davis",
+    "WR",
+    2017,
+    30.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Stacy Coley",
+    "WR",
+    2017,
+    32.6,
+    "Depth"
+   ],
+   [
+    "Isaiah Ford",
+    "WR",
+    2017,
+    35.1,
+    "Depth"
+   ],
+   [
+    "Mason Schreck",
+    "TE",
+    2017,
+    17.2,
+    "Long Shot"
+   ],
+   [
+    "Baker Mayfield",
+    "QB",
+    2018,
+    85.7,
+    "Top Prospect"
+   ],
+   [
+    "Saquon Barkley",
+    "RB",
+    2018,
+    93.5,
+    "Generational"
+   ],
+   [
+    "Josh Allen",
+    "QB",
+    2018,
+    64.5,
+    "Starter"
+   ],
+   [
+    "Josh Rosen",
+    "QB",
+    2018,
+    55.8,
+    "Contributor"
+   ],
+   [
+    "Hayden Hurst",
+    "TE",
+    2018,
+    52.7,
+    "Contributor"
+   ],
+   [
+    "Calvin Ridley",
+    "WR",
+    2018,
+    75.7,
+    "Starter"
+   ],
+   [
+    "Rashaad Penny",
+    "RB",
+    2018,
+    68.7,
+    "Starter"
+   ],
+   [
+    "Courtland Sutton",
+    "WR",
+    2018,
+    62.7,
+    "Starter"
+   ],
+   [
+    "Mike Gesicki",
+    "TE",
+    2018,
+    72.8,
+    "Starter"
+   ],
+   [
+    "Kerryon Johnson",
+    "RB",
+    2018,
+    58.9,
+    "Contributor"
+   ],
+   [
+    "Dante Pettis",
+    "WR",
+    2018,
+    53.3,
+    "Contributor"
+   ],
+   [
+    "James Washington",
+    "WR",
+    2018,
+    43.4,
+    "Depth"
+   ],
+   [
+    "D.J. Chark",
+    "WR",
+    2018,
+    32.6,
+    "Depth"
+   ],
+   [
+    "Royce Freeman",
+    "RB",
+    2018,
+    67.8,
+    "Starter"
+   ],
+   [
+    "Michael Gallup",
+    "WR",
+    2018,
+    58.3,
+    "Starter"
+   ],
+   [
+    "Mark Andrews",
+    "TE",
+    2018,
+    54.8,
+    "Starter"
+   ],
+   [
+    "Tre'Quan Smith",
+    "WR",
+    2018,
+    39.1,
+    "Depth"
+   ],
+   [
+    "Jordan Akins",
+    "TE",
+    2018,
+    33.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Nyheim Hines",
+    "RB",
+    2018,
+    31.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Antonio Callaway",
+    "WR",
+    2018,
+    42.4,
+    "Depth"
+   ],
+   [
+    "DaeSean Hamilton",
+    "WR",
+    2018,
+    42.2,
+    "Depth"
+   ],
+   [
+    "Will Dissly",
+    "TE",
+    2018,
+    21.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Ito Smith",
+    "RB",
+    2018,
+    44.4,
+    "Depth"
+   ],
+   [
+    "Kalen Ballage",
+    "RB",
+    2018,
+    32.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaleel Scott",
+    "WR",
+    2018,
+    26.2,
+    "Lottery Ticket"
+   ],
+   [
+    "J'Mon Moore",
+    "WR",
+    2018,
+    25.2,
+    "Long Shot"
+   ],
+   [
+    "Dalton Schultz",
+    "TE",
+    2018,
+    14.2,
+    "Long Shot"
+   ],
+   [
+    "Troy Fumagalli",
+    "TE",
+    2018,
+    31.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaylen Samuels",
+    "RB",
+    2018,
+    38.5,
+    "Depth"
+   ],
+   [
+    "Jordan Wilkins",
+    "RB",
+    2018,
+    23.7,
+    "Long Shot"
+   ],
+   [
+    "Mike White",
+    "QB",
+    2018,
+    9.5,
+    "Long Shot"
+   ],
+   [
+    "Marquez Valdes-Scantling",
+    "WR",
+    2018,
+    16.1,
+    "Long Shot"
+   ],
+   [
+    "Damion Ratley",
+    "WR",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "John Kelly",
+    "RB",
+    2018,
+    28.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Deon Cain",
+    "WR",
+    2018,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "Ray-Ray McCloud",
+    "WR",
+    2018,
+    8,
+    "Long Shot"
+   ],
+   [
+    "Russell Gage",
+    "WR",
+    2018,
+    25.3,
+    "Long Shot"
+   ],
+   [
+    "Luke Falk",
+    "QB",
+    2018,
+    27.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Boston Scott",
+    "RB",
+    2018,
+    26.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Equanimeous St. Brown",
+    "WR",
+    2018,
+    30.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Braxton Berrios",
+    "WR",
+    2018,
+    23.7,
+    "Long Shot"
+   ],
+   [
+    "Jordan Thomas",
+    "TE",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Javon Wims",
+    "WR",
+    2018,
+    9.9,
+    "Long Shot"
+   ],
+   [
+    "Marcell Ateman",
+    "WR",
+    2018,
+    28.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Bo Scarbrough",
+    "RB",
+    2018,
+    28.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Logan Woodside",
+    "QB",
+    2018,
+    23.7,
+    "Long Shot"
+   ],
+   [
+    "Auden Tate",
+    "WR",
+    2018,
+    31.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Trey Quinn",
+    "WR",
+    2018,
+    25.3,
+    "Long Shot"
+   ],
+   [
+    "Kyler Murray",
+    "QB",
+    2019,
+    73,
+    "Starter"
+   ],
+   [
+    "T.J. Hockenson",
+    "TE",
+    2019,
+    72.1,
+    "Starter"
+   ],
+   [
+    "Noah Fant",
+    "TE",
+    2019,
+    86.1,
+    "Top Prospect"
+   ],
+   [
+    "Josh Jacobs",
+    "RB",
+    2019,
+    72.9,
+    "Starter"
+   ],
+   [
+    "Marquise Brown",
+    "WR",
+    2019,
+    78.5,
+    "Starter"
+   ],
+   [
+    "N'Keal Harry",
+    "WR",
+    2019,
+    82.7,
+    "Starter"
+   ],
+   [
+    "Deebo Samuel",
+    "WR",
+    2019,
+    69.3,
+    "Starter"
+   ],
+   [
+    "Irv Smith Jr.",
+    "TE",
+    2019,
+    63.7,
+    "Starter"
+   ],
+   [
+    "A.J. Brown",
+    "WR",
+    2019,
+    69.9,
+    "Starter"
+   ],
+   [
+    "Miles Sanders",
+    "RB",
+    2019,
+    47.4,
+    "Contributor"
+   ],
+   [
+    "Mecole Hardman",
+    "WR",
+    2019,
+    45.7,
+    "Contributor"
+   ],
+   [
+    "Parris Campbell",
+    "WR",
+    2019,
+    55.7,
+    "Starter"
+   ],
+   [
+    "Andy Isabella",
+    "WR",
+    2019,
+    40.7,
+    "Depth"
+   ],
+   [
+    "Diontae Johnson",
+    "WR",
+    2019,
+    46.1,
+    "Contributor"
+   ],
+   [
+    "Josh Oliver",
+    "TE",
+    2019,
+    55.7,
+    "Starter"
+   ],
+   [
+    "Darrell Henderson",
+    "RB",
+    2019,
+    57.1,
+    "Contributor"
+   ],
+   [
+    "David Montgomery",
+    "RB",
+    2019,
+    47.7,
+    "Contributor"
+   ],
+   [
+    "Devin Singletary",
+    "RB",
+    2019,
+    64.8,
+    "Starter"
+   ],
+   [
+    "Jace Sternberger",
+    "TE",
+    2019,
+    38.5,
+    "Depth"
+   ],
+   [
+    "Terry McLaurin",
+    "WR",
+    2019,
+    38.3,
+    "Depth"
+   ],
+   [
+    "Damien Harris",
+    "RB",
+    2019,
+    52.8,
+    "Contributor"
+   ],
+   [
+    "Miles Boykin",
+    "WR",
+    2019,
+    25.7,
+    "Long Shot"
+   ],
+   [
+    "Will Grier",
+    "QB",
+    2019,
+    38.7,
+    "Depth"
+   ],
+   [
+    "Alexander Mattison",
+    "RB",
+    2019,
+    39.1,
+    "Depth"
+   ],
+   [
+    "Hakeem Butler",
+    "WR",
+    2019,
+    25.7,
+    "Long Shot"
+   ],
+   [
+    "Justice Hill",
+    "RB",
+    2019,
+    42.9,
+    "Depth"
+   ],
+   [
+    "Riley Ridley",
+    "WR",
+    2019,
+    23.2,
+    "Long Shot"
+   ],
+   [
+    "Tony Pollard",
+    "RB",
+    2019,
+    36.3,
+    "Depth"
+   ],
+   [
+    "Foster Moreau",
+    "TE",
+    2019,
+    38.7,
+    "Depth"
+   ],
+   [
+    "Ryquell Armstead",
+    "RB",
+    2019,
+    25.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Zach Gentry",
+    "TE",
+    2019,
+    20.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Hunter Renfrow",
+    "WR",
+    2019,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "Qadree Ollison",
+    "RB",
+    2019,
+    29.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Jordan Scarlett",
+    "RB",
+    2019,
+    19.8,
+    "Long Shot"
+   ],
+   [
+    "Darius Slayton",
+    "WR",
+    2019,
+    26.8,
+    "Lottery Ticket"
+   ],
+   [
+    "KeeSean Johnson",
+    "WR",
+    2019,
+    30.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Travis Fulgham",
+    "WR",
+    2019,
+    9.4,
+    "Long Shot"
+   ],
+   [
+    "Trace McSorley",
+    "QB",
+    2019,
+    49.6,
+    "Contributor"
+   ],
+   [
+    "Travis Homer",
+    "RB",
+    2019,
+    29.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Kelvin Harmon",
+    "WR",
+    2019,
+    32.2,
+    "Depth"
+   ],
+   [
+    "Scott Miller",
+    "WR",
+    2019,
+    31.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Darwin Thompson",
+    "RB",
+    2019,
+    10.6,
+    "Long Shot"
+   ],
+   [
+    "Isaac Nauta",
+    "TE",
+    2019,
+    0.8,
+    "Long Shot"
+   ],
+   [
+    "Tommy Sweeney",
+    "TE",
+    2019,
+    16,
+    "Long Shot"
+   ],
+   [
+    "Myles Gaskin",
+    "RB",
+    2019,
+    37,
+    "Depth"
+   ],
+   [
+    "Terry Godwin",
+    "WR",
+    2019,
+    14.5,
+    "Long Shot"
+   ],
+   [
+    "Olabisi Johnson",
+    "WR",
+    2019,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Justin Herbert",
+    "QB",
+    2020,
+    82.5,
+    "Top Prospect"
+   ],
+   [
+    "Henry Ruggs III",
+    "WR",
+    2020,
+    83.9,
+    "Starter"
+   ],
+   [
+    "CeeDee Lamb",
+    "WR",
+    2020,
+    91,
+    "Generational"
+   ],
+   [
+    "Jalen Reagor",
+    "WR",
+    2020,
+    73.2,
+    "Starter"
+   ],
+   [
+    "Brandon Aiyuk",
+    "WR",
+    2020,
+    55.3,
+    "Starter"
+   ],
+   [
+    "Clyde Edwards-Helaire",
+    "RB",
+    2020,
+    56.3,
+    "Contributor"
+   ],
+   [
+    "Tee Higgins",
+    "WR",
+    2020,
+    78.8,
+    "Starter"
+   ],
+   [
+    "Michael Pittman Jr.",
+    "WR",
+    2020,
+    64,
+    "Starter"
+   ],
+   [
+    "D'Andre Swift",
+    "RB",
+    2020,
+    71.1,
+    "Starter"
+   ],
+   [
+    "Jonathan Taylor",
+    "RB",
+    2020,
+    81.6,
+    "Top Prospect"
+   ],
+   [
+    "Cole Kmet",
+    "TE",
+    2020,
+    55.6,
+    "Starter"
+   ],
+   [
+    "Chase Claypool",
+    "WR",
+    2020,
+    43.5,
+    "Depth"
+   ],
+   [
+    "Cam Akers",
+    "RB",
+    2020,
+    56.5,
+    "Contributor"
+   ],
+   [
+    "Jalen Hurts",
+    "QB",
+    2020,
+    72.8,
+    "Starter"
+   ],
+   [
+    "J.K. Dobbins",
+    "RB",
+    2020,
+    69.2,
+    "Starter"
+   ],
+   [
+    "Van Jefferson",
+    "WR",
+    2020,
+    41,
+    "Depth"
+   ],
+   [
+    "Denzel Mims",
+    "WR",
+    2020,
+    54.4,
+    "Starter"
+   ],
+   [
+    "AJ Dillon",
+    "RB",
+    2020,
+    56.1,
+    "Contributor"
+   ],
+   [
+    "Ke'Shawn Vaughn",
+    "RB",
+    2020,
+    52.8,
+    "Contributor"
+   ],
+   [
+    "Bryan Edwards",
+    "WR",
+    2020,
+    56.6,
+    "Starter"
+   ],
+   [
+    "Zack Moss",
+    "RB",
+    2020,
+    56.3,
+    "Contributor"
+   ],
+   [
+    "Devin Asiasi",
+    "TE",
+    2020,
+    29.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Devin Duvernay",
+    "WR",
+    2020,
+    38.1,
+    "Depth"
+   ],
+   [
+    "Darrynton Evans",
+    "RB",
+    2020,
+    41.4,
+    "Depth"
+   ],
+   [
+    "Josiah Deguara",
+    "TE",
+    2020,
+    43,
+    "Depth"
+   ],
+   [
+    "Joshua Kelley",
+    "RB",
+    2020,
+    41.7,
+    "Depth"
+   ],
+   [
+    "Harrison Bryant",
+    "TE",
+    2020,
+    48.2,
+    "Contributor"
+   ],
+   [
+    "Jacob Eason",
+    "QB",
+    2020,
+    0.4,
+    "Long Shot"
+   ],
+   [
+    "Colby Parkinson",
+    "TE",
+    2020,
+    44,
+    "Depth"
+   ],
+   [
+    "Brycen Hopkins",
+    "TE",
+    2020,
+    42,
+    "Depth"
+   ],
+   [
+    "Antonio Gandy-Golden",
+    "WR",
+    2020,
+    34.3,
+    "Depth"
+   ],
+   [
+    "DeeJay Dallas",
+    "RB",
+    2020,
+    31.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyler Johnson",
+    "WR",
+    2020,
+    36.2,
+    "Depth"
+   ],
+   [
+    "Quintez Cephus",
+    "WR",
+    2020,
+    31.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Jake Fromm",
+    "QB",
+    2020,
+    19.2,
+    "Long Shot"
+   ],
+   [
+    "John Hightower",
+    "WR",
+    2020,
+    20.9,
+    "Long Shot"
+   ],
+   [
+    "Jason Huntley",
+    "RB",
+    2020,
+    29.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Darnell Mooney",
+    "WR",
+    2020,
+    29.9,
+    "Lottery Ticket"
+   ],
+   [
+    "K.J. Osborn",
+    "WR",
+    2020,
+    25.8,
+    "Long Shot"
+   ],
+   [
+    "Donovan Peoples-Jones",
+    "WR",
+    2020,
+    30.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Jake Luton",
+    "QB",
+    2020,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Quez Watkins",
+    "WR",
+    2020,
+    31.2,
+    "Lottery Ticket"
+   ],
+   [
+    "James Proche",
+    "WR",
+    2020,
+    31.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Hodgins",
+    "WR",
+    2020,
+    36.6,
+    "Depth"
+   ],
+   [
+    "Dezmon Patmon",
+    "WR",
+    2020,
+    30.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Freddie Swain",
+    "WR",
+    2020,
+    24.3,
+    "Long Shot"
+   ],
+   [
+    "Jauan Jennings",
+    "WR",
+    2020,
+    32.1,
+    "Depth"
+   ],
+   [
+    "K.J. Hill",
+    "WR",
+    2020,
+    29,
+    "Lottery Ticket"
+   ],
+   [
+    "Eno Benjamin",
+    "RB",
+    2020,
+    36.3,
+    "Depth"
+   ],
+   [
+    "Malcolm Perry",
+    "RB",
+    2020,
+    34.2,
+    "Depth"
+   ],
+   [
+    "Tyrie Cleveland",
+    "WR",
+    2020,
+    8,
+    "Long Shot"
+   ],
+   [
+    "Zach Wilson",
+    "QB",
+    2021,
+    72.8,
+    "Starter"
+   ],
+   [
+    "Ja'Marr Chase",
+    "WR",
+    2021,
+    91.9,
+    "Generational"
+   ],
+   [
+    "Javonte Williams",
+    "RB",
+    2021,
+    74.2,
+    "Starter"
+   ],
+   [
+    "Hunter Long",
+    "TE",
+    2021,
+    57.5,
+    "Starter"
+   ],
+   [
+    "Dyami Brown",
+    "WR",
+    2021,
+    56.4,
+    "Starter"
+   ],
+   [
+    "Nico Collins",
+    "WR",
+    2021,
+    46.9,
+    "Contributor"
+   ],
+   [
+    "Anthony Schwartz",
+    "WR",
+    2021,
+    41.7,
+    "Depth"
+   ],
+   [
+    "Dez Fitzpatrick",
+    "WR",
+    2021,
+    36.7,
+    "Depth"
+   ],
+   [
+    "Kene Nwangwu",
+    "RB",
+    2021,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Kylen Granson",
+    "TE",
+    2021,
+    38.7,
+    "Depth"
+   ],
+   [
+    "Tylan Wallace",
+    "WR",
+    2021,
+    44.6,
+    "Contributor"
+   ],
+   [
+    "Jacob Harris",
+    "WR",
+    2021,
+    10.4,
+    "Long Shot"
+   ],
+   [
+    "Kenneth Gainwell",
+    "RB",
+    2021,
+    37.3,
+    "Depth"
+   ],
+   [
+    "Elijah Mitchell",
+    "RB",
+    2021,
+    36.2,
+    "Depth"
+   ],
+   [
+    "Khalil Herbert",
+    "RB",
+    2021,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Sam Ehlinger",
+    "QB",
+    2021,
+    49.4,
+    "Contributor"
+   ],
+   [
+    "Seth Williams",
+    "WR",
+    2021,
+    32.9,
+    "Depth"
+   ],
+   [
+    "Dazz Newsome",
+    "WR",
+    2021,
+    33.6,
+    "Depth"
+   ],
+   [
+    "Dax Milne",
+    "WR",
+    2021,
+    12.8,
+    "Long Shot"
+   ],
+   [
+    "Garrett Wilson",
+    "WR",
+    2022,
+    84.7,
+    "Top Prospect"
+   ],
+   [
+    "Chris Olave",
+    "WR",
+    2022,
+    91.2,
+    "Generational"
+   ],
+   [
+    "Jameson Williams",
+    "WR",
+    2022,
+    78.1,
+    "Starter"
+   ],
+   [
+    "Jahan Dotson",
+    "WR",
+    2022,
+    79.2,
+    "Starter"
+   ],
+   [
+    "Treylon Burks",
+    "WR",
+    2022,
+    69.9,
+    "Starter"
+   ],
+   [
+    "Kenny Pickett",
+    "QB",
+    2022,
+    50.8,
+    "Contributor"
+   ],
+   [
+    "Breece Hall",
+    "RB",
+    2022,
+    75,
+    "Top Prospect"
+   ],
+   [
+    "Kenneth Walker III",
+    "RB",
+    2022,
+    67.5,
+    "Starter"
+   ],
+   [
+    "Wan'Dale Robinson",
+    "WR",
+    2022,
+    40.6,
+    "Depth"
+   ],
+   [
+    "Tyquan Thornton",
+    "WR",
+    2022,
+    44.8,
+    "Contributor"
+   ],
+   [
+    "Alec Pierce",
+    "WR",
+    2022,
+    42.1,
+    "Depth"
+   ],
+   [
+    "Skyy Moore",
+    "WR",
+    2022,
+    47.6,
+    "Contributor"
+   ],
+   [
+    "Trey McBride",
+    "TE",
+    2022,
+    66.3,
+    "Starter"
+   ],
+   [
+    "James Cook",
+    "RB",
+    2022,
+    49.7,
+    "Contributor"
+   ],
+   [
+    "Jelani Woods",
+    "TE",
+    2022,
+    27.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Desmond Ridder",
+    "QB",
+    2022,
+    63.1,
+    "Starter"
+   ],
+   [
+    "Greg Dulcich",
+    "TE",
+    2022,
+    60.5,
+    "Starter"
+   ],
+   [
+    "Malik Willis",
+    "QB",
+    2022,
+    54.3,
+    "Contributor"
+   ],
+   [
+    "Jalen Tolbert",
+    "WR",
+    2022,
+    43.6,
+    "Depth"
+   ],
+   [
+    "Rachaad White",
+    "RB",
+    2022,
+    63.9,
+    "Starter"
+   ],
+   [
+    "Tyrion Davis-Price",
+    "RB",
+    2022,
+    24.2,
+    "Lottery Ticket"
+   ],
+   [
+    "David Bell",
+    "WR",
+    2022,
+    58.9,
+    "Starter"
+   ],
+   [
+    "Danny Gray",
+    "WR",
+    2022,
+    36.2,
+    "Depth"
+   ],
+   [
+    "Dameon Pierce",
+    "RB",
+    2022,
+    35.5,
+    "Depth"
+   ],
+   [
+    "Daniel Bellinger",
+    "TE",
+    2022,
+    39.9,
+    "Depth"
+   ],
+   [
+    "Zamir White",
+    "RB",
+    2022,
+    29.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Spiller",
+    "RB",
+    2022,
+    46.1,
+    "Contributor"
+   ],
+   [
+    "Erik Ezukanma",
+    "WR",
+    2022,
+    38.7,
+    "Depth"
+   ],
+   [
+    "Charlie Kolar",
+    "TE",
+    2022,
+    48.2,
+    "Contributor"
+   ],
+   [
+    "Jake Ferguson",
+    "TE",
+    2022,
+    41.9,
+    "Depth"
+   ],
+   [
+    "Hassan Haskins",
+    "RB",
+    2022,
+    35.9,
+    "Depth"
+   ],
+   [
+    "Romeo Doubs",
+    "WR",
+    2022,
+    40.2,
+    "Depth"
+   ],
+   [
+    "Calvin Austin III",
+    "WR",
+    2022,
+    35,
+    "Depth"
+   ],
+   [
+    "Isaiah Likely",
+    "TE",
+    2022,
+    50.5,
+    "Contributor"
+   ],
+   [
+    "Chigoziem Okonkwo",
+    "TE",
+    2022,
+    32.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Sam Howell",
+    "QB",
+    2022,
+    48.9,
+    "Contributor"
+   ],
+   [
+    "Khalil Shakir",
+    "WR",
+    2022,
+    34.5,
+    "Depth"
+   ],
+   [
+    "Cole Turner",
+    "TE",
+    2022,
+    35.1,
+    "Depth"
+   ],
+   [
+    "Tyler Allgeier",
+    "RB",
+    2022,
+    35.1,
+    "Depth"
+   ],
+   [
+    "Snoop Conner",
+    "RB",
+    2022,
+    31.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Jerome Ford",
+    "RB",
+    2022,
+    34.7,
+    "Depth"
+   ],
+   [
+    "Kyle Philips",
+    "WR",
+    2022,
+    28.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Kyren Williams",
+    "RB",
+    2022,
+    32,
+    "Lottery Ticket"
+   ],
+   [
+    "Ty Chandler",
+    "RB",
+    2022,
+    2.1,
+    "Long Shot"
+   ],
+   [
+    "Tyler Badie",
+    "RB",
+    2022,
+    30.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Grant Calcaterra",
+    "TE",
+    2022,
+    37.7,
+    "Depth"
+   ],
+   [
+    "Keaontay Ingram",
+    "RB",
+    2022,
+    3.6,
+    "Long Shot"
+   ],
+   [
+    "Trestan Ebner",
+    "RB",
+    2022,
+    20.3,
+    "Long Shot"
+   ],
+   [
+    "Connor Heyward",
+    "TE",
+    2022,
+    31.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Nick Muse",
+    "TE",
+    2022,
+    28.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Bo Melton",
+    "WR",
+    2022,
+    19.7,
+    "Long Shot"
+   ],
+   [
+    "Samori Toure",
+    "WR",
+    2022,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Brock Purdy",
+    "QB",
+    2022,
+    42.3,
+    "Depth"
+   ],
+   [
+    "C.J. Stroud",
+    "QB",
+    2023,
+    64.5,
+    "Starter"
+   ],
+   [
+    "Anthony Richardson",
+    "QB",
+    2023,
+    71.1,
+    "Starter"
+   ],
+   [
+    "Bijan Robinson",
+    "RB",
+    2023,
+    93.7,
+    "Generational"
+   ],
+   [
+    "Jahmyr Gibbs",
+    "RB",
+    2023,
+    90.9,
+    "Generational"
+   ],
+   [
+    "Quentin Johnston",
+    "WR",
+    2023,
+    71.1,
+    "Starter"
+   ],
+   [
+    "Zay Flowers",
+    "WR",
+    2023,
+    64.6,
+    "Starter"
+   ],
+   [
+    "Jordan Addison",
+    "WR",
+    2023,
+    81.6,
+    "Starter"
+   ],
+   [
+    "Dalton Kincaid",
+    "TE",
+    2023,
+    65.6,
+    "Starter"
+   ],
+   [
+    "Will Levis",
+    "QB",
+    2023,
+    41.6,
+    "Depth"
+   ],
+   [
+    "Sam LaPorta",
+    "TE",
+    2023,
+    74.4,
+    "Top Prospect"
+   ],
+   [
+    "Michael Mayer",
+    "TE",
+    2023,
+    69.4,
+    "Starter"
+   ],
+   [
+    "Jonathan Mingo",
+    "WR",
+    2023,
+    47.1,
+    "Contributor"
+   ],
+   [
+    "Jayden Reed",
+    "WR",
+    2023,
+    62.4,
+    "Starter"
+   ],
+   [
+    "Zach Charbonnet",
+    "RB",
+    2023,
+    62.5,
+    "Starter"
+   ],
+   [
+    "Rashee Rice",
+    "WR",
+    2023,
+    55.7,
+    "Starter"
+   ],
+   [
+    "Luke Schoonmaker",
+    "TE",
+    2023,
+    35.7,
+    "Depth"
+   ],
+   [
+    "Brenton Strange",
+    "TE",
+    2023,
+    57.8,
+    "Starter"
+   ],
+   [
+    "Hendon Hooker",
+    "QB",
+    2023,
+    46.8,
+    "Contributor"
+   ],
+   [
+    "Tank Dell",
+    "WR",
+    2023,
+    51,
+    "Contributor"
+   ],
+   [
+    "Kendre Miller",
+    "RB",
+    2023,
+    55.1,
+    "Contributor"
+   ],
+   [
+    "Jalin Hyatt",
+    "WR",
+    2023,
+    46.2,
+    "Contributor"
+   ],
+   [
+    "Josh Downs",
+    "WR",
+    2023,
+    58.9,
+    "Starter"
+   ],
+   [
+    "De'Von Achane",
+    "RB",
+    2023,
+    58.7,
+    "Contributor"
+   ],
+   [
+    "Tank Bigsby",
+    "RB",
+    2023,
+    54.5,
+    "Contributor"
+   ],
+   [
+    "Darnell Washington",
+    "TE",
+    2023,
+    41.8,
+    "Depth"
+   ],
+   [
+    "Tre Tucker",
+    "WR",
+    2023,
+    19.3,
+    "Long Shot"
+   ],
+   [
+    "Roschon Johnson",
+    "RB",
+    2023,
+    37.7,
+    "Depth"
+   ],
+   [
+    "Derius Davis",
+    "WR",
+    2023,
+    26.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Charlie Jones Jr.",
+    "WR",
+    2023,
+    27.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyler Scott",
+    "WR",
+    2023,
+    35.4,
+    "Depth"
+   ],
+   [
+    "Aidan O'Connell",
+    "QB",
+    2023,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Clayton Tune",
+    "QB",
+    2023,
+    44.8,
+    "Depth"
+   ],
+   [
+    "Dorian Thompson-Robinson",
+    "QB",
+    2023,
+    43,
+    "Depth"
+   ],
+   [
+    "Israel Abanikanda",
+    "RB",
+    2023,
+    33.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Josh Whyle",
+    "TE",
+    2023,
+    35,
+    "Depth"
+   ],
+   [
+    "Sean Clifford",
+    "QB",
+    2023,
+    39.8,
+    "Depth"
+   ],
+   [
+    "Will Mallory",
+    "TE",
+    2023,
+    35.6,
+    "Depth"
+   ],
+   [
+    "Jaren Hall",
+    "QB",
+    2023,
+    15.1,
+    "Long Shot"
+   ],
+   [
+    "Payne Durham",
+    "TE",
+    2023,
+    30.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Eric Gray",
+    "RB",
+    2023,
+    31.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Davis Allen",
+    "TE",
+    2023,
+    33.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Evan Hull",
+    "RB",
+    2023,
+    32.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Parker Washington",
+    "WR",
+    2023,
+    36.6,
+    "Depth"
+   ],
+   [
+    "Kayshon Boutte",
+    "WR",
+    2023,
+    37.8,
+    "Depth"
+   ],
+   [
+    "Tanner McKee",
+    "QB",
+    2023,
+    6.3,
+    "Long Shot"
+   ],
+   [
+    "Trey Palmer",
+    "WR",
+    2023,
+    32.6,
+    "Depth"
+   ],
+   [
+    "A.T. Perry",
+    "WR",
+    2023,
+    25.1,
+    "Long Shot"
+   ],
+   [
+    "Elijah Higgins",
+    "TE",
+    2023,
+    36.6,
+    "Depth"
+   ],
+   [
+    "Xavier Hutchinson",
+    "WR",
+    2023,
+    34,
+    "Depth"
+   ],
+   [
+    "Andrei Iosivas",
+    "WR",
+    2023,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Deuce Vaughn",
+    "RB",
+    2023,
+    41,
+    "Depth"
+   ],
+   [
+    "Jalen Brooks",
+    "WR",
+    2023,
+    4.3,
+    "Long Shot"
+   ],
+   [
+    "Brayden Willis",
+    "TE",
+    2023,
+    26.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Ronnie Bell",
+    "WR",
+    2023,
+    32.5,
+    "Depth"
+   ],
+   [
+    "Jayden Daniels",
+    "QB",
+    2024,
+    90.4,
+    "Generational"
+   ],
+   [
+    "Drake Maye",
+    "QB",
+    2024,
+    86.6,
+    "Top Prospect"
+   ],
+   [
+    "Marvin Harrison Jr.",
+    "WR",
+    2024,
+    92.6,
+    "Generational"
+   ],
+   [
+    "Malik Nabers",
+    "WR",
+    2024,
+    91.1,
+    "Generational"
+   ],
+   [
+    "Rome Odunze",
+    "WR",
+    2024,
+    87.4,
+    "Top Prospect"
+   ],
+   [
+    "Brock Bowers",
+    "TE",
+    2024,
+    95.2,
+    "Generational"
+   ],
+   [
+    "Brian Thomas Jr.",
+    "WR",
+    2024,
+    67.7,
+    "Starter"
+   ],
+   [
+    "Xavier Worthy",
+    "WR",
+    2024,
+    80.4,
+    "Starter"
+   ],
+   [
+    "Ricky Pearsall",
+    "WR",
+    2024,
+    56.1,
+    "Starter"
+   ],
+   [
+    "Xavier Legette",
+    "WR",
+    2024,
+    51.6,
+    "Contributor"
+   ],
+   [
+    "Keon Coleman",
+    "WR",
+    2024,
+    74.3,
+    "Starter"
+   ],
+   [
+    "Ja'Lynn Polk",
+    "WR",
+    2024,
+    71.1,
+    "Starter"
+   ],
+   [
+    "Jonathon Brooks",
+    "RB",
+    2024,
+    66.1,
+    "Starter"
+   ],
+   [
+    "Adonai Mitchell",
+    "WR",
+    2024,
+    61.1,
+    "Starter"
+   ],
+   [
+    "Ben Sinnott",
+    "TE",
+    2024,
+    63.6,
+    "Starter"
+   ],
+   [
+    "Malachi Corley",
+    "WR",
+    2024,
+    51.4,
+    "Contributor"
+   ],
+   [
+    "Trey Benson",
+    "RB",
+    2024,
+    59.6,
+    "Contributor"
+   ],
+   [
+    "Jermaine Burton",
+    "WR",
+    2024,
+    48.8,
+    "Contributor"
+   ],
+   [
+    "Tip Reiman",
+    "TE",
+    2024,
+    18.5,
+    "Lottery Ticket"
+   ],
+   [
+    "MarShawn Lloyd",
+    "RB",
+    2024,
+    43.9,
+    "Depth"
+   ],
+   [
+    "Luke McCaffrey",
+    "WR",
+    2024,
+    33.8,
+    "Depth"
+   ],
+   [
+    "Ja'Tavion Sanders",
+    "TE",
+    2024,
+    54.5,
+    "Starter"
+   ],
+   [
+    "Troy Franklin",
+    "WR",
+    2024,
+    55,
+    "Starter"
+   ],
+   [
+    "Theo Johnson",
+    "TE",
+    2024,
+    41.6,
+    "Depth"
+   ],
+   [
+    "Javon Baker",
+    "WR",
+    2024,
+    41,
+    "Depth"
+   ],
+   [
+    "Jaylen Wright",
+    "RB",
+    2024,
+    36.2,
+    "Depth"
+   ],
+   [
+    "Will Shipley",
+    "RB",
+    2024,
+    44.3,
+    "Depth"
+   ],
+   [
+    "Isaac Guerendo",
+    "RB",
+    2024,
+    33.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Jared Wiley",
+    "TE",
+    2024,
+    37.2,
+    "Depth"
+   ],
+   [
+    "Braelon Allen",
+    "RB",
+    2024,
+    48.2,
+    "Contributor"
+   ],
+   [
+    "Jacob Cowing",
+    "WR",
+    2024,
+    36.5,
+    "Depth"
+   ],
+   [
+    "Anthony Gould",
+    "WR",
+    2024,
+    17.5,
+    "Long Shot"
+   ],
+   [
+    "Audric Estime",
+    "RB",
+    2024,
+    38.1,
+    "Depth"
+   ],
+   [
+    "Spencer Rattler",
+    "QB",
+    2024,
+    36.1,
+    "Depth"
+   ],
+   [
+    "Ainias Smith",
+    "WR",
+    2024,
+    33,
+    "Depth"
+   ],
+   [
+    "Jamari Thrash",
+    "WR",
+    2024,
+    30.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Rasheen Ali",
+    "RB",
+    2024,
+    37.7,
+    "Depth"
+   ],
+   [
+    "Kimani Vidal",
+    "RB",
+    2024,
+    32.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Jha'Quan Jackson",
+    "WR",
+    2024,
+    18.9,
+    "Long Shot"
+   ],
+   [
+    "Malik Washington",
+    "WR",
+    2024,
+    31.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Jase McClellan",
+    "RB",
+    2024,
+    33.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Casey Washington",
+    "WR",
+    2024,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Joe Milton",
+    "QB",
+    2024,
+    8.1,
+    "Long Shot"
+   ],
+   [
+    "Jawhar Jordan",
+    "RB",
+    2024,
+    31.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Dylan Laube",
+    "RB",
+    2024,
+    41.2,
+    "Depth"
+   ],
+   [
+    "Jordan Whittington",
+    "WR",
+    2024,
+    26,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaheim Bell",
+    "TE",
+    2024,
+    41.8,
+    "Depth"
+   ],
+   [
+    "Devaughn Vele",
+    "WR",
+    2024,
+    12.4,
+    "Long Shot"
+   ],
+   [
+    "Devin Culp",
+    "TE",
+    2024,
+    29.9,
+    "Lottery Ticket"
+   ]
+  ],
+  "7": [
+   [
+    "Corey Davis",
+    "WR",
+    2017,
+    83.5,
+    "Starter"
+   ],
+   [
+    "Christian McCaffrey",
+    "RB",
+    2017,
+    91.1,
+    "Generational"
+   ],
+   [
+    "John Ross",
+    "WR",
+    2017,
+    66.4,
+    "Starter"
+   ],
+   [
+    "O.J. Howard",
+    "TE",
+    2017,
+    73.1,
+    "Starter"
+   ],
+   [
+    "Evan Engram",
+    "TE",
+    2017,
+    89.4,
+    "Top Prospect"
+   ],
+   [
+    "David Njoku",
+    "TE",
+    2017,
+    76,
+    "Top Prospect"
+   ],
+   [
+    "Zay Jones",
+    "WR",
+    2017,
+    57.9,
+    "Starter"
+   ],
+   [
+    "Dalvin Cook",
+    "RB",
+    2017,
+    79.4,
+    "Top Prospect"
+   ],
+   [
+    "Gerald Everett",
+    "TE",
+    2017,
+    67.1,
+    "Starter"
+   ],
+   [
+    "Joe Mixon",
+    "RB",
+    2017,
+    75.2,
+    "Top Prospect"
+   ],
+   [
+    "DeShone Kizer",
+    "QB",
+    2017,
+    51.7,
+    "Contributor"
+   ],
+   [
+    "JuJu Smith-Schuster",
+    "WR",
+    2017,
+    65,
+    "Starter"
+   ],
+   [
+    "Alvin Kamara",
+    "RB",
+    2017,
+    59.7,
+    "Contributor"
+   ],
+   [
+    "Taywan Taylor",
+    "WR",
+    2017,
+    58,
+    "Starter"
+   ],
+   [
+    "ArDarius Stewart",
+    "WR",
+    2017,
+    48.1,
+    "Contributor"
+   ],
+   [
+    "Chris Godwin",
+    "WR",
+    2017,
+    59.3,
+    "Starter"
+   ],
+   [
+    "Kareem Hunt",
+    "RB",
+    2017,
+    61.2,
+    "Contributor"
+   ],
+   [
+    "Kenny Golladay",
+    "WR",
+    2017,
+    44.2,
+    "Contributor"
+   ],
+   [
+    "Jonnu Smith",
+    "TE",
+    2017,
+    66.4,
+    "Starter"
+   ],
+   [
+    "C.J. Beathard",
+    "QB",
+    2017,
+    20.9,
+    "Long Shot"
+   ],
+   [
+    "James Conner",
+    "RB",
+    2017,
+    56.8,
+    "Contributor"
+   ],
+   [
+    "Amara Darboh",
+    "WR",
+    2017,
+    30.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Dede Westbrook",
+    "WR",
+    2017,
+    41,
+    "Depth"
+   ],
+   [
+    "Josh Reynolds",
+    "WR",
+    2017,
+    43.8,
+    "Depth"
+   ],
+   [
+    "Michael Roberts",
+    "TE",
+    2017,
+    40.4,
+    "Depth"
+   ],
+   [
+    "Josh Malone",
+    "WR",
+    2017,
+    31.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Ryan Switzer",
+    "WR",
+    2017,
+    35.5,
+    "Depth"
+   ],
+   [
+    "Joshua Dobbs",
+    "QB",
+    2017,
+    51.5,
+    "Contributor"
+   ],
+   [
+    "Jehu Chesson",
+    "WR",
+    2017,
+    26.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Chad Hansen",
+    "WR",
+    2017,
+    31.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Marlon Mack",
+    "RB",
+    2017,
+    36.7,
+    "Depth"
+   ],
+   [
+    "Jake Butt",
+    "TE",
+    2017,
+    37.4,
+    "Depth"
+   ],
+   [
+    "Jordan Leggett",
+    "TE",
+    2017,
+    33.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Jeremy Sprinkle",
+    "TE",
+    2017,
+    28.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Jeremy McNichols",
+    "RB",
+    2017,
+    38.5,
+    "Depth"
+   ],
+   [
+    "Shelton Gibson",
+    "WR",
+    2017,
+    30.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Rodney Adams",
+    "WR",
+    2017,
+    28.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Nathan Peterman",
+    "QB",
+    2017,
+    16.9,
+    "Long Shot"
+   ],
+   [
+    "Isaiah McKenzie",
+    "WR",
+    2017,
+    26.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Trent Taylor",
+    "WR",
+    2017,
+    32,
+    "Depth"
+   ],
+   [
+    "T.J. Logan",
+    "RB",
+    2017,
+    30.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Aaron Jones",
+    "RB",
+    2017,
+    34.8,
+    "Depth"
+   ],
+   [
+    "Elijah McGuire",
+    "RB",
+    2017,
+    36.8,
+    "Depth"
+   ],
+   [
+    "Robert Davis",
+    "WR",
+    2017,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Stacy Coley",
+    "WR",
+    2017,
+    31.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Ford",
+    "WR",
+    2017,
+    35.1,
+    "Depth"
+   ],
+   [
+    "Mason Schreck",
+    "TE",
+    2017,
+    20.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Baker Mayfield",
+    "QB",
+    2018,
+    86.1,
+    "Top Prospect"
+   ],
+   [
+    "Saquon Barkley",
+    "RB",
+    2018,
+    93.6,
+    "Generational"
+   ],
+   [
+    "Josh Allen",
+    "QB",
+    2018,
+    65.4,
+    "Starter"
+   ],
+   [
+    "Josh Rosen",
+    "QB",
+    2018,
+    53,
+    "Contributor"
+   ],
+   [
+    "Hayden Hurst",
+    "TE",
+    2018,
+    52.2,
+    "Contributor"
+   ],
+   [
+    "Calvin Ridley",
+    "WR",
+    2018,
+    80,
+    "Starter"
+   ],
+   [
+    "Rashaad Penny",
+    "RB",
+    2018,
+    69,
+    "Starter"
+   ],
+   [
+    "Courtland Sutton",
+    "WR",
+    2018,
+    63.2,
+    "Starter"
+   ],
+   [
+    "Mike Gesicki",
+    "TE",
+    2018,
+    71.3,
+    "Starter"
+   ],
+   [
+    "Kerryon Johnson",
+    "RB",
+    2018,
+    59.7,
+    "Contributor"
+   ],
+   [
+    "Dante Pettis",
+    "WR",
+    2018,
+    52.5,
+    "Contributor"
+   ],
+   [
+    "James Washington",
+    "WR",
+    2018,
+    43.6,
+    "Depth"
+   ],
+   [
+    "D.J. Chark",
+    "WR",
+    2018,
+    32.6,
+    "Depth"
+   ],
+   [
+    "Royce Freeman",
+    "RB",
+    2018,
+    67.2,
+    "Starter"
+   ],
+   [
+    "Michael Gallup",
+    "WR",
+    2018,
+    58.8,
+    "Starter"
+   ],
+   [
+    "Mark Andrews",
+    "TE",
+    2018,
+    62.5,
+    "Starter"
+   ],
+   [
+    "Tre'Quan Smith",
+    "WR",
+    2018,
+    37.7,
+    "Depth"
+   ],
+   [
+    "Jordan Akins",
+    "TE",
+    2018,
+    33.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Nyheim Hines",
+    "RB",
+    2018,
+    38.2,
+    "Depth"
+   ],
+   [
+    "Antonio Callaway",
+    "WR",
+    2018,
+    43.2,
+    "Depth"
+   ],
+   [
+    "DaeSean Hamilton",
+    "WR",
+    2018,
+    41.6,
+    "Depth"
+   ],
+   [
+    "Will Dissly",
+    "TE",
+    2018,
+    4.8,
+    "Long Shot"
+   ],
+   [
+    "Ito Smith",
+    "RB",
+    2018,
+    44.7,
+    "Depth"
+   ],
+   [
+    "Kalen Ballage",
+    "RB",
+    2018,
+    32.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaleel Scott",
+    "WR",
+    2018,
+    25.9,
+    "Long Shot"
+   ],
+   [
+    "J'Mon Moore",
+    "WR",
+    2018,
+    25.4,
+    "Long Shot"
+   ],
+   [
+    "Dalton Schultz",
+    "TE",
+    2018,
+    13.4,
+    "Long Shot"
+   ],
+   [
+    "Troy Fumagalli",
+    "TE",
+    2018,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaylen Samuels",
+    "RB",
+    2018,
+    38.6,
+    "Depth"
+   ],
+   [
+    "Jordan Wilkins",
+    "RB",
+    2018,
+    25.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Mike White",
+    "QB",
+    2018,
+    10,
+    "Long Shot"
+   ],
+   [
+    "Marquez Valdes-Scantling",
+    "WR",
+    2018,
+    17,
+    "Long Shot"
+   ],
+   [
+    "Damion Ratley",
+    "WR",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "John Kelly",
+    "RB",
+    2018,
+    22.5,
+    "Long Shot"
+   ],
+   [
+    "Deon Cain",
+    "WR",
+    2018,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "Ray-Ray McCloud",
+    "WR",
+    2018,
+    6.4,
+    "Long Shot"
+   ],
+   [
+    "Russell Gage",
+    "WR",
+    2018,
+    24.6,
+    "Long Shot"
+   ],
+   [
+    "Luke Falk",
+    "QB",
+    2018,
+    27.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Boston Scott",
+    "RB",
+    2018,
+    28.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Equanimeous St. Brown",
+    "WR",
+    2018,
+    30.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Braxton Berrios",
+    "WR",
+    2018,
+    22.9,
+    "Long Shot"
+   ],
+   [
+    "Jordan Thomas",
+    "TE",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Javon Wims",
+    "WR",
+    2018,
+    11.5,
+    "Long Shot"
+   ],
+   [
+    "Marcell Ateman",
+    "WR",
+    2018,
+    28.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Bo Scarbrough",
+    "RB",
+    2018,
+    27.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Logan Woodside",
+    "QB",
+    2018,
+    24.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Auden Tate",
+    "WR",
+    2018,
+    30.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Trey Quinn",
+    "WR",
+    2018,
+    29,
+    "Lottery Ticket"
+   ],
+   [
+    "Kyler Murray",
+    "QB",
+    2019,
+    75,
+    "Starter"
+   ],
+   [
+    "T.J. Hockenson",
+    "TE",
+    2019,
+    81.8,
+    "Top Prospect"
+   ],
+   [
+    "Noah Fant",
+    "TE",
+    2019,
+    86,
+    "Top Prospect"
+   ],
+   [
+    "Josh Jacobs",
+    "RB",
+    2019,
+    77.8,
+    "Top Prospect"
+   ],
+   [
+    "Marquise Brown",
+    "WR",
+    2019,
+    77.6,
+    "Starter"
+   ],
+   [
+    "N'Keal Harry",
+    "WR",
+    2019,
+    82.2,
+    "Starter"
+   ],
+   [
+    "Deebo Samuel",
+    "WR",
+    2019,
+    69.3,
+    "Starter"
+   ],
+   [
+    "Irv Smith Jr.",
+    "TE",
+    2019,
+    66,
+    "Starter"
+   ],
+   [
+    "A.J. Brown",
+    "WR",
+    2019,
+    70.2,
+    "Starter"
+   ],
+   [
+    "Miles Sanders",
+    "RB",
+    2019,
+    49.2,
+    "Contributor"
+   ],
+   [
+    "Mecole Hardman",
+    "WR",
+    2019,
+    44.2,
+    "Contributor"
+   ],
+   [
+    "Parris Campbell",
+    "WR",
+    2019,
+    56.5,
+    "Starter"
+   ],
+   [
+    "Andy Isabella",
+    "WR",
+    2019,
+    41.4,
+    "Depth"
+   ],
+   [
+    "Diontae Johnson",
+    "WR",
+    2019,
+    46,
+    "Contributor"
+   ],
+   [
+    "Josh Oliver",
+    "TE",
+    2019,
+    54.9,
+    "Starter"
+   ],
+   [
+    "Darrell Henderson",
+    "RB",
+    2019,
+    58.4,
+    "Contributor"
+   ],
+   [
+    "David Montgomery",
+    "RB",
+    2019,
+    48.1,
+    "Contributor"
+   ],
+   [
+    "Devin Singletary",
+    "RB",
+    2019,
+    64.7,
+    "Starter"
+   ],
+   [
+    "Jace Sternberger",
+    "TE",
+    2019,
+    40.3,
+    "Depth"
+   ],
+   [
+    "Terry McLaurin",
+    "WR",
+    2019,
+    38.7,
+    "Depth"
+   ],
+   [
+    "Damien Harris",
+    "RB",
+    2019,
+    53.6,
+    "Contributor"
+   ],
+   [
+    "Miles Boykin",
+    "WR",
+    2019,
+    31.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Will Grier",
+    "QB",
+    2019,
+    40.4,
+    "Depth"
+   ],
+   [
+    "Alexander Mattison",
+    "RB",
+    2019,
+    39.9,
+    "Depth"
+   ],
+   [
+    "Hakeem Butler",
+    "WR",
+    2019,
+    26.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Justice Hill",
+    "RB",
+    2019,
+    42.6,
+    "Depth"
+   ],
+   [
+    "Riley Ridley",
+    "WR",
+    2019,
+    26.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Tony Pollard",
+    "RB",
+    2019,
+    37.4,
+    "Depth"
+   ],
+   [
+    "Foster Moreau",
+    "TE",
+    2019,
+    38.4,
+    "Depth"
+   ],
+   [
+    "Ryquell Armstead",
+    "RB",
+    2019,
+    25.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Zach Gentry",
+    "TE",
+    2019,
+    23.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Hunter Renfrow",
+    "WR",
+    2019,
+    30.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Qadree Ollison",
+    "RB",
+    2019,
+    30.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Jordan Scarlett",
+    "RB",
+    2019,
+    21.3,
+    "Long Shot"
+   ],
+   [
+    "Darius Slayton",
+    "WR",
+    2019,
+    24.4,
+    "Long Shot"
+   ],
+   [
+    "KeeSean Johnson",
+    "WR",
+    2019,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Travis Fulgham",
+    "WR",
+    2019,
+    14.2,
+    "Long Shot"
+   ],
+   [
+    "Trace McSorley",
+    "QB",
+    2019,
+    49,
+    "Contributor"
+   ],
+   [
+    "Travis Homer",
+    "RB",
+    2019,
+    30.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Kelvin Harmon",
+    "WR",
+    2019,
+    32.8,
+    "Depth"
+   ],
+   [
+    "Scott Miller",
+    "WR",
+    2019,
+    32.2,
+    "Depth"
+   ],
+   [
+    "Darwin Thompson",
+    "RB",
+    2019,
+    31.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaac Nauta",
+    "TE",
+    2019,
+    0.6,
+    "Long Shot"
+   ],
+   [
+    "Tommy Sweeney",
+    "TE",
+    2019,
+    16.2,
+    "Long Shot"
+   ],
+   [
+    "Myles Gaskin",
+    "RB",
+    2019,
+    37,
+    "Depth"
+   ],
+   [
+    "Terry Godwin",
+    "WR",
+    2019,
+    14.5,
+    "Long Shot"
+   ],
+   [
+    "Olabisi Johnson",
+    "WR",
+    2019,
+    28.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Justin Herbert",
+    "QB",
+    2020,
+    81.1,
+    "Top Prospect"
+   ],
+   [
+    "Henry Ruggs III",
+    "WR",
+    2020,
+    77.7,
+    "Starter"
+   ],
+   [
+    "CeeDee Lamb",
+    "WR",
+    2020,
+    91.3,
+    "Generational"
+   ],
+   [
+    "Jalen Reagor",
+    "WR",
+    2020,
+    73.2,
+    "Starter"
+   ],
+   [
+    "Brandon Aiyuk",
+    "WR",
+    2020,
+    57.1,
+    "Starter"
+   ],
+   [
+    "Clyde Edwards-Helaire",
+    "RB",
+    2020,
+    57,
+    "Contributor"
+   ],
+   [
+    "Tee Higgins",
+    "WR",
+    2020,
+    75.6,
+    "Starter"
+   ],
+   [
+    "Michael Pittman Jr.",
+    "WR",
+    2020,
+    70.6,
+    "Starter"
+   ],
+   [
+    "D'Andre Swift",
+    "RB",
+    2020,
+    82.3,
+    "Top Prospect"
+   ],
+   [
+    "Jonathan Taylor",
+    "RB",
+    2020,
+    81.9,
+    "Top Prospect"
+   ],
+   [
+    "Cole Kmet",
+    "TE",
+    2020,
+    55.8,
+    "Starter"
+   ],
+   [
+    "Chase Claypool",
+    "WR",
+    2020,
+    44.2,
+    "Contributor"
+   ],
+   [
+    "Cam Akers",
+    "RB",
+    2020,
+    56.2,
+    "Contributor"
+   ],
+   [
+    "Jalen Hurts",
+    "QB",
+    2020,
+    72.9,
+    "Starter"
+   ],
+   [
+    "J.K. Dobbins",
+    "RB",
+    2020,
+    69.5,
+    "Starter"
+   ],
+   [
+    "Van Jefferson",
+    "WR",
+    2020,
+    41.6,
+    "Depth"
+   ],
+   [
+    "Denzel Mims",
+    "WR",
+    2020,
+    52.3,
+    "Contributor"
+   ],
+   [
+    "AJ Dillon",
+    "RB",
+    2020,
+    56.6,
+    "Contributor"
+   ],
+   [
+    "Ke'Shawn Vaughn",
+    "RB",
+    2020,
+    54.9,
+    "Contributor"
+   ],
+   [
+    "Bryan Edwards",
+    "WR",
+    2020,
+    56.8,
+    "Starter"
+   ],
+   [
+    "Zack Moss",
+    "RB",
+    2020,
+    58.7,
+    "Contributor"
+   ],
+   [
+    "Devin Asiasi",
+    "TE",
+    2020,
+    29.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Devin Duvernay",
+    "WR",
+    2020,
+    38.7,
+    "Depth"
+   ],
+   [
+    "Darrynton Evans",
+    "RB",
+    2020,
+    41.8,
+    "Depth"
+   ],
+   [
+    "Josiah Deguara",
+    "TE",
+    2020,
+    42.2,
+    "Depth"
+   ],
+   [
+    "Joshua Kelley",
+    "RB",
+    2020,
+    43.1,
+    "Depth"
+   ],
+   [
+    "Harrison Bryant",
+    "TE",
+    2020,
+    48.2,
+    "Contributor"
+   ],
+   [
+    "Jacob Eason",
+    "QB",
+    2020,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Colby Parkinson",
+    "TE",
+    2020,
+    43.8,
+    "Depth"
+   ],
+   [
+    "Brycen Hopkins",
+    "TE",
+    2020,
+    41.7,
+    "Depth"
+   ],
+   [
+    "Antonio Gandy-Golden",
+    "WR",
+    2020,
+    34.9,
+    "Depth"
+   ],
+   [
+    "DeeJay Dallas",
+    "RB",
+    2020,
+    30.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyler Johnson",
+    "WR",
+    2020,
+    36,
+    "Depth"
+   ],
+   [
+    "Quintez Cephus",
+    "WR",
+    2020,
+    31.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Jake Fromm",
+    "QB",
+    2020,
+    7.1,
+    "Long Shot"
+   ],
+   [
+    "John Hightower",
+    "WR",
+    2020,
+    23.5,
+    "Long Shot"
+   ],
+   [
+    "Jason Huntley",
+    "RB",
+    2020,
+    29.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Darnell Mooney",
+    "WR",
+    2020,
+    30.1,
+    "Lottery Ticket"
+   ],
+   [
+    "K.J. Osborn",
+    "WR",
+    2020,
+    25.8,
+    "Long Shot"
+   ],
+   [
+    "Donovan Peoples-Jones",
+    "WR",
+    2020,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Jake Luton",
+    "QB",
+    2020,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Quez Watkins",
+    "WR",
+    2020,
+    30.8,
+    "Lottery Ticket"
+   ],
+   [
+    "James Proche",
+    "WR",
+    2020,
+    31.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Hodgins",
+    "WR",
+    2020,
+    36.3,
+    "Depth"
+   ],
+   [
+    "Dezmon Patmon",
+    "WR",
+    2020,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Freddie Swain",
+    "WR",
+    2020,
+    23.4,
+    "Long Shot"
+   ],
+   [
+    "Jauan Jennings",
+    "WR",
+    2020,
+    31.7,
+    "Lottery Ticket"
+   ],
+   [
+    "K.J. Hill",
+    "WR",
+    2020,
+    28.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Eno Benjamin",
+    "RB",
+    2020,
+    36.1,
+    "Depth"
+   ],
+   [
+    "Malcolm Perry",
+    "RB",
+    2020,
+    34.2,
+    "Depth"
+   ],
+   [
+    "Tyrie Cleveland",
+    "WR",
+    2020,
+    7.5,
+    "Long Shot"
+   ],
+   [
+    "Zach Wilson",
+    "QB",
+    2021,
+    76.5,
+    "Starter"
+   ],
+   [
+    "Ja'Marr Chase",
+    "WR",
+    2021,
+    94.9,
+    "Generational"
+   ],
+   [
+    "Javonte Williams",
+    "RB",
+    2021,
+    78.7,
+    "Top Prospect"
+   ],
+   [
+    "Hunter Long",
+    "TE",
+    2021,
+    57.7,
+    "Starter"
+   ],
+   [
+    "Dyami Brown",
+    "WR",
+    2021,
+    57.5,
+    "Starter"
+   ],
+   [
+    "Nico Collins",
+    "WR",
+    2021,
+    48.5,
+    "Contributor"
+   ],
+   [
+    "Anthony Schwartz",
+    "WR",
+    2021,
+    43.5,
+    "Depth"
+   ],
+   [
+    "Dez Fitzpatrick",
+    "WR",
+    2021,
+    36.9,
+    "Depth"
+   ],
+   [
+    "Kene Nwangwu",
+    "RB",
+    2021,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Kylen Granson",
+    "TE",
+    2021,
+    43.2,
+    "Depth"
+   ],
+   [
+    "Tylan Wallace",
+    "WR",
+    2021,
+    44.6,
+    "Contributor"
+   ],
+   [
+    "Jacob Harris",
+    "WR",
+    2021,
+    9.7,
+    "Long Shot"
+   ],
+   [
+    "Kenneth Gainwell",
+    "RB",
+    2021,
+    39.3,
+    "Depth"
+   ],
+   [
+    "Elijah Mitchell",
+    "RB",
+    2021,
+    36.1,
+    "Depth"
+   ],
+   [
+    "Khalil Herbert",
+    "RB",
+    2021,
+    22.5,
+    "Long Shot"
+   ],
+   [
+    "Sam Ehlinger",
+    "QB",
+    2021,
+    48.8,
+    "Contributor"
+   ],
+   [
+    "Seth Williams",
+    "WR",
+    2021,
+    33,
+    "Depth"
+   ],
+   [
+    "Dazz Newsome",
+    "WR",
+    2021,
+    33.4,
+    "Depth"
+   ],
+   [
+    "Dax Milne",
+    "WR",
+    2021,
+    12.7,
+    "Long Shot"
+   ],
+   [
+    "Garrett Wilson",
+    "WR",
+    2022,
+    85,
+    "Top Prospect"
+   ],
+   [
+    "Chris Olave",
+    "WR",
+    2022,
+    91,
+    "Generational"
+   ],
+   [
+    "Jameson Williams",
+    "WR",
+    2022,
+    81.7,
+    "Starter"
+   ],
+   [
+    "Jahan Dotson",
+    "WR",
+    2022,
+    79.2,
+    "Starter"
+   ],
+   [
+    "Treylon Burks",
+    "WR",
+    2022,
+    71.4,
+    "Starter"
+   ],
+   [
+    "Kenny Pickett",
+    "QB",
+    2022,
+    50.3,
+    "Contributor"
+   ],
+   [
+    "Breece Hall",
+    "RB",
+    2022,
+    75.3,
+    "Top Prospect"
+   ],
+   [
+    "Kenneth Walker III",
+    "RB",
+    2022,
+    67.3,
+    "Starter"
+   ],
+   [
+    "Wan'Dale Robinson",
+    "WR",
+    2022,
+    59.1,
+    "Starter"
+   ],
+   [
+    "Tyquan Thornton",
+    "WR",
+    2022,
+    51.2,
+    "Contributor"
+   ],
+   [
+    "Alec Pierce",
+    "WR",
+    2022,
+    40.7,
+    "Depth"
+   ],
+   [
+    "Skyy Moore",
+    "WR",
+    2022,
+    48.4,
+    "Contributor"
+   ],
+   [
+    "Trey McBride",
+    "TE",
+    2022,
+    66.3,
+    "Starter"
+   ],
+   [
+    "James Cook",
+    "RB",
+    2022,
+    49.6,
+    "Contributor"
+   ],
+   [
+    "Jelani Woods",
+    "TE",
+    2022,
+    47.6,
+    "Depth"
+   ],
+   [
+    "Desmond Ridder",
+    "QB",
+    2022,
+    62.7,
+    "Starter"
+   ],
+   [
+    "Greg Dulcich",
+    "TE",
+    2022,
+    62.3,
+    "Starter"
+   ],
+   [
+    "Malik Willis",
+    "QB",
+    2022,
+    54.1,
+    "Contributor"
+   ],
+   [
+    "Jalen Tolbert",
+    "WR",
+    2022,
+    45.9,
+    "Contributor"
+   ],
+   [
+    "Rachaad White",
+    "RB",
+    2022,
+    63.5,
+    "Starter"
+   ],
+   [
+    "Tyrion Davis-Price",
+    "RB",
+    2022,
+    31.7,
+    "Lottery Ticket"
+   ],
+   [
+    "David Bell",
+    "WR",
+    2022,
+    58.7,
+    "Starter"
+   ],
+   [
+    "Danny Gray",
+    "WR",
+    2022,
+    36.7,
+    "Depth"
+   ],
+   [
+    "Dameon Pierce",
+    "RB",
+    2022,
+    34,
+    "Depth"
+   ],
+   [
+    "Daniel Bellinger",
+    "TE",
+    2022,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "Zamir White",
+    "RB",
+    2022,
+    31.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Spiller",
+    "RB",
+    2022,
+    46.3,
+    "Contributor"
+   ],
+   [
+    "Erik Ezukanma",
+    "WR",
+    2022,
+    38.7,
+    "Depth"
+   ],
+   [
+    "Charlie Kolar",
+    "TE",
+    2022,
+    48.3,
+    "Contributor"
+   ],
+   [
+    "Jake Ferguson",
+    "TE",
+    2022,
+    41.9,
+    "Depth"
+   ],
+   [
+    "Hassan Haskins",
+    "RB",
+    2022,
+    37.6,
+    "Depth"
+   ],
+   [
+    "Romeo Doubs",
+    "WR",
+    2022,
+    40.8,
+    "Depth"
+   ],
+   [
+    "Calvin Austin III",
+    "WR",
+    2022,
+    35.6,
+    "Depth"
+   ],
+   [
+    "Isaiah Likely",
+    "TE",
+    2022,
+    51.1,
+    "Contributor"
+   ],
+   [
+    "Chigoziem Okonkwo",
+    "TE",
+    2022,
+    31.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Sam Howell",
+    "QB",
+    2022,
+    50.6,
+    "Contributor"
+   ],
+   [
+    "Khalil Shakir",
+    "WR",
+    2022,
+    34.4,
+    "Depth"
+   ],
+   [
+    "Cole Turner",
+    "TE",
+    2022,
+    35.2,
+    "Depth"
+   ],
+   [
+    "Tyler Allgeier",
+    "RB",
+    2022,
+    34.9,
+    "Depth"
+   ],
+   [
+    "Snoop Conner",
+    "RB",
+    2022,
+    29.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Jerome Ford",
+    "RB",
+    2022,
+    36,
+    "Depth"
+   ],
+   [
+    "Kyle Philips",
+    "WR",
+    2022,
+    28.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Kyren Williams",
+    "RB",
+    2022,
+    33.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Ty Chandler",
+    "RB",
+    2022,
+    20.9,
+    "Long Shot"
+   ],
+   [
+    "Tyler Badie",
+    "RB",
+    2022,
+    32.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Grant Calcaterra",
+    "TE",
+    2022,
+    37.8,
+    "Depth"
+   ],
+   [
+    "Keaontay Ingram",
+    "RB",
+    2022,
+    27,
+    "Lottery Ticket"
+   ],
+   [
+    "Trestan Ebner",
+    "RB",
+    2022,
+    23.6,
+    "Long Shot"
+   ],
+   [
+    "Connor Heyward",
+    "TE",
+    2022,
+    31.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Nick Muse",
+    "TE",
+    2022,
+    28.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Bo Melton",
+    "WR",
+    2022,
+    19.7,
+    "Long Shot"
+   ],
+   [
+    "Samori Toure",
+    "WR",
+    2022,
+    10.5,
+    "Long Shot"
+   ],
+   [
+    "Brock Purdy",
+    "QB",
+    2022,
+    42.1,
+    "Depth"
+   ],
+   [
+    "C.J. Stroud",
+    "QB",
+    2023,
+    64.8,
+    "Starter"
+   ],
+   [
+    "Anthony Richardson",
+    "QB",
+    2023,
+    70.7,
+    "Starter"
+   ],
+   [
+    "Bijan Robinson",
+    "RB",
+    2023,
+    93.7,
+    "Generational"
+   ],
+   [
+    "Jahmyr Gibbs",
+    "RB",
+    2023,
+    91.3,
+    "Generational"
+   ],
+   [
+    "Quentin Johnston",
+    "WR",
+    2023,
+    72.5,
+    "Starter"
+   ],
+   [
+    "Zay Flowers",
+    "WR",
+    2023,
+    65.2,
+    "Starter"
+   ],
+   [
+    "Jordan Addison",
+    "WR",
+    2023,
+    81.5,
+    "Starter"
+   ],
+   [
+    "Dalton Kincaid",
+    "TE",
+    2023,
+    70.1,
+    "Starter"
+   ],
+   [
+    "Will Levis",
+    "QB",
+    2023,
+    40.9,
+    "Depth"
+   ],
+   [
+    "Sam LaPorta",
+    "TE",
+    2023,
+    74.6,
+    "Top Prospect"
+   ],
+   [
+    "Michael Mayer",
+    "TE",
+    2023,
+    69.2,
+    "Starter"
+   ],
+   [
+    "Jonathan Mingo",
+    "WR",
+    2023,
+    53.3,
+    "Contributor"
+   ],
+   [
+    "Jayden Reed",
+    "WR",
+    2023,
+    62.6,
+    "Starter"
+   ],
+   [
+    "Zach Charbonnet",
+    "RB",
+    2023,
+    64.7,
+    "Starter"
+   ],
+   [
+    "Rashee Rice",
+    "WR",
+    2023,
+    54,
+    "Starter"
+   ],
+   [
+    "Luke Schoonmaker",
+    "TE",
+    2023,
+    37,
+    "Depth"
+   ],
+   [
+    "Brenton Strange",
+    "TE",
+    2023,
+    54.6,
+    "Starter"
+   ],
+   [
+    "Hendon Hooker",
+    "QB",
+    2023,
+    47.1,
+    "Contributor"
+   ],
+   [
+    "Tank Dell",
+    "WR",
+    2023,
+    51.4,
+    "Contributor"
+   ],
+   [
+    "Kendre Miller",
+    "RB",
+    2023,
+    58.8,
+    "Contributor"
+   ],
+   [
+    "Jalin Hyatt",
+    "WR",
+    2023,
+    51.3,
+    "Contributor"
+   ],
+   [
+    "Josh Downs",
+    "WR",
+    2023,
+    59.3,
+    "Starter"
+   ],
+   [
+    "De'Von Achane",
+    "RB",
+    2023,
+    60.1,
+    "Contributor"
+   ],
+   [
+    "Tank Bigsby",
+    "RB",
+    2023,
+    54.6,
+    "Contributor"
+   ],
+   [
+    "Darnell Washington",
+    "TE",
+    2023,
+    42.2,
+    "Depth"
+   ],
+   [
+    "Tre Tucker",
+    "WR",
+    2023,
+    17.8,
+    "Long Shot"
+   ],
+   [
+    "Roschon Johnson",
+    "RB",
+    2023,
+    37.5,
+    "Depth"
+   ],
+   [
+    "Derius Davis",
+    "WR",
+    2023,
+    24.4,
+    "Long Shot"
+   ],
+   [
+    "Charlie Jones Jr.",
+    "WR",
+    2023,
+    27.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyler Scott",
+    "WR",
+    2023,
+    36.3,
+    "Depth"
+   ],
+   [
+    "Aidan O'Connell",
+    "QB",
+    2023,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Clayton Tune",
+    "QB",
+    2023,
+    45.9,
+    "Depth"
+   ],
+   [
+    "Dorian Thompson-Robinson",
+    "QB",
+    2023,
+    42.8,
+    "Depth"
+   ],
+   [
+    "Israel Abanikanda",
+    "RB",
+    2023,
+    37.8,
+    "Depth"
+   ],
+   [
+    "Josh Whyle",
+    "TE",
+    2023,
+    35,
+    "Depth"
+   ],
+   [
+    "Sean Clifford",
+    "QB",
+    2023,
+    39,
+    "Depth"
+   ],
+   [
+    "Will Mallory",
+    "TE",
+    2023,
+    35.5,
+    "Depth"
+   ],
+   [
+    "Jaren Hall",
+    "QB",
+    2023,
+    17.8,
+    "Long Shot"
+   ],
+   [
+    "Payne Durham",
+    "TE",
+    2023,
+    30.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Eric Gray",
+    "RB",
+    2023,
+    33.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Davis Allen",
+    "TE",
+    2023,
+    33.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Evan Hull",
+    "RB",
+    2023,
+    32.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Parker Washington",
+    "WR",
+    2023,
+    36.6,
+    "Depth"
+   ],
+   [
+    "Kayshon Boutte",
+    "WR",
+    2023,
+    37.6,
+    "Depth"
+   ],
+   [
+    "Tanner McKee",
+    "QB",
+    2023,
+    5.1,
+    "Long Shot"
+   ],
+   [
+    "Trey Palmer",
+    "WR",
+    2023,
+    33,
+    "Depth"
+   ],
+   [
+    "A.T. Perry",
+    "WR",
+    2023,
+    25.1,
+    "Long Shot"
+   ],
+   [
+    "Elijah Higgins",
+    "TE",
+    2023,
+    37.2,
+    "Depth"
+   ],
+   [
+    "Xavier Hutchinson",
+    "WR",
+    2023,
+    34,
+    "Depth"
+   ],
+   [
+    "Andrei Iosivas",
+    "WR",
+    2023,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Deuce Vaughn",
+    "RB",
+    2023,
+    40.8,
+    "Depth"
+   ],
+   [
+    "Jalen Brooks",
+    "WR",
+    2023,
+    3.9,
+    "Long Shot"
+   ],
+   [
+    "Brayden Willis",
+    "TE",
+    2023,
+    26.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Ronnie Bell",
+    "WR",
+    2023,
+    32.5,
+    "Depth"
+   ],
+   [
+    "Jayden Daniels",
+    "QB",
+    2024,
+    90.7,
+    "Generational"
+   ],
+   [
+    "Drake Maye",
+    "QB",
+    2024,
+    88.3,
+    "Top Prospect"
+   ],
+   [
+    "Marvin Harrison Jr.",
+    "WR",
+    2024,
+    92.7,
+    "Generational"
+   ],
+   [
+    "Malik Nabers",
+    "WR",
+    2024,
+    91.2,
+    "Generational"
+   ],
+   [
+    "Rome Odunze",
+    "WR",
+    2024,
+    90.4,
+    "Generational"
+   ],
+   [
+    "Brock Bowers",
+    "TE",
+    2024,
+    95.2,
+    "Generational"
+   ],
+   [
+    "Brian Thomas Jr.",
+    "WR",
+    2024,
+    74,
+    "Starter"
+   ],
+   [
+    "Xavier Worthy",
+    "WR",
+    2024,
+    80.4,
+    "Starter"
+   ],
+   [
+    "Ricky Pearsall",
+    "WR",
+    2024,
+    60.6,
+    "Starter"
+   ],
+   [
+    "Xavier Legette",
+    "WR",
+    2024,
+    50.5,
+    "Contributor"
+   ],
+   [
+    "Keon Coleman",
+    "WR",
+    2024,
+    74.8,
+    "Starter"
+   ],
+   [
+    "Ja'Lynn Polk",
+    "WR",
+    2024,
+    71.1,
+    "Starter"
+   ],
+   [
+    "Jonathon Brooks",
+    "RB",
+    2024,
+    70.3,
+    "Starter"
+   ],
+   [
+    "Adonai Mitchell",
+    "WR",
+    2024,
+    62.2,
+    "Starter"
+   ],
+   [
+    "Ben Sinnott",
+    "TE",
+    2024,
+    62.7,
+    "Starter"
+   ],
+   [
+    "Malachi Corley",
+    "WR",
+    2024,
+    51.4,
+    "Contributor"
+   ],
+   [
+    "Trey Benson",
+    "RB",
+    2024,
+    56.2,
+    "Contributor"
+   ],
+   [
+    "Jermaine Burton",
+    "WR",
+    2024,
+    48.4,
+    "Contributor"
+   ],
+   [
+    "Tip Reiman",
+    "TE",
+    2024,
+    18.5,
+    "Lottery Ticket"
+   ],
+   [
+    "MarShawn Lloyd",
+    "RB",
+    2024,
+    45.1,
+    "Depth"
+   ],
+   [
+    "Luke McCaffrey",
+    "WR",
+    2024,
+    35.2,
+    "Depth"
+   ],
+   [
+    "Ja'Tavion Sanders",
+    "TE",
+    2024,
+    55.9,
+    "Starter"
+   ],
+   [
+    "Troy Franklin",
+    "WR",
+    2024,
+    55,
+    "Starter"
+   ],
+   [
+    "Theo Johnson",
+    "TE",
+    2024,
+    41.5,
+    "Depth"
+   ],
+   [
+    "Javon Baker",
+    "WR",
+    2024,
+    41.6,
+    "Depth"
+   ],
+   [
+    "Jaylen Wright",
+    "RB",
+    2024,
+    36.9,
+    "Depth"
+   ],
+   [
+    "Will Shipley",
+    "RB",
+    2024,
+    44.1,
+    "Depth"
+   ],
+   [
+    "Isaac Guerendo",
+    "RB",
+    2024,
+    34.6,
+    "Depth"
+   ],
+   [
+    "Jared Wiley",
+    "TE",
+    2024,
+    36.3,
+    "Depth"
+   ],
+   [
+    "Braelon Allen",
+    "RB",
+    2024,
+    48.3,
+    "Contributor"
+   ],
+   [
+    "Jacob Cowing",
+    "WR",
+    2024,
+    36.7,
+    "Depth"
+   ],
+   [
+    "Anthony Gould",
+    "WR",
+    2024,
+    17.2,
+    "Long Shot"
+   ],
+   [
+    "Audric Estime",
+    "RB",
+    2024,
+    38.7,
+    "Depth"
+   ],
+   [
+    "Spencer Rattler",
+    "QB",
+    2024,
+    36.1,
+    "Depth"
+   ],
+   [
+    "Ainias Smith",
+    "WR",
+    2024,
+    32.9,
+    "Depth"
+   ],
+   [
+    "Jamari Thrash",
+    "WR",
+    2024,
+    30.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Rasheen Ali",
+    "RB",
+    2024,
+    37.8,
+    "Depth"
+   ],
+   [
+    "Kimani Vidal",
+    "RB",
+    2024,
+    32.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Jha'Quan Jackson",
+    "WR",
+    2024,
+    17.7,
+    "Long Shot"
+   ],
+   [
+    "Malik Washington",
+    "WR",
+    2024,
+    32.2,
+    "Depth"
+   ],
+   [
+    "Jase McClellan",
+    "RB",
+    2024,
+    33.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Casey Washington",
+    "WR",
+    2024,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Joe Milton",
+    "QB",
+    2024,
+    6.9,
+    "Long Shot"
+   ],
+   [
+    "Jawhar Jordan",
+    "RB",
+    2024,
+    31.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Dylan Laube",
+    "RB",
+    2024,
+    43,
+    "Depth"
+   ],
+   [
+    "Jordan Whittington",
+    "WR",
+    2024,
+    26.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaheim Bell",
+    "TE",
+    2024,
+    41.6,
+    "Depth"
+   ],
+   [
+    "Devaughn Vele",
+    "WR",
+    2024,
+    12.4,
+    "Long Shot"
+   ],
+   [
+    "Devin Culp",
+    "TE",
+    2024,
+    29.9,
+    "Lottery Ticket"
+   ]
+  ],
+  "9": [
+   [
+    "Corey Davis",
+    "WR",
+    2017,
+    83.9,
+    "Starter"
+   ],
+   [
+    "Christian McCaffrey",
+    "RB",
+    2017,
+    92.6,
+    "Generational"
+   ],
+   [
+    "John Ross",
+    "WR",
+    2017,
+    67.9,
+    "Starter"
+   ],
+   [
+    "O.J. Howard",
+    "TE",
+    2017,
+    73.3,
+    "Starter"
+   ],
+   [
+    "Evan Engram",
+    "TE",
+    2017,
+    89.6,
+    "Top Prospect"
+   ],
+   [
+    "David Njoku",
+    "TE",
+    2017,
+    77.8,
+    "Top Prospect"
+   ],
+   [
+    "Zay Jones",
+    "WR",
+    2017,
+    58.7,
+    "Starter"
+   ],
+   [
+    "Dalvin Cook",
+    "RB",
+    2017,
+    79.7,
+    "Top Prospect"
+   ],
+   [
+    "Gerald Everett",
+    "TE",
+    2017,
+    66.3,
+    "Starter"
+   ],
+   [
+    "Joe Mixon",
+    "RB",
+    2017,
+    77.2,
+    "Top Prospect"
+   ],
+   [
+    "DeShone Kizer",
+    "QB",
+    2017,
+    52.9,
+    "Contributor"
+   ],
+   [
+    "JuJu Smith-Schuster",
+    "WR",
+    2017,
+    64.2,
+    "Starter"
+   ],
+   [
+    "Alvin Kamara",
+    "RB",
+    2017,
+    66.2,
+    "Starter"
+   ],
+   [
+    "Taywan Taylor",
+    "WR",
+    2017,
+    58.4,
+    "Starter"
+   ],
+   [
+    "ArDarius Stewart",
+    "WR",
+    2017,
+    50.7,
+    "Contributor"
+   ],
+   [
+    "Chris Godwin",
+    "WR",
+    2017,
+    59.4,
+    "Starter"
+   ],
+   [
+    "Kareem Hunt",
+    "RB",
+    2017,
+    61.5,
+    "Contributor"
+   ],
+   [
+    "Kenny Golladay",
+    "WR",
+    2017,
+    43.7,
+    "Depth"
+   ],
+   [
+    "Jonnu Smith",
+    "TE",
+    2017,
+    66.5,
+    "Starter"
+   ],
+   [
+    "C.J. Beathard",
+    "QB",
+    2017,
+    20.4,
+    "Long Shot"
+   ],
+   [
+    "James Conner",
+    "RB",
+    2017,
+    56.8,
+    "Contributor"
+   ],
+   [
+    "Amara Darboh",
+    "WR",
+    2017,
+    31.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Dede Westbrook",
+    "WR",
+    2017,
+    42,
+    "Depth"
+   ],
+   [
+    "Josh Reynolds",
+    "WR",
+    2017,
+    43.6,
+    "Depth"
+   ],
+   [
+    "Michael Roberts",
+    "TE",
+    2017,
+    38.1,
+    "Depth"
+   ],
+   [
+    "Josh Malone",
+    "WR",
+    2017,
+    32.2,
+    "Depth"
+   ],
+   [
+    "Ryan Switzer",
+    "WR",
+    2017,
+    35.5,
+    "Depth"
+   ],
+   [
+    "Joshua Dobbs",
+    "QB",
+    2017,
+    51.2,
+    "Contributor"
+   ],
+   [
+    "Jehu Chesson",
+    "WR",
+    2017,
+    26.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Chad Hansen",
+    "WR",
+    2017,
+    32.3,
+    "Depth"
+   ],
+   [
+    "Marlon Mack",
+    "RB",
+    2017,
+    37.2,
+    "Depth"
+   ],
+   [
+    "Jake Butt",
+    "TE",
+    2017,
+    37.3,
+    "Depth"
+   ],
+   [
+    "Jordan Leggett",
+    "TE",
+    2017,
+    33.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Jeremy Sprinkle",
+    "TE",
+    2017,
+    28.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Jeremy McNichols",
+    "RB",
+    2017,
+    40.1,
+    "Depth"
+   ],
+   [
+    "Shelton Gibson",
+    "WR",
+    2017,
+    30.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Rodney Adams",
+    "WR",
+    2017,
+    27.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Nathan Peterman",
+    "QB",
+    2017,
+    17.2,
+    "Long Shot"
+   ],
+   [
+    "Isaiah McKenzie",
+    "WR",
+    2017,
+    24.6,
+    "Long Shot"
+   ],
+   [
+    "Trent Taylor",
+    "WR",
+    2017,
+    32,
+    "Depth"
+   ],
+   [
+    "T.J. Logan",
+    "RB",
+    2017,
+    30.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Aaron Jones",
+    "RB",
+    2017,
+    34.9,
+    "Depth"
+   ],
+   [
+    "Elijah McGuire",
+    "RB",
+    2017,
+    36.9,
+    "Depth"
+   ],
+   [
+    "Robert Davis",
+    "WR",
+    2017,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Stacy Coley",
+    "WR",
+    2017,
+    32.3,
+    "Depth"
+   ],
+   [
+    "Isaiah Ford",
+    "WR",
+    2017,
+    34.8,
+    "Depth"
+   ],
+   [
+    "Mason Schreck",
+    "TE",
+    2017,
+    23.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Baker Mayfield",
+    "QB",
+    2018,
+    86.6,
+    "Top Prospect"
+   ],
+   [
+    "Saquon Barkley",
+    "RB",
+    2018,
+    93.4,
+    "Generational"
+   ],
+   [
+    "Josh Allen",
+    "QB",
+    2018,
+    69.1,
+    "Starter"
+   ],
+   [
+    "Josh Rosen",
+    "QB",
+    2018,
+    52.8,
+    "Contributor"
+   ],
+   [
+    "Hayden Hurst",
+    "TE",
+    2018,
+    52.5,
+    "Contributor"
+   ],
+   [
+    "Calvin Ridley",
+    "WR",
+    2018,
+    79.8,
+    "Starter"
+   ],
+   [
+    "Rashaad Penny",
+    "RB",
+    2018,
+    69.5,
+    "Starter"
+   ],
+   [
+    "Courtland Sutton",
+    "WR",
+    2018,
+    62.4,
+    "Starter"
+   ],
+   [
+    "Mike Gesicki",
+    "TE",
+    2018,
+    71.7,
+    "Starter"
+   ],
+   [
+    "Kerryon Johnson",
+    "RB",
+    2018,
+    60.6,
+    "Contributor"
+   ],
+   [
+    "Dante Pettis",
+    "WR",
+    2018,
+    52.6,
+    "Contributor"
+   ],
+   [
+    "James Washington",
+    "WR",
+    2018,
+    43.8,
+    "Depth"
+   ],
+   [
+    "D.J. Chark",
+    "WR",
+    2018,
+    32.6,
+    "Depth"
+   ],
+   [
+    "Royce Freeman",
+    "RB",
+    2018,
+    67.1,
+    "Starter"
+   ],
+   [
+    "Michael Gallup",
+    "WR",
+    2018,
+    59.7,
+    "Starter"
+   ],
+   [
+    "Mark Andrews",
+    "TE",
+    2018,
+    62.6,
+    "Starter"
+   ],
+   [
+    "Tre'Quan Smith",
+    "WR",
+    2018,
+    38.5,
+    "Depth"
+   ],
+   [
+    "Jordan Akins",
+    "TE",
+    2018,
+    33.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Nyheim Hines",
+    "RB",
+    2018,
+    35.8,
+    "Depth"
+   ],
+   [
+    "Antonio Callaway",
+    "WR",
+    2018,
+    40.4,
+    "Depth"
+   ],
+   [
+    "DaeSean Hamilton",
+    "WR",
+    2018,
+    41.7,
+    "Depth"
+   ],
+   [
+    "Will Dissly",
+    "TE",
+    2018,
+    4.5,
+    "Long Shot"
+   ],
+   [
+    "Ito Smith",
+    "RB",
+    2018,
+    41.8,
+    "Depth"
+   ],
+   [
+    "Kalen Ballage",
+    "RB",
+    2018,
+    32.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaleel Scott",
+    "WR",
+    2018,
+    27.8,
+    "Lottery Ticket"
+   ],
+   [
+    "J'Mon Moore",
+    "WR",
+    2018,
+    26.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Dalton Schultz",
+    "TE",
+    2018,
+    13.4,
+    "Long Shot"
+   ],
+   [
+    "Troy Fumagalli",
+    "TE",
+    2018,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaylen Samuels",
+    "RB",
+    2018,
+    38.2,
+    "Depth"
+   ],
+   [
+    "Jordan Wilkins",
+    "RB",
+    2018,
+    27,
+    "Lottery Ticket"
+   ],
+   [
+    "Mike White",
+    "QB",
+    2018,
+    9.9,
+    "Long Shot"
+   ],
+   [
+    "Marquez Valdes-Scantling",
+    "WR",
+    2018,
+    16.9,
+    "Long Shot"
+   ],
+   [
+    "Damion Ratley",
+    "WR",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "John Kelly",
+    "RB",
+    2018,
+    24.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Deon Cain",
+    "WR",
+    2018,
+    31.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Ray-Ray McCloud",
+    "WR",
+    2018,
+    4.8,
+    "Long Shot"
+   ],
+   [
+    "Russell Gage",
+    "WR",
+    2018,
+    22.7,
+    "Long Shot"
+   ],
+   [
+    "Luke Falk",
+    "QB",
+    2018,
+    27.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Boston Scott",
+    "RB",
+    2018,
+    29.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Equanimeous St. Brown",
+    "WR",
+    2018,
+    30.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Braxton Berrios",
+    "WR",
+    2018,
+    22.4,
+    "Long Shot"
+   ],
+   [
+    "Jordan Thomas",
+    "TE",
+    2018,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Javon Wims",
+    "WR",
+    2018,
+    11.9,
+    "Long Shot"
+   ],
+   [
+    "Marcell Ateman",
+    "WR",
+    2018,
+    28.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Bo Scarbrough",
+    "RB",
+    2018,
+    27.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Logan Woodside",
+    "QB",
+    2018,
+    24.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Auden Tate",
+    "WR",
+    2018,
+    30,
+    "Lottery Ticket"
+   ],
+   [
+    "Trey Quinn",
+    "WR",
+    2018,
+    29.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Kyler Murray",
+    "QB",
+    2019,
+    80.4,
+    "Top Prospect"
+   ],
+   [
+    "T.J. Hockenson",
+    "TE",
+    2019,
+    81.8,
+    "Top Prospect"
+   ],
+   [
+    "Noah Fant",
+    "TE",
+    2019,
+    86.1,
+    "Top Prospect"
+   ],
+   [
+    "Josh Jacobs",
+    "RB",
+    2019,
+    78.4,
+    "Top Prospect"
+   ],
+   [
+    "Marquise Brown",
+    "WR",
+    2019,
+    80.2,
+    "Starter"
+   ],
+   [
+    "N'Keal Harry",
+    "WR",
+    2019,
+    83,
+    "Starter"
+   ],
+   [
+    "Deebo Samuel",
+    "WR",
+    2019,
+    68.8,
+    "Starter"
+   ],
+   [
+    "Irv Smith Jr.",
+    "TE",
+    2019,
+    66.5,
+    "Starter"
+   ],
+   [
+    "A.J. Brown",
+    "WR",
+    2019,
+    70.6,
+    "Starter"
+   ],
+   [
+    "Miles Sanders",
+    "RB",
+    2019,
+    48.4,
+    "Contributor"
+   ],
+   [
+    "Mecole Hardman",
+    "WR",
+    2019,
+    32.6,
+    "Depth"
+   ],
+   [
+    "Parris Campbell",
+    "WR",
+    2019,
+    55.8,
+    "Starter"
+   ],
+   [
+    "Andy Isabella",
+    "WR",
+    2019,
+    41.9,
+    "Depth"
+   ],
+   [
+    "Diontae Johnson",
+    "WR",
+    2019,
+    46,
+    "Contributor"
+   ],
+   [
+    "Josh Oliver",
+    "TE",
+    2019,
+    55,
+    "Starter"
+   ],
+   [
+    "Darrell Henderson",
+    "RB",
+    2019,
+    58.6,
+    "Contributor"
+   ],
+   [
+    "David Montgomery",
+    "RB",
+    2019,
+    47.9,
+    "Contributor"
+   ],
+   [
+    "Devin Singletary",
+    "RB",
+    2019,
+    64.5,
+    "Starter"
+   ],
+   [
+    "Jace Sternberger",
+    "TE",
+    2019,
+    39,
+    "Depth"
+   ],
+   [
+    "Terry McLaurin",
+    "WR",
+    2019,
+    39.1,
+    "Depth"
+   ],
+   [
+    "Damien Harris",
+    "RB",
+    2019,
+    54.6,
+    "Contributor"
+   ],
+   [
+    "Miles Boykin",
+    "WR",
+    2019,
+    32.7,
+    "Depth"
+   ],
+   [
+    "Will Grier",
+    "QB",
+    2019,
+    40.2,
+    "Depth"
+   ],
+   [
+    "Alexander Mattison",
+    "RB",
+    2019,
+    40.8,
+    "Depth"
+   ],
+   [
+    "Hakeem Butler",
+    "WR",
+    2019,
+    28.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Justice Hill",
+    "RB",
+    2019,
+    42.8,
+    "Depth"
+   ],
+   [
+    "Riley Ridley",
+    "WR",
+    2019,
+    24.2,
+    "Long Shot"
+   ],
+   [
+    "Tony Pollard",
+    "RB",
+    2019,
+    38.9,
+    "Depth"
+   ],
+   [
+    "Foster Moreau",
+    "TE",
+    2019,
+    38.6,
+    "Depth"
+   ],
+   [
+    "Ryquell Armstead",
+    "RB",
+    2019,
+    29.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Zach Gentry",
+    "TE",
+    2019,
+    22.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Hunter Renfrow",
+    "WR",
+    2019,
+    30.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Qadree Ollison",
+    "RB",
+    2019,
+    30.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Jordan Scarlett",
+    "RB",
+    2019,
+    21.4,
+    "Long Shot"
+   ],
+   [
+    "Darius Slayton",
+    "WR",
+    2019,
+    23.6,
+    "Long Shot"
+   ],
+   [
+    "KeeSean Johnson",
+    "WR",
+    2019,
+    30.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Travis Fulgham",
+    "WR",
+    2019,
+    17.9,
+    "Long Shot"
+   ],
+   [
+    "Trace McSorley",
+    "QB",
+    2019,
+    48,
+    "Contributor"
+   ],
+   [
+    "Travis Homer",
+    "RB",
+    2019,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Kelvin Harmon",
+    "WR",
+    2019,
+    32.9,
+    "Depth"
+   ],
+   [
+    "Scott Miller",
+    "WR",
+    2019,
+    31.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Darwin Thompson",
+    "RB",
+    2019,
+    35.4,
+    "Depth"
+   ],
+   [
+    "Isaac Nauta",
+    "TE",
+    2019,
+    0.7,
+    "Long Shot"
+   ],
+   [
+    "Tommy Sweeney",
+    "TE",
+    2019,
+    16.2,
+    "Long Shot"
+   ],
+   [
+    "Myles Gaskin",
+    "RB",
+    2019,
+    37.1,
+    "Depth"
+   ],
+   [
+    "Terry Godwin",
+    "WR",
+    2019,
+    14.5,
+    "Long Shot"
+   ],
+   [
+    "Olabisi Johnson",
+    "WR",
+    2019,
+    28.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Justin Herbert",
+    "QB",
+    2020,
+    80.9,
+    "Top Prospect"
+   ],
+   [
+    "Henry Ruggs III",
+    "WR",
+    2020,
+    77.3,
+    "Starter"
+   ],
+   [
+    "CeeDee Lamb",
+    "WR",
+    2020,
+    91.6,
+    "Generational"
+   ],
+   [
+    "Jalen Reagor",
+    "WR",
+    2020,
+    72.9,
+    "Starter"
+   ],
+   [
+    "Brandon Aiyuk",
+    "WR",
+    2020,
+    58.9,
+    "Starter"
+   ],
+   [
+    "Clyde Edwards-Helaire",
+    "RB",
+    2020,
+    63,
+    "Starter"
+   ],
+   [
+    "Tee Higgins",
+    "WR",
+    2020,
+    75.2,
+    "Starter"
+   ],
+   [
+    "Michael Pittman Jr.",
+    "WR",
+    2020,
+    72.2,
+    "Starter"
+   ],
+   [
+    "D'Andre Swift",
+    "RB",
+    2020,
+    79.9,
+    "Top Prospect"
+   ],
+   [
+    "Jonathan Taylor",
+    "RB",
+    2020,
+    81.8,
+    "Top Prospect"
+   ],
+   [
+    "Cole Kmet",
+    "TE",
+    2020,
+    57.5,
+    "Starter"
+   ],
+   [
+    "Chase Claypool",
+    "WR",
+    2020,
+    49,
+    "Contributor"
+   ],
+   [
+    "Cam Akers",
+    "RB",
+    2020,
+    58,
+    "Contributor"
+   ],
+   [
+    "Jalen Hurts",
+    "QB",
+    2020,
+    73,
+    "Starter"
+   ],
+   [
+    "J.K. Dobbins",
+    "RB",
+    2020,
+    70.7,
+    "Starter"
+   ],
+   [
+    "Van Jefferson",
+    "WR",
+    2020,
+    40.3,
+    "Depth"
+   ],
+   [
+    "Denzel Mims",
+    "WR",
+    2020,
+    52.7,
+    "Contributor"
+   ],
+   [
+    "AJ Dillon",
+    "RB",
+    2020,
+    57.2,
+    "Contributor"
+   ],
+   [
+    "Ke'Shawn Vaughn",
+    "RB",
+    2020,
+    53.7,
+    "Contributor"
+   ],
+   [
+    "Bryan Edwards",
+    "WR",
+    2020,
+    57.9,
+    "Starter"
+   ],
+   [
+    "Zack Moss",
+    "RB",
+    2020,
+    60.6,
+    "Contributor"
+   ],
+   [
+    "Devin Asiasi",
+    "TE",
+    2020,
+    31.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Devin Duvernay",
+    "WR",
+    2020,
+    39.5,
+    "Depth"
+   ],
+   [
+    "Darrynton Evans",
+    "RB",
+    2020,
+    39.6,
+    "Depth"
+   ],
+   [
+    "Josiah Deguara",
+    "TE",
+    2020,
+    43,
+    "Depth"
+   ],
+   [
+    "Joshua Kelley",
+    "RB",
+    2020,
+    44,
+    "Depth"
+   ],
+   [
+    "Harrison Bryant",
+    "TE",
+    2020,
+    48.8,
+    "Contributor"
+   ],
+   [
+    "Jacob Eason",
+    "QB",
+    2020,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Colby Parkinson",
+    "TE",
+    2020,
+    44,
+    "Depth"
+   ],
+   [
+    "Brycen Hopkins",
+    "TE",
+    2020,
+    41.7,
+    "Depth"
+   ],
+   [
+    "Antonio Gandy-Golden",
+    "WR",
+    2020,
+    34.9,
+    "Depth"
+   ],
+   [
+    "DeeJay Dallas",
+    "RB",
+    2020,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyler Johnson",
+    "WR",
+    2020,
+    35.9,
+    "Depth"
+   ],
+   [
+    "Quintez Cephus",
+    "WR",
+    2020,
+    31.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Jake Fromm",
+    "QB",
+    2020,
+    6.9,
+    "Long Shot"
+   ],
+   [
+    "John Hightower",
+    "WR",
+    2020,
+    23.3,
+    "Long Shot"
+   ],
+   [
+    "Jason Huntley",
+    "RB",
+    2020,
+    29.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Darnell Mooney",
+    "WR",
+    2020,
+    30.1,
+    "Lottery Ticket"
+   ],
+   [
+    "K.J. Osborn",
+    "WR",
+    2020,
+    26,
+    "Lottery Ticket"
+   ],
+   [
+    "Donovan Peoples-Jones",
+    "WR",
+    2020,
+    30.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Jake Luton",
+    "QB",
+    2020,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Quez Watkins",
+    "WR",
+    2020,
+    31,
+    "Lottery Ticket"
+   ],
+   [
+    "James Proche",
+    "WR",
+    2020,
+    31.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Hodgins",
+    "WR",
+    2020,
+    36.3,
+    "Depth"
+   ],
+   [
+    "Dezmon Patmon",
+    "WR",
+    2020,
+    29.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Freddie Swain",
+    "WR",
+    2020,
+    23.7,
+    "Long Shot"
+   ],
+   [
+    "Jauan Jennings",
+    "WR",
+    2020,
+    32.4,
+    "Depth"
+   ],
+   [
+    "K.J. Hill",
+    "WR",
+    2020,
+    28.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Eno Benjamin",
+    "RB",
+    2020,
+    36.2,
+    "Depth"
+   ],
+   [
+    "Malcolm Perry",
+    "RB",
+    2020,
+    34.1,
+    "Depth"
+   ],
+   [
+    "Tyrie Cleveland",
+    "WR",
+    2020,
+    7.5,
+    "Long Shot"
+   ],
+   [
+    "Zach Wilson",
+    "QB",
+    2021,
+    75.7,
+    "Starter"
+   ],
+   [
+    "Ja'Marr Chase",
+    "WR",
+    2021,
+    95.3,
+    "Generational"
+   ],
+   [
+    "Javonte Williams",
+    "RB",
+    2021,
+    78,
+    "Top Prospect"
+   ],
+   [
+    "Hunter Long",
+    "TE",
+    2021,
+    57,
+    "Starter"
+   ],
+   [
+    "Dyami Brown",
+    "WR",
+    2021,
+    58.2,
+    "Starter"
+   ],
+   [
+    "Nico Collins",
+    "WR",
+    2021,
+    48.4,
+    "Contributor"
+   ],
+   [
+    "Anthony Schwartz",
+    "WR",
+    2021,
+    42.1,
+    "Depth"
+   ],
+   [
+    "Dez Fitzpatrick",
+    "WR",
+    2021,
+    36.8,
+    "Depth"
+   ],
+   [
+    "Kene Nwangwu",
+    "RB",
+    2021,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Kylen Granson",
+    "TE",
+    2021,
+    44.2,
+    "Depth"
+   ],
+   [
+    "Tylan Wallace",
+    "WR",
+    2021,
+    44.6,
+    "Contributor"
+   ],
+   [
+    "Jacob Harris",
+    "WR",
+    2021,
+    11.4,
+    "Long Shot"
+   ],
+   [
+    "Kenneth Gainwell",
+    "RB",
+    2021,
+    39.8,
+    "Depth"
+   ],
+   [
+    "Elijah Mitchell",
+    "RB",
+    2021,
+    36.1,
+    "Depth"
+   ],
+   [
+    "Khalil Herbert",
+    "RB",
+    2021,
+    28.8,
+    "Lottery Ticket"
+   ],
+   [
+    "Sam Ehlinger",
+    "QB",
+    2021,
+    48.6,
+    "Contributor"
+   ],
+   [
+    "Seth Williams",
+    "WR",
+    2021,
+    32.8,
+    "Depth"
+   ],
+   [
+    "Dazz Newsome",
+    "WR",
+    2021,
+    33.8,
+    "Depth"
+   ],
+   [
+    "Dax Milne",
+    "WR",
+    2021,
+    11.8,
+    "Long Shot"
+   ],
+   [
+    "Garrett Wilson",
+    "WR",
+    2022,
+    87,
+    "Top Prospect"
+   ],
+   [
+    "Chris Olave",
+    "WR",
+    2022,
+    91,
+    "Generational"
+   ],
+   [
+    "Jameson Williams",
+    "WR",
+    2022,
+    83.9,
+    "Starter"
+   ],
+   [
+    "Jahan Dotson",
+    "WR",
+    2022,
+    81.1,
+    "Starter"
+   ],
+   [
+    "Treylon Burks",
+    "WR",
+    2022,
+    73,
+    "Starter"
+   ],
+   [
+    "Kenny Pickett",
+    "QB",
+    2022,
+    50.8,
+    "Contributor"
+   ],
+   [
+    "Breece Hall",
+    "RB",
+    2022,
+    75.3,
+    "Top Prospect"
+   ],
+   [
+    "Kenneth Walker III",
+    "RB",
+    2022,
+    73.1,
+    "Starter"
+   ],
+   [
+    "Wan'Dale Robinson",
+    "WR",
+    2022,
+    64,
+    "Starter"
+   ],
+   [
+    "Tyquan Thornton",
+    "WR",
+    2022,
+    51.9,
+    "Contributor"
+   ],
+   [
+    "Alec Pierce",
+    "WR",
+    2022,
+    41,
+    "Depth"
+   ],
+   [
+    "Skyy Moore",
+    "WR",
+    2022,
+    48,
+    "Contributor"
+   ],
+   [
+    "Trey McBride",
+    "TE",
+    2022,
+    66.6,
+    "Starter"
+   ],
+   [
+    "James Cook",
+    "RB",
+    2022,
+    50,
+    "Contributor"
+   ],
+   [
+    "Jelani Woods",
+    "TE",
+    2022,
+    47.1,
+    "Depth"
+   ],
+   [
+    "Desmond Ridder",
+    "QB",
+    2022,
+    62.7,
+    "Starter"
+   ],
+   [
+    "Greg Dulcich",
+    "TE",
+    2022,
+    62.2,
+    "Starter"
+   ],
+   [
+    "Malik Willis",
+    "QB",
+    2022,
+    53.8,
+    "Contributor"
+   ],
+   [
+    "Jalen Tolbert",
+    "WR",
+    2022,
+    46,
+    "Contributor"
+   ],
+   [
+    "Rachaad White",
+    "RB",
+    2022,
+    66.5,
+    "Starter"
+   ],
+   [
+    "Tyrion Davis-Price",
+    "RB",
+    2022,
+    31.8,
+    "Lottery Ticket"
+   ],
+   [
+    "David Bell",
+    "WR",
+    2022,
+    58.9,
+    "Starter"
+   ],
+   [
+    "Danny Gray",
+    "WR",
+    2022,
+    36.9,
+    "Depth"
+   ],
+   [
+    "Dameon Pierce",
+    "RB",
+    2022,
+    36.9,
+    "Depth"
+   ],
+   [
+    "Daniel Bellinger",
+    "TE",
+    2022,
+    32,
+    "Lottery Ticket"
+   ],
+   [
+    "Zamir White",
+    "RB",
+    2022,
+    32.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Isaiah Spiller",
+    "RB",
+    2022,
+    46.3,
+    "Contributor"
+   ],
+   [
+    "Erik Ezukanma",
+    "WR",
+    2022,
+    39.8,
+    "Depth"
+   ],
+   [
+    "Charlie Kolar",
+    "TE",
+    2022,
+    48.3,
+    "Contributor"
+   ],
+   [
+    "Jake Ferguson",
+    "TE",
+    2022,
+    41.9,
+    "Depth"
+   ],
+   [
+    "Hassan Haskins",
+    "RB",
+    2022,
+    38,
+    "Depth"
+   ],
+   [
+    "Romeo Doubs",
+    "WR",
+    2022,
+    41.1,
+    "Depth"
+   ],
+   [
+    "Calvin Austin III",
+    "WR",
+    2022,
+    35.3,
+    "Depth"
+   ],
+   [
+    "Isaiah Likely",
+    "TE",
+    2022,
+    50.6,
+    "Contributor"
+   ],
+   [
+    "Chigoziem Okonkwo",
+    "TE",
+    2022,
+    33.5,
+    "Lottery Ticket"
+   ],
+   [
+    "Sam Howell",
+    "QB",
+    2022,
+    52.9,
+    "Contributor"
+   ],
+   [
+    "Khalil Shakir",
+    "WR",
+    2022,
+    34.5,
+    "Depth"
+   ],
+   [
+    "Cole Turner",
+    "TE",
+    2022,
+    35.2,
+    "Depth"
+   ],
+   [
+    "Tyler Allgeier",
+    "RB",
+    2022,
+    36.4,
+    "Depth"
+   ],
+   [
+    "Snoop Conner",
+    "RB",
+    2022,
+    28.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Jerome Ford",
+    "RB",
+    2022,
+    36.7,
+    "Depth"
+   ],
+   [
+    "Kyle Philips",
+    "WR",
+    2022,
+    29.1,
+    "Lottery Ticket"
+   ],
+   [
+    "Kyren Williams",
+    "RB",
+    2022,
+    35.7,
+    "Depth"
+   ],
+   [
+    "Ty Chandler",
+    "RB",
+    2022,
+    34.1,
+    "Depth"
+   ],
+   [
+    "Tyler Badie",
+    "RB",
+    2022,
+    32.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Grant Calcaterra",
+    "TE",
+    2022,
+    37.5,
+    "Depth"
+   ],
+   [
+    "Keaontay Ingram",
+    "RB",
+    2022,
+    29,
+    "Lottery Ticket"
+   ],
+   [
+    "Trestan Ebner",
+    "RB",
+    2022,
+    23.7,
+    "Long Shot"
+   ],
+   [
+    "Connor Heyward",
+    "TE",
+    2022,
+    31.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Nick Muse",
+    "TE",
+    2022,
+    28.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Bo Melton",
+    "WR",
+    2022,
+    19.7,
+    "Long Shot"
+   ],
+   [
+    "Samori Toure",
+    "WR",
+    2022,
+    18.2,
+    "Long Shot"
+   ],
+   [
+    "Brock Purdy",
+    "QB",
+    2022,
+    42.3,
+    "Depth"
+   ],
+   [
+    "C.J. Stroud",
+    "QB",
+    2023,
+    64.9,
+    "Starter"
+   ],
+   [
+    "Anthony Richardson",
+    "QB",
+    2023,
+    73.3,
+    "Starter"
+   ],
+   [
+    "Bijan Robinson",
+    "RB",
+    2023,
+    94,
+    "Generational"
+   ],
+   [
+    "Jahmyr Gibbs",
+    "RB",
+    2023,
+    91.5,
+    "Generational"
+   ],
+   [
+    "Quentin Johnston",
+    "WR",
+    2023,
+    72.1,
+    "Starter"
+   ],
+   [
+    "Zay Flowers",
+    "WR",
+    2023,
+    65,
+    "Starter"
+   ],
+   [
+    "Jordan Addison",
+    "WR",
+    2023,
+    81.5,
+    "Starter"
+   ],
+   [
+    "Dalton Kincaid",
+    "TE",
+    2023,
+    69.6,
+    "Starter"
+   ],
+   [
+    "Will Levis",
+    "QB",
+    2023,
+    39.8,
+    "Depth"
+   ],
+   [
+    "Sam LaPorta",
+    "TE",
+    2023,
+    74.9,
+    "Top Prospect"
+   ],
+   [
+    "Michael Mayer",
+    "TE",
+    2023,
+    68.9,
+    "Starter"
+   ],
+   [
+    "Jonathan Mingo",
+    "WR",
+    2023,
+    54.1,
+    "Starter"
+   ],
+   [
+    "Jayden Reed",
+    "WR",
+    2023,
+    62.7,
+    "Starter"
+   ],
+   [
+    "Zach Charbonnet",
+    "RB",
+    2023,
+    68.9,
+    "Starter"
+   ],
+   [
+    "Rashee Rice",
+    "WR",
+    2023,
+    55.7,
+    "Starter"
+   ],
+   [
+    "Luke Schoonmaker",
+    "TE",
+    2023,
+    38.2,
+    "Depth"
+   ],
+   [
+    "Brenton Strange",
+    "TE",
+    2023,
+    53.1,
+    "Contributor"
+   ],
+   [
+    "Hendon Hooker",
+    "QB",
+    2023,
+    46.2,
+    "Contributor"
+   ],
+   [
+    "Tank Dell",
+    "WR",
+    2023,
+    51.6,
+    "Contributor"
+   ],
+   [
+    "Kendre Miller",
+    "RB",
+    2023,
+    58.6,
+    "Contributor"
+   ],
+   [
+    "Jalin Hyatt",
+    "WR",
+    2023,
+    51.6,
+    "Contributor"
+   ],
+   [
+    "Josh Downs",
+    "WR",
+    2023,
+    59.4,
+    "Starter"
+   ],
+   [
+    "De'Von Achane",
+    "RB",
+    2023,
+    63.7,
+    "Starter"
+   ],
+   [
+    "Tank Bigsby",
+    "RB",
+    2023,
+    55.1,
+    "Contributor"
+   ],
+   [
+    "Darnell Washington",
+    "TE",
+    2023,
+    54,
+    "Starter"
+   ],
+   [
+    "Tre Tucker",
+    "WR",
+    2023,
+    18.8,
+    "Long Shot"
+   ],
+   [
+    "Roschon Johnson",
+    "RB",
+    2023,
+    41,
+    "Depth"
+   ],
+   [
+    "Derius Davis",
+    "WR",
+    2023,
+    23.7,
+    "Long Shot"
+   ],
+   [
+    "Charlie Jones Jr.",
+    "WR",
+    2023,
+    27.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Tyler Scott",
+    "WR",
+    2023,
+    36.6,
+    "Depth"
+   ],
+   [
+    "Aidan O'Connell",
+    "QB",
+    2023,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Clayton Tune",
+    "QB",
+    2023,
+    47.4,
+    "Contributor"
+   ],
+   [
+    "Dorian Thompson-Robinson",
+    "QB",
+    2023,
+    43.5,
+    "Depth"
+   ],
+   [
+    "Israel Abanikanda",
+    "RB",
+    2023,
+    38.1,
+    "Depth"
+   ],
+   [
+    "Josh Whyle",
+    "TE",
+    2023,
+    35,
+    "Depth"
+   ],
+   [
+    "Sean Clifford",
+    "QB",
+    2023,
+    38.3,
+    "Depth"
+   ],
+   [
+    "Will Mallory",
+    "TE",
+    2023,
+    35.5,
+    "Depth"
+   ],
+   [
+    "Jaren Hall",
+    "QB",
+    2023,
+    17.4,
+    "Long Shot"
+   ],
+   [
+    "Payne Durham",
+    "TE",
+    2023,
+    30.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Eric Gray",
+    "RB",
+    2023,
+    34,
+    "Depth"
+   ],
+   [
+    "Davis Allen",
+    "TE",
+    2023,
+    33.7,
+    "Lottery Ticket"
+   ],
+   [
+    "Evan Hull",
+    "RB",
+    2023,
+    32.6,
+    "Lottery Ticket"
+   ],
+   [
+    "Parker Washington",
+    "WR",
+    2023,
+    36.8,
+    "Depth"
+   ],
+   [
+    "Kayshon Boutte",
+    "WR",
+    2023,
+    37.5,
+    "Depth"
+   ],
+   [
+    "Tanner McKee",
+    "QB",
+    2023,
+    6.8,
+    "Long Shot"
+   ],
+   [
+    "Trey Palmer",
+    "WR",
+    2023,
+    32.5,
+    "Depth"
+   ],
+   [
+    "A.T. Perry",
+    "WR",
+    2023,
+    25.3,
+    "Long Shot"
+   ],
+   [
+    "Elijah Higgins",
+    "TE",
+    2023,
+    37.2,
+    "Depth"
+   ],
+   [
+    "Xavier Hutchinson",
+    "WR",
+    2023,
+    34,
+    "Depth"
+   ],
+   [
+    "Andrei Iosivas",
+    "WR",
+    2023,
+    12.5,
+    "Long Shot"
+   ],
+   [
+    "Deuce Vaughn",
+    "RB",
+    2023,
+    41.1,
+    "Depth"
+   ],
+   [
+    "Jalen Brooks",
+    "WR",
+    2023,
+    2.7,
+    "Long Shot"
+   ],
+   [
+    "Brayden Willis",
+    "TE",
+    2023,
+    25.4,
+    "Lottery Ticket"
+   ],
+   [
+    "Ronnie Bell",
+    "WR",
+    2023,
+    32.1,
+    "Depth"
+   ],
+   [
+    "Jayden Daniels",
+    "QB",
+    2024,
+    90.8,
+    "Generational"
+   ],
+   [
+    "Drake Maye",
+    "QB",
+    2024,
+    88.3,
+    "Top Prospect"
+   ],
+   [
+    "Marvin Harrison Jr.",
+    "WR",
+    2024,
+    92.8,
+    "Generational"
+   ],
+   [
+    "Malik Nabers",
+    "WR",
+    2024,
+    91.8,
+    "Generational"
+   ],
+   [
+    "Rome Odunze",
+    "WR",
+    2024,
+    90,
+    "Generational"
+   ],
+   [
+    "Brock Bowers",
+    "TE",
+    2024,
+    95.2,
+    "Generational"
+   ],
+   [
+    "Brian Thomas Jr.",
+    "WR",
+    2024,
+    73.8,
+    "Starter"
+   ],
+   [
+    "Xavier Worthy",
+    "WR",
+    2024,
+    79.9,
+    "Starter"
+   ],
+   [
+    "Ricky Pearsall",
+    "WR",
+    2024,
+    60.6,
+    "Starter"
+   ],
+   [
+    "Xavier Legette",
+    "WR",
+    2024,
+    51.5,
+    "Contributor"
+   ],
+   [
+    "Keon Coleman",
+    "WR",
+    2024,
+    75.5,
+    "Starter"
+   ],
+   [
+    "Ja'Lynn Polk",
+    "WR",
+    2024,
+    71.7,
+    "Starter"
+   ],
+   [
+    "Jonathon Brooks",
+    "RB",
+    2024,
+    72.6,
+    "Starter"
+   ],
+   [
+    "Adonai Mitchell",
+    "WR",
+    2024,
+    64,
+    "Starter"
+   ],
+   [
+    "Ben Sinnott",
+    "TE",
+    2024,
+    63.3,
+    "Starter"
+   ],
+   [
+    "Malachi Corley",
+    "WR",
+    2024,
+    51.3,
+    "Contributor"
+   ],
+   [
+    "Trey Benson",
+    "RB",
+    2024,
+    58.3,
+    "Contributor"
+   ],
+   [
+    "Jermaine Burton",
+    "WR",
+    2024,
+    48.2,
+    "Contributor"
+   ],
+   [
+    "Tip Reiman",
+    "TE",
+    2024,
+    21.3,
+    "Lottery Ticket"
+   ],
+   [
+    "MarShawn Lloyd",
+    "RB",
+    2024,
+    46.3,
+    "Contributor"
+   ],
+   [
+    "Luke McCaffrey",
+    "WR",
+    2024,
+    34.9,
+    "Depth"
+   ],
+   [
+    "Ja'Tavion Sanders",
+    "TE",
+    2024,
+    55.8,
+    "Starter"
+   ],
+   [
+    "Troy Franklin",
+    "WR",
+    2024,
+    55.3,
+    "Starter"
+   ],
+   [
+    "Theo Johnson",
+    "TE",
+    2024,
+    41.9,
+    "Depth"
+   ],
+   [
+    "Javon Baker",
+    "WR",
+    2024,
+    41.3,
+    "Depth"
+   ],
+   [
+    "Jaylen Wright",
+    "RB",
+    2024,
+    40.4,
+    "Depth"
+   ],
+   [
+    "Will Shipley",
+    "RB",
+    2024,
+    43.6,
+    "Depth"
+   ],
+   [
+    "Isaac Guerendo",
+    "RB",
+    2024,
+    36.4,
+    "Depth"
+   ],
+   [
+    "Jared Wiley",
+    "TE",
+    2024,
+    36.1,
+    "Depth"
+   ],
+   [
+    "Braelon Allen",
+    "RB",
+    2024,
+    47.5,
+    "Contributor"
+   ],
+   [
+    "Jacob Cowing",
+    "WR",
+    2024,
+    37.6,
+    "Depth"
+   ],
+   [
+    "Anthony Gould",
+    "WR",
+    2024,
+    15,
+    "Long Shot"
+   ],
+   [
+    "Audric Estime",
+    "RB",
+    2024,
+    39.6,
+    "Depth"
+   ],
+   [
+    "Spencer Rattler",
+    "QB",
+    2024,
+    35.6,
+    "Depth"
+   ],
+   [
+    "Ainias Smith",
+    "WR",
+    2024,
+    33.1,
+    "Depth"
+   ],
+   [
+    "Jamari Thrash",
+    "WR",
+    2024,
+    29.9,
+    "Lottery Ticket"
+   ],
+   [
+    "Rasheen Ali",
+    "RB",
+    2024,
+    37.8,
+    "Depth"
+   ],
+   [
+    "Kimani Vidal",
+    "RB",
+    2024,
+    32.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Jha'Quan Jackson",
+    "WR",
+    2024,
+    17.7,
+    "Long Shot"
+   ],
+   [
+    "Malik Washington",
+    "WR",
+    2024,
+    32.4,
+    "Depth"
+   ],
+   [
+    "Jase McClellan",
+    "RB",
+    2024,
+    34.2,
+    "Depth"
+   ],
+   [
+    "Casey Washington",
+    "WR",
+    2024,
+    0,
+    "Long Shot"
+   ],
+   [
+    "Joe Milton",
+    "QB",
+    2024,
+    13,
+    "Long Shot"
+   ],
+   [
+    "Jawhar Jordan",
+    "RB",
+    2024,
+    32.3,
+    "Lottery Ticket"
+   ],
+   [
+    "Dylan Laube",
+    "RB",
+    2024,
+    43.6,
+    "Depth"
+   ],
+   [
+    "Jordan Whittington",
+    "WR",
+    2024,
+    26.2,
+    "Lottery Ticket"
+   ],
+   [
+    "Jaheim Bell",
+    "TE",
+    2024,
+    41.4,
+    "Depth"
+   ],
+   [
+    "Devaughn Vele",
+    "WR",
+    2024,
+    13.3,
+    "Long Shot"
+   ],
+   [
+    "Devin Culp",
+    "TE",
+    2024,
+    29.9,
+    "Lottery Ticket"
+   ]
+  ]
+ }
+}

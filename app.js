@@ -50617,6 +50617,17 @@ window.fmtHeight = fmtHeight;
       let breakoutYr = null;
       let breakoutPpg = null; // track how strong the breakout was
 
+      // EXPERIMENT: early-season shrink (window._JM_EXP.partialShrink = k). A season row flagged
+      // inProgress (set by scripts/jm_partial_season.js when it cuts a season to N games) has its PPG pulled
+      // toward the player's earlier-season PPG: (gp*ppg + k*prior) / (gp + k). No earlier seasons -> no
+      // shrink. Inert on the site (no row carries inProgress).
+      const _psK = (window._JM_EXP && window._JM_EXP.partialShrink) || 0;
+      let _psPrior = null;
+      if (_psK && cs && cs.some(s => s.inProgress)) {
+        let _pf = 0, _pg = 0;
+        cs.forEach(s => { if (!s.inProgress && (s.gp || 0) > 0) { _pf += cfpts(s); _pg += s.gp; } });
+        if (_pg > 0) _psPrior = _pf / _pg;
+      }
       if (cs && cs.length) {
         cs.forEach(s => {
           const fp = cfpts(s);
@@ -50659,6 +50670,7 @@ window.fmtHeight = fmtHeight;
               const _qw = window.JM_COMP_EXP.qbWeak[name][s.yr];
               if (_qw[0] > 0) ppg = Math.round(ppg * ((_qw[0] - (1 - window._JM_EXP.qbWeak) * _qw[1]) / _qw[0]) * 10) / 10;
             }
+            if (_psK && s.inProgress && _psPrior != null) ppg = Math.round(((gp * ppg + _psK * _psPrior) / (gp + _psK)) * 10) / 10;
             if (ppg > bestPpg) bestPpg = ppg;
             // Track earliest breakout season using graduated threshold
             // Full breakout: ppg >= threshold. Near breakout: ppg >= 75% of threshold.

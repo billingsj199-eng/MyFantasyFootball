@@ -28,6 +28,12 @@
  *   it settles (agreement >= .96 / .98, accuracy within .02 of full season).
  *   Before the final season starts (N = 0) accuracy is .02-.05 lower with a pick, .07-.15 lower without.
  *   Mid-November grades (9-10 games) can be trusted; September / early-October devy grades are noisy.
+ * Fix tested 2026-11-18 - early-season shrink (--exp '{"partialShrink": k}', k = 2/4/6/8; the cut season's
+ *   PPG pulled toward the player's earlier-season PPG; scored by scripts/jm_partial_shrink_score.py with k
+ *   chosen on 7 classes): no ship. No pick: held-out accuracy at 3-5 games QB .445 -> .443, RB .458 (k = 0
+ *   picked 8/8), WR .377 -> .363, TE .469 (k = 0 picked 8/8), and agreement with the full-season grade gets
+ *   WORSE as k grows. With a pick: QB .636 -> .645 (39 QBs, k unstable), RB .667 -> .652, WR .583 -> .580,
+ *   TE .640 -> .630. Early in-season production carries information the earlier seasons don't.
  */
 const path = require('path'); const fs = require('fs'); const { spawn } = require('child_process');
 const args = process.argv.slice(2);
@@ -95,6 +101,7 @@ function spearman(xs, ys) {
       const first = p.games.slice(0, N), row = JSON.parse(JSON.stringify(p.orig));
       CNT.forEach(f => { const v = first.reduce((s, g) => s + (g[f] || 0), 0); if (v || row[f] != null) row[f] = v; });
       row.gp = first.length;
+      row.inProgress = true;   // read only by the partialShrink experiment
       if (row.ra) row.rypc = Math.round(row.ry / row.ra * 10) / 10;
       COLLEGE_STATS[p.ck][p.ri] = row; COLLEGE_WEEKLY[p.wk][p.season] = first;
     });

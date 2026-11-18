@@ -55,6 +55,9 @@ const EXP = args.includes('--exp');
 // scripts/jm_comp_exp.json from `python -I scripts/jm_competition_study.py export ROWS`.
 // Any other / no value after --exp runs the 2026-09-30 grid (tmComp, rbSos).
 const EXP_SET = EXP && args[args.indexOf('--exp') + 1] === 'comp' ? 'comp' : 'sep30';
+// --devy: tune JM_DEVY_FLOOR / JM_DEVY_CEILING instead of the main tables, every backtest player graded
+// as a no-pick devy prospect. Also scores "main minus DC" (the main tables with draft capital removed).
+const DEVY = args.includes('--devy');
 const NO_REGEN = args.includes('--no-regen');   // legacy flag: outcomes no longer come from the regenerated verdicts, so this is a no-op
 const NO_PROV = args.includes('--no-provisional');   // drop classes with fewer than four NFL seasons played out
 const OUT = opt('--out', path.join(ROOT, 'scripts', `jm_optimize_results_${new Date().toISOString().slice(0, 10)}.json`));
@@ -154,11 +157,17 @@ async function boot() {
   });
   await page.waitForFunction(() => typeof BACKTEST_OUTCOMES !== 'undefined' && typeof COLLEGE_STATS !== 'undefined', null, { timeout: 120000 });
   await new Promise(r => setTimeout(r, 3000));
-  await page.evaluate((noProv) => {
+  await page.evaluate(([noProv, devy]) => {
     window.__jmNoProv = noProv;
+    // --devy: tune the devy tables (JM_DEVY_FLOOR / JM_DEVY_CEILING) with every player graded as a
+    // no-pick devy prospect (window._JM_EXP.asDevy, see calcJM).
+    window.__jmDevy = devy;
+    window.__jmRoot = track => devy ? (track === 'floor' ? window.JM_DEVY_FLOOR : window.JM_DEVY_CEILING)
+                                    : (track === 'floor' ? window._JM_WEIGHTS : window._JM_CEILING_WEIGHTS);
+    if (devy) window._JM_EXP = { asDevy: true };
     window.__jmApply = (cfg) => {
       ['floor', 'ceiling'].forEach(track => {
-        const root = track === 'floor' ? window._JM_WEIGHTS : window._JM_CEILING_WEIGHTS;
+        const root = window.__jmRoot(track);
         Object.keys(cfg[track] || {}).forEach(pos => {
           const t = root[pos]; if (!t) return;
           Object.keys(t).forEach(k => delete t[k]);
@@ -166,7 +175,7 @@ async function boot() {
         });
       });
       if (window.__jmCfgOnly) return null;
-      window._JM_EXP = cfg.exp || null;
+      window._JM_EXP = window.__jmDevy ? Object.assign({}, cfg.exp || {}, { asDevy: true }) : (cfg.exp || null);
       if (window._jmClearCache) window._jmClearCache();
       return window.__jmCollect(window.buildProspectData());
     };
@@ -195,11 +204,12 @@ async function boot() {
     };
     window.__jmBaselineRows = () => window.__jmCollect(window.buildProspectData(), true);
     window.__jmState = () => ({
-      floor: JSON.parse(JSON.stringify(window._JM_WEIGHTS)),
-      ceiling: JSON.parse(JSON.stringify(window._JM_CEILING_WEIGHTS)),
+      floor: JSON.parse(JSON.stringify(window.__jmRoot('floor'))),
+      ceiling: JSON.parse(JSON.stringify(window.__jmRoot('ceiling'))),
+      main: { floor: JSON.parse(JSON.stringify(window._JM_WEIGHTS)), ceiling: JSON.parse(JSON.stringify(window._JM_CEILING_WEIGHTS)) },
       tiers: Object.fromEntries(Object.keys(window._POS_TIERS).map(p => [p, window._POS_TIERS[p].map(t => ({ label: t.label, min: t.min }))])),
     });
-  }, NO_PROV);
+  }, [NO_PROV, DEVY]);
   if (EXP_SET === 'comp') {
     const src = opt('--comp-file', path.join(ROOT, 'scripts', 'jm_comp_exp.json'));
     if (!fs.existsSync(src)) throw new Error('--exp comp needs ' + src + ' (python -I scripts/jm_competition_study.py export ROWS)');
@@ -301,6 +311,33 @@ async function descent(page, base, tiers, years, label) {
     const rp0 = byPos(rows0, null);
     POSITIONS.forEach(p => { results.baseline[p] = score(rp0[p], tiers[p]); console.log(`  baseline ${p}: n ${results.baseline[p].n} rho ${results.baseline[p].rho.toFixed(3)} pen ${results.baseline[p].pen.toFixed(3)} loss ${results.baseline[p].loss.toFixed(3)}`); });
 
+    if (DEVY) {
+      // Reference design: the main tables with draft capital taken out and the rest re-spread.
+      const noDc = t => { const out = {}; const s = Object.keys(t).filter(k => k !== 'dc').reduce((a, k) => a + t[k], 0);
+        Object.keys(t).forEach(k => { if (k !== 'dc' && t[k] > 0) out[k] = t[k] / s; }); return out; };
+      const mainNoDc = { floor: {}, ceiling: {} };
+      POSITIONS.forEach(p => { mainNoDc.floor[p] = noDc(state.main.floor[p]); mainNoDc.ceiling[p] = noDc(state.main.ceiling[p]); });
+      const rpm = byPos(await evalCfg(page, mainNoDc), null);
+      results.mainNoDc = { weights: mainNoDc };
+      POSITIONS.forEach(p => { const sc = score(rpm[p], tiers[p]); results.mainNoDc[p] = sc;
+        console.log(`  main-minus-DC ${p}: rho ${sc.rho.toFixed(3)} pen ${sc.pen.toFixed(3)} (devy tables ${results.baseline[p].rho.toFixed(3)})`); });
+      // Leave-one-year-out: per position, the better of {devy tables, main-minus-DC} on 7 years, scored on the 8th.
+      const pick = {};
+      POSITIONS.forEach(p => {
+        const pb = [], ps = []; pick[p] = {};
+        for (const y of years) {
+          const fit = new Set(years.filter(v => v !== y));
+          const a = score(byPos(rows0, fit)[p], tiers[p]), b = score(byPos(Object.values(rpm).flat(), fit)[p], tiers[p]);
+          const useMain = b.loss < a.loss - 1e-6; pick[p][y] = useMain ? 'mainNoDc' : 'devy';
+          byPos(rows0, new Set([y]))[p].forEach(r => pb.push(r));
+          byPos(useMain ? Object.values(rpm).flat() : rows0, new Set([y]))[p].forEach(r => ps.push(r));
+        }
+        const sb = score(pb, tiers[p]), ss = score(ps, tiers[p]);
+        results.mainNoDc[p].loyo = { base: sb, selected: ss, picks: pick[p] };
+        console.log(`  devy vs main-minus-DC, out-of-year ${p}: rho ${sb.rho.toFixed(3)} -> ${ss.rho.toFixed(3)}  picks: ${Object.values(pick[p]).join(' / ')}`);
+      });
+      await evalCfg(page, base);   // restore the devy tables
+    }
     if (EXP) {
       // Grid of flag-gated model experiments, deployed weights fixed. Per position, the config is
       // chosen on the 7 fit years (loss) and scored on the held-out year; pooled = ship/no-ship.

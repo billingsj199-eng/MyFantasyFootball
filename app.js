@@ -48793,6 +48793,10 @@ window.fmtHeight = fmtHeight;
 
   function calcJM(p, opts) {
     opts = opts || {};
+    // EXPERIMENT: grade every player as a devy prospect with no pick (window._JM_EXP.asDevy) -> devy
+    // weight tables, no draft capital, no pick-based adjustments. Used by scripts/jm_optimize.js --devy
+    // to backtest JM_DEVY_FLOOR / JM_DEVY_CEILING. Inert on the site.
+    if (typeof window !== 'undefined' && window._JM_EXP && window._JM_EXP.asDevy) p = Object.assign({}, p, { dr: null, isDevy: true });
     const _skipClassBonus = opts.skipClassBonus === true;
     // Cache key: player name + position + dr (so DC edits bust the cache correctly).
     // Include skipClassBonus so the recursive "base JM" lookup for class-strength doesn't

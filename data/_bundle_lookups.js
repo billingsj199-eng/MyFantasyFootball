@@ -2202,13 +2202,17 @@ window.JM_CAREER_GRADES = {"A.J. Brown|2019":[83.9,2,7,0],"A.T. Perry|2023":[0.0
 // ===== jm_devy_ceiling.js =====
 /* JM_DEVY_CEILING — extracted from index.html for performance */
   var JM_DEVY_CEILING = {
-    // Oct 17 2026: QB bigTime + turnoverRate set to 0, others re-spread proportionally (no backtest support; TWP points
-    //   the wrong way on the 2017-24 QBs - see jm_weights.js v10.3).
-    // (previous) QB: { breakout: 0.22, prod: 0.18, qbRush: 0.10, improve: 0.10, qbIntRate: 0.08, conf: 0.06, age: 0.05, qbAccuracy: 0.05, eff: 0.05, size: 0.03, bigTime: 0.03, turnoverRate: 0.03, pff: 0.02 }  // sum=1.00
-    QB:  { breakout: 0.23405, prod: 0.19149, qbRush: 0.10638, improve: 0.10638, qbIntRate: 0.08511, conf: 0.06383, age: 0.05319, qbAccuracy: 0.05319, eff: 0.05319, size: 0.03191, pff: 0.02128 },  // sum=1.00
-    RB:  { breakout: 0.24, prod: 0.20, breakaway: 0.09, rbRec: 0.06, conf: 0.06, yaco: 0.06, improve: 0.06, elusive: 0.06, mktShare: 0.05, age: 0.05, forcedMissed: 0.05, size: 0.02 },  // sum=1.00
-    WR:  { breakout: 0.27, prod: 0.22, yprr: 0.10, routeGrade: 0.10, age: 0.05, contested: 0.05, yac: 0.05, conf: 0.04, dominator: 0.04, qbCtx: 0.04, dropRate: 0.04 },  // sum=1.00
-    TE:  { breakout: 0.22, prod: 0.15, teRec: 0.10, improve: 0.07, age: 0.05, qbCtx: 0.05, eff: 0.05, routeGrade: 0.05, yprr: 0.05, conf: 0.04, contested: 0.04, dominator: 0.04, size: 0.03, yac: 0.03, dropRate: 0.03 }  // sum=1.00
+    // Nov 18 2026 (devy v2): the MAIN ceiling weights (jm_ceiling_weights.js) with draft capital taken out and the
+    //   rest re-spread - see jm_devy_floor.js for the backtest. Regenerate when the main tables change.
+    // (previous, hand-set June 2026, Oct 17 QB trim):
+    //   QB: { breakout: 0.23405, prod: 0.19149, qbRush: 0.10638, improve: 0.10638, qbIntRate: 0.08511, conf: 0.06383, age: 0.05319, qbAccuracy: 0.05319, eff: 0.05319, size: 0.03191, pff: 0.02128 }
+    //   RB: { breakout: 0.24, prod: 0.20, breakaway: 0.09, rbRec: 0.06, conf: 0.06, yaco: 0.06, improve: 0.06, elusive: 0.06, mktShare: 0.05, age: 0.05, forcedMissed: 0.05, size: 0.02 }
+    //   WR: { breakout: 0.27, prod: 0.22, yprr: 0.10, routeGrade: 0.10, age: 0.05, contested: 0.05, yac: 0.05, conf: 0.04, dominator: 0.04, qbCtx: 0.04, dropRate: 0.04 }
+    //   TE: { breakout: 0.22, prod: 0.15, teRec: 0.10, improve: 0.07, age: 0.05, qbCtx: 0.05, eff: 0.05, routeGrade: 0.05, yprr: 0.05, conf: 0.04, contested: 0.04, dominator: 0.04, size: 0.03, yac: 0.03, dropRate: 0.03 }
+    QB:  { qbRush: 0.33767, ras: 0.16882, breakout: 0.16882, prod: 0.11689, pff: 0.10391, qbAccuracy: 0.07792, age: 0.02597 },  // sum=1.00
+    RB:  { careerPpg: 0.125, pffRecv: 0.125, tdRate: 0.125, rbRec: 0.125, prod: 0.125, pff: 0.125, eff: 0.125, totalColFpts: 0.125 },  // sum=1.00
+    WR:  { prod: 0.2, careerPpg: 0.2, tm: 0.1, adot: 0.1, pff: 0.1, conf: 0.1, breakout: 0.1, contested: 0.1 },  // sum=1.00
+    TE:  { athl: 0.19831, breakout: 0.14576, yprr: 0.14576, prod: 0.0937, routeGrade: 0.07288, pff: 0.06247, contested: 0.06247, avoidedTackles: 0.05206, ras: 0.05206, teRec: 0.04165, pbGrade: 0.03123, dominator: 0.02082, conf: 0.01041, qbCtx: 0.01041 }  // sum=1.00
   };
 
 ;
@@ -2216,13 +2220,22 @@ window.JM_CAREER_GRADES = {"A.J. Brown|2019":[83.9,2,7,0],"A.T. Perry|2023":[0.0
 // ===== jm_devy_floor.js =====
 /* JM_DEVY_FLOOR — extracted from index.html for performance */
   var JM_DEVY_FLOOR = {
-    // Oct 17 2026: QB bigTime + turnoverRate set to 0, others re-spread proportionally (no backtest support; TWP points
-    //   the wrong way on the 2017-24 QBs - see jm_weights.js v10.3).
-    // (previous) QB: { prod: 0.20, breakout: 0.18, qbRush: 0.10, age: 0.08, conf: 0.08, improve: 0.08, qbIntRate: 0.08, size: 0.05, eff: 0.05, qbAccuracy: 0.05, bigTime: 0.02, turnoverRate: 0.02, pff: 0.01 }  // sum=1.00
-    QB:  { prod: 0.20835, breakout: 0.1875, qbRush: 0.10417, age: 0.08333, conf: 0.08333, improve: 0.08333, qbIntRate: 0.08333, size: 0.05208, eff: 0.05208, qbAccuracy: 0.05208, pff: 0.01042 },  // sum=1.00
-    RB:  { prod: 0.22, breakout: 0.20, rbRec: 0.08, age: 0.08, conf: 0.08, yaco: 0.06, mktShare: 0.05, improve: 0.05, forcedMissed: 0.05, elusive: 0.05, breakaway: 0.05, size: 0.03 },  // sum=1.00
-    WR:  { prod: 0.24, breakout: 0.24, yprr: 0.10, age: 0.08, routeGrade: 0.07, conf: 0.06, contested: 0.05, dominator: 0.04, qbCtx: 0.04, dropRate: 0.04, yac: 0.04 },  // sum=1.00
-    TE:  { breakout: 0.20, prod: 0.17, teRec: 0.10, age: 0.08, improve: 0.07, conf: 0.06, size: 0.05, eff: 0.05, qbCtx: 0.05, yprr: 0.04, dominator: 0.04, contested: 0.03, dropRate: 0.02, routeGrade: 0.02, yac: 0.02 }  // sum=1.00
+    // Nov 18 2026 (devy v2): the MAIN floor weights (jm_weights.js) with draft capital taken out and the rest
+    //   re-spread. Used only for devy prospects with no pick / projected pick (26 players, 2028 class).
+    //   Backtest: every 2017-24 drafted player graded as a no-pick devy prospect (window._JM_EXP.asDevy,
+    //   node scripts/jm_optimize.js --devy), Spearman vs graded career: QB .508 -> .561, RB .453 -> .486,
+    //   WR .459 -> .503, TE .467 -> .478; won 31 of 32 position folds (choose on 7 classes, score the 8th).
+    //   Re-tuning the old tables gained almost nothing (QB .510, RB .470, WR .451, TE .471).
+    //   When jm_weights.js changes, regenerate these (main table minus dc, renormalised).
+    // (previous, hand-set June 2026, Oct 17 QB trim):
+    //   QB: { prod: 0.20835, breakout: 0.1875, qbRush: 0.10417, age: 0.08333, conf: 0.08333, improve: 0.08333, qbIntRate: 0.08333, size: 0.05208, eff: 0.05208, qbAccuracy: 0.05208, pff: 0.01042 }
+    //   RB: { prod: 0.22, breakout: 0.20, rbRec: 0.08, age: 0.08, conf: 0.08, yaco: 0.06, mktShare: 0.05, improve: 0.05, forcedMissed: 0.05, elusive: 0.05, breakaway: 0.05, size: 0.03 }
+    //   WR: { prod: 0.24, breakout: 0.24, yprr: 0.10, age: 0.08, routeGrade: 0.07, conf: 0.06, contested: 0.05, dominator: 0.04, qbCtx: 0.04, dropRate: 0.04, yac: 0.04 }
+    //   TE: { breakout: 0.20, prod: 0.17, teRec: 0.10, age: 0.08, improve: 0.07, conf: 0.06, size: 0.05, eff: 0.05, qbCtx: 0.05, yprr: 0.04, dominator: 0.04, contested: 0.03, dropRate: 0.02, routeGrade: 0.02, yac: 0.02 }
+    QB:  { breakout: 0.19678, qbRush: 0.19678, prod: 0.18355, pff: 0.11307, ras: 0.11307, age: 0.09837, qbAccuracy: 0.05581, totalColFpts: 0.04258 },  // sum=1.00
+    RB:  { careerPpg: 0.125, pffRecv: 0.125, tdRate: 0.125, rbRec: 0.125, prod: 0.125, pff: 0.125, eff: 0.125, totalColFpts: 0.125 },  // sum=1.00
+    WR:  { prod: 0.2, careerPpg: 0.2, tm: 0.1, adot: 0.1, pff: 0.1, conf: 0.1, breakout: 0.1, contested: 0.1 },  // sum=1.00
+    TE:  { athl: 0.19608, breakout: 0.14102, prod: 0.12044, yprr: 0.12044, pff: 0.06999, ras: 0.06999, routeGrade: 0.06073, teRec: 0.05044, contested: 0.04014, age: 0.04014, avoidedTackles: 0.04014, pbGrade: 0.02985, dominator: 0.01029, eff: 0.01029 }  // sum=1.00
   };
 
 ;

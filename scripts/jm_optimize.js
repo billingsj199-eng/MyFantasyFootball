@@ -201,7 +201,7 @@ async function boot() {
     });
   }, NO_PROV);
   if (EXP_SET === 'comp') {
-    const src = path.join(ROOT, 'scripts', 'jm_comp_exp.json');
+    const src = opt('--comp-file', path.join(ROOT, 'scripts', 'jm_comp_exp.json'));
     if (!fs.existsSync(src)) throw new Error('--exp comp needs ' + src + ' (python -I scripts/jm_competition_study.py export ROWS)');
     await page.evaluate(d => { window.JM_COMP_EXP = d; }, JSON.parse(fs.readFileSync(src, 'utf8')));
   }

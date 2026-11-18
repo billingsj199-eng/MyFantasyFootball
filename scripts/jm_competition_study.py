@@ -48,6 +48,15 @@ Result 2026-11-18 (535 players, 64 feature tests, 200 shuffles):
               BUT the input counts opposing defenders drafted 1-3 years AFTER the game, so it can't be
               computed for a current prospect as is - needs a live proxy before it can ship.
     QB qbWeak rho .733 -> .727 (tier penalty .200 -> .167): no ship.
+  Live proxies for rbNfl (2026-11-18; `export --metric X`, `jm_optimize.js --exp comp --comp-file`):
+    metric   beyond JM (shuffle p)   in-model pooled rho / tier penalty (baseline .639 / .287)
+    def      +.158 (.09)             .641 / .364
+    pipe     +.091 (.32)             .622 / .334
+    honest   +.071 (.51)             .626 / .347
+    tal      +.076 (.46)             .635 / .357
+    None ships. The 'honest' version (same count, only drafts held by November of the final season)
+    collapses, so the signal lives in who got drafted AFTER the games - it only becomes measurable
+    1-3 drafts later. CFBD /talent has no 2013-2014 ratings (tal = 0 there).
   Earlier and different: scripts/jm_sos_analysis.py (SP+-adjusted season PPG, 2026-09-30, no ship).
 """
 import csv
@@ -176,13 +185,23 @@ def load_weekly(wanted=None):
     return out
 
 
+def _cfbd_key():
+    """cfbd_config.py is git-ignored: look in this checkout, then (from a .claude/worktrees/<name>
+    worktree) in the main checkout three levels up."""
+    for d in (ROOT, os.path.abspath(os.path.join(ROOT, "..", "..", ".."))):
+        if os.path.exists(os.path.join(d, "cfbd_config.py")):
+            sys.path.insert(0, d)
+            from cfbd_config import CFBD_API_KEY
+            return CFBD_API_KEY
+    sys.exit("cfbd_config.py not found (needed to pull missing CFBD seasons)")
+
+
 def sp_splits(years):
     cache = json.load(open(SPF)) if os.path.exists(SPF) else {}
     missing = [y for y in years if str(y) not in cache]
     if missing:
         import requests
-        sys.path.insert(0, ROOT)
-        from cfbd_config import CFBD_API_KEY
+        CFBD_API_KEY = _cfbd_key()
         for y in missing:
             r = requests.get("https://apinext.collegefootballdata.com/ratings/sp", headers={"Authorization": "Bearer " + CFBD_API_KEY},
                              params={"year": y}, timeout=40)
@@ -196,6 +215,27 @@ def sp_splits(years):
     return {int(y): t for y, t in cache.items()}
 
 
+TALF = os.path.join(ROOT, "scripts", "_cfbd_talent.json")
+
+
+def cfbd_talent(years):
+    """CFBD /talent (247 team talent composite, whole roster) -> {yr: {team: rating}}, cached."""
+    cache = json.load(open(TALF)) if os.path.exists(TALF) else {}
+    missing = [y for y in years if str(y) not in cache]
+    if missing:
+        import requests
+        CFBD_API_KEY = _cfbd_key()
+        for y in missing:
+            r = requests.get("https://apinext.collegefootballdata.com/talent", headers={"Authorization": "Bearer " + CFBD_API_KEY},
+                             params={"year": y}, timeout=40)
+            rows = r.json() if r.status_code == 200 else []
+            cache[str(y)] = {(x.get("team") or x.get("school")): x.get("talent") for x in rows if (x.get("team") or x.get("school"))}
+            print("  talent %d: %d teams" % (y, len(cache[str(y)])), flush=True)
+            time.sleep(0.4)
+        json.dump(cache, open(TALF, "w"))
+    return {int(y): t for y, t in cache.items()}
+
+
 # ---------- opponent strength ----------
 def zscores(vals):
     v = [x for x in vals.values() if x is not None]
@@ -203,30 +243,55 @@ def zscores(vals):
     return {k: (x - mu) / sd for k, x in vals.items() if x is not None}
 
 
-def strength_tables(sp):
-    """yr -> teamkey -> {def, pass, rush} (positive = strong defense); NFL talent per (season, team)."""
+def strength_tables(sp, tal=None):
+    """yr -> teamkey -> {def, pass, rush, tal} (positive = strong defense / more talent); NFL talent per
+    (season, team) in hindsight; DRAFTED[(draft year, team)] = round-weighted defenders drafted that year."""
     STR = {}
     for y, teams in sp.items():
         zd = zscores({tnorm(k): -t["def"] if t["def"] is not None else None for k, t in teams.items()})
         zp = zscores({tnorm(k): t["pass"] for k, t in teams.items()}) if any(t["pass"] is not None for t in teams.values()) else {}
         zr = zscores({tnorm(k): t["rush"] for k, t in teams.items()}) if any(t["rush"] is not None for t in teams.values()) else {}
-        STR[y] = {k: {"def": zd[k], "pass": zp.get(k, zd[k]), "rush": zr.get(k, zd[k])} for k in zd}
+        zt = zscores({tnorm(k): v for k, v in ((tal or {}).get(y) or {}).items()}) if (tal or {}).get(y) else {}
+        STR[y] = {k: {"def": zd[k], "pass": zp.get(k, zd[k]), "rush": zr.get(k, zd[k]), "tal": zt.get(k, 0.0)} for k in zd}
     talent = defaultdict(lambda: {"db": 0.0, "front": 0.0})
+    drafted = defaultdict(lambda: {"db": 0.0, "front": 0.0})
     unmatched = defaultdict(int)
     fbs_keys = set().union(*[set(v) for v in STR.values()])
     for r in csv.DictReader(open(PICKS, encoding="utf-8")):
         D = int(r["season"]); pos = r["position"]
         grp = "db" if pos in DB_POS else "front" if pos in FRONT_POS else None
-        if grp is None or D < 2013:
+        if grp is None or D < 2010:
             continue
         k = tnorm(r["college"])
         if k not in fbs_keys:
-            unmatched[r["college"]] += 1
+            if D >= 2013:
+                unmatched[r["college"]] += 1
             continue
         rd = int(r["round"]); rw = 1.5 if rd <= 2 else 1.0 if rd <= 4 else 0.6
+        drafted[(D, k)][grp] += rw
+        if D < 2013:
+            continue
         for S, yw in ((D - 1, 1.0), (D - 2, 1.0), (D - 3, 0.5)):
             talent[(S, k)][grp] += rw * yw
+    global DRAFTED
+    DRAFTED = drafted
     return STR, talent, unmatched
+
+
+DRAFTED = {}
+WIN = ((1, 1.0), (2, 1.0), (3, 0.5))      # hindsight window: drafted S+1, S+2 (x1), S+3 (x.5)
+
+
+def nfl_pipe(k, S, grp):
+    """Known before season S: defenders the school had drafted in drafts S, S-1 (x1) and S-2 (x.5)."""
+    return sum(DRAFTED.get((S - j, k), {}).get(grp, 0.0) * w for j, w in ((0, 1.0), (1, 1.0), (2, 0.5)))
+
+
+def nfl_honest(k, S, grp, cutoff):
+    """The hindsight count using only drafts <= cutoff; a draft not yet held is filled with the school's
+    average over its last three known drafts."""
+    rate = sum(DRAFTED.get((cutoff - j, k), {}).get(grp, 0.0) for j in range(3)) / 3
+    return sum((DRAFTED.get((S + j, k), {}).get(grp, 0.0) if S + j <= cutoff else rate) * w for j, w in WIN)
 
 
 def opp_strength(STR, talent, yr, opp):
@@ -239,11 +304,17 @@ def opp_strength(STR, talent, yr, opp):
     if k not in s:
         return None          # FCS / unrated
     t = talent.get((yr, k), {"db": 0.0, "front": 0.0})
-    return {**s[k], "db": t["db"], "front": t["front"]}
+    return {**s[k], "db": t["db"], "front": t["front"], "key": k}
 
 
 # ---------- study ----------
-NAMES = ["ppg_all"] + [p + m for m in ("def", "unit", "nfl") for p in ("ppg_strong_", "ppg_weak_", "r_strong_", "big_strong_", "soft_share_")]
+# def / unit / nfl: SP+ defense, SP+ pass-or-rush defense, NFL talent in hindsight (drafted after the game).
+# pipe / honest / tal: stand-ins for nfl that are known by November of the prospect's final season -
+#   pipe   the opponent's defenders drafted in the three drafts BEFORE that season
+#   honest the nfl count with only drafts held by then (later drafts = the school's recent rate)
+#   tal    CFBD 247 team talent composite of the opponent that season (whole roster)
+METRICS = ("def", "unit", "nfl", "pipe", "honest", "tal")
+NAMES = ["ppg_all"] + [p + m for m in METRICS for p in ("ppg_strong_", "ppg_weak_", "r_strong_", "big_strong_", "soft_share_")]
 
 
 def features(gs, cuts):
@@ -253,7 +324,7 @@ def features(gs, cuts):
     allp = sum(g["pts"] for g in gs) / len(gs)
     f["ppg_all"] = allp
     tot = sum(max(0, g["pts"]) for g in gs)
-    for m in ("def", "unit", "nfl"):
+    for m in METRICS:
         hi, lo = cuts[m]
         st = [g for g in gs if g[m] >= hi]
         wk = [g for g in gs if g[m] <= lo]
@@ -297,7 +368,8 @@ def partial_jm(rows, raw):
 
 def build(rows_path):
     """Backtest players (with live JM + graded career), their tagged pre-draft games, cut points, features."""
-    STR, talent, unmatched = strength_tables(sp_splits(range(2013, int(TODAY[:4]) + 1)))
+    yrs = range(2013, int(TODAY[:4]) + 1)
+    STR, talent, unmatched = strength_tables(sp_splits(yrs), cfbd_talent(yrs))
     grades = json.load(open(GRADES, encoding="utf-8"))["players"]
     bt = []
     for n, pos, yr, jm, pick, dr in json.load(open(rows_path))["real"]:
@@ -315,9 +387,14 @@ def build(rows_path):
                 if not isinstance(g, dict) or not g.get("opp"):
                     continue
                 s = opp_strength(STR, talent, yr, g["opp"])
+                grp = "front" if pos == "RB" else "db"
                 out.append({"yr": yr, "opp": g["opp"], "pts": fpts(g),
                             "def": s["def"] if s else SOFT, "unit": s["rush" if pos == "RB" else "pass"] if s else SOFT,
-                            "nfl": s["front" if pos == "RB" else "db"] if s else 0.0})
+                            "nfl": s[grp] if s else 0.0,
+                            "pipe": nfl_pipe(s["key"], yr, grp) if s else 0.0,
+                            # known by November of the final season: drafts up to the year before his own
+                            "honest": nfl_honest(s["key"], yr, grp, before_yr - 1) if s else 0.0,
+                            "tal": s["tal"] if s else SOFT})
         return out
 
     games = {r["n"]: player_games(nrm(r["n"]), r["pos"], r["yr"]) for r in bt}
@@ -325,7 +402,7 @@ def build(rows_path):
     for pos in POSITIONS:
         pg = [g for r in bt if r["pos"] == pos for g in games[r["n"]]]
         CUTS[pos] = {}
-        for m in ("def", "unit", "nfl"):
+        for m in METRICS:
             vals = sorted(g[m] for g in pg)
             CUTS[pos][m] = (vals[int(len(vals) * 0.75)], vals[int(len(vals) * 0.30)])
         pts = sorted(g["pts"] for g in pg)
@@ -356,9 +433,11 @@ def run_export(rows_path, out_path):
                 a[1] += max(0, g["pts"])
         if by:
             qb[r["n"]] = {y: [round(a, 2), round(w, 2)] for y, (a, w) in by.items()}
-    rbs = [r for r in bt if r["pos"] == "RB" and "r_strong_nfl" in FEATS[r["n"]]]
-    pct = pct_rank([FEATS[r["n"]]["r_strong_nfl"] for r in rbs])
-    out = {"date": TODAY, "qbWeakCut": CUTS["QB"]["def"][1], "qbWeak": qb,
+    metric = _opt("--metric", "nfl")         # which opponent measure feeds rbNfl (nfl / pipe / honest / tal ...)
+    fn = "r_strong_" + metric
+    rbs = [r for r in bt if r["pos"] == "RB" and fn in FEATS[r["n"]]]
+    pct = pct_rank([FEATS[r["n"]][fn] for r in rbs])
+    out = {"date": TODAY, "rbMetric": fn, "qbWeakCut": CUTS["QB"]["def"][1], "qbWeak": qb,
            "rbNfl": {r["n"]: round(p, 4) for r, p in zip(rbs, pct)}}
     json.dump(out, open(out_path, "w"), indent=1)
     print("QBs %d, RBs %d -> %s" % (len(qb), len(out["rbNfl"]), out_path))
@@ -403,9 +482,11 @@ def run_study(rows_path, out_path):
 def run_perm(src, n_perm, out_path):
     D = json.load(open(src)); d = D["features"]
     out = {}
-    for pos in POSITIONS:
+    only = (_opt("--pos") or ",".join(POSITIONS)).split(",")
+    match = _opt("--match")                 # only features whose name contains this (e.g. r_strong)
+    for pos in [p for p in POSITIONS if p in only]:
         rows = [dict(v, n=k) for k, v in d.items() if v["pos"] == pos]
-        for fn in D["results"][pos]:
+        for fn in [f for f in D["results"][pos] if not match or match in f]:
             raw = [r.get(fn) for r in rows]
             obs = loyo_delta(rows, pct_rank(raw)); obs_p = partial_jm(rows, raw)
             ge = ge2 = 0

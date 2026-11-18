@@ -51,13 +51,19 @@ const POSITIONS = (opt('--pos', 'QB,RB,WR,TE')).split(',');
 const PASSES = parseInt(opt('--passes', '2'), 10);
 const LOYO = !args.includes('--no-loyo');
 const EXP = args.includes('--exp');
+// --exp comp : the 2026-11-18 competition grid (QB weak-defense discount, RB vs NFL fronts); needs
+// scripts/jm_comp_exp.json from `python -I scripts/jm_competition_study.py export ROWS`.
+// Any other / no value after --exp runs the 2026-09-30 grid (tmComp, rbSos).
+const EXP_SET = EXP && args[args.indexOf('--exp') + 1] === 'comp' ? 'comp' : 'sep30';
 const NO_REGEN = args.includes('--no-regen');   // legacy flag: outcomes no longer come from the regenerated verdicts, so this is a no-op
 const NO_PROV = args.includes('--no-provisional');   // drop classes with fewer than four NFL seasons played out
 const OUT = opt('--out', path.join(ROOT, 'scripts', `jm_optimize_results_${new Date().toISOString().slice(0, 10)}.json`));
 const DELTAS = [0.03, -0.03, 0.015, -0.015];
 const MIN_KEY_W = 0.02;   // only perturb keys carrying real weight
 
-const { chromium } = require(path.join(ROOT, 'tests', 'node_modules', 'playwright'));
+// --node-modules <dir>: a worktree has no tests/node_modules of its own; point at the main checkout's.
+const { chromium } = require(path.join(opt('--node-modules', path.join(ROOT, 'tests', 'node_modules')), 'playwright'));
+const HTTP_SERVER = path.join(opt('--node-modules', path.join(ROOT, 'tests', 'node_modules')), 'http-server', 'bin', 'http-server');
 
 // ------------------------------------------------------------------ stats
 function spearman(xs, ys) {
@@ -117,8 +123,7 @@ function renorm(w, key, delta) {
 
 // ------------------------------------------------------------------ page driver
 async function boot() {
-  const hs = path.join(ROOT, 'tests', 'node_modules', 'http-server', 'bin', 'http-server');
-  const server = spawn(process.execPath, [hs, ROOT, '-p', String(PORT), '-c-1', '--silent'], { stdio: 'ignore' });
+  const server = spawn(process.execPath, [HTTP_SERVER, ROOT, '-p', String(PORT), '-c-1', '--silent'], { stdio: 'ignore' });
   for (let i = 0; i < 40; i++) {
     try { const r = await fetch(`http://127.0.0.1:${PORT}/index.html`); if (r.ok) break; } catch (e) {}
     await new Promise(r => setTimeout(r, 500));
@@ -195,6 +200,21 @@ async function boot() {
       tiers: Object.fromEntries(Object.keys(window._POS_TIERS).map(p => [p, window._POS_TIERS[p].map(t => ({ label: t.label, min: t.min }))])),
     });
   }, NO_PROV);
+  if (EXP_SET === 'comp') {
+    const src = path.join(ROOT, 'scripts', 'jm_comp_exp.json');
+    if (!fs.existsSync(src)) throw new Error('--exp comp needs ' + src + ' (python -I scripts/jm_competition_study.py export ROWS)');
+    await page.evaluate(d => { window.JM_COMP_EXP = d; }, JSON.parse(fs.readFileSync(src, 'utf8')));
+  }
+  // Late async data (Firestore bios / DC edits) can land after the fixed wait and move a few grades
+  // (seen 2026-11-18). Rebuild until two builds in a row match before anything is scored.
+  const sig = () => page.evaluate(() => JSON.stringify(window.__jmCollect(window.buildProspectData()).map(r => [r.n, r.yr, r.jm])));
+  let prev = await sig(), stable = false;
+  for (let i = 0; i < 12 && !stable; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    await page.evaluate(() => { if (window._jmClearCache) window._jmClearCache(); });
+    const cur = await sig(); stable = cur === prev; prev = cur;
+  }
+  console.log(stable ? 'live JM stable' : 'WARNING: live JM still moving after warm-up');
   return { page, browser, server };
 }
 
@@ -285,10 +305,16 @@ async function descent(page, base, tiers, years, label) {
       // Grid of flag-gated model experiments, deployed weights fixed. Per position, the config is
       // chosen on the 7 fit years (loss) and scored on the held-out year; pooled = ship/no-ship.
       const grid = [{ label: 'baseline', exp: null }];
-      for (const k of [0.05, 0.1, 0.15, 0.2]) grid.push({ label: `tmComp WR k=${k}`, exp: { tmComp: { WR: k } } });
-      for (const k of [0.05, 0.1, 0.15, 0.2]) grid.push({ label: `tmComp RB k=${k}`, exp: { tmComp: { RB: k } } });
-      grid.push({ label: 'rbSos', exp: { rbSos: true } });
-      for (const k of [0.05, 0.1, 0.15]) grid.push({ label: `rbSos + tmComp RB k=${k}`, exp: { rbSos: true, tmComp: { RB: k } } });
+      if (EXP_SET === 'comp') {
+        // qbWeak d = share of a point vs a soft defense the QB keeps; rbNfl k = JM points per percentile step
+        for (const d of [0.75, 0.5, 0.25, 0]) grid.push({ label: `qbWeak d=${d}`, exp: { qbWeak: d } });
+        for (const k of [0.04, 0.08, 0.12, 0.16, 0.2, 0.3]) grid.push({ label: `rbNfl k=${k}`, exp: { rbNfl: k } });
+      } else {
+        for (const k of [0.05, 0.1, 0.15, 0.2]) grid.push({ label: `tmComp WR k=${k}`, exp: { tmComp: { WR: k } } });
+        for (const k of [0.05, 0.1, 0.15, 0.2]) grid.push({ label: `tmComp RB k=${k}`, exp: { tmComp: { RB: k } } });
+        grid.push({ label: 'rbSos', exp: { rbSos: true } });
+        for (const k of [0.05, 0.1, 0.15]) grid.push({ label: `rbSos + tmComp RB k=${k}`, exp: { rbSos: true, tmComp: { RB: k } } });
+      }
       const rowsBy = {};
       for (const g of grid) {
         rowsBy[g.label] = await evalCfg(page, { ...base, exp: g.exp });

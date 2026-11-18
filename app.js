@@ -49361,6 +49361,14 @@ window.fmtHeight = fmtHeight;
         const _k = (typeof _exp.tmComp === 'object') ? (_exp.tmComp[p.pos] || 0) : Number(_exp.tmComp) || 0;
         tmCompAdj = Math.max(-6, Math.min(6, _k * (0.6 - p.tmCompShare) * 100));
       }
+      // EXPERIMENT: RB holding up against NFL-caliber fronts (window._JM_EXP.rbNfl = k).
+      // k*(pct - 0.5)*100 JM points, clamped +-6; pct = percentile of PPG vs defenses with many
+      // future-drafted front-seven players / overall PPG (window.JM_COMP_EXP.rbNfl, injected only by
+      // scripts/jm_optimize.js --exp comp). Inert on the site.
+      if (_exp && _exp.rbNfl && p.pos === 'RB' && window.JM_COMP_EXP && window.JM_COMP_EXP.rbNfl
+          && window.JM_COMP_EXP.rbNfl[p.name] != null) {
+        tmCompAdj += Math.max(-6, Math.min(6, Number(_exp.rbNfl) * (window.JM_COMP_EXP.rbNfl[p.name] - 0.5) * 100));
+      }
     }
     if (p.tm != null && p.tm > 0) {
       if (p.pos === 'WR') {
@@ -50637,6 +50645,15 @@ window.fmtHeight = fmtHeight;
                 _num += gpts * f; _den += gpts;
               });
               if (_den > 0) ppg = Math.round(ppg * (_num / _den) * 10) / 10;
+            }
+            // EXPERIMENT: QB points vs weak defenses count for less (window._JM_EXP.qbWeak = d, the share
+            // a soft-defense point keeps). Per-season [points, points vs the softest 30% of QB opponents]
+            // come from window.JM_COMP_EXP.qbWeak (scripts/jm_competition_study.py export; injected only by
+            // scripts/jm_optimize.js --exp comp). Inert on the site.
+            if (window._JM_EXP && window._JM_EXP.qbWeak != null && pos === 'QB' && window.JM_COMP_EXP
+                && window.JM_COMP_EXP.qbWeak && window.JM_COMP_EXP.qbWeak[name] && window.JM_COMP_EXP.qbWeak[name][s.yr]) {
+              const _qw = window.JM_COMP_EXP.qbWeak[name][s.yr];
+              if (_qw[0] > 0) ppg = Math.round(ppg * ((_qw[0] - (1 - window._JM_EXP.qbWeak) * _qw[1]) / _qw[0]) * 10) / 10;
             }
             if (ppg > bestPpg) bestPpg = ppg;
             // Track earliest breakout season using graduated threshold

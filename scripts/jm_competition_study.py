@@ -27,6 +27,8 @@ Modes (run from the repo root):
       node scripts/jm_projpick_eval.js --scenarios s.json --out rows.json
   python -I scripts/jm_competition_study.py perm N [--src study.json] [--out scripts/jm_competition_perm_<date>.json]
       shuffle test: every feature vs N shuffled copies of itself (p-values for LOYO and |JM)
+  python -I scripts/jm_competition_study.py export ROWS [--out scripts/jm_comp_exp.json]
+      per-player inputs for the in-model test: node scripts/jm_optimize.js --exp comp
   python -I scripts/jm_competition_study.py view2027 [--out scripts/jm_competition_2027_<date>.json]
       the current class's 2026 games: opponent SP+ defense rank, points, PPG vs top-30 defenses vs soft
 Options: --picks <nflverse draft_picks.csv> (default E:/MyFantasyFootball/trivia_daily_cache/draft_picks.csv)
@@ -40,7 +42,12 @@ Result 2026-11-18 (535 players, 64 feature tests, 200 shuffles):
   QB  points vs weak defenses (ppg_weak_def): beyond JM -.39 (p .005), 5 of 7 classes - JM over-credits
       production against soft defenses (overall PPG -.22).
   WR / TE  nothing competition-specific; raw college PPG beyond JM is negative for QB / WR / TE.
-  Not tested in the real model yet (needs flag-gated inputs in app.js + jm_optimize.js --exp).
+  In-model (2026-11-18, `node scripts/jm_optimize.js --exp comp`, flags window._JM_EXP.rbNfl / .qbWeak,
+  k / d chosen on 7 classes, scored on the 8th):
+    RB rbNfl  pooled out-of-year rho .639 -> .654, tier penalty .287 -> .240, k = .2 in 8 of 8 folds.
+              BUT the input counts opposing defenders drafted 1-3 years AFTER the game, so it can't be
+              computed for a current prospect as is - needs a live proxy before it can ship.
+    QB qbWeak rho .733 -> .727 (tier penalty .200 -> .167): no ship.
   Earlier and different: scripts/jm_sos_analysis.py (SP+-adjusted season PPG, 2026-09-30, no ship).
 """
 import csv
@@ -288,7 +295,8 @@ def partial_jm(rows, raw):
     return spearman([raw[i] for i in idx], rj)
 
 
-def run_study(rows_path, out_path):
+def build(rows_path):
+    """Backtest players (with live JM + graded career), their tagged pre-draft games, cut points, features."""
     STR, talent, unmatched = strength_tables(sp_splits(range(2013, int(TODAY[:4]) + 1)))
     grades = json.load(open(GRADES, encoding="utf-8"))["players"]
     bt = []
@@ -324,7 +332,40 @@ def run_study(rows_path, out_path):
         CUTS[pos]["big"] = pts[int(len(pts) * 0.75)]
         CUTS[pos]["n_games"] = len(pg)
     FEATS = {r["n"]: features(games[r["n"]], CUTS[r["pos"]]) for r in bt}
+    return bt, games, CUTS, FEATS, unmatched
 
+
+def run_export(rows_path, out_path):
+    """Per-player inputs for the flag-gated in-model experiments (window.JM_COMP_EXP, read by app.js
+    only when window._JM_EXP.qbWeak / .rbNfl is set; injected by scripts/jm_optimize.js --exp comp):
+      qbWeak[name][season] = [points, points vs the softest 30% of QB opponents (SP+ defense, incl. FCS)]
+                              (positive game points only, as the rbSos factor does)
+      rbNfl[name]          = percentile (0-1, among backtest RBs) of PPG vs NFL-caliber fronts / overall PPG
+    Keys are the site names (the prospect model's p.name)."""
+    bt, games, CUTS, FEATS, _ = build(rows_path)
+    qb = {}
+    for r in bt:
+        if r["pos"] != "QB":
+            continue
+        lo = CUTS["QB"]["def"][1]
+        by = {}
+        for g in games[r["n"]]:
+            a = by.setdefault(str(g["yr"]), [0.0, 0.0])
+            a[0] += max(0, g["pts"])
+            if g["def"] <= lo:
+                a[1] += max(0, g["pts"])
+        if by:
+            qb[r["n"]] = {y: [round(a, 2), round(w, 2)] for y, (a, w) in by.items()}
+    rbs = [r for r in bt if r["pos"] == "RB" and "r_strong_nfl" in FEATS[r["n"]]]
+    pct = pct_rank([FEATS[r["n"]]["r_strong_nfl"] for r in rbs])
+    out = {"date": TODAY, "qbWeakCut": CUTS["QB"]["def"][1], "qbWeak": qb,
+           "rbNfl": {r["n"]: round(p, 4) for r, p in zip(rbs, pct)}}
+    json.dump(out, open(out_path, "w"), indent=1)
+    print("QBs %d, RBs %d -> %s" % (len(qb), len(out["rbNfl"]), out_path))
+
+
+def run_study(rows_path, out_path):
+    bt, games, CUTS, FEATS, unmatched = build(rows_path)
     out = {"date": TODAY, "cuts": CUTS, "unmatched_colleges": sorted(unmatched.items(), key=lambda kv: -kv[1])[:25],
            "coverage": {}, "results": {}}
     print("players with a grade: %d; with >= 6 logged pre-draft games: %d" % (len(bt), sum(1 for r in bt if FEATS[r["n"]])))
@@ -431,6 +472,8 @@ if __name__ == "__main__":
     elif mode == "perm" and len(ARGS) > 1:
         run_perm(_opt("--src", os.path.join(ROOT, "scripts", "jm_competition_%s.json" % TODAY)), int(ARGS[1]),
                  _opt("--out", os.path.join(ROOT, "scripts", "jm_competition_perm_%s.json" % TODAY)))
+    elif mode == "export" and len(ARGS) > 1:
+        run_export(ARGS[1], _opt("--out", os.path.join(ROOT, "scripts", "jm_comp_exp.json")))
     elif mode == "view2027":
         run_view2027(_opt("--out", os.path.join(ROOT, "scripts", "jm_competition_2027_%s.json" % TODAY)))
     else:

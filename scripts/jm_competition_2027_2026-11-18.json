@@ -1,0 +1,7291 @@
+{
+ "date": "2026-11-18",
+ "n_fbs": 139,
+ "top": 30,
+ "soft": "bottom 45 FBS + FCS",
+ "players": [
+  {
+   "name": "Alex Honig",
+   "pos": "TE",
+   "school": "Northwestern",
+   "proj": 234,
+   "cons": 234,
+   "gp": 8,
+   "ppg": 6.8,
+   "n_top": 4,
+   "ppg_top": 4.2,
+   "n_soft": 3,
+   "ppg_soft": 10.7,
+   "soft_share": 0.59,
+   "best_top": {
+    "wk": 4,
+    "opp": "Indiana",
+    "rk": 2,
+    "pts": 6.9
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "South Dakota State",
+     "rk": null,
+     "pts": 9.5
+    },
+    {
+     "wk": 4,
+     "opp": "Indiana",
+     "rk": 2,
+     "pts": 6.9
+    },
+    {
+     "wk": 5,
+     "opp": "Penn State",
+     "rk": 22,
+     "pts": 2.8
+    },
+    {
+     "wk": 6,
+     "opp": "Ball State",
+     "rk": 133,
+     "pts": 11.8
+    },
+    {
+     "wk": 7,
+     "opp": "Michigan State",
+     "rk": 56,
+     "pts": 5.2
+    },
+    {
+     "wk": 8,
+     "opp": "Rutgers",
+     "rk": 126,
+     "pts": 10.9
+    },
+    {
+     "wk": 9,
+     "opp": "Oregon",
+     "rk": 20,
+     "pts": 1.3
+    },
+    {
+     "wk": 11,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 5.9
+    }
+   ]
+  },
+  {
+   "name": "Amare Thomas",
+   "pos": "WR",
+   "school": "Houston",
+   "proj": 93,
+   "cons": 98,
+   "gp": 10,
+   "ppg": 15.7,
+   "n_top": 1,
+   "ppg_top": 15.8,
+   "n_soft": 3,
+   "ppg_soft": 18.8,
+   "soft_share": 0.36,
+   "best_top": {
+    "wk": 8,
+    "opp": "Utah",
+    "rk": 23,
+    "pts": 15.8
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Oregon State",
+     "rk": 95,
+     "pts": 23.3
+    },
+    {
+     "wk": 2,
+     "opp": "Southern",
+     "rk": 134,
+     "pts": 10.4
+    },
+    {
+     "wk": 3,
+     "opp": "Texas Tech",
+     "rk": 34,
+     "pts": 17.0
+    },
+    {
+     "wk": 4,
+     "opp": "Georgia Southern",
+     "rk": 54,
+     "pts": 13.5
+    },
+    {
+     "wk": 5,
+     "opp": "UCF",
+     "rk": 70,
+     "pts": 6.3
+    },
+    {
+     "wk": 6,
+     "opp": "Kansas State",
+     "rk": 64,
+     "pts": 4.1
+    },
+    {
+     "wk": 7,
+     "opp": "Oklahoma State",
+     "rk": 84,
+     "pts": 28.1
+    },
+    {
+     "wk": 8,
+     "opp": "Utah",
+     "rk": 23,
+     "pts": 15.8
+    },
+    {
+     "wk": 10,
+     "opp": "Cincinnati",
+     "rk": 111,
+     "pts": 22.8
+    },
+    {
+     "wk": 11,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 15.6
+    }
+   ]
+  },
+  {
+   "name": "Andrew Rappleyea",
+   "pos": "TE",
+   "school": "Penn State",
+   "proj": 176,
+   "cons": 187,
+   "gp": 8,
+   "ppg": 7.1,
+   "n_top": 1,
+   "ppg_top": 2.6,
+   "n_soft": 3,
+   "ppg_soft": 5.3,
+   "soft_share": 0.28,
+   "best_top": {
+    "wk": 10,
+    "opp": "Washington",
+    "rk": 27,
+    "pts": 2.6
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Marshall",
+     "rk": 121,
+     "pts": 2.3
+    },
+    {
+     "wk": 2,
+     "opp": "Temple",
+     "rk": 125,
+     "pts": 1.0
+    },
+    {
+     "wk": 3,
+     "opp": "Buffalo",
+     "rk": 86,
+     "pts": 9.9
+    },
+    {
+     "wk": 5,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 6.1
+    },
+    {
+     "wk": 6,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 15.8
+    },
+    {
+     "wk": 9,
+     "opp": "Purdue",
+     "rk": 110,
+     "pts": 12.5
+    },
+    {
+     "wk": 10,
+     "opp": "Washington",
+     "rk": 27,
+     "pts": 2.6
+    },
+    {
+     "wk": 11,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 6.5
+    }
+   ]
+  },
+  {
+   "name": "Anthony Evans III",
+   "pos": "WR",
+   "school": "Mississippi State",
+   "proj": null,
+   "cons": 283,
+   "gp": 10,
+   "ppg": 14.2,
+   "n_top": 5,
+   "ppg_top": 13.1,
+   "n_soft": 1,
+   "ppg_soft": 21.3,
+   "soft_share": 0.15,
+   "best_top": {
+    "wk": 5,
+    "opp": "Alabama",
+    "rk": 11,
+    "pts": 34.6
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "UL Monroe",
+     "rk": 135,
+     "pts": 21.3
+    },
+    {
+     "wk": 2,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 22.2
+    },
+    {
+     "wk": 3,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 14.5
+    },
+    {
+     "wk": 4,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 14.9
+    },
+    {
+     "wk": 5,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 34.6
+    },
+    {
+     "wk": 7,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 7.5
+    },
+    {
+     "wk": 8,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 6.3
+    },
+    {
+     "wk": 9,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 2.4
+    },
+    {
+     "wk": 10,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 7.0
+    },
+    {
+     "wk": 11,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 11.4
+    }
+   ]
+  },
+  {
+   "name": "Antwan Raymond",
+   "pos": "RB",
+   "school": "Rutgers",
+   "proj": 172,
+   "cons": 188,
+   "gp": 10,
+   "ppg": 14.9,
+   "n_top": 4,
+   "ppg_top": 6.8,
+   "n_soft": 2,
+   "ppg_soft": 19.0,
+   "soft_share": 0.26,
+   "best_top": {
+    "wk": 9,
+    "opp": "Michigan",
+    "rk": 7,
+    "pts": 12.2
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Massachusetts",
+     "rk": 94,
+     "pts": 6.0
+    },
+    {
+     "wk": 2,
+     "opp": "Boston College",
+     "rk": 92,
+     "pts": 22.2
+    },
+    {
+     "wk": 3,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 23.6
+    },
+    {
+     "wk": 4,
+     "opp": "Howard",
+     "rk": null,
+     "pts": 32.0
+    },
+    {
+     "wk": 5,
+     "opp": "Indiana",
+     "rk": 2,
+     "pts": 4.8
+    },
+    {
+     "wk": 7,
+     "opp": "Maryland",
+     "rk": 83,
+     "pts": 12.8
+    },
+    {
+     "wk": 8,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 24.7
+    },
+    {
+     "wk": 9,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 12.2
+    },
+    {
+     "wk": 10,
+     "opp": "Wisconsin",
+     "rk": 17,
+     "pts": 8.2
+    },
+    {
+     "wk": 11,
+     "opp": "Nebraska",
+     "rk": 9,
+     "pts": 2.1
+    }
+   ]
+  },
+  {
+   "name": "Arch Manning",
+   "pos": "QB",
+   "school": "Texas",
+   "proj": 38,
+   "cons": 16,
+   "gp": 10,
+   "ppg": 17.1,
+   "n_top": 5,
+   "ppg_top": 15.4,
+   "n_soft": 2,
+   "ppg_soft": 23.2,
+   "soft_share": 0.27,
+   "best_top": {
+    "wk": 10,
+    "opp": "Missouri",
+    "rk": 24,
+    "pts": 23.8
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Texas State",
+     "rk": 102,
+     "pts": 26.8
+    },
+    {
+     "wk": 2,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 12.2
+    },
+    {
+     "wk": 3,
+     "opp": "UTSA",
+     "rk": 96,
+     "pts": 19.6
+    },
+    {
+     "wk": 4,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 5.9
+    },
+    {
+     "wk": 6,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 20.4
+    },
+    {
+     "wk": 7,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 8.9
+    },
+    {
+     "wk": 8,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 18.7
+    },
+    {
+     "wk": 9,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 19.8
+    },
+    {
+     "wk": 10,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 23.8
+    },
+    {
+     "wk": 11,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 14.5
+    }
+   ]
+  },
+  {
+   "name": "Benjamin Brahmer",
+   "pos": "TE",
+   "school": "Penn State",
+   "proj": 206,
+   "cons": 206,
+   "gp": 9,
+   "ppg": 8.2,
+   "n_top": 2,
+   "ppg_top": 5.6,
+   "n_soft": 3,
+   "ppg_soft": 12.5,
+   "soft_share": 0.51,
+   "best_top": {
+    "wk": 4,
+    "opp": "Wisconsin",
+    "rk": 17,
+    "pts": 5.6
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Marshall",
+     "rk": 121,
+     "pts": 7.3
+    },
+    {
+     "wk": 2,
+     "opp": "Temple",
+     "rk": 125,
+     "pts": 22.4
+    },
+    {
+     "wk": 3,
+     "opp": "Buffalo",
+     "rk": 86,
+     "pts": 1.5
+    },
+    {
+     "wk": 4,
+     "opp": "Wisconsin",
+     "rk": 17,
+     "pts": 5.6
+    },
+    {
+     "wk": 5,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 7.0
+    },
+    {
+     "wk": 6,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 0.9
+    },
+    {
+     "wk": 9,
+     "opp": "Purdue",
+     "rk": 110,
+     "pts": 7.8
+    },
+    {
+     "wk": 10,
+     "opp": "Washington",
+     "rk": 27,
+     "pts": 5.6
+    },
+    {
+     "wk": 11,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 15.3
+    }
+   ]
+  },
+  {
+   "name": "Braden Pegan",
+   "pos": "WR",
+   "school": "Utah",
+   "proj": 120,
+   "cons": 126,
+   "gp": 10,
+   "ppg": 14.1,
+   "n_top": 1,
+   "ppg_top": 21.1,
+   "n_soft": 2,
+   "ppg_soft": 15.2,
+   "soft_share": 0.22,
+   "best_top": {
+    "wk": 10,
+    "opp": "BYU",
+    "rk": 18,
+    "pts": 21.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Idaho",
+     "rk": null,
+     "pts": 23.3
+    },
+    {
+     "wk": 2,
+     "opp": "Arkansas",
+     "rk": 74,
+     "pts": 4.7
+    },
+    {
+     "wk": 3,
+     "opp": "Utah State",
+     "rk": 49,
+     "pts": 28.2
+    },
+    {
+     "wk": 4,
+     "opp": "Iowa State",
+     "rk": 90,
+     "pts": 9.9
+    },
+    {
+     "wk": 6,
+     "opp": "Kansas",
+     "rk": 53,
+     "pts": 10.7
+    },
+    {
+     "wk": 7,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 24.6
+    },
+    {
+     "wk": 8,
+     "opp": "Houston",
+     "rk": 61,
+     "pts": 4.7
+    },
+    {
+     "wk": 9,
+     "opp": "Cincinnati",
+     "rk": 111,
+     "pts": 7.1
+    },
+    {
+     "wk": 10,
+     "opp": "BYU",
+     "rk": 18,
+     "pts": 21.1
+    },
+    {
+     "wk": 11,
+     "opp": "Arizona",
+     "rk": 38,
+     "pts": 6.7
+    }
+   ]
+  },
+  {
+   "name": "Bryant Wesco Jr.",
+   "pos": "WR",
+   "school": "Clemson",
+   "proj": 81,
+   "cons": 86,
+   "gp": 9,
+   "ppg": 8.0,
+   "n_top": 2,
+   "ppg_top": 11.4,
+   "n_soft": 2,
+   "ppg_soft": 3.9,
+   "soft_share": 0.11,
+   "best_top": {
+    "wk": 5,
+    "opp": "Miami",
+    "rk": 26,
+    "pts": 19.7
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 3.2
+    },
+    {
+     "wk": 2,
+     "opp": "Georgia Southern",
+     "rk": 54,
+     "pts": 6.5
+    },
+    {
+     "wk": 3,
+     "opp": "North Carolina",
+     "rk": 47,
+     "pts": 10.2
+    },
+    {
+     "wk": 4,
+     "opp": "California",
+     "rk": 108,
+     "pts": 3.7
+    },
+    {
+     "wk": 5,
+     "opp": "Miami",
+     "rk": 26,
+     "pts": 19.7
+    },
+    {
+     "wk": 8,
+     "opp": "Virginia Tech",
+     "rk": 71,
+     "pts": 6.3
+    },
+    {
+     "wk": 9,
+     "opp": "Florida State",
+     "rk": 67,
+     "pts": 5.3
+    },
+    {
+     "wk": 10,
+     "opp": "Syracuse",
+     "rk": 91,
+     "pts": 12.8
+    },
+    {
+     "wk": 11,
+     "opp": "Georgia Tech",
+     "rk": 100,
+     "pts": 4.0
+    }
+   ]
+  },
+  {
+   "name": "CJ Baxter Jr.",
+   "pos": "RB",
+   "school": "Kentucky",
+   "proj": 231,
+   "cons": 231,
+   "gp": 9,
+   "ppg": 14.0,
+   "n_top": 4,
+   "ppg_top": 15.8,
+   "n_soft": 2,
+   "ppg_soft": 19.1,
+   "soft_share": 0.3,
+   "best_top": {
+    "wk": 6,
+    "opp": "LSU",
+    "rk": 10,
+    "pts": 24.3
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Youngstown State",
+     "rk": null,
+     "pts": 16.8
+    },
+    {
+     "wk": 2,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 5.4
+    },
+    {
+     "wk": 3,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 24.0
+    },
+    {
+     "wk": 4,
+     "opp": "South Alabama",
+     "rk": 131,
+     "pts": 21.3
+    },
+    {
+     "wk": 5,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 14.3
+    },
+    {
+     "wk": 6,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 24.3
+    },
+    {
+     "wk": 8,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 1.3
+    },
+    {
+     "wk": 10,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 9.3
+    },
+    {
+     "wk": 11,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 9.1
+    }
+   ]
+  },
+  {
+   "name": "CJ Carr",
+   "pos": "QB",
+   "school": "Notre Dame",
+   "proj": 6,
+   "cons": 6,
+   "gp": 9,
+   "ppg": 22.0,
+   "n_top": 2,
+   "ppg_top": 21.1,
+   "n_soft": 4,
+   "ppg_soft": 23.2,
+   "soft_share": 0.47,
+   "best_top": {
+    "wk": 10,
+    "opp": "Miami",
+    "rk": 26,
+    "pts": 25.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Wisconsin",
+     "rk": 17,
+     "pts": 17.0
+    },
+    {
+     "wk": 2,
+     "opp": "Rice",
+     "rk": 124,
+     "pts": 26.1
+    },
+    {
+     "wk": 3,
+     "opp": "Michigan State",
+     "rk": 56,
+     "pts": 16.3
+    },
+    {
+     "wk": 4,
+     "opp": "Purdue",
+     "rk": 110,
+     "pts": 26.5
+    },
+    {
+     "wk": 5,
+     "opp": "North Carolina",
+     "rk": 47,
+     "pts": 32.9
+    },
+    {
+     "wk": 6,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 23.3
+    },
+    {
+     "wk": 9,
+     "opp": "Navy",
+     "rk": 116,
+     "pts": 16.8
+    },
+    {
+     "wk": 10,
+     "opp": "Miami",
+     "rk": 26,
+     "pts": 25.1
+    },
+    {
+     "wk": 11,
+     "opp": "Boston College",
+     "rk": 92,
+     "pts": 14.0
+    }
+   ]
+  },
+  {
+   "name": "Caleb Odom",
+   "pos": "TE",
+   "school": "Mississippi",
+   "proj": null,
+   "cons": 268,
+   "gp": 9,
+   "ppg": 8.8,
+   "n_top": 5,
+   "ppg_top": 9.8,
+   "n_soft": 0,
+   "ppg_soft": null,
+   "soft_share": 0.0,
+   "best_top": {
+    "wk": 11,
+    "opp": "Oklahoma",
+    "rk": 15,
+    "pts": 13.6
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Louisville",
+     "rk": 40,
+     "pts": 14.1
+    },
+    {
+     "wk": 3,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 11.3
+    },
+    {
+     "wk": 4,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 7.2
+    },
+    {
+     "wk": 6,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 4.9
+    },
+    {
+     "wk": 7,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 11.7
+    },
+    {
+     "wk": 8,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 8.4
+    },
+    {
+     "wk": 9,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 3.9
+    },
+    {
+     "wk": 10,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 3.8
+    },
+    {
+     "wk": 11,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 13.6
+    }
+   ]
+  },
+  {
+   "name": "Cam Coleman",
+   "pos": "WR",
+   "school": "Texas",
+   "proj": 14,
+   "cons": 17,
+   "gp": 8,
+   "ppg": 11.6,
+   "n_top": 3,
+   "ppg_top": 9.3,
+   "n_soft": 2,
+   "ppg_soft": 20.2,
+   "soft_share": 0.44,
+   "best_top": {
+    "wk": 6,
+    "opp": "Oklahoma",
+    "rk": 15,
+    "pts": 19.5
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Texas State",
+     "rk": 102,
+     "pts": 20.5
+    },
+    {
+     "wk": 2,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 5.0
+    },
+    {
+     "wk": 3,
+     "opp": "UTSA",
+     "rk": 96,
+     "pts": 19.9
+    },
+    {
+     "wk": 4,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 3.5
+    },
+    {
+     "wk": 6,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 19.5
+    },
+    {
+     "wk": 7,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 9.3
+    },
+    {
+     "wk": 8,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 1.7
+    },
+    {
+     "wk": 9,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 13.1
+    }
+   ]
+  },
+  {
+   "name": "Cam Cook",
+   "pos": "RB",
+   "school": "West Virginia",
+   "proj": null,
+   "cons": 269,
+   "gp": 9,
+   "ppg": 18.8,
+   "n_top": 1,
+   "ppg_top": 16.8,
+   "n_soft": 2,
+   "ppg_soft": 19.8,
+   "soft_share": 0.23,
+   "best_top": {
+    "wk": 8,
+    "opp": "TCU",
+    "rk": 16,
+    "pts": 16.8
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Coastal Carolina",
+     "rk": 104,
+     "pts": 28.3
+    },
+    {
+     "wk": 2,
+     "opp": "UT Martin",
+     "rk": null,
+     "pts": 11.2
+    },
+    {
+     "wk": 3,
+     "opp": "Virginia",
+     "rk": 37,
+     "pts": 13.8
+    },
+    {
+     "wk": 4,
+     "opp": "Oklahoma State",
+     "rk": 84,
+     "pts": 22.0
+    },
+    {
+     "wk": 5,
+     "opp": "Iowa State",
+     "rk": 90,
+     "pts": 27.7
+    },
+    {
+     "wk": 6,
+     "opp": "Arizona",
+     "rk": 38,
+     "pts": 24.4
+    },
+    {
+     "wk": 8,
+     "opp": "TCU",
+     "rk": 16,
+     "pts": 16.8
+    },
+    {
+     "wk": 10,
+     "opp": "Texas Tech",
+     "rk": 34,
+     "pts": 22.8
+    },
+    {
+     "wk": 11,
+     "opp": "Kansas",
+     "rk": 53,
+     "pts": 2.5
+    }
+   ]
+  },
+  {
+   "name": "Carlos Hernandez",
+   "pos": "WR",
+   "school": "Wake Forest",
+   "proj": 240,
+   "cons": 252,
+   "gp": 9,
+   "ppg": 20.4,
+   "n_top": 1,
+   "ppg_top": 17.9,
+   "n_soft": 5,
+   "ppg_soft": 19.1,
+   "soft_share": 0.52,
+   "best_top": {
+    "wk": 3,
+    "opp": "Miami",
+    "rk": 26,
+    "pts": 17.9
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Akron",
+     "rk": 136,
+     "pts": 25.0
+    },
+    {
+     "wk": 2,
+     "opp": "Purdue",
+     "rk": 110,
+     "pts": 11.8
+    },
+    {
+     "wk": 3,
+     "opp": "Miami",
+     "rk": 26,
+     "pts": 17.9
+    },
+    {
+     "wk": 4,
+     "opp": "Louisville",
+     "rk": 40,
+     "pts": 27.9
+    },
+    {
+     "wk": 5,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 12.2
+    },
+    {
+     "wk": 6,
+     "opp": "NC State",
+     "rk": 106,
+     "pts": 23.7
+    },
+    {
+     "wk": 9,
+     "opp": "Virginia",
+     "rk": 37,
+     "pts": 23.6
+    },
+    {
+     "wk": 10,
+     "opp": "Merrimack",
+     "rk": null,
+     "pts": 22.9
+    },
+    {
+     "wk": 11,
+     "opp": "SMU",
+     "rk": 44,
+     "pts": 18.4
+    }
+   ]
+  },
+  {
+   "name": "Cayden Lee",
+   "pos": "WR",
+   "school": "Missouri",
+   "proj": 257,
+   "cons": 267,
+   "gp": 10,
+   "ppg": 14.5,
+   "n_top": 3,
+   "ppg_top": 11.7,
+   "n_soft": 1,
+   "ppg_soft": 5.0,
+   "soft_share": 0.03,
+   "best_top": {
+    "wk": 6,
+    "opp": "Texas A&M",
+    "rk": 30,
+    "pts": 18.9
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Arkansas-Pine Bluff",
+     "rk": 74,
+     "pts": 16.0
+    },
+    {
+     "wk": 2,
+     "opp": "Kansas",
+     "rk": 53,
+     "pts": 21.0
+    },
+    {
+     "wk": 3,
+     "opp": "Troy",
+     "rk": 99,
+     "pts": 5.0
+    },
+    {
+     "wk": 4,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 33.1
+    },
+    {
+     "wk": 5,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 15.0
+    },
+    {
+     "wk": 6,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 18.9
+    },
+    {
+     "wk": 7,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 8.7
+    },
+    {
+     "wk": 9,
+     "opp": "Arkansas",
+     "rk": 74,
+     "pts": 10.8
+    },
+    {
+     "wk": 10,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 10.4
+    },
+    {
+     "wk": 11,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 5.9
+    }
+   ]
+  },
+  {
+   "name": "Charlie Becker",
+   "pos": "WR",
+   "school": "Indiana",
+   "proj": 8,
+   "cons": 8,
+   "gp": 10,
+   "ppg": 18.1,
+   "n_top": 3,
+   "ppg_top": 10.8,
+   "n_soft": 4,
+   "ppg_soft": 24.0,
+   "soft_share": 0.53,
+   "best_top": {
+    "wk": 7,
+    "opp": "Ohio State",
+    "rk": 8,
+    "pts": 21.0
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "North Texas",
+     "rk": 119,
+     "pts": 20.4
+    },
+    {
+     "wk": 2,
+     "opp": "Howard",
+     "rk": null,
+     "pts": 27.6
+    },
+    {
+     "wk": 3,
+     "opp": "Western Kentucky",
+     "rk": 118,
+     "pts": 21.2
+    },
+    {
+     "wk": 4,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 13.3
+    },
+    {
+     "wk": 5,
+     "opp": "Rutgers",
+     "rk": 126,
+     "pts": 26.7
+    },
+    {
+     "wk": 6,
+     "opp": "Nebraska",
+     "rk": 9,
+     "pts": 6.7
+    },
+    {
+     "wk": 7,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 21.0
+    },
+    {
+     "wk": 8,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 4.7
+    },
+    {
+     "wk": 9,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 24.9
+    },
+    {
+     "wk": 11,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 15.0
+    }
+   ]
+  },
+  {
+   "name": "Chris Corbo",
+   "pos": "TE",
+   "school": "Georgia Tech",
+   "proj": 246,
+   "cons": 249,
+   "gp": 8,
+   "ppg": 4.6,
+   "n_top": 2,
+   "ppg_top": 4.8,
+   "n_soft": 2,
+   "ppg_soft": 1.8,
+   "soft_share": 0.1,
+   "best_top": {
+    "wk": 11,
+    "opp": "Clemson",
+    "rk": 28,
+    "pts": 6.4
+   },
+   "games": [
+    {
+     "wk": 2,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 3.1
+    },
+    {
+     "wk": 3,
+     "opp": "Mercer",
+     "rk": null,
+     "pts": 1.1
+    },
+    {
+     "wk": 4,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 2.5
+    },
+    {
+     "wk": 6,
+     "opp": "Duke",
+     "rk": 31,
+     "pts": 2.8
+    },
+    {
+     "wk": 7,
+     "opp": "Virginia Tech",
+     "rk": 71,
+     "pts": 5.5
+    },
+    {
+     "wk": 8,
+     "opp": "Boston College",
+     "rk": 92,
+     "pts": 3.6
+    },
+    {
+     "wk": 10,
+     "opp": "Louisville",
+     "rk": 40,
+     "pts": 12.0
+    },
+    {
+     "wk": 11,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 6.4
+    }
+   ]
+  },
+  {
+   "name": "Chris Marshall",
+   "pos": "WR",
+   "school": "Arkansas",
+   "proj": 117,
+   "cons": 125,
+   "gp": 8,
+   "ppg": 14.2,
+   "n_top": 4,
+   "ppg_top": 12.2,
+   "n_soft": 1,
+   "ppg_soft": 11.4,
+   "soft_share": 0.1,
+   "best_top": {
+    "wk": 5,
+    "opp": "Texas A&M",
+    "rk": 30,
+    "pts": 17.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "North Alabama",
+     "rk": null,
+     "pts": 11.4
+    },
+    {
+     "wk": 2,
+     "opp": "Utah",
+     "rk": 23,
+     "pts": 8.8
+    },
+    {
+     "wk": 3,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 13.9
+    },
+    {
+     "wk": 4,
+     "opp": "Tulsa",
+     "rk": 76,
+     "pts": 30.0
+    },
+    {
+     "wk": 5,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 17.1
+    },
+    {
+     "wk": 6,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 9.1
+    },
+    {
+     "wk": 10,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 9.0
+    },
+    {
+     "wk": 11,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 14.3
+    }
+   ]
+  },
+  {
+   "name": "Conner Weigman",
+   "pos": "QB",
+   "school": "Houston",
+   "proj": 191,
+   "cons": 120,
+   "gp": 10,
+   "ppg": 26.3,
+   "n_top": 1,
+   "ppg_top": 11.3,
+   "n_soft": 3,
+   "ppg_soft": 22.2,
+   "soft_share": 0.25,
+   "best_top": {
+    "wk": 8,
+    "opp": "Utah",
+    "rk": 23,
+    "pts": 11.3
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Oregon State",
+     "rk": 95,
+     "pts": 23.2
+    },
+    {
+     "wk": 2,
+     "opp": "Southern",
+     "rk": 134,
+     "pts": 17.4
+    },
+    {
+     "wk": 3,
+     "opp": "Texas Tech",
+     "rk": 34,
+     "pts": 26.9
+    },
+    {
+     "wk": 4,
+     "opp": "Georgia Southern",
+     "rk": 54,
+     "pts": 39.0
+    },
+    {
+     "wk": 5,
+     "opp": "UCF",
+     "rk": 70,
+     "pts": 32.6
+    },
+    {
+     "wk": 6,
+     "opp": "Kansas State",
+     "rk": 64,
+     "pts": 27.8
+    },
+    {
+     "wk": 7,
+     "opp": "Oklahoma State",
+     "rk": 84,
+     "pts": 36.9
+    },
+    {
+     "wk": 8,
+     "opp": "Utah",
+     "rk": 23,
+     "pts": 11.3
+    },
+    {
+     "wk": 10,
+     "opp": "Cincinnati",
+     "rk": 111,
+     "pts": 26.1
+    },
+    {
+     "wk": 11,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 21.8
+    }
+   ]
+  },
+  {
+   "name": "Cooper Barkate",
+   "pos": "WR",
+   "school": "Miami (FL)",
+   "proj": 154,
+   "cons": 160,
+   "gp": 9,
+   "ppg": 12.6,
+   "n_top": 4,
+   "ppg_top": 12.6,
+   "n_soft": 1,
+   "ppg_soft": 14.7,
+   "soft_share": 0.13,
+   "best_top": {
+    "wk": 10,
+    "opp": "Notre Dame",
+    "rk": 14,
+    "pts": 24.2
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 14.7
+    },
+    {
+     "wk": 2,
+     "opp": "Florida A&M",
+     "rk": 52,
+     "pts": 8.6
+    },
+    {
+     "wk": 3,
+     "opp": "Wake Forest",
+     "rk": 19,
+     "pts": 3.3
+    },
+    {
+     "wk": 4,
+     "opp": "Central Michigan",
+     "rk": 88,
+     "pts": 12.7
+    },
+    {
+     "wk": 5,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 18.3
+    },
+    {
+     "wk": 8,
+     "opp": "Pittsburgh",
+     "rk": 29,
+     "pts": 4.7
+    },
+    {
+     "wk": 9,
+     "opp": "North Carolina",
+     "rk": 47,
+     "pts": 9.1
+    },
+    {
+     "wk": 10,
+     "opp": "Notre Dame",
+     "rk": 14,
+     "pts": 24.2
+    },
+    {
+     "wk": 11,
+     "opp": "Duke",
+     "rk": 31,
+     "pts": 17.4
+    }
+   ]
+  },
+  {
+   "name": "DJ Lagway",
+   "pos": "QB",
+   "school": "Baylor",
+   "proj": 216,
+   "cons": 216,
+   "gp": 7,
+   "ppg": 22.9,
+   "n_top": 1,
+   "ppg_top": 12.6,
+   "n_soft": 0,
+   "ppg_soft": null,
+   "soft_share": 0.0,
+   "best_top": {
+    "wk": 11,
+    "opp": "BYU",
+    "rk": 18,
+    "pts": 12.6
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 16.3
+    },
+    {
+     "wk": 4,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 15.1
+    },
+    {
+     "wk": 5,
+     "opp": "Arizona State",
+     "rk": 46,
+     "pts": 33.8
+    },
+    {
+     "wk": 8,
+     "opp": "Kansas",
+     "rk": 53,
+     "pts": 16.1
+    },
+    {
+     "wk": 9,
+     "opp": "UCF",
+     "rk": 70,
+     "pts": 31.1
+    },
+    {
+     "wk": 10,
+     "opp": "Iowa State",
+     "rk": 90,
+     "pts": 35.1
+    },
+    {
+     "wk": 11,
+     "opp": "BYU",
+     "rk": 18,
+     "pts": 12.6
+    }
+   ]
+  },
+  {
+   "name": "DJ Vonnahme",
+   "pos": "TE",
+   "school": "Iowa",
+   "proj": 88,
+   "cons": 97,
+   "gp": 9,
+   "ppg": 8.6,
+   "n_top": 4,
+   "ppg_top": 13.5,
+   "n_soft": 2,
+   "ppg_soft": 5.6,
+   "soft_share": 0.14,
+   "best_top": {
+    "wk": 9,
+    "opp": "Wisconsin",
+    "rk": 17,
+    "pts": 20.9
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Northern Illinois",
+     "rk": 138,
+     "pts": 6.2
+    },
+    {
+     "wk": 2,
+     "opp": "Iowa State",
+     "rk": 90,
+     "pts": 3.7
+    },
+    {
+     "wk": 4,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 6.4
+    },
+    {
+     "wk": 5,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 9.4
+    },
+    {
+     "wk": 6,
+     "opp": "Washington",
+     "rk": 27,
+     "pts": 17.4
+    },
+    {
+     "wk": 8,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 6.1
+    },
+    {
+     "wk": 9,
+     "opp": "Wisconsin",
+     "rk": 17,
+     "pts": 20.9
+    },
+    {
+     "wk": 10,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 2.5
+    },
+    {
+     "wk": 11,
+     "opp": "Purdue",
+     "rk": 110,
+     "pts": 4.9
+    }
+   ]
+  },
+  {
+   "name": "Dante Moore",
+   "pos": "QB",
+   "school": "Oregon",
+   "proj": 180,
+   "cons": 24,
+   "gp": 4,
+   "ppg": 18.1,
+   "n_top": 0,
+   "ppg_top": null,
+   "n_soft": 1,
+   "ppg_soft": 26.9,
+   "soft_share": 0.37,
+   "best_top": null,
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Boise State",
+     "rk": 78,
+     "pts": 26.6
+    },
+    {
+     "wk": 2,
+     "opp": "Oklahoma State",
+     "rk": 84,
+     "pts": 14.7
+    },
+    {
+     "wk": 3,
+     "opp": "Portland State",
+     "rk": null,
+     "pts": 26.9
+    },
+    {
+     "wk": 4,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 4.1
+    }
+   ]
+  },
+  {
+   "name": "Darian Mensah",
+   "pos": "QB",
+   "school": "Miami (FL)",
+   "proj": 7,
+   "cons": 9,
+   "gp": 9,
+   "ppg": 26.5,
+   "n_top": 4,
+   "ppg_top": 24.3,
+   "n_soft": 1,
+   "ppg_soft": 36.5,
+   "soft_share": 0.15,
+   "best_top": {
+    "wk": 8,
+    "opp": "Pittsburgh",
+    "rk": 29,
+    "pts": 30.3
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 36.5
+    },
+    {
+     "wk": 2,
+     "opp": "Florida A&M",
+     "rk": 52,
+     "pts": 24.2
+    },
+    {
+     "wk": 3,
+     "opp": "Wake Forest",
+     "rk": 19,
+     "pts": 21.3
+    },
+    {
+     "wk": 4,
+     "opp": "Central Michigan",
+     "rk": 88,
+     "pts": 33.6
+    },
+    {
+     "wk": 5,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 21.8
+    },
+    {
+     "wk": 8,
+     "opp": "Pittsburgh",
+     "rk": 29,
+     "pts": 30.3
+    },
+    {
+     "wk": 9,
+     "opp": "North Carolina",
+     "rk": 47,
+     "pts": 26.6
+    },
+    {
+     "wk": 10,
+     "opp": "Notre Dame",
+     "rk": 14,
+     "pts": 23.8
+    },
+    {
+     "wk": 11,
+     "opp": "Duke",
+     "rk": 31,
+     "pts": 20.0
+    }
+   ]
+  },
+  {
+   "name": "DeSean Bishop",
+   "pos": "RB",
+   "school": "Tennessee",
+   "proj": 158,
+   "cons": 162,
+   "gp": 10,
+   "ppg": 20.4,
+   "n_top": 3,
+   "ppg_top": 15.7,
+   "n_soft": 3,
+   "ppg_soft": 18.2,
+   "soft_share": 0.27,
+   "best_top": {
+    "wk": 7,
+    "opp": "Alabama",
+    "rk": 11,
+    "pts": 31.0
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Furman",
+     "rk": null,
+     "pts": 13.7
+    },
+    {
+     "wk": 2,
+     "opp": "Georgia Tech",
+     "rk": 100,
+     "pts": 28.7
+    },
+    {
+     "wk": 3,
+     "opp": "Kennesaw State",
+     "rk": 97,
+     "pts": 12.2
+    },
+    {
+     "wk": 4,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 5.7
+    },
+    {
+     "wk": 5,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 40.0
+    },
+    {
+     "wk": 6,
+     "opp": "Arkansas",
+     "rk": 74,
+     "pts": 19.8
+    },
+    {
+     "wk": 7,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 31.0
+    },
+    {
+     "wk": 8,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 19.5
+    },
+    {
+     "wk": 10,
+     "opp": "Kentucky",
+     "rk": 45,
+     "pts": 22.9
+    },
+    {
+     "wk": 11,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 10.4
+    }
+   ]
+  },
+  {
+   "name": "Decker DeGraaf",
+   "pos": "TE",
+   "school": "Washington",
+   "proj": null,
+   "cons": 295,
+   "gp": 10,
+   "ppg": 4.5,
+   "n_top": 3,
+   "ppg_top": 1.8,
+   "n_soft": 2,
+   "ppg_soft": 4.1,
+   "soft_share": 0.18,
+   "best_top": {
+    "wk": 9,
+    "opp": "Nebraska",
+    "rk": 9,
+    "pts": 3.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Washington State",
+     "rk": 93,
+     "pts": 5.0
+    },
+    {
+     "wk": 2,
+     "opp": "Utah State",
+     "rk": 49,
+     "pts": 3.1
+    },
+    {
+     "wk": 3,
+     "opp": "Eastern Washington",
+     "rk": null,
+     "pts": 1.5
+    },
+    {
+     "wk": 4,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 3.5
+    },
+    {
+     "wk": 5,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 11.9
+    },
+    {
+     "wk": 6,
+     "opp": "Iowa",
+     "rk": 4,
+     "pts": 0.3
+    },
+    {
+     "wk": 7,
+     "opp": "Purdue",
+     "rk": 110,
+     "pts": 6.7
+    },
+    {
+     "wk": 9,
+     "opp": "Nebraska",
+     "rk": 9,
+     "pts": 3.1
+    },
+    {
+     "wk": 10,
+     "opp": "Penn State",
+     "rk": 22,
+     "pts": 2.1
+    },
+    {
+     "wk": 11,
+     "opp": "Michigan State",
+     "rk": 56,
+     "pts": 8.3
+    }
+   ]
+  },
+  {
+   "name": "Deuce Alexander",
+   "pos": "WR",
+   "school": "Mississippi",
+   "proj": 54,
+   "cons": 55,
+   "gp": 10,
+   "ppg": 12.7,
+   "n_top": 5,
+   "ppg_top": 7.1,
+   "n_soft": 1,
+   "ppg_soft": 11.6,
+   "soft_share": 0.09,
+   "best_top": {
+    "wk": 3,
+    "opp": "LSU",
+    "rk": 10,
+    "pts": 15.9
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Louisville",
+     "rk": 40,
+     "pts": 30.4
+    },
+    {
+     "wk": 2,
+     "opp": "Charlotte",
+     "rk": 137,
+     "pts": 11.6
+    },
+    {
+     "wk": 3,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 15.9
+    },
+    {
+     "wk": 4,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 22.9
+    },
+    {
+     "wk": 6,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 17.5
+    },
+    {
+     "wk": 7,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 3.5
+    },
+    {
+     "wk": 8,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 13.4
+    },
+    {
+     "wk": 9,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 9.0
+    },
+    {
+     "wk": 10,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 0.0
+    },
+    {
+     "wk": 11,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 2.5
+    }
+   ]
+  },
+  {
+   "name": "Devin McCuin",
+   "pos": "WR",
+   "school": "Ohio State",
+   "proj": 200,
+   "cons": 191,
+   "gp": 8,
+   "ppg": 8.4,
+   "n_top": 3,
+   "ppg_top": 10.0,
+   "n_soft": 2,
+   "ppg_soft": 11.3,
+   "soft_share": 0.33,
+   "best_top": {
+    "wk": 5,
+    "opp": "Iowa",
+    "rk": 4,
+    "pts": 16.0
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Ball State",
+     "rk": 133,
+     "pts": 18.7
+    },
+    {
+     "wk": 2,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 1.0
+    },
+    {
+     "wk": 3,
+     "opp": "Kent State",
+     "rk": 122,
+     "pts": 3.9
+    },
+    {
+     "wk": 4,
+     "opp": "Illinois",
+     "rk": 43,
+     "pts": 5.4
+    },
+    {
+     "wk": 5,
+     "opp": "Iowa",
+     "rk": 4,
+     "pts": 16.0
+    },
+    {
+     "wk": 9,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 2.2
+    },
+    {
+     "wk": 10,
+     "opp": "Oregon",
+     "rk": 20,
+     "pts": 12.9
+    },
+    {
+     "wk": 11,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 7.4
+    }
+   ]
+  },
+  {
+   "name": "Drake Lindsey",
+   "pos": "QB",
+   "school": "Minnesota",
+   "proj": 147,
+   "cons": 122,
+   "gp": 10,
+   "ppg": 10.6,
+   "n_top": 6,
+   "ppg_top": 8.7,
+   "n_soft": 3,
+   "ppg_soft": 14.8,
+   "soft_share": 0.42,
+   "best_top": {
+    "wk": 4,
+    "opp": "Washington",
+    "rk": 27,
+    "pts": 18.2
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Eastern Illinois",
+     "rk": null,
+     "pts": 15.2
+    },
+    {
+     "wk": 2,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 10.0
+    },
+    {
+     "wk": 3,
+     "opp": "Akron",
+     "rk": 136,
+     "pts": 17.4
+    },
+    {
+     "wk": 4,
+     "opp": "Washington",
+     "rk": 27,
+     "pts": 18.2
+    },
+    {
+     "wk": 5,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 5.5
+    },
+    {
+     "wk": 6,
+     "opp": "Purdue",
+     "rk": 110,
+     "pts": 11.9
+    },
+    {
+     "wk": 8,
+     "opp": "Iowa",
+     "rk": 4,
+     "pts": 2.4
+    },
+    {
+     "wk": 9,
+     "opp": "Indiana",
+     "rk": 2,
+     "pts": 5.3
+    },
+    {
+     "wk": 10,
+     "opp": "UCLA",
+     "rk": 3,
+     "pts": 10.2
+    },
+    {
+     "wk": 11,
+     "opp": "Penn State",
+     "rk": 22,
+     "pts": 10.3
+    }
+   ]
+  },
+  {
+   "name": "Drew Mestemaker",
+   "pos": "QB",
+   "school": "Oklahoma State",
+   "proj": 3,
+   "cons": 3,
+   "gp": 10,
+   "ppg": 27.1,
+   "n_top": 1,
+   "ppg_top": 33.6,
+   "n_soft": 2,
+   "ppg_soft": 28.0,
+   "soft_share": 0.21,
+   "best_top": {
+    "wk": 2,
+    "opp": "Oregon",
+    "rk": 20,
+    "pts": 33.6
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Tulsa",
+     "rk": 76,
+     "pts": 7.9
+    },
+    {
+     "wk": 2,
+     "opp": "Oregon",
+     "rk": 20,
+     "pts": 33.6
+    },
+    {
+     "wk": 3,
+     "opp": "Murray State",
+     "rk": null,
+     "pts": 30.4
+    },
+    {
+     "wk": 4,
+     "opp": "West Virginia",
+     "rk": 129,
+     "pts": 25.6
+    },
+    {
+     "wk": 6,
+     "opp": "UCF",
+     "rk": 70,
+     "pts": 26.4
+    },
+    {
+     "wk": 7,
+     "opp": "Houston",
+     "rk": 61,
+     "pts": 26.0
+    },
+    {
+     "wk": 8,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 32.2
+    },
+    {
+     "wk": 9,
+     "opp": "Iowa State",
+     "rk": 90,
+     "pts": 32.5
+    },
+    {
+     "wk": 10,
+     "opp": "Kansas State",
+     "rk": 64,
+     "pts": 40.6
+    },
+    {
+     "wk": 11,
+     "opp": "Texas Tech",
+     "rk": 34,
+     "pts": 16.3
+    }
+   ]
+  },
+  {
+   "name": "Duce Robinson",
+   "pos": "WR",
+   "school": "Florida State",
+   "proj": 115,
+   "cons": 132,
+   "gp": 6,
+   "ppg": 7.4,
+   "n_top": 2,
+   "ppg_top": 13.3,
+   "n_soft": 2,
+   "ppg_soft": 6.2,
+   "soft_share": 0.28,
+   "best_top": {
+    "wk": 3,
+    "opp": "Alabama",
+    "rk": 11,
+    "pts": 22.5
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "New Mexico State",
+     "rk": 105,
+     "pts": 0.3
+    },
+    {
+     "wk": 3,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 22.5
+    },
+    {
+     "wk": 4,
+     "opp": "Central Arkansas",
+     "rk": null,
+     "pts": 12.2
+    },
+    {
+     "wk": 5,
+     "opp": "Virginia",
+     "rk": 37,
+     "pts": 2.8
+    },
+    {
+     "wk": 6,
+     "opp": "Louisville",
+     "rk": 40,
+     "pts": 2.4
+    },
+    {
+     "wk": 9,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 4.1
+    }
+   ]
+  },
+  {
+   "name": "Dylan Raiola",
+   "pos": "QB",
+   "school": "Oregon",
+   "proj": 250,
+   "cons": 245,
+   "gp": 7,
+   "ppg": 15.8,
+   "n_top": 3,
+   "ppg_top": 14.1,
+   "n_soft": 1,
+   "ppg_soft": 16.1,
+   "soft_share": 0.14,
+   "best_top": {
+    "wk": 11,
+    "opp": "Michigan",
+    "rk": 7,
+    "pts": 28.9
+   },
+   "games": [
+    {
+     "wk": 3,
+     "opp": "Portland State",
+     "rk": null,
+     "pts": 16.1
+    },
+    {
+     "wk": 4,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 19.6
+    },
+    {
+     "wk": 6,
+     "opp": "UCLA",
+     "rk": 3,
+     "pts": -5.0
+    },
+    {
+     "wk": 8,
+     "opp": "Illinois",
+     "rk": 43,
+     "pts": 7.2
+    },
+    {
+     "wk": 9,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 25.4
+    },
+    {
+     "wk": 10,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 18.3
+    },
+    {
+     "wk": 11,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 28.9
+    }
+   ]
+  },
+  {
+   "name": "Dylan Riley",
+   "pos": "RB",
+   "school": "Boise State",
+   "proj": 90,
+   "cons": 96,
+   "gp": 10,
+   "ppg": 23.8,
+   "n_top": 1,
+   "ppg_top": 6.0,
+   "n_soft": 4,
+   "ppg_soft": 25.9,
+   "soft_share": 0.44,
+   "best_top": {
+    "wk": 1,
+    "opp": "Oregon",
+    "rk": 20,
+    "pts": 6.0
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Oregon",
+     "rk": 20,
+     "pts": 6.0
+    },
+    {
+     "wk": 2,
+     "opp": "Memphis",
+     "rk": 81,
+     "pts": 22.7
+    },
+    {
+     "wk": 3,
+     "opp": "South Dakota",
+     "rk": null,
+     "pts": 32.6
+    },
+    {
+     "wk": 4,
+     "opp": "Western Michigan",
+     "rk": 50,
+     "pts": 21.8
+    },
+    {
+     "wk": 5,
+     "opp": "Utah State",
+     "rk": 49,
+     "pts": 22.5
+    },
+    {
+     "wk": 6,
+     "opp": "Fresno State",
+     "rk": 58,
+     "pts": 35.4
+    },
+    {
+     "wk": 8,
+     "opp": "Washington State",
+     "rk": 93,
+     "pts": 25.8
+    },
+    {
+     "wk": 9,
+     "opp": "Texas State",
+     "rk": 102,
+     "pts": 16.6
+    },
+    {
+     "wk": 10,
+     "opp": "Colorado State",
+     "rk": 139,
+     "pts": 47.0
+    },
+    {
+     "wk": 11,
+     "opp": "Oregon State",
+     "rk": 95,
+     "pts": 7.5
+    }
+   ]
+  },
+  {
+   "name": "Emmett Mosley V",
+   "pos": "WR",
+   "school": "Texas",
+   "proj": null,
+   "cons": 285,
+   "gp": 10,
+   "ppg": 7.5,
+   "n_top": 5,
+   "ppg_top": 7.1,
+   "n_soft": 2,
+   "ppg_soft": 4.8,
+   "soft_share": 0.13,
+   "best_top": {
+    "wk": 2,
+    "opp": "Ohio State",
+    "rk": 8,
+    "pts": 9.0
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Texas State",
+     "rk": 102,
+     "pts": 5.2
+    },
+    {
+     "wk": 2,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 9.0
+    },
+    {
+     "wk": 3,
+     "opp": "UTSA",
+     "rk": 96,
+     "pts": 4.3
+    },
+    {
+     "wk": 4,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 4.8
+    },
+    {
+     "wk": 6,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 6.8
+    },
+    {
+     "wk": 7,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 8.6
+    },
+    {
+     "wk": 8,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 3.9
+    },
+    {
+     "wk": 9,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 17.8
+    },
+    {
+     "wk": 10,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 9.0
+    },
+    {
+     "wk": 11,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 5.7
+    }
+   ]
+  },
+  {
+   "name": "Eric Singleton Jr.",
+   "pos": "WR",
+   "school": "Florida",
+   "proj": 201,
+   "cons": 202,
+   "gp": 5,
+   "ppg": 2.5,
+   "n_top": 2,
+   "ppg_top": 2.4,
+   "n_soft": 0,
+   "ppg_soft": null,
+   "soft_share": 0.0,
+   "best_top": {
+    "wk": 9,
+    "opp": "Georgia",
+    "rk": 1,
+    "pts": 4.1
+   },
+   "games": [
+    {
+     "wk": 4,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 4.3
+    },
+    {
+     "wk": 5,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 0.7
+    },
+    {
+     "wk": 6,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 1.5
+    },
+    {
+     "wk": 9,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 4.1
+    },
+    {
+     "wk": 11,
+     "opp": "Kentucky",
+     "rk": 45,
+     "pts": 1.8
+    }
+   ]
+  },
+  {
+   "name": "Eugene Wilson III",
+   "pos": "WR",
+   "school": "LSU",
+   "proj": null,
+   "cons": 232,
+   "gp": 9,
+   "ppg": 6.1,
+   "n_top": 4,
+   "ppg_top": 7.2,
+   "n_soft": 1,
+   "ppg_soft": 7.8,
+   "soft_share": 0.14,
+   "best_top": {
+    "wk": 11,
+    "opp": "Texas",
+    "rk": 5,
+    "pts": 13.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 6.4
+    },
+    {
+     "wk": 2,
+     "opp": "Louisiana Tech",
+     "rk": 59,
+     "pts": 10.4
+    },
+    {
+     "wk": 3,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 1.4
+    },
+    {
+     "wk": 4,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 3.8
+    },
+    {
+     "wk": 5,
+     "opp": "McNeese",
+     "rk": null,
+     "pts": 7.8
+    },
+    {
+     "wk": 6,
+     "opp": "Kentucky",
+     "rk": 45,
+     "pts": 1.0
+    },
+    {
+     "wk": 8,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 5.7
+    },
+    {
+     "wk": 10,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 5.6
+    },
+    {
+     "wk": 11,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 13.1
+    }
+   ]
+  },
+  {
+   "name": "Evan Stewart",
+   "pos": "WR",
+   "school": "Oregon",
+   "proj": 174,
+   "cons": 172,
+   "gp": 8,
+   "ppg": 11.1,
+   "n_top": 3,
+   "ppg_top": 8.3,
+   "n_soft": 1,
+   "ppg_soft": 14.7,
+   "soft_share": 0.17,
+   "best_top": {
+    "wk": 6,
+    "opp": "UCLA",
+    "rk": 3,
+    "pts": 13.9
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Boise State",
+     "rk": 78,
+     "pts": 9.0
+    },
+    {
+     "wk": 2,
+     "opp": "Oklahoma State",
+     "rk": 84,
+     "pts": 15.8
+    },
+    {
+     "wk": 3,
+     "opp": "Portland State",
+     "rk": null,
+     "pts": 14.7
+    },
+    {
+     "wk": 4,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 15.1
+    },
+    {
+     "wk": 6,
+     "opp": "UCLA",
+     "rk": 3,
+     "pts": 13.9
+    },
+    {
+     "wk": 9,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 9.1
+    },
+    {
+     "wk": 10,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 6.7
+    },
+    {
+     "wk": 11,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 4.3
+    }
+   ]
+  },
+  {
+   "name": "Fluff Bothwell",
+   "pos": "RB",
+   "school": "Mississippi State",
+   "proj": null,
+   "cons": 280,
+   "gp": 9,
+   "ppg": 12.7,
+   "n_top": 4,
+   "ppg_top": 13.2,
+   "n_soft": 1,
+   "ppg_soft": 7.3,
+   "soft_share": 0.06,
+   "best_top": {
+    "wk": 4,
+    "opp": "Missouri",
+    "rk": 24,
+    "pts": 32.7
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "UL Monroe",
+     "rk": 135,
+     "pts": 7.3
+    },
+    {
+     "wk": 2,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 24.1
+    },
+    {
+     "wk": 3,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 14.2
+    },
+    {
+     "wk": 4,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 32.7
+    },
+    {
+     "wk": 5,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 0.1
+    },
+    {
+     "wk": 8,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 12.4
+    },
+    {
+     "wk": 9,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 7.7
+    },
+    {
+     "wk": 10,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 10.1
+    },
+    {
+     "wk": 11,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 6.0
+    }
+   ]
+  },
+  {
+   "name": "Griffin Wilde",
+   "pos": "WR",
+   "school": "Northwestern",
+   "proj": 169,
+   "cons": 178,
+   "gp": 10,
+   "ppg": 14.0,
+   "n_top": 5,
+   "ppg_top": 12.1,
+   "n_soft": 3,
+   "ppg_soft": 20.0,
+   "soft_share": 0.43,
+   "best_top": {
+    "wk": 9,
+    "opp": "Oregon",
+    "rk": 20,
+    "pts": 23.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "South Dakota State",
+     "rk": null,
+     "pts": 11.9
+    },
+    {
+     "wk": 3,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 11.0
+    },
+    {
+     "wk": 4,
+     "opp": "Indiana",
+     "rk": 2,
+     "pts": 20.6
+    },
+    {
+     "wk": 5,
+     "opp": "Penn State",
+     "rk": 22,
+     "pts": 4.6
+    },
+    {
+     "wk": 6,
+     "opp": "Ball State",
+     "rk": 133,
+     "pts": 24.4
+    },
+    {
+     "wk": 7,
+     "opp": "Michigan State",
+     "rk": 56,
+     "pts": 8.7
+    },
+    {
+     "wk": 8,
+     "opp": "Rutgers",
+     "rk": 126,
+     "pts": 23.8
+    },
+    {
+     "wk": 9,
+     "opp": "Oregon",
+     "rk": 20,
+     "pts": 23.1
+    },
+    {
+     "wk": 10,
+     "opp": "Iowa",
+     "rk": 4,
+     "pts": 7.7
+    },
+    {
+     "wk": 11,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 4.5
+    }
+   ]
+  },
+  {
+   "name": "Gunner Stockton",
+   "pos": "QB",
+   "school": "Georgia",
+   "proj": null,
+   "cons": 260,
+   "gp": 10,
+   "ppg": 20.0,
+   "n_top": 4,
+   "ppg_top": 17.2,
+   "n_soft": 1,
+   "ppg_soft": 29.7,
+   "soft_share": 0.15,
+   "best_top": {
+    "wk": 11,
+    "opp": "Missouri",
+    "rk": 24,
+    "pts": 20.7
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Tennessee State",
+     "rk": 6,
+     "pts": 20.1
+    },
+    {
+     "wk": 2,
+     "opp": "Western Kentucky",
+     "rk": 118,
+     "pts": 29.7
+    },
+    {
+     "wk": 3,
+     "opp": "Arkansas",
+     "rk": 74,
+     "pts": 19.6
+    },
+    {
+     "wk": 4,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 8.8
+    },
+    {
+     "wk": 5,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 26.0
+    },
+    {
+     "wk": 6,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 19.2
+    },
+    {
+     "wk": 7,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 15.5
+    },
+    {
+     "wk": 9,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 8.5
+    },
+    {
+     "wk": 10,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 32.2
+    },
+    {
+     "wk": 11,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 20.7
+    }
+   ]
+  },
+  {
+   "name": "Hollywood Smothers",
+   "pos": "RB",
+   "school": "Texas",
+   "proj": 160,
+   "cons": 159,
+   "gp": 6,
+   "ppg": 10.3,
+   "n_top": 2,
+   "ppg_top": 15.3,
+   "n_soft": 2,
+   "ppg_soft": 12.8,
+   "soft_share": 0.41,
+   "best_top": {
+    "wk": 2,
+    "opp": "Ohio State",
+    "rk": 8,
+    "pts": 23.8
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Texas State",
+     "rk": 102,
+     "pts": 17.3
+    },
+    {
+     "wk": 2,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 23.8
+    },
+    {
+     "wk": 3,
+     "opp": "UTSA",
+     "rk": 96,
+     "pts": 8.3
+    },
+    {
+     "wk": 6,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 6.8
+    },
+    {
+     "wk": 7,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 6.3
+    },
+    {
+     "wk": 9,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": -0.6
+    }
+   ]
+  },
+  {
+   "name": "Ian Strong",
+   "pos": "WR",
+   "school": "California",
+   "proj": 155,
+   "cons": 157,
+   "gp": 8,
+   "ppg": 8.9,
+   "n_top": 2,
+   "ppg_top": 8.9,
+   "n_soft": 2,
+   "ppg_soft": 5.0,
+   "soft_share": 0.14,
+   "best_top": {
+    "wk": 1,
+    "opp": "UCLA",
+    "rk": 3,
+    "pts": 11.9
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "UCLA",
+     "rk": 3,
+     "pts": 11.9
+    },
+    {
+     "wk": 2,
+     "opp": "Syracuse",
+     "rk": 91,
+     "pts": 7.9
+    },
+    {
+     "wk": 3,
+     "opp": "Wagner",
+     "rk": null,
+     "pts": 7.8
+    },
+    {
+     "wk": 4,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 5.9
+    },
+    {
+     "wk": 5,
+     "opp": "UNLV",
+     "rk": 89,
+     "pts": 13.9
+    },
+    {
+     "wk": 6,
+     "opp": "Virginia Tech",
+     "rk": 71,
+     "pts": 12.2
+    },
+    {
+     "wk": 8,
+     "opp": "SMU",
+     "rk": 44,
+     "pts": 9.6
+    },
+    {
+     "wk": 9,
+     "opp": "NC State",
+     "rk": 106,
+     "pts": 2.1
+    }
+   ]
+  },
+  {
+   "name": "Isaac Brown",
+   "pos": "RB",
+   "school": "Louisville",
+   "proj": 103,
+   "cons": 79,
+   "gp": 10,
+   "ppg": 16.3,
+   "n_top": 1,
+   "ppg_top": 6.4,
+   "n_soft": 4,
+   "ppg_soft": 19.6,
+   "soft_share": 0.48,
+   "best_top": {
+    "wk": 4,
+    "opp": "Wake Forest",
+    "rk": 19,
+    "pts": 6.4
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 8.3
+    },
+    {
+     "wk": 2,
+     "opp": "Villanova",
+     "rk": null,
+     "pts": 6.1
+    },
+    {
+     "wk": 3,
+     "opp": "SMU",
+     "rk": 44,
+     "pts": 13.0
+    },
+    {
+     "wk": 4,
+     "opp": "Wake Forest",
+     "rk": 19,
+     "pts": 6.4
+    },
+    {
+     "wk": 5,
+     "opp": "NC State",
+     "rk": 106,
+     "pts": 19.0
+    },
+    {
+     "wk": 6,
+     "opp": "Florida State",
+     "rk": 67,
+     "pts": 36.7
+    },
+    {
+     "wk": 7,
+     "opp": "Syracuse",
+     "rk": 91,
+     "pts": 14.1
+    },
+    {
+     "wk": 9,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 42.7
+    },
+    {
+     "wk": 10,
+     "opp": "Georgia Tech",
+     "rk": 100,
+     "pts": 10.7
+    },
+    {
+     "wk": 11,
+     "opp": "North Carolina",
+     "rk": 47,
+     "pts": 6.3
+    }
+   ]
+  },
+  {
+   "name": "Isaiah Sategna III",
+   "pos": "WR",
+   "school": "Oklahoma",
+   "proj": 202,
+   "cons": 196,
+   "gp": 9,
+   "ppg": 11.4,
+   "n_top": 4,
+   "ppg_top": 10.4,
+   "n_soft": 1,
+   "ppg_soft": 15.6,
+   "soft_share": 0.15,
+   "best_top": {
+    "wk": 3,
+    "opp": "New Mexico",
+    "rk": 12,
+    "pts": 17.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "UTEP",
+     "rk": 132,
+     "pts": 15.6
+    },
+    {
+     "wk": 2,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 3.0
+    },
+    {
+     "wk": 3,
+     "opp": "New Mexico",
+     "rk": 12,
+     "pts": 17.1
+    },
+    {
+     "wk": 4,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 12.7
+    },
+    {
+     "wk": 6,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 8.8
+    },
+    {
+     "wk": 8,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 28.8
+    },
+    {
+     "wk": 9,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 3.6
+    },
+    {
+     "wk": 10,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 11.9
+    },
+    {
+     "wk": 11,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 0.8
+    }
+   ]
+  },
+  {
+   "name": "Jadan Baugh",
+   "pos": "RB",
+   "school": "Florida",
+   "proj": 25,
+   "cons": 28,
+   "gp": 9,
+   "ppg": 19.5,
+   "n_top": 3,
+   "ppg_top": 6.3,
+   "n_soft": 2,
+   "ppg_soft": 29.8,
+   "soft_share": 0.34,
+   "best_top": {
+    "wk": 10,
+    "opp": "Oklahoma",
+    "rk": 15,
+    "pts": 10.7
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Florida Atlantic",
+     "rk": 127,
+     "pts": 34.0
+    },
+    {
+     "wk": 2,
+     "opp": "Campbell",
+     "rk": null,
+     "pts": 25.6
+    },
+    {
+     "wk": 3,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 35.3
+    },
+    {
+     "wk": 4,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 33.9
+    },
+    {
+     "wk": 5,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 4.5
+    },
+    {
+     "wk": 6,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 14.0
+    },
+    {
+     "wk": 9,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 3.8
+    },
+    {
+     "wk": 10,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 10.7
+    },
+    {
+     "wk": 11,
+     "opp": "Kentucky",
+     "rk": 45,
+     "pts": 14.1
+    }
+   ]
+  },
+  {
+   "name": "Jamal Roberts",
+   "pos": "RB",
+   "school": "Missouri",
+   "proj": null,
+   "cons": 279,
+   "gp": 10,
+   "ppg": 19.0,
+   "n_top": 3,
+   "ppg_top": 16.6,
+   "n_soft": 1,
+   "ppg_soft": 21.1,
+   "soft_share": 0.11,
+   "best_top": {
+    "wk": 6,
+    "opp": "Texas A&M",
+    "rk": 30,
+    "pts": 36.5
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Arkansas-Pine Bluff",
+     "rk": 74,
+     "pts": 10.7
+    },
+    {
+     "wk": 2,
+     "opp": "Kansas",
+     "rk": 53,
+     "pts": 16.6
+    },
+    {
+     "wk": 3,
+     "opp": "Troy",
+     "rk": 99,
+     "pts": 21.1
+    },
+    {
+     "wk": 4,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 14.3
+    },
+    {
+     "wk": 5,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 43.5
+    },
+    {
+     "wk": 6,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 36.5
+    },
+    {
+     "wk": 7,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 7.0
+    },
+    {
+     "wk": 9,
+     "opp": "Arkansas",
+     "rk": 74,
+     "pts": 27.3
+    },
+    {
+     "wk": 10,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 6.6
+    },
+    {
+     "wk": 11,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 6.8
+    }
+   ]
+  },
+  {
+   "name": "Jamari Johnson",
+   "pos": "TE",
+   "school": "Oregon",
+   "proj": 24,
+   "cons": 29,
+   "gp": 7,
+   "ppg": 9.8,
+   "n_top": 3,
+   "ppg_top": 6.2,
+   "n_soft": 0,
+   "ppg_soft": null,
+   "soft_share": 0.0,
+   "best_top": {
+    "wk": 10,
+    "opp": "Ohio State",
+    "rk": 8,
+    "pts": 11.9
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Boise State",
+     "rk": 78,
+     "pts": 13.7
+    },
+    {
+     "wk": 4,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 15.4
+    },
+    {
+     "wk": 6,
+     "opp": "UCLA",
+     "rk": 3,
+     "pts": 1.8
+    },
+    {
+     "wk": 8,
+     "opp": "Illinois",
+     "rk": 43,
+     "pts": 10.4
+    },
+    {
+     "wk": 9,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 10.5
+    },
+    {
+     "wk": 10,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 11.9
+    },
+    {
+     "wk": 11,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 5.0
+    }
+   ]
+  },
+  {
+   "name": "Javon Tracy",
+   "pos": "WR",
+   "school": "Minnesota",
+   "proj": 255,
+   "cons": 262,
+   "gp": 10,
+   "ppg": 9.9,
+   "n_top": 6,
+   "ppg_top": 9.8,
+   "n_soft": 3,
+   "ppg_soft": 10.6,
+   "soft_share": 0.32,
+   "best_top": {
+    "wk": 11,
+    "opp": "Penn State",
+    "rk": 22,
+    "pts": 20.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Eastern Illinois",
+     "rk": null,
+     "pts": 12.3
+    },
+    {
+     "wk": 2,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 8.6
+    },
+    {
+     "wk": 3,
+     "opp": "Akron",
+     "rk": 136,
+     "pts": 11.6
+    },
+    {
+     "wk": 4,
+     "opp": "Washington",
+     "rk": 27,
+     "pts": 13.6
+    },
+    {
+     "wk": 5,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 3.4
+    },
+    {
+     "wk": 6,
+     "opp": "Purdue",
+     "rk": 110,
+     "pts": 8.0
+    },
+    {
+     "wk": 8,
+     "opp": "Iowa",
+     "rk": 4,
+     "pts": 10.2
+    },
+    {
+     "wk": 9,
+     "opp": "Indiana",
+     "rk": 2,
+     "pts": 7.5
+    },
+    {
+     "wk": 10,
+     "opp": "UCLA",
+     "rk": 3,
+     "pts": 4.2
+    },
+    {
+     "wk": 11,
+     "opp": "Penn State",
+     "rk": 22,
+     "pts": 20.1
+    }
+   ]
+  },
+  {
+   "name": "Jayden Maiava",
+   "pos": "QB",
+   "school": "USC",
+   "proj": 58,
+   "cons": 53,
+   "gp": 9,
+   "ppg": 17.8,
+   "n_top": 6,
+   "ppg_top": 14.6,
+   "n_soft": 1,
+   "ppg_soft": 20.0,
+   "soft_share": 0.12,
+   "best_top": {
+    "wk": 4,
+    "opp": "Oregon",
+    "rk": 20,
+    "pts": 25.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Fresno State",
+     "rk": 58,
+     "pts": 24.5
+    },
+    {
+     "wk": 2,
+     "opp": "Louisiana",
+     "rk": 68,
+     "pts": 28.4
+    },
+    {
+     "wk": 3,
+     "opp": "Rutgers",
+     "rk": 126,
+     "pts": 20.0
+    },
+    {
+     "wk": 4,
+     "opp": "Oregon",
+     "rk": 20,
+     "pts": 25.1
+    },
+    {
+     "wk": 5,
+     "opp": "Washington",
+     "rk": 27,
+     "pts": 11.5
+    },
+    {
+     "wk": 6,
+     "opp": "Penn State",
+     "rk": 22,
+     "pts": 23.9
+    },
+    {
+     "wk": 8,
+     "opp": "Wisconsin",
+     "rk": 17,
+     "pts": 4.6
+    },
+    {
+     "wk": 9,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 12.0
+    },
+    {
+     "wk": 11,
+     "opp": "Indiana",
+     "rk": 2,
+     "pts": 10.4
+    }
+   ]
+  },
+  {
+   "name": "Jeremiah Smith",
+   "pos": "WR",
+   "school": "Ohio State",
+   "proj": 1,
+   "cons": 1,
+   "gp": 9,
+   "ppg": 27.5,
+   "n_top": 3,
+   "ppg_top": 29.1,
+   "n_soft": 2,
+   "ppg_soft": 21.3,
+   "soft_share": 0.17,
+   "best_top": {
+    "wk": 5,
+    "opp": "Iowa",
+    "rk": 4,
+    "pts": 38.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Ball State",
+     "rk": 133,
+     "pts": 31.6
+    },
+    {
+     "wk": 2,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 26.4
+    },
+    {
+     "wk": 3,
+     "opp": "Kent State",
+     "rk": 122,
+     "pts": 11.0
+    },
+    {
+     "wk": 4,
+     "opp": "Illinois",
+     "rk": 43,
+     "pts": 51.7
+    },
+    {
+     "wk": 5,
+     "opp": "Iowa",
+     "rk": 4,
+     "pts": 38.1
+    },
+    {
+     "wk": 6,
+     "opp": "Maryland",
+     "rk": 83,
+     "pts": 23.3
+    },
+    {
+     "wk": 9,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 19.3
+    },
+    {
+     "wk": 10,
+     "opp": "Oregon",
+     "rk": 20,
+     "pts": 22.8
+    },
+    {
+     "wk": 11,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 23.2
+    }
+   ]
+  },
+  {
+   "name": "John Mateer",
+   "pos": "QB",
+   "school": "Oklahoma",
+   "proj": 235,
+   "cons": 244,
+   "gp": 9,
+   "ppg": 16.8,
+   "n_top": 4,
+   "ppg_top": 11.7,
+   "n_soft": 1,
+   "ppg_soft": 21.7,
+   "soft_share": 0.14,
+   "best_top": {
+    "wk": 3,
+    "opp": "New Mexico",
+    "rk": 12,
+    "pts": 15.2
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "UTEP",
+     "rk": 132,
+     "pts": 21.7
+    },
+    {
+     "wk": 2,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 14.1
+    },
+    {
+     "wk": 3,
+     "opp": "New Mexico",
+     "rk": 12,
+     "pts": 15.2
+    },
+    {
+     "wk": 4,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 11.9
+    },
+    {
+     "wk": 6,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 5.6
+    },
+    {
+     "wk": 8,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 23.0
+    },
+    {
+     "wk": 9,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 20.7
+    },
+    {
+     "wk": 10,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 21.9
+    },
+    {
+     "wk": 11,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 17.4
+    }
+   ]
+  },
+  {
+   "name": "Jordan Dwyer",
+   "pos": "WR",
+   "school": "TCU",
+   "proj": null,
+   "cons": 297,
+   "gp": 6,
+   "ppg": 14.1,
+   "n_top": 1,
+   "ppg_top": 18.0,
+   "n_soft": 1,
+   "ppg_soft": 16.3,
+   "soft_share": 0.19,
+   "best_top": {
+    "wk": 7,
+    "opp": "Baylor",
+    "rk": 25,
+    "pts": 18.0
+   },
+   "games": [
+    {
+     "wk": 4,
+     "opp": "UCF",
+     "rk": 70,
+     "pts": 12.5
+    },
+    {
+     "wk": 7,
+     "opp": "Baylor",
+     "rk": 25,
+     "pts": 18.0
+    },
+    {
+     "wk": 8,
+     "opp": "West Virginia",
+     "rk": 129,
+     "pts": 16.3
+    },
+    {
+     "wk": 9,
+     "opp": "Kansas",
+     "rk": 53,
+     "pts": 7.6
+    },
+    {
+     "wk": 10,
+     "opp": "Arizona",
+     "rk": 38,
+     "pts": 19.1
+    },
+    {
+     "wk": 11,
+     "opp": "Kansas State",
+     "rk": 64,
+     "pts": 11.0
+    }
+   ]
+  },
+  {
+   "name": "Jordan Faison",
+   "pos": "WR",
+   "school": "Notre Dame",
+   "proj": 100,
+   "cons": 119,
+   "gp": 9,
+   "ppg": 12.6,
+   "n_top": 2,
+   "ppg_top": 13.4,
+   "n_soft": 4,
+   "ppg_soft": 9.4,
+   "soft_share": 0.33,
+   "best_top": {
+    "wk": 10,
+    "opp": "Miami",
+    "rk": 26,
+    "pts": 16.7
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Wisconsin",
+     "rk": 17,
+     "pts": 10.1
+    },
+    {
+     "wk": 2,
+     "opp": "Rice",
+     "rk": 124,
+     "pts": 19.4
+    },
+    {
+     "wk": 3,
+     "opp": "Michigan State",
+     "rk": 56,
+     "pts": 6.3
+    },
+    {
+     "wk": 4,
+     "opp": "Purdue",
+     "rk": 110,
+     "pts": 8.6
+    },
+    {
+     "wk": 5,
+     "opp": "North Carolina",
+     "rk": 47,
+     "pts": 29.2
+    },
+    {
+     "wk": 6,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 3.1
+    },
+    {
+     "wk": 9,
+     "opp": "Navy",
+     "rk": 116,
+     "pts": 6.6
+    },
+    {
+     "wk": 10,
+     "opp": "Miami",
+     "rk": 26,
+     "pts": 16.7
+    },
+    {
+     "wk": 11,
+     "opp": "Boston College",
+     "rk": 92,
+     "pts": 13.4
+    }
+   ]
+  },
+  {
+   "name": "Josh Hoover",
+   "pos": "QB",
+   "school": "Indiana",
+   "proj": 221,
+   "cons": 218,
+   "gp": 9,
+   "ppg": 18.0,
+   "n_top": 3,
+   "ppg_top": 14.3,
+   "n_soft": 4,
+   "ppg_soft": 23.4,
+   "soft_share": 0.58,
+   "best_top": {
+    "wk": 6,
+    "opp": "Nebraska",
+    "rk": 9,
+    "pts": 20.9
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "North Texas",
+     "rk": 119,
+     "pts": 25.2
+    },
+    {
+     "wk": 2,
+     "opp": "Howard",
+     "rk": null,
+     "pts": 23.6
+    },
+    {
+     "wk": 3,
+     "opp": "Western Kentucky",
+     "rk": 118,
+     "pts": 19.1
+    },
+    {
+     "wk": 4,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 18.1
+    },
+    {
+     "wk": 5,
+     "opp": "Rutgers",
+     "rk": 126,
+     "pts": 25.7
+    },
+    {
+     "wk": 6,
+     "opp": "Nebraska",
+     "rk": 9,
+     "pts": 20.9
+    },
+    {
+     "wk": 7,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 14.1
+    },
+    {
+     "wk": 8,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 7.9
+    },
+    {
+     "wk": 9,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 7.0
+    }
+   ]
+  },
+  {
+   "name": "Junior Sherrill",
+   "pos": "WR",
+   "school": "Vanderbilt",
+   "proj": 76,
+   "cons": 82,
+   "gp": 9,
+   "ppg": 13.4,
+   "n_top": 2,
+   "ppg_top": 16.9,
+   "n_soft": 3,
+   "ppg_soft": 15.7,
+   "soft_share": 0.39,
+   "best_top": {
+    "wk": 5,
+    "opp": "Georgia",
+    "rk": 1,
+    "pts": 20.2
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Austin Peay",
+     "rk": null,
+     "pts": 9.3
+    },
+    {
+     "wk": 2,
+     "opp": "Delaware",
+     "rk": 120,
+     "pts": 11.9
+    },
+    {
+     "wk": 3,
+     "opp": "NC State",
+     "rk": 106,
+     "pts": 25.8
+    },
+    {
+     "wk": 4,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 12.5
+    },
+    {
+     "wk": 5,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 20.2
+    },
+    {
+     "wk": 6,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 8.0
+    },
+    {
+     "wk": 8,
+     "opp": "Kentucky",
+     "rk": 45,
+     "pts": 12.0
+    },
+    {
+     "wk": 10,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 7.6
+    },
+    {
+     "wk": 11,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 13.5
+    }
+   ]
+  },
+  {
+   "name": "Justice Haynes",
+   "pos": "RB",
+   "school": "Georgia Tech",
+   "proj": 199,
+   "cons": 194,
+   "gp": 9,
+   "ppg": 14.7,
+   "n_top": 3,
+   "ppg_top": 17.6,
+   "n_soft": 2,
+   "ppg_soft": 21.8,
+   "soft_share": 0.33,
+   "best_top": {
+    "wk": 2,
+    "opp": "Tennessee",
+    "rk": 6,
+    "pts": 26.7
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 7.3
+    },
+    {
+     "wk": 2,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 26.7
+    },
+    {
+     "wk": 3,
+     "opp": "Mercer",
+     "rk": null,
+     "pts": 35.7
+    },
+    {
+     "wk": 4,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 7.8
+    },
+    {
+     "wk": 6,
+     "opp": "Duke",
+     "rk": 31,
+     "pts": 6.9
+    },
+    {
+     "wk": 8,
+     "opp": "Boston College",
+     "rk": 92,
+     "pts": 11.3
+    },
+    {
+     "wk": 9,
+     "opp": "Pittsburgh",
+     "rk": 29,
+     "pts": 6.7
+    },
+    {
+     "wk": 10,
+     "opp": "Louisville",
+     "rk": 40,
+     "pts": 10.4
+    },
+    {
+     "wk": 11,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 19.4
+    }
+   ]
+  },
+  {
+   "name": "Justin Bowick",
+   "pos": "WR",
+   "school": "Oklahoma State",
+   "proj": 101,
+   "cons": 99,
+   "gp": 10,
+   "ppg": 17.1,
+   "n_top": 1,
+   "ppg_top": 10.6,
+   "n_soft": 2,
+   "ppg_soft": 24.3,
+   "soft_share": 0.28,
+   "best_top": {
+    "wk": 2,
+    "opp": "Oregon",
+    "rk": 20,
+    "pts": 10.6
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Tulsa",
+     "rk": 76,
+     "pts": 9.2
+    },
+    {
+     "wk": 2,
+     "opp": "Oregon",
+     "rk": 20,
+     "pts": 10.6
+    },
+    {
+     "wk": 3,
+     "opp": "Murray State",
+     "rk": null,
+     "pts": 34.3
+    },
+    {
+     "wk": 4,
+     "opp": "West Virginia",
+     "rk": 129,
+     "pts": 14.3
+    },
+    {
+     "wk": 6,
+     "opp": "UCF",
+     "rk": 70,
+     "pts": 18.8
+    },
+    {
+     "wk": 7,
+     "opp": "Houston",
+     "rk": 61,
+     "pts": 10.2
+    },
+    {
+     "wk": 8,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 22.3
+    },
+    {
+     "wk": 9,
+     "opp": "Iowa State",
+     "rk": 90,
+     "pts": 27.9
+    },
+    {
+     "wk": 10,
+     "opp": "Kansas State",
+     "rk": 64,
+     "pts": 13.4
+    },
+    {
+     "wk": 11,
+     "opp": "Texas Tech",
+     "rk": 34,
+     "pts": 10.3
+    }
+   ]
+  },
+  {
+   "name": "KJ Duff",
+   "pos": "WR",
+   "school": "Rutgers",
+   "proj": 26,
+   "cons": 37,
+   "gp": 7,
+   "ppg": 22.0,
+   "n_top": 1,
+   "ppg_top": 9.8,
+   "n_soft": 2,
+   "ppg_soft": 31.9,
+   "soft_share": 0.41,
+   "best_top": {
+    "wk": 5,
+    "opp": "Indiana",
+    "rk": 2,
+    "pts": 9.8
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Massachusetts",
+     "rk": 94,
+     "pts": 42.1
+    },
+    {
+     "wk": 2,
+     "opp": "Boston College",
+     "rk": 92,
+     "pts": 29.7
+    },
+    {
+     "wk": 3,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 18.1
+    },
+    {
+     "wk": 4,
+     "opp": "Howard",
+     "rk": null,
+     "pts": 21.6
+    },
+    {
+     "wk": 5,
+     "opp": "Indiana",
+     "rk": 2,
+     "pts": 9.8
+    },
+    {
+     "wk": 7,
+     "opp": "Maryland",
+     "rk": 83,
+     "pts": 27.8
+    },
+    {
+     "wk": 8,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 4.8
+    }
+   ]
+  },
+  {
+   "name": "Kamari Moulton",
+   "pos": "RB",
+   "school": "Iowa",
+   "proj": null,
+   "cons": 257,
+   "gp": 6,
+   "ppg": 14.3,
+   "n_top": 3,
+   "ppg_top": 13.8,
+   "n_soft": 1,
+   "ppg_soft": 30.3,
+   "soft_share": 0.35,
+   "best_top": {
+    "wk": 6,
+    "opp": "Washington",
+    "rk": 27,
+    "pts": 33.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Northern Illinois",
+     "rk": 138,
+     "pts": 30.3
+    },
+    {
+     "wk": 2,
+     "opp": "Iowa State",
+     "rk": 90,
+     "pts": 11.8
+    },
+    {
+     "wk": 4,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 5.6
+    },
+    {
+     "wk": 5,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 2.7
+    },
+    {
+     "wk": 6,
+     "opp": "Washington",
+     "rk": 27,
+     "pts": 33.1
+    },
+    {
+     "wk": 8,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 2.2
+    }
+   ]
+  },
+  {
+   "name": "Kenny Johnson",
+   "pos": "WR",
+   "school": "Texas Tech",
+   "proj": 238,
+   "cons": 237,
+   "gp": 9,
+   "ppg": 11.9,
+   "n_top": 0,
+   "ppg_top": null,
+   "n_soft": 5,
+   "ppg_soft": 11.6,
+   "soft_share": 0.55,
+   "best_top": null,
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Abilene Christian",
+     "rk": null,
+     "pts": 9.6
+    },
+    {
+     "wk": 2,
+     "opp": "Oregon State",
+     "rk": 95,
+     "pts": 6.6
+    },
+    {
+     "wk": 3,
+     "opp": "Houston",
+     "rk": 61,
+     "pts": 19.3
+    },
+    {
+     "wk": 4,
+     "opp": "Sam Houston",
+     "rk": 115,
+     "pts": 7.5
+    },
+    {
+     "wk": 5,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 1.3
+    },
+    {
+     "wk": 8,
+     "opp": "Cincinnati",
+     "rk": 111,
+     "pts": 11.6
+    },
+    {
+     "wk": 9,
+     "opp": "Arizona",
+     "rk": 38,
+     "pts": 12.9
+    },
+    {
+     "wk": 10,
+     "opp": "West Virginia",
+     "rk": 129,
+     "pts": 22.9
+    },
+    {
+     "wk": 11,
+     "opp": "Oklahoma State",
+     "rk": 84,
+     "pts": 15.0
+    }
+   ]
+  },
+  {
+   "name": "Kewan Lacy",
+   "pos": "RB",
+   "school": "Mississippi",
+   "proj": 47,
+   "cons": 51,
+   "gp": 6,
+   "ppg": 12.5,
+   "n_top": 3,
+   "ppg_top": 9.4,
+   "n_soft": 1,
+   "ppg_soft": 21.1,
+   "soft_share": 0.28,
+   "best_top": {
+    "wk": 7,
+    "opp": "Missouri",
+    "rk": 24,
+    "pts": 12.3
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Louisville",
+     "rk": 40,
+     "pts": 16.0
+    },
+    {
+     "wk": 2,
+     "opp": "Charlotte",
+     "rk": 137,
+     "pts": 21.1
+    },
+    {
+     "wk": 3,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 11.1
+    },
+    {
+     "wk": 6,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 9.9
+    },
+    {
+     "wk": 7,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 12.3
+    },
+    {
+     "wk": 8,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 4.7
+    }
+   ]
+  },
+  {
+   "name": "Keyjuan Brown",
+   "pos": "RB",
+   "school": "Louisville",
+   "proj": null,
+   "cons": 270,
+   "gp": 9,
+   "ppg": 10.3,
+   "n_top": 1,
+   "ppg_top": 4.8,
+   "n_soft": 4,
+   "ppg_soft": 6.8,
+   "soft_share": 0.29,
+   "best_top": {
+    "wk": 4,
+    "opp": "Wake Forest",
+    "rk": 19,
+    "pts": 4.8
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 6.6
+    },
+    {
+     "wk": 2,
+     "opp": "Villanova",
+     "rk": null,
+     "pts": 1.2
+    },
+    {
+     "wk": 3,
+     "opp": "SMU",
+     "rk": 44,
+     "pts": 28.3
+    },
+    {
+     "wk": 4,
+     "opp": "Wake Forest",
+     "rk": 19,
+     "pts": 4.8
+    },
+    {
+     "wk": 5,
+     "opp": "NC State",
+     "rk": 106,
+     "pts": 12.6
+    },
+    {
+     "wk": 7,
+     "opp": "Syracuse",
+     "rk": 91,
+     "pts": 17.0
+    },
+    {
+     "wk": 9,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 6.6
+    },
+    {
+     "wk": 10,
+     "opp": "Georgia Tech",
+     "rk": 100,
+     "pts": 7.0
+    },
+    {
+     "wk": 11,
+     "opp": "North Carolina",
+     "rk": 47,
+     "pts": 8.9
+    }
+   ]
+  },
+  {
+   "name": "LJ Martin",
+   "pos": "RB",
+   "school": "BYU",
+   "proj": 125,
+   "cons": 123,
+   "gp": 6,
+   "ppg": 12.1,
+   "n_top": 4,
+   "ppg_top": 5.6,
+   "n_soft": 1,
+   "ppg_soft": 37.0,
+   "soft_share": 0.51,
+   "best_top": {
+    "wk": 10,
+    "opp": "Utah",
+    "rk": 23,
+    "pts": 8.9
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Utah Tech",
+     "rk": 23,
+     "pts": 6.4
+    },
+    {
+     "wk": 2,
+     "opp": "Arizona",
+     "rk": 38,
+     "pts": 13.5
+    },
+    {
+     "wk": 3,
+     "opp": "Colorado State",
+     "rk": 139,
+     "pts": 37.0
+    },
+    {
+     "wk": 5,
+     "opp": "TCU",
+     "rk": 16,
+     "pts": 2.1
+    },
+    {
+     "wk": 10,
+     "opp": "Utah",
+     "rk": 23,
+     "pts": 8.9
+    },
+    {
+     "wk": 11,
+     "opp": "Baylor",
+     "rk": 25,
+     "pts": 4.9
+    }
+   ]
+  },
+  {
+   "name": "LaNorris Sellers",
+   "pos": "QB",
+   "school": "South Carolina",
+   "proj": 182,
+   "cons": 33,
+   "gp": 9,
+   "ppg": 26.6,
+   "n_top": 4,
+   "ppg_top": 27.9,
+   "n_soft": 2,
+   "ppg_soft": 21.3,
+   "soft_share": 0.18,
+   "best_top": {
+    "wk": 9,
+    "opp": "Oklahoma",
+    "rk": 15,
+    "pts": 41.6
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Kent State",
+     "rk": 122,
+     "pts": 22.9
+    },
+    {
+     "wk": 2,
+     "opp": "Towson",
+     "rk": null,
+     "pts": 19.7
+    },
+    {
+     "wk": 3,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 20.5
+    },
+    {
+     "wk": 4,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 16.6
+    },
+    {
+     "wk": 5,
+     "opp": "Kentucky",
+     "rk": 45,
+     "pts": 29.7
+    },
+    {
+     "wk": 6,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 35.2
+    },
+    {
+     "wk": 8,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 32.0
+    },
+    {
+     "wk": 9,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 41.6
+    },
+    {
+     "wk": 10,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 21.4
+    }
+   ]
+  },
+  {
+   "name": "Lawson Luckie",
+   "pos": "TE",
+   "school": "Georgia",
+   "proj": 143,
+   "cons": 115,
+   "gp": 9,
+   "ppg": 4.7,
+   "n_top": 3,
+   "ppg_top": 2.8,
+   "n_soft": 1,
+   "ppg_soft": 0.9,
+   "soft_share": 0.02,
+   "best_top": {
+    "wk": 6,
+    "opp": "Alabama",
+    "rk": 11,
+    "pts": 4.2
+   },
+   "games": [
+    {
+     "wk": 2,
+     "opp": "Western Kentucky",
+     "rk": 118,
+     "pts": 0.9
+    },
+    {
+     "wk": 3,
+     "opp": "Arkansas",
+     "rk": 74,
+     "pts": 13.4
+    },
+    {
+     "wk": 4,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 1.0
+    },
+    {
+     "wk": 5,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 4.8
+    },
+    {
+     "wk": 6,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 4.2
+    },
+    {
+     "wk": 7,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 11.6
+    },
+    {
+     "wk": 9,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 1.8
+    },
+    {
+     "wk": 10,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 1.6
+    },
+    {
+     "wk": 11,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 3.1
+    }
+   ]
+  },
+  {
+   "name": "Lincoln Kienholz",
+   "pos": "QB",
+   "school": "Louisville",
+   "proj": 242,
+   "cons": 253,
+   "gp": 10,
+   "ppg": 25.6,
+   "n_top": 1,
+   "ppg_top": 25.1,
+   "n_soft": 4,
+   "ppg_soft": 27.4,
+   "soft_share": 0.43,
+   "best_top": {
+    "wk": 4,
+    "opp": "Wake Forest",
+    "rk": 19,
+    "pts": 25.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 33.2
+    },
+    {
+     "wk": 2,
+     "opp": "Villanova",
+     "rk": null,
+     "pts": 37.5
+    },
+    {
+     "wk": 3,
+     "opp": "SMU",
+     "rk": 44,
+     "pts": 25.3
+    },
+    {
+     "wk": 4,
+     "opp": "Wake Forest",
+     "rk": 19,
+     "pts": 25.1
+    },
+    {
+     "wk": 5,
+     "opp": "NC State",
+     "rk": 106,
+     "pts": 18.6
+    },
+    {
+     "wk": 6,
+     "opp": "Florida State",
+     "rk": 67,
+     "pts": 21.6
+    },
+    {
+     "wk": 7,
+     "opp": "Syracuse",
+     "rk": 91,
+     "pts": 29.7
+    },
+    {
+     "wk": 9,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 30.2
+    },
+    {
+     "wk": 10,
+     "opp": "Georgia Tech",
+     "rk": 100,
+     "pts": 23.4
+    },
+    {
+     "wk": 11,
+     "opp": "North Carolina",
+     "rk": 47,
+     "pts": 11.6
+    }
+   ]
+  },
+  {
+   "name": "Luke Reynolds",
+   "pos": "TE",
+   "school": "Virginia Tech",
+   "proj": 60,
+   "cons": 59,
+   "gp": 10,
+   "ppg": 12.3,
+   "n_top": 2,
+   "ppg_top": 16.5,
+   "n_soft": 4,
+   "ppg_soft": 6.8,
+   "soft_share": 0.22,
+   "best_top": {
+    "wk": 8,
+    "opp": "Clemson",
+    "rk": 28,
+    "pts": 20.2
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "VMI",
+     "rk": null,
+     "pts": 13.5
+    },
+    {
+     "wk": 2,
+     "opp": "Old Dominion",
+     "rk": 85,
+     "pts": 26.6
+    },
+    {
+     "wk": 3,
+     "opp": "Maryland",
+     "rk": 83,
+     "pts": 22.7
+    },
+    {
+     "wk": 4,
+     "opp": "Boston College",
+     "rk": 92,
+     "pts": 4.3
+    },
+    {
+     "wk": 5,
+     "opp": "Pittsburgh",
+     "rk": 29,
+     "pts": 12.8
+    },
+    {
+     "wk": 6,
+     "opp": "California",
+     "rk": 108,
+     "pts": 7.8
+    },
+    {
+     "wk": 7,
+     "opp": "Georgia Tech",
+     "rk": 100,
+     "pts": 2.8
+    },
+    {
+     "wk": 8,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 20.2
+    },
+    {
+     "wk": 10,
+     "opp": "SMU",
+     "rk": 44,
+     "pts": 9.7
+    },
+    {
+     "wk": 11,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 3.0
+    }
+   ]
+  },
+  {
+   "name": "Makhi Hughes",
+   "pos": "RB",
+   "school": "Houston",
+   "proj": 228,
+   "cons": 228,
+   "gp": 10,
+   "ppg": 11.6,
+   "n_top": 1,
+   "ppg_top": 12.3,
+   "n_soft": 3,
+   "ppg_soft": 12.1,
+   "soft_share": 0.31,
+   "best_top": {
+    "wk": 8,
+    "opp": "Utah",
+    "rk": 23,
+    "pts": 12.3
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Oregon State",
+     "rk": 95,
+     "pts": 15.6
+    },
+    {
+     "wk": 2,
+     "opp": "Southern",
+     "rk": 134,
+     "pts": 10.4
+    },
+    {
+     "wk": 3,
+     "opp": "Texas Tech",
+     "rk": 34,
+     "pts": 10.9
+    },
+    {
+     "wk": 4,
+     "opp": "Georgia Southern",
+     "rk": 54,
+     "pts": 8.9
+    },
+    {
+     "wk": 5,
+     "opp": "UCF",
+     "rk": 70,
+     "pts": 5.6
+    },
+    {
+     "wk": 6,
+     "opp": "Kansas State",
+     "rk": 64,
+     "pts": 13.8
+    },
+    {
+     "wk": 7,
+     "opp": "Oklahoma State",
+     "rk": 84,
+     "pts": 8.5
+    },
+    {
+     "wk": 8,
+     "opp": "Utah",
+     "rk": 23,
+     "pts": 12.3
+    },
+    {
+     "wk": 10,
+     "opp": "Cincinnati",
+     "rk": 111,
+     "pts": 10.2
+    },
+    {
+     "wk": 11,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 19.9
+    }
+   ]
+  },
+  {
+   "name": "Mario Craver",
+   "pos": "WR",
+   "school": "Texas A&M",
+   "proj": 80,
+   "cons": 84,
+   "gp": 9,
+   "ppg": 8.3,
+   "n_top": 4,
+   "ppg_top": 7.0,
+   "n_soft": 1,
+   "ppg_soft": 12.6,
+   "soft_share": 0.17,
+   "best_top": {
+    "wk": 8,
+    "opp": "Alabama",
+    "rk": 11,
+    "pts": 14.5
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Missouri State",
+     "rk": 112,
+     "pts": 12.6
+    },
+    {
+     "wk": 2,
+     "opp": "Arizona State",
+     "rk": 46,
+     "pts": 10.9
+    },
+    {
+     "wk": 3,
+     "opp": "Kentucky",
+     "rk": 45,
+     "pts": 17.4
+    },
+    {
+     "wk": 4,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 5.2
+    },
+    {
+     "wk": 5,
+     "opp": "Arkansas",
+     "rk": 74,
+     "pts": 1.5
+    },
+    {
+     "wk": 6,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 1.1
+    },
+    {
+     "wk": 8,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 14.5
+    },
+    {
+     "wk": 10,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 4.5
+    },
+    {
+     "wk": 11,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 7.4
+    }
+   ]
+  },
+  {
+   "name": "Mark Fletcher Jr.",
+   "pos": "RB",
+   "school": "Miami (FL)",
+   "proj": 136,
+   "cons": 141,
+   "gp": 8,
+   "ppg": 15.4,
+   "n_top": 4,
+   "ppg_top": 13.9,
+   "n_soft": 1,
+   "ppg_soft": 6.0,
+   "soft_share": 0.05,
+   "best_top": {
+    "wk": 5,
+    "opp": "Clemson",
+    "rk": 28,
+    "pts": 22.3
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 6.0
+    },
+    {
+     "wk": 2,
+     "opp": "Florida A&M",
+     "rk": 52,
+     "pts": 22.5
+    },
+    {
+     "wk": 3,
+     "opp": "Wake Forest",
+     "rk": 19,
+     "pts": 14.5
+    },
+    {
+     "wk": 5,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 22.3
+    },
+    {
+     "wk": 8,
+     "opp": "Pittsburgh",
+     "rk": 29,
+     "pts": 12.2
+    },
+    {
+     "wk": 9,
+     "opp": "North Carolina",
+     "rk": 47,
+     "pts": 27.6
+    },
+    {
+     "wk": 10,
+     "opp": "Notre Dame",
+     "rk": 14,
+     "pts": 6.8
+    },
+    {
+     "wk": 11,
+     "opp": "Duke",
+     "rk": 31,
+     "pts": 11.3
+    }
+   ]
+  },
+  {
+   "name": "Marquis Johnson",
+   "pos": "WR",
+   "school": "Mississippi State",
+   "proj": null,
+   "cons": 266,
+   "gp": 10,
+   "ppg": 6.7,
+   "n_top": 5,
+   "ppg_top": 5.4,
+   "n_soft": 1,
+   "ppg_soft": 17.4,
+   "soft_share": 0.26,
+   "best_top": {
+    "wk": 9,
+    "opp": "Texas",
+    "rk": 5,
+    "pts": 9.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "UL Monroe",
+     "rk": 135,
+     "pts": 17.4
+    },
+    {
+     "wk": 2,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 1.3
+    },
+    {
+     "wk": 3,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 10.4
+    },
+    {
+     "wk": 4,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 8.0
+    },
+    {
+     "wk": 5,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 3.2
+    },
+    {
+     "wk": 7,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 4.1
+    },
+    {
+     "wk": 8,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 2.5
+    },
+    {
+     "wk": 9,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 9.1
+    },
+    {
+     "wk": 10,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 8.6
+    },
+    {
+     "wk": 11,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 1.9
+    }
+   ]
+  },
+  {
+   "name": "Mike Matthews",
+   "pos": "WR",
+   "school": "Tennessee",
+   "proj": 132,
+   "cons": 129,
+   "gp": 10,
+   "ppg": 11.2,
+   "n_top": 3,
+   "ppg_top": 10.5,
+   "n_soft": 3,
+   "ppg_soft": 12.0,
+   "soft_share": 0.32,
+   "best_top": {
+    "wk": 4,
+    "opp": "Texas",
+    "rk": 5,
+    "pts": 15.2
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Furman",
+     "rk": null,
+     "pts": 27.2
+    },
+    {
+     "wk": 2,
+     "opp": "Georgia Tech",
+     "rk": 100,
+     "pts": 2.6
+    },
+    {
+     "wk": 3,
+     "opp": "Kennesaw State",
+     "rk": 97,
+     "pts": 6.1
+    },
+    {
+     "wk": 4,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 15.2
+    },
+    {
+     "wk": 5,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 7.7
+    },
+    {
+     "wk": 6,
+     "opp": "Arkansas",
+     "rk": 74,
+     "pts": 11.2
+    },
+    {
+     "wk": 7,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 11.0
+    },
+    {
+     "wk": 8,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 14.0
+    },
+    {
+     "wk": 10,
+     "opp": "Kentucky",
+     "rk": 45,
+     "pts": 11.3
+    },
+    {
+     "wk": 11,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 5.2
+    }
+   ]
+  },
+  {
+   "name": "Nate Frazier",
+   "pos": "RB",
+   "school": "Georgia",
+   "proj": 124,
+   "cons": 134,
+   "gp": 8,
+   "ppg": 13.7,
+   "n_top": 2,
+   "ppg_top": 26.2,
+   "n_soft": 1,
+   "ppg_soft": 12.5,
+   "soft_share": 0.11,
+   "best_top": {
+    "wk": 11,
+    "opp": "Missouri",
+    "rk": 24,
+    "pts": 27.2
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Tennessee State",
+     "rk": 6,
+     "pts": 25.2
+    },
+    {
+     "wk": 2,
+     "opp": "Western Kentucky",
+     "rk": 118,
+     "pts": 12.5
+    },
+    {
+     "wk": 3,
+     "opp": "Arkansas",
+     "rk": 74,
+     "pts": 13.5
+    },
+    {
+     "wk": 5,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 0.9
+    },
+    {
+     "wk": 7,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 5.0
+    },
+    {
+     "wk": 9,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 14.2
+    },
+    {
+     "wk": 10,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 10.7
+    },
+    {
+     "wk": 11,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 27.2
+    }
+   ]
+  },
+  {
+   "name": "Nic Anderson",
+   "pos": "WR",
+   "school": "Kentucky",
+   "proj": 220,
+   "cons": 229,
+   "gp": 7,
+   "ppg": 5.5,
+   "n_top": 4,
+   "ppg_top": 4.4,
+   "n_soft": 2,
+   "ppg_soft": 2.1,
+   "soft_share": 0.11,
+   "best_top": {
+    "wk": 7,
+    "opp": "Oklahoma",
+    "rk": 15,
+    "pts": 7.3
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Youngstown State",
+     "rk": null,
+     "pts": 0.9
+    },
+    {
+     "wk": 2,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 1.8
+    },
+    {
+     "wk": 4,
+     "opp": "South Alabama",
+     "rk": 131,
+     "pts": 3.3
+    },
+    {
+     "wk": 5,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 16.5
+    },
+    {
+     "wk": 6,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 4.4
+    },
+    {
+     "wk": 7,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 7.3
+    },
+    {
+     "wk": 10,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 4.1
+    }
+   ]
+  },
+  {
+   "name": "Nick Marsh",
+   "pos": "WR",
+   "school": "Indiana",
+   "proj": 17,
+   "cons": 21,
+   "gp": 10,
+   "ppg": 14.4,
+   "n_top": 3,
+   "ppg_top": 16.8,
+   "n_soft": 4,
+   "ppg_soft": 14.0,
+   "soft_share": 0.39,
+   "best_top": {
+    "wk": 6,
+    "opp": "Nebraska",
+    "rk": 9,
+    "pts": 33.7
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "North Texas",
+     "rk": 119,
+     "pts": 8.7
+    },
+    {
+     "wk": 2,
+     "opp": "Howard",
+     "rk": null,
+     "pts": 14.1
+    },
+    {
+     "wk": 3,
+     "opp": "Western Kentucky",
+     "rk": 118,
+     "pts": 11.6
+    },
+    {
+     "wk": 4,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 13.7
+    },
+    {
+     "wk": 5,
+     "opp": "Rutgers",
+     "rk": 126,
+     "pts": 21.5
+    },
+    {
+     "wk": 6,
+     "opp": "Nebraska",
+     "rk": 9,
+     "pts": 33.7
+    },
+    {
+     "wk": 7,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 13.2
+    },
+    {
+     "wk": 8,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 3.5
+    },
+    {
+     "wk": 9,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 13.9
+    },
+    {
+     "wk": 11,
+     "opp": "USC",
+     "rk": 35,
+     "pts": 10.0
+    }
+   ]
+  },
+  {
+   "name": "Nyck Harbor",
+   "pos": "WR",
+   "school": "South Carolina",
+   "proj": 175,
+   "cons": 192,
+   "gp": 8,
+   "ppg": 8.8,
+   "n_top": 3,
+   "ppg_top": 11.3,
+   "n_soft": 2,
+   "ppg_soft": 7.0,
+   "soft_share": 0.2,
+   "best_top": {
+    "wk": 9,
+    "opp": "Oklahoma",
+    "rk": 15,
+    "pts": 13.1
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Kent State",
+     "rk": 122,
+     "pts": 9.5
+    },
+    {
+     "wk": 2,
+     "opp": "Towson",
+     "rk": null,
+     "pts": 4.5
+    },
+    {
+     "wk": 3,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 2.7
+    },
+    {
+     "wk": 4,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 11.7
+    },
+    {
+     "wk": 5,
+     "opp": "Kentucky",
+     "rk": 45,
+     "pts": 3.6
+    },
+    {
+     "wk": 6,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 16.3
+    },
+    {
+     "wk": 9,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 13.1
+    },
+    {
+     "wk": 10,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 9.0
+    }
+   ]
+  },
+  {
+   "name": "Omarion Miller",
+   "pos": "WR",
+   "school": "Arizona State",
+   "proj": 97,
+   "cons": 104,
+   "gp": 9,
+   "ppg": 9.5,
+   "n_top": 3,
+   "ppg_top": 11.5,
+   "n_soft": 1,
+   "ppg_soft": 20.2,
+   "soft_share": 0.24,
+   "best_top": {
+    "wk": 5,
+    "opp": "Baylor",
+    "rk": 25,
+    "pts": 15.5
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Morgan State",
+     "rk": null,
+     "pts": 20.2
+    },
+    {
+     "wk": 2,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 7.4
+    },
+    {
+     "wk": 3,
+     "opp": "Kansas",
+     "rk": 53,
+     "pts": 3.3
+    },
+    {
+     "wk": 5,
+     "opp": "Baylor",
+     "rk": 25,
+     "pts": 15.5
+    },
+    {
+     "wk": 6,
+     "opp": "Hawai'i",
+     "rk": 77,
+     "pts": 10.8
+    },
+    {
+     "wk": 8,
+     "opp": "Kansas State",
+     "rk": 64,
+     "pts": 3.0
+    },
+    {
+     "wk": 9,
+     "opp": "BYU",
+     "rk": 18,
+     "pts": 11.7
+    },
+    {
+     "wk": 10,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 8.9
+    },
+    {
+     "wk": 11,
+     "opp": "UCF",
+     "rk": 70,
+     "pts": 4.9
+    }
+   ]
+  },
+  {
+   "name": "Patrick Overmyer",
+   "pos": "TE",
+   "school": "Houston",
+   "proj": 197,
+   "cons": 203,
+   "gp": 10,
+   "ppg": 13.3,
+   "n_top": 1,
+   "ppg_top": 0.5,
+   "n_soft": 3,
+   "ppg_soft": 9.5,
+   "soft_share": 0.21,
+   "best_top": {
+    "wk": 8,
+    "opp": "Utah",
+    "rk": 23,
+    "pts": 0.5
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Oregon State",
+     "rk": 95,
+     "pts": 11.4
+    },
+    {
+     "wk": 2,
+     "opp": "Southern",
+     "rk": 134,
+     "pts": 8.6
+    },
+    {
+     "wk": 3,
+     "opp": "Texas Tech",
+     "rk": 34,
+     "pts": 17.2
+    },
+    {
+     "wk": 4,
+     "opp": "Georgia Southern",
+     "rk": 54,
+     "pts": 8.3
+    },
+    {
+     "wk": 5,
+     "opp": "UCF",
+     "rk": 70,
+     "pts": 8.6
+    },
+    {
+     "wk": 6,
+     "opp": "Kansas State",
+     "rk": 64,
+     "pts": 36.4
+    },
+    {
+     "wk": 7,
+     "opp": "Oklahoma State",
+     "rk": 84,
+     "pts": 11.7
+    },
+    {
+     "wk": 8,
+     "opp": "Utah",
+     "rk": 23,
+     "pts": 0.5
+    },
+    {
+     "wk": 10,
+     "opp": "Cincinnati",
+     "rk": 111,
+     "pts": 8.6
+    },
+    {
+     "wk": 11,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 22.1
+    }
+   ]
+  },
+  {
+   "name": "Peter Clarke",
+   "pos": "TE",
+   "school": "Temple",
+   "proj": 135,
+   "cons": 136,
+   "gp": 4,
+   "ppg": 6.8,
+   "n_top": 1,
+   "ppg_top": 6.1,
+   "n_soft": 1,
+   "ppg_soft": 17.3,
+   "soft_share": 0.64,
+   "best_top": {
+    "wk": 2,
+    "opp": "Penn State",
+    "rk": 22,
+    "pts": 6.1
+   },
+   "games": [
+    {
+     "wk": 2,
+     "opp": "Penn State",
+     "rk": 22,
+     "pts": 6.1
+    },
+    {
+     "wk": 5,
+     "opp": "South Florida",
+     "rk": 55,
+     "pts": 2.8
+    },
+    {
+     "wk": 6,
+     "opp": "UConn",
+     "rk": 101,
+     "pts": 17.3
+    },
+    {
+     "wk": 9,
+     "opp": "East Carolina",
+     "rk": 51,
+     "pts": 0.9
+    }
+   ]
+  },
+  {
+   "name": "Que'Sean Brown",
+   "pos": "WR",
+   "school": "Virginia Tech",
+   "proj": 226,
+   "cons": 242,
+   "gp": 10,
+   "ppg": 14.2,
+   "n_top": 2,
+   "ppg_top": 17.9,
+   "n_soft": 4,
+   "ppg_soft": 17.6,
+   "soft_share": 0.5,
+   "best_top": {
+    "wk": 5,
+    "opp": "Pittsburgh",
+    "rk": 29,
+    "pts": 24.2
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "VMI",
+     "rk": null,
+     "pts": 19.9
+    },
+    {
+     "wk": 2,
+     "opp": "Old Dominion",
+     "rk": 85,
+     "pts": 7.6
+    },
+    {
+     "wk": 3,
+     "opp": "Maryland",
+     "rk": 83,
+     "pts": 4.8
+    },
+    {
+     "wk": 4,
+     "opp": "Boston College",
+     "rk": 92,
+     "pts": 9.1
+    },
+    {
+     "wk": 5,
+     "opp": "Pittsburgh",
+     "rk": 29,
+     "pts": 24.2
+    },
+    {
+     "wk": 6,
+     "opp": "California",
+     "rk": 108,
+     "pts": 9.8
+    },
+    {
+     "wk": 7,
+     "opp": "Georgia Tech",
+     "rk": 100,
+     "pts": 26.4
+    },
+    {
+     "wk": 8,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 11.6
+    },
+    {
+     "wk": 10,
+     "opp": "SMU",
+     "rk": 44,
+     "pts": 14.0
+    },
+    {
+     "wk": 11,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 14.5
+    }
+   ]
+  },
+  {
+   "name": "Quintrevion Wisner",
+   "pos": "RB",
+   "school": "Florida State",
+   "proj": 194,
+   "cons": 197,
+   "gp": 7,
+   "ppg": 6.5,
+   "n_top": 2,
+   "ppg_top": 5.9,
+   "n_soft": 2,
+   "ppg_soft": 5.5,
+   "soft_share": 0.25,
+   "best_top": {
+    "wk": 9,
+    "opp": "Clemson",
+    "rk": 28,
+    "pts": 11.8
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "New Mexico State",
+     "rk": 105,
+     "pts": 5.3
+    },
+    {
+     "wk": 3,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 0.0
+    },
+    {
+     "wk": 4,
+     "opp": "Central Arkansas",
+     "rk": null,
+     "pts": 5.8
+    },
+    {
+     "wk": 5,
+     "opp": "Virginia",
+     "rk": 37,
+     "pts": 11.6
+    },
+    {
+     "wk": 6,
+     "opp": "Louisville",
+     "rk": 40,
+     "pts": 4.9
+    },
+    {
+     "wk": 9,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 11.8
+    },
+    {
+     "wk": 10,
+     "opp": "Boston College",
+     "rk": 92,
+     "pts": 5.8
+    }
+   ]
+  },
+  {
+   "name": "Raleek Brown",
+   "pos": "RB",
+   "school": "Texas",
+   "proj": null,
+   "cons": 278,
+   "gp": 10,
+   "ppg": 13.1,
+   "n_top": 5,
+   "ppg_top": 13.8,
+   "n_soft": 2,
+   "ppg_soft": 11.6,
+   "soft_share": 0.18,
+   "best_top": {
+    "wk": 10,
+    "opp": "Missouri",
+    "rk": 24,
+    "pts": 28.3
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Texas State",
+     "rk": 102,
+     "pts": 17.0
+    },
+    {
+     "wk": 2,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 5.5
+    },
+    {
+     "wk": 3,
+     "opp": "UTSA",
+     "rk": 96,
+     "pts": 6.1
+    },
+    {
+     "wk": 4,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 20.5
+    },
+    {
+     "wk": 6,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 2.5
+    },
+    {
+     "wk": 7,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 10.7
+    },
+    {
+     "wk": 8,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 15.7
+    },
+    {
+     "wk": 9,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 12.6
+    },
+    {
+     "wk": 10,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 28.3
+    },
+    {
+     "wk": 11,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 12.3
+    }
+   ]
+  },
+  {
+   "name": "Reed Harris",
+   "pos": "WR",
+   "school": "Arizona State",
+   "proj": 43,
+   "cons": 43,
+   "gp": 9,
+   "ppg": 18.6,
+   "n_top": 3,
+   "ppg_top": 17.4,
+   "n_soft": 1,
+   "ppg_soft": 28.7,
+   "soft_share": 0.17,
+   "best_top": {
+    "wk": 2,
+    "opp": "Texas A&M",
+    "rk": 30,
+    "pts": 35.4
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Morgan State",
+     "rk": null,
+     "pts": 28.7
+    },
+    {
+     "wk": 2,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 35.4
+    },
+    {
+     "wk": 3,
+     "opp": "Kansas",
+     "rk": 53,
+     "pts": 12.8
+    },
+    {
+     "wk": 5,
+     "opp": "Baylor",
+     "rk": 25,
+     "pts": 16.0
+    },
+    {
+     "wk": 6,
+     "opp": "Hawai'i",
+     "rk": 77,
+     "pts": 25.1
+    },
+    {
+     "wk": 8,
+     "opp": "Kansas State",
+     "rk": 64,
+     "pts": 17.7
+    },
+    {
+     "wk": 9,
+     "opp": "BYU",
+     "rk": 18,
+     "pts": 0.9
+    },
+    {
+     "wk": 10,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 19.2
+    },
+    {
+     "wk": 11,
+     "opp": "UCF",
+     "rk": 70,
+     "pts": 11.5
+    }
+   ]
+  },
+  {
+   "name": "Ryan Coleman-Williams",
+   "pos": "WR",
+   "school": "Alabama",
+   "proj": 44,
+   "cons": 32,
+   "gp": 8,
+   "ppg": 12.0,
+   "n_top": 2,
+   "ppg_top": 7.4,
+   "n_soft": 0,
+   "ppg_soft": null,
+   "soft_share": 0.0,
+   "best_top": {
+    "wk": 10,
+    "opp": "LSU",
+    "rk": 10,
+    "pts": 9.4
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "East Carolina",
+     "rk": 51,
+     "pts": 14.4
+    },
+    {
+     "wk": 2,
+     "opp": "Kentucky",
+     "rk": 45,
+     "pts": 6.3
+    },
+    {
+     "wk": 3,
+     "opp": "Florida State",
+     "rk": 67,
+     "pts": 13.7
+    },
+    {
+     "wk": 4,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 24.7
+    },
+    {
+     "wk": 5,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 11.8
+    },
+    {
+     "wk": 6,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 5.4
+    },
+    {
+     "wk": 10,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 9.4
+    },
+    {
+     "wk": 11,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 10.2
+    }
+   ]
+  },
+  {
+   "name": "Ryan Wingo",
+   "pos": "WR",
+   "school": "Texas",
+   "proj": 63,
+   "cons": 76,
+   "gp": 10,
+   "ppg": 10.8,
+   "n_top": 5,
+   "ppg_top": 10.2,
+   "n_soft": 2,
+   "ppg_soft": 12.4,
+   "soft_share": 0.23,
+   "best_top": {
+    "wk": 6,
+    "opp": "Oklahoma",
+    "rk": 15,
+    "pts": 12.7
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Texas State",
+     "rk": 102,
+     "pts": 21.6
+    },
+    {
+     "wk": 2,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 9.2
+    },
+    {
+     "wk": 3,
+     "opp": "UTSA",
+     "rk": 96,
+     "pts": 3.2
+    },
+    {
+     "wk": 4,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 10.4
+    },
+    {
+     "wk": 6,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 12.7
+    },
+    {
+     "wk": 7,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 7.4
+    },
+    {
+     "wk": 8,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 21.5
+    },
+    {
+     "wk": 9,
+     "opp": "Mississippi State",
+     "rk": 75,
+     "pts": 2.9
+    },
+    {
+     "wk": 10,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 8.9
+    },
+    {
+     "wk": 11,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 9.8
+    }
+   ]
+  },
+  {
+   "name": "Sam Leavitt",
+   "pos": "QB",
+   "school": "LSU",
+   "proj": 153,
+   "cons": 143,
+   "gp": 9,
+   "ppg": 23.9,
+   "n_top": 4,
+   "ppg_top": 20.4,
+   "n_soft": 1,
+   "ppg_soft": 17.0,
+   "soft_share": 0.08,
+   "best_top": {
+    "wk": 1,
+    "opp": "Clemson",
+    "rk": 28,
+    "pts": 34.5
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 34.5
+    },
+    {
+     "wk": 2,
+     "opp": "Louisiana Tech",
+     "rk": 59,
+     "pts": 32.0
+    },
+    {
+     "wk": 3,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 20.6
+    },
+    {
+     "wk": 4,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 20.7
+    },
+    {
+     "wk": 5,
+     "opp": "McNeese",
+     "rk": null,
+     "pts": 17.0
+    },
+    {
+     "wk": 6,
+     "opp": "Kentucky",
+     "rk": 45,
+     "pts": 24.9
+    },
+    {
+     "wk": 8,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 38.9
+    },
+    {
+     "wk": 10,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 14.8
+    },
+    {
+     "wk": 11,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 11.5
+    }
+   ]
+  },
+  {
+   "name": "T.J. Moore",
+   "pos": "WR",
+   "school": "Clemson",
+   "proj": 127,
+   "cons": 144,
+   "gp": 9,
+   "ppg": 6.8,
+   "n_top": 2,
+   "ppg_top": 5.5,
+   "n_soft": 2,
+   "ppg_soft": 2.8,
+   "soft_share": 0.09,
+   "best_top": {
+    "wk": 5,
+    "opp": "Miami",
+    "rk": 26,
+    "pts": 5.9
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 5.1
+    },
+    {
+     "wk": 2,
+     "opp": "Georgia Southern",
+     "rk": 54,
+     "pts": 19.8
+    },
+    {
+     "wk": 3,
+     "opp": "North Carolina",
+     "rk": 47,
+     "pts": 7.3
+    },
+    {
+     "wk": 4,
+     "opp": "California",
+     "rk": 108,
+     "pts": 3.9
+    },
+    {
+     "wk": 5,
+     "opp": "Miami",
+     "rk": 26,
+     "pts": 5.9
+    },
+    {
+     "wk": 8,
+     "opp": "Virginia Tech",
+     "rk": 71,
+     "pts": 4.0
+    },
+    {
+     "wk": 9,
+     "opp": "Florida State",
+     "rk": 67,
+     "pts": 5.1
+    },
+    {
+     "wk": 10,
+     "opp": "Syracuse",
+     "rk": 91,
+     "pts": 8.3
+    },
+    {
+     "wk": 11,
+     "opp": "Georgia Tech",
+     "rk": 100,
+     "pts": 1.7
+    }
+   ]
+  },
+  {
+   "name": "Terrance Carter Jr.",
+   "pos": "TE",
+   "school": "Texas Tech",
+   "proj": 139,
+   "cons": 117,
+   "gp": 7,
+   "ppg": 10.3,
+   "n_top": 0,
+   "ppg_top": null,
+   "n_soft": 3,
+   "ppg_soft": 9.8,
+   "soft_share": 0.41,
+   "best_top": null,
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Abilene Christian",
+     "rk": null,
+     "pts": 4.3
+    },
+    {
+     "wk": 3,
+     "opp": "Houston",
+     "rk": 61,
+     "pts": 4.4
+    },
+    {
+     "wk": 5,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 16.7
+    },
+    {
+     "wk": 8,
+     "opp": "Cincinnati",
+     "rk": 111,
+     "pts": 2.9
+    },
+    {
+     "wk": 9,
+     "opp": "Arizona",
+     "rk": 38,
+     "pts": 11.7
+    },
+    {
+     "wk": 10,
+     "opp": "West Virginia",
+     "rk": 129,
+     "pts": 22.1
+    },
+    {
+     "wk": 11,
+     "opp": "Oklahoma State",
+     "rk": 84,
+     "pts": 9.9
+    }
+   ]
+  },
+  {
+   "name": "Trey'Dez Green",
+   "pos": "TE",
+   "school": "LSU",
+   "proj": 29,
+   "cons": 27,
+   "gp": 6,
+   "ppg": 11.7,
+   "n_top": 3,
+   "ppg_top": 9.6,
+   "n_soft": 0,
+   "ppg_soft": null,
+   "soft_share": 0.0,
+   "best_top": {
+    "wk": 10,
+    "opp": "Alabama",
+    "rk": 11,
+    "pts": 13.5
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Clemson",
+     "rk": 28,
+     "pts": 7.8
+    },
+    {
+     "wk": 2,
+     "opp": "Louisiana Tech",
+     "rk": 59,
+     "pts": 20.1
+    },
+    {
+     "wk": 3,
+     "opp": "Ole Miss",
+     "rk": 48,
+     "pts": 8.0
+    },
+    {
+     "wk": 8,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 13.5
+    },
+    {
+     "wk": 10,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 13.5
+    },
+    {
+     "wk": 11,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 7.4
+    }
+   ]
+  },
+  {
+   "name": "Trinidad Chambliss",
+   "pos": "QB",
+   "school": "Mississippi",
+   "proj": 23,
+   "cons": 19,
+   "gp": 10,
+   "ppg": 22.0,
+   "n_top": 5,
+   "ppg_top": 17.5,
+   "n_soft": 1,
+   "ppg_soft": 17.2,
+   "soft_share": 0.08,
+   "best_top": {
+    "wk": 7,
+    "opp": "Missouri",
+    "rk": 24,
+    "pts": 29.0
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Louisville",
+     "rk": 40,
+     "pts": 33.4
+    },
+    {
+     "wk": 2,
+     "opp": "Charlotte",
+     "rk": 137,
+     "pts": 17.2
+    },
+    {
+     "wk": 3,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 26.7
+    },
+    {
+     "wk": 4,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 28.3
+    },
+    {
+     "wk": 6,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 25.0
+    },
+    {
+     "wk": 7,
+     "opp": "Missouri",
+     "rk": 24,
+     "pts": 29.0
+    },
+    {
+     "wk": 8,
+     "opp": "Texas",
+     "rk": 5,
+     "pts": 12.7
+    },
+    {
+     "wk": 9,
+     "opp": "Auburn",
+     "rk": 33,
+     "pts": 29.0
+    },
+    {
+     "wk": 10,
+     "opp": "Georgia",
+     "rk": 1,
+     "pts": 1.6
+    },
+    {
+     "wk": 11,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 17.5
+    }
+   ]
+  },
+  {
+   "name": "Turbo Richard",
+   "pos": "RB",
+   "school": "Indiana",
+   "proj": null,
+   "cons": 265,
+   "gp": 9,
+   "ppg": 13.1,
+   "n_top": 3,
+   "ppg_top": 6.5,
+   "n_soft": 4,
+   "ppg_soft": 22.0,
+   "soft_share": 0.75,
+   "best_top": {
+    "wk": 7,
+    "opp": "Ohio State",
+    "rk": 8,
+    "pts": 11.3
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "North Texas",
+     "rk": 119,
+     "pts": 22.1
+    },
+    {
+     "wk": 2,
+     "opp": "Howard",
+     "rk": null,
+     "pts": 17.8
+    },
+    {
+     "wk": 3,
+     "opp": "Western Kentucky",
+     "rk": 118,
+     "pts": 20.9
+    },
+    {
+     "wk": 4,
+     "opp": "Northwestern",
+     "rk": 32,
+     "pts": 6.8
+    },
+    {
+     "wk": 5,
+     "opp": "Rutgers",
+     "rk": 126,
+     "pts": 27.3
+    },
+    {
+     "wk": 6,
+     "opp": "Nebraska",
+     "rk": 9,
+     "pts": 1.0
+    },
+    {
+     "wk": 7,
+     "opp": "Ohio State",
+     "rk": 8,
+     "pts": 11.3
+    },
+    {
+     "wk": 8,
+     "opp": "Michigan",
+     "rk": 7,
+     "pts": 7.3
+    },
+    {
+     "wk": 9,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 3.4
+    }
+   ]
+  },
+  {
+   "name": "Walker Eget",
+   "pos": "QB",
+   "school": "Duke",
+   "proj": null,
+   "cons": 300,
+   "gp": 9,
+   "ppg": 11.7,
+   "n_top": 1,
+   "ppg_top": 9.8,
+   "n_soft": 5,
+   "ppg_soft": 11.7,
+   "soft_share": 0.55,
+   "best_top": {
+    "wk": 11,
+    "opp": "Miami",
+    "rk": 26,
+    "pts": 9.8
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Tulane",
+     "rk": 103,
+     "pts": 4.3
+    },
+    {
+     "wk": 2,
+     "opp": "Illinois",
+     "rk": 43,
+     "pts": 20.0
+    },
+    {
+     "wk": 3,
+     "opp": "Stanford",
+     "rk": 113,
+     "pts": 10.9
+    },
+    {
+     "wk": 4,
+     "opp": "William & Mary",
+     "rk": null,
+     "pts": 15.3
+    },
+    {
+     "wk": 6,
+     "opp": "Georgia Tech",
+     "rk": 100,
+     "pts": 15.5
+    },
+    {
+     "wk": 8,
+     "opp": "Virginia",
+     "rk": 37,
+     "pts": 6.4
+    },
+    {
+     "wk": 9,
+     "opp": "Boston College",
+     "rk": 92,
+     "pts": 11.2
+    },
+    {
+     "wk": 10,
+     "opp": "NC State",
+     "rk": 106,
+     "pts": 12.3
+    },
+    {
+     "wk": 11,
+     "opp": "Miami",
+     "rk": 26,
+     "pts": 9.8
+    }
+   ]
+  },
+  {
+   "name": "Wayne Knight",
+   "pos": "RB",
+   "school": "UCLA",
+   "proj": 208,
+   "cons": 211,
+   "gp": 10,
+   "ppg": 19.9,
+   "n_top": 2,
+   "ppg_top": 17.7,
+   "n_soft": 3,
+   "ppg_soft": 30.1,
+   "soft_share": 0.45,
+   "best_top": {
+    "wk": 6,
+    "opp": "Oregon",
+    "rk": 20,
+    "pts": 25.0
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "California",
+     "rk": 108,
+     "pts": 29.1
+    },
+    {
+     "wk": 2,
+     "opp": "San Diego State",
+     "rk": 98,
+     "pts": 27.7
+    },
+    {
+     "wk": 3,
+     "opp": "Purdue",
+     "rk": 110,
+     "pts": 33.5
+    },
+    {
+     "wk": 4,
+     "opp": "Maryland",
+     "rk": 83,
+     "pts": 21.0
+    },
+    {
+     "wk": 6,
+     "opp": "Oregon",
+     "rk": 20,
+     "pts": 25.0
+    },
+    {
+     "wk": 7,
+     "opp": "Wisconsin",
+     "rk": 17,
+     "pts": 10.4
+    },
+    {
+     "wk": 8,
+     "opp": "Michigan State",
+     "rk": 56,
+     "pts": 11.6
+    },
+    {
+     "wk": 9,
+     "opp": "Nevada",
+     "rk": 57,
+     "pts": 14.4
+    },
+    {
+     "wk": 10,
+     "opp": "Minnesota",
+     "rk": 41,
+     "pts": 20.2
+    },
+    {
+     "wk": 11,
+     "opp": "Illinois",
+     "rk": 43,
+     "pts": 6.3
+    }
+   ]
+  },
+  {
+   "name": "Wayshawn Parker",
+   "pos": "RB",
+   "school": "Utah",
+   "proj": 110,
+   "cons": 101,
+   "gp": 10,
+   "ppg": 19.6,
+   "n_top": 1,
+   "ppg_top": 5.6,
+   "n_soft": 2,
+   "ppg_soft": 23.1,
+   "soft_share": 0.24,
+   "best_top": {
+    "wk": 10,
+    "opp": "BYU",
+    "rk": 18,
+    "pts": 5.6
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Idaho",
+     "rk": null,
+     "pts": 28.9
+    },
+    {
+     "wk": 2,
+     "opp": "Arkansas",
+     "rk": 74,
+     "pts": 32.3
+    },
+    {
+     "wk": 3,
+     "opp": "Utah State",
+     "rk": 49,
+     "pts": 4.1
+    },
+    {
+     "wk": 4,
+     "opp": "Iowa State",
+     "rk": 90,
+     "pts": 44.4
+    },
+    {
+     "wk": 6,
+     "opp": "Kansas",
+     "rk": 53,
+     "pts": 33.7
+    },
+    {
+     "wk": 7,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 11.9
+    },
+    {
+     "wk": 8,
+     "opp": "Houston",
+     "rk": 61,
+     "pts": 17.3
+    },
+    {
+     "wk": 9,
+     "opp": "Cincinnati",
+     "rk": 111,
+     "pts": 17.4
+    },
+    {
+     "wk": 10,
+     "opp": "BYU",
+     "rk": 18,
+     "pts": 5.6
+    },
+    {
+     "wk": 11,
+     "opp": "Arizona",
+     "rk": 38,
+     "pts": 0.2
+    }
+   ]
+  },
+  {
+   "name": "Willie Rodriguez",
+   "pos": "TE",
+   "school": "Kentucky",
+   "proj": 214,
+   "cons": 217,
+   "gp": 10,
+   "ppg": 9.6,
+   "n_top": 5,
+   "ppg_top": 9.5,
+   "n_soft": 2,
+   "ppg_soft": 7.8,
+   "soft_share": 0.16,
+   "best_top": {
+    "wk": 7,
+    "opp": "Oklahoma",
+    "rk": 15,
+    "pts": 18.3
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Youngstown State",
+     "rk": null,
+     "pts": 12.8
+    },
+    {
+     "wk": 2,
+     "opp": "Alabama",
+     "rk": 11,
+     "pts": 8.9
+    },
+    {
+     "wk": 3,
+     "opp": "Texas A&M",
+     "rk": 30,
+     "pts": 3.7
+    },
+    {
+     "wk": 4,
+     "opp": "South Alabama",
+     "rk": 131,
+     "pts": 2.8
+    },
+    {
+     "wk": 5,
+     "opp": "South Carolina",
+     "rk": 36,
+     "pts": 8.7
+    },
+    {
+     "wk": 6,
+     "opp": "LSU",
+     "rk": 10,
+     "pts": 5.5
+    },
+    {
+     "wk": 7,
+     "opp": "Oklahoma",
+     "rk": 15,
+     "pts": 18.3
+    },
+    {
+     "wk": 8,
+     "opp": "Vanderbilt",
+     "rk": 80,
+     "pts": 15.8
+    },
+    {
+     "wk": 10,
+     "opp": "Tennessee",
+     "rk": 6,
+     "pts": 11.1
+    },
+    {
+     "wk": 11,
+     "opp": "Florida",
+     "rk": 52,
+     "pts": 8.7
+    }
+   ]
+  },
+  {
+   "name": "Wyatt Young",
+   "pos": "WR",
+   "school": "Oklahoma State",
+   "proj": 92,
+   "cons": 87,
+   "gp": 10,
+   "ppg": 15.5,
+   "n_top": 1,
+   "ppg_top": 20.6,
+   "n_soft": 2,
+   "ppg_soft": 18.9,
+   "soft_share": 0.24,
+   "best_top": {
+    "wk": 2,
+    "opp": "Oregon",
+    "rk": 20,
+    "pts": 20.6
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Tulsa",
+     "rk": 76,
+     "pts": 12.6
+    },
+    {
+     "wk": 2,
+     "opp": "Oregon",
+     "rk": 20,
+     "pts": 20.6
+    },
+    {
+     "wk": 3,
+     "opp": "Murray State",
+     "rk": null,
+     "pts": 8.6
+    },
+    {
+     "wk": 4,
+     "opp": "West Virginia",
+     "rk": 129,
+     "pts": 29.2
+    },
+    {
+     "wk": 6,
+     "opp": "UCF",
+     "rk": 70,
+     "pts": 14.1
+    },
+    {
+     "wk": 7,
+     "opp": "Houston",
+     "rk": 61,
+     "pts": 18.4
+    },
+    {
+     "wk": 8,
+     "opp": "Colorado",
+     "rk": 82,
+     "pts": 15.8
+    },
+    {
+     "wk": 9,
+     "opp": "Iowa State",
+     "rk": 90,
+     "pts": 22.8
+    },
+    {
+     "wk": 10,
+     "opp": "Kansas State",
+     "rk": 64,
+     "pts": 8.7
+    },
+    {
+     "wk": 11,
+     "opp": "Texas Tech",
+     "rk": 34,
+     "pts": 4.0
+    }
+   ]
+  },
+  {
+   "name": "Yannick Smith",
+   "pos": "WR",
+   "school": "SMU",
+   "proj": 243,
+   "cons": 240,
+   "gp": 9,
+   "ppg": 9.9,
+   "n_top": 1,
+   "ppg_top": 8.4,
+   "n_soft": 2,
+   "ppg_soft": 7.4,
+   "soft_share": 0.17,
+   "best_top": {
+    "wk": 11,
+    "opp": "Wake Forest",
+    "rk": 19,
+    "pts": 8.4
+   },
+   "games": [
+    {
+     "wk": 1,
+     "opp": "Florida State",
+     "rk": 67,
+     "pts": 19.2
+    },
+    {
+     "wk": 2,
+     "opp": "UC Davis",
+     "rk": null,
+     "pts": 10.9
+    },
+    {
+     "wk": 3,
+     "opp": "Louisville",
+     "rk": 40,
+     "pts": 6.5
+    },
+    {
+     "wk": 5,
+     "opp": "Boston College",
+     "rk": 92,
+     "pts": 5.5
+    },
+    {
+     "wk": 7,
+     "opp": "Virginia",
+     "rk": 37,
+     "pts": 11.2
+    },
+    {
+     "wk": 8,
+     "opp": "California",
+     "rk": 108,
+     "pts": 3.9
+    },
+    {
+     "wk": 9,
+     "opp": "Syracuse",
+     "rk": 91,
+     "pts": 12.0
+    },
+    {
+     "wk": 10,
+     "opp": "Virginia Tech",
+     "rk": 71,
+     "pts": 11.4
+    },
+    {
+     "wk": 11,
+     "opp": "Wake Forest",
+     "rk": 19,
+     "pts": 8.4
+    }
+   ]
+  }
+ ]
+}

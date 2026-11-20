@@ -89,12 +89,12 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://site.api.espn.com">
 <link rel="dns-prefetch" href="https://sports.core.api.espn.com">
-<link rel="preload" href="styles/main.css?v=2026-11-20-ajpass" as="style">
+<link rel="preload" href="styles/main.css?v=2026-11-20-gopremium" as="style">
 <!-- Preload the largest deferred scripts: their tags sit deep in the ~475 KB document, so on
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-20-passoff" as="script">
+<link rel="preload" href="app.js?v=2026-11-20-gopremium" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -105,7 +105,7 @@
 <link rel="preload" href="data/_bundle_lookups.js?v=2026-11-20" as="script">
 <link rel="preload" href="data/d.js?v=2026-11-20" as="script">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=2026-11-20-ajpass">
+<link rel="stylesheet" href="styles/main.css?v=2026-11-20-gopremium">
 
 <!-- Apply persisted theme synchronously to avoid flash of dark before JS runs -->
 <script>try{var _t=localStorage.getItem('mff_theme');if(_t==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
@@ -472,11 +472,14 @@ Continue with Google
 <div class="global-auth-bar" id="globalAuthBar">
 <!-- Season Pass CTA (2026-10-13): rides the auth bar onto every page; hidden for
      premium/admin, after the pass end date, and while SEASON_PASS_ON_SALE = false
-     (app.js _syncPassCta; Jack 11-20: off sale for the rest of 2026). -->
+     (app.js _syncPassCta; Jack 11-20: off sale for the rest of 2026).
+     GO PREMIUM (C-20261120-8) takes the same slot whenever the pass CTA is off;
+     hidden for premium/admin. Opens Account > Premium on the default plan. -->
 <!-- Search (2026-10-13): opens the Cmd+K palette from every page; hidden on
      Rankings, which has its own search box (main.css #authAnchorRankings rule). -->
 <button type="button" class="global-search-btn" id="globalSearchBtn" aria-label="Search players and pages" title="Search players and pages (Ctrl+K)" onclick="window._openCmdK&&window._openCmdK()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="gsb-lbl">Search</span><kbd class="gsb-kbd">Ctrl K</kbd></button>
 <button type="button" class="global-pass-btn" id="globalPassBtn" aria-label="Season Pass" style="display:none" onclick="window._openSeasonPass()" title="Season Pass — $24.99 one-time, every premium feature through Week 18 (ends Jan 15, 2027). Never renews, no subscription."><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg><span class="gpb-full">SEASON PASS $24.99</span><span class="gpb-mid">SEASON PASS</span></button>
+<button type="button" class="global-pass-btn" id="globalPremiumBtn" aria-label="Go Premium" style="display:none" onclick="window._openPremiumUpgrade()" title="See the premium plans"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg><span class="gpb-lbl">GO PREMIUM</span></button>
 <button class="global-signin-btn" id="globalSigninBtn">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
 SIGN IN
@@ -6877,7 +6880,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-20-passoff"></script>
+<script defer src="app.js?v=2026-11-20-gopremium"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

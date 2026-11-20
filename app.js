@@ -11479,16 +11479,21 @@ function hasPremium() {
 // Expose globally so external code (e.g. Jack's Teams panel) can check
 window.hasPremium = hasPremium;
 
-// Season Pass CTA in the global auth bar (every page). Re-synced from
+// Header upgrade CTA in the global auth bar (every page). Re-synced from
 // checkPremiumStatus(), which runs on load and on every premium/auth change.
+// One slot, two buttons: #globalPassBtn (Season Pass) while the pass is on sale,
+// otherwise #globalPremiumBtn "GO PREMIUM" (C-20261120-8) -> plan page, default
+// plan. Both hidden for premium/admin (hasPremium: Season Pass holders, gifts).
 // Same end date as SEASON_GIFT_END / the functions' SEASON_PASS_END_MS.
 const SEASON_PASS_CTA_END = Date.parse('2027-01-16T04:59:59Z');   // Jan 15 2027 11:59pm ET
 function _syncPassCta() {
+  let prem = false;
+  try { prem = !!hasPremium(); } catch (_) {}
+  const passOn = SEASON_PASS_ON_SALE && Date.now() < SEASON_PASS_CTA_END;
   const btn = document.getElementById('globalPassBtn');
-  if (!btn) return;
-  let show = SEASON_PASS_ON_SALE && Date.now() < SEASON_PASS_CTA_END;
-  try { if (show && hasPremium()) show = false; } catch (_) {}
-  btn.style.display = show ? 'flex' : 'none';
+  if (btn) btn.style.display = (passOn && !prem) ? 'flex' : 'none';
+  const gp = document.getElementById('globalPremiumBtn');
+  if (gp) gp.style.display = (!passOn && !prem) ? 'flex' : 'none';
 }
 // Global search button shortcut hint: ⌘K on Apple devices
 (function () {
@@ -25750,6 +25755,9 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
     // (and medium/campaign) as reserved traffic-source params, so a CTA click
     // was rewriting the session's acquisition source to "globalPassBtn".
     ['#globalPassBtn', () => ['premium_cta', { cta: 'globalPassBtn', page: page() }]],
+    // C-20261120-8: GO PREMIUM in the same header slot while the pass is off sale
+    // (globalPassBtn keeps meaning the Season Pass). Must sit above the auth-bar rule.
+    ['#globalPremiumBtn', () => ['premium_cta', { cta: 'header-go-premium', page: page() }]],
     ['#globalAuthBar button', b => /sign\s*in/i.test(b.textContent) ? ['sign_in_open', { page: page() }] : null],
     // C-20261120-3: Ask Jack Season Pass card; the button names its spot in data-cta
     // (askjack-free-card above the free form, askjack-after-free once it's used).

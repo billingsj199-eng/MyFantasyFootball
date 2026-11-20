@@ -3530,7 +3530,7 @@ html.aj-onair .aj-slot{margin:3px 0}
 /* ON AIR (html.aj-onair): stream capture view — only the question + queue, scaled up */
 .aj-onair-btn.on{border-color:#ef4444;color:#fca5a5;background:rgba(239,68,68,.12)}
 .aj-onair-bar{display:none}
-html.aj-onair .sidebar,html.aj-onair #globalAuthBar,html.aj-onair #pageAskJack .compare-header,html.aj-onair #pageAskJack .aj-intro,html.aj-onair .aj-inbox-bar,html.aj-onair #ajInfoBar,html.aj-onair #ajInboxMsg,html.aj-onair .page-tour,html.aj-onair #globalPassBtn{display:none!important}
+html.aj-onair .sidebar,html.aj-onair #globalAuthBar,html.aj-onair #pageAskJack .compare-header,html.aj-onair #pageAskJack .aj-intro,html.aj-onair .aj-inbox-bar,html.aj-onair #ajInfoBar,html.aj-onair #ajInboxMsg,html.aj-onair .page-tour,html.aj-onair #globalPassBtn,html.aj-onair #globalPremiumBtn{display:none!important}
 html.aj-onair .main-content{margin:0!important;padding:0!important}
 html.aj-onair #pageAskJack{padding:0;background:radial-gradient(1200px 600px at 50% -10%,#1e293b 0%,#0b1120 55%,#05080f 100%)}
 html.aj-onair #pageAskJack > div{max-width:none;padding:18px 28px 28px}
@@ -4109,7 +4109,7 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
 @media(max-width:600px){
   /* The Season Pass button was a bare ★ — read as a favorites toggle (the position row
      has a ★ watchlist filter too). Label it; the Rankings search box gives up the room. */
-  .global-pass-btn .gpb-mid{display:inline;font-size:.6875rem;letter-spacing:.8px}
+  .global-pass-btn .gpb-mid,.global-pass-btn .gpb-lbl{display:inline;font-size:.6875rem;letter-spacing:.8px}
   .global-pass-btn{padding:6px 7px;gap:4px}
   #pageRankings .controls .search-box{flex:1 1 90px;min-width:90px}
   /* SYNC (keeps positional order in step across paired formats) only means something

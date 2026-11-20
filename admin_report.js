@@ -69,7 +69,9 @@ async function cached(key, force, fn) {
   const hit = _cache.get(key);
   if (!force && hit && Date.now() - hit.at < CACHE_MS) return hit.val;
   const val = await fn();
-  _cache.set(key, { at: Date.now(), val });
+  // Don't cache a report with a failed section (11-13: a GA4 quota error was served back for 5 min to every retry).
+  const failed = val && typeof val === "object" && !Array.isArray(val) && Object.values(val).some((v) => v && typeof v === "object" && v.ok === false);
+  if (!failed) _cache.set(key, { at: Date.now(), val });
   return val;
 }
 async function safe(fn) {
@@ -415,17 +417,33 @@ async function ga4Section(range) {
   const prev = { startDate: range.prevStart, endDate: range.prevEnd, name: "prev" };
   const base = { property, dimensionFilter: HOST_FILTER };
   const M = ["activeUsers", "newUsers", "sessions", "screenPageViews", "engagedSessions", "userEngagementDuration"];
-  const run = (req) => ga.runReport({ ...base, ...req }).then((r) => r[0]);
-  const [daily, totals, channels, sources, pages, devices, events, rt] = await Promise.all([
-    run({ dateRanges: [{ startDate: range.prevStart, endDate: range.end }], dimensions: [{ name: "date" }], metrics: M.map((name) => ({ name })), limit: 5000 }),
-    run({ dateRanges: [cur, prev], metrics: M.map((name) => ({ name })) }),
-    run({ dateRanges: [cur, prev], dimensions: [{ name: "sessionDefaultChannelGroup" }], metrics: [{ name: "sessions" }, { name: "activeUsers" }], limit: 20 }),
-    run({ dateRanges: [cur, prev], dimensions: [{ name: "sessionSource" }], metrics: [{ name: "sessions" }, { name: "activeUsers" }], limit: 25, orderBys: [{ metric: { metricName: "sessions" }, desc: true }] }),
-    run({ dateRanges: [cur], dimensions: [{ name: "pagePath" }], metrics: [{ name: "screenPageViews" }, { name: "activeUsers" }], limit: 25, orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }] }),
-    run({ dateRanges: [cur], dimensions: [{ name: "deviceCategory" }], metrics: [{ name: "activeUsers" }] }),
-    run({ dateRanges: [cur, prev], dimensions: [{ name: "eventName" }], metrics: [{ name: "eventCount" }, { name: "totalUsers" }], limit: 80 }),
-    ga.runRealtimeReport({ property, metrics: [{ name: "activeUsers" }] }).then((r) => r[0]).catch(() => null),
-  ]);
+  // GA4 allows ~10 concurrent requests per property; these 8 run together. 11-13: GA4 answers took 50-70 s, and the
+  // client's default 60 s deadline cancelled them while GA4 kept running them (holding concurrency slots -> RESOURCE_EXHAUSTED).
+  // So each request may run up to GA_TIMEOUT_MS, and a RESOURCE_EXHAUSTED (gRPC code 8) is retried twice with backoff.
+  const GA_TIMEOUT_MS = 150000;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const withRetry = async (fn) => {
+    for (let i = 0; ; i++) {
+      try { return await fn(); } catch (e) {
+        const busy = e && (e.code === 8 || /RESOURCE_EXHAUSTED/.test(String(e.message)));
+        if (!busy || i >= 2) throw e;
+        await sleep([5000, 15000][i] + Math.floor(Math.random() * 2000));
+      }
+    }
+  };
+  const opts = { timeout: GA_TIMEOUT_MS };
+  const run = (req) => withRetry(() => ga.runReport({ ...base, ...req }, opts).then((r) => r[0]));
+  const jobs = [
+    () => run({ dateRanges: [{ startDate: range.prevStart, endDate: range.end }], dimensions: [{ name: "date" }], metrics: M.map((name) => ({ name })), limit: 5000 }),
+    () => run({ dateRanges: [cur, prev], metrics: M.map((name) => ({ name })) }),
+    () => run({ dateRanges: [cur, prev], dimensions: [{ name: "sessionDefaultChannelGroup" }], metrics: [{ name: "sessions" }, { name: "activeUsers" }], limit: 20 }),
+    () => run({ dateRanges: [cur, prev], dimensions: [{ name: "sessionSource" }], metrics: [{ name: "sessions" }, { name: "activeUsers" }], limit: 25, orderBys: [{ metric: { metricName: "sessions" }, desc: true }] }),
+    () => run({ dateRanges: [cur], dimensions: [{ name: "pagePath" }], metrics: [{ name: "screenPageViews" }, { name: "activeUsers" }], limit: 25, orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }] }),
+    () => run({ dateRanges: [cur], dimensions: [{ name: "deviceCategory" }], metrics: [{ name: "activeUsers" }] }),
+    () => run({ dateRanges: [cur, prev], dimensions: [{ name: "eventName" }], metrics: [{ name: "eventCount" }, { name: "totalUsers" }], limit: 80 }),
+    () => ga.runRealtimeReport({ property, metrics: [{ name: "activeUsers" }] }, { timeout: 30000 }).then((r) => r[0]).catch(() => null),
+  ];
+  const [daily, totals, channels, sources, pages, devices, events, rt] = await Promise.all(jobs.map((j) => j()));
   const byDay = {};
   for (const r of rowsOf(daily)) {
     byDay[gaDs(r.date)] = {
@@ -460,7 +478,7 @@ async function ga4Section(range) {
 // ---------- callable ----------
 function build(cfg) {
   return onCall(
-    { secrets: [cfg.STRIPE_SECRET_KEY], cors: cfg.ALLOWED_ORIGINS, memory: "512MiB", timeoutSeconds: 120 },
+    { secrets: [cfg.STRIPE_SECRET_KEY], cors: cfg.ALLOWED_ORIGINS, memory: "512MiB", timeoutSeconds: 300 },
     async (request) => {
       const tok = request.auth && request.auth.token;
       if (!tok || String(tok.email || "").toLowerCase() !== ADMIN_EMAIL || tok.email_verified !== true) {

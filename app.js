@@ -42590,11 +42590,15 @@ window.fmtHeight = fmtHeight;
     } else {
       priceEl.innerHTML = '$' + basePrice.toFixed(2) + ' <span>/ ' + planLabel + '</span>';
     }
-    // The line under UPGRADE NOW: "Cancel anytime" is wrong for the one-time Season Pass.
+    // The line under UPGRADE NOW (C-20261120-1): Monthly/Yearly say they renew until
+    // cancelled ("cancel anytime" only next to that); the Season Pass is one-time.
     const note = document.getElementById('premiumPlanNote');
-    if (note) note.textContent = seasonSelected
-      ? 'One-time payment, nothing renews. Have a promo code? Enter it on the next step.'
-      : 'Cancel anytime. Have a promo code? Enter it on the next step.';
+    if (note) note.textContent = (seasonSelected
+      ? '$24.99 one-time · covers the whole season through Week 18 (ends Jan 15, 2027) · never renews, no subscription.'
+      : yearlySelected
+        ? '$69.99/year (about $5.83/mo) · renews yearly until you cancel (cancel anytime).'
+        : '$9.99/month · renews monthly until you cancel (cancel anytime).')
+      + ' Have a promo code? Enter it on the next step.';
   }
   window._updatePriceDisplay = updatePriceDisplay;
 
@@ -42986,7 +42990,7 @@ window.fmtHeight = fmtHeight;
       // say so instead of "canceled", which read like something went wrong.
       const isSeasonPass = data.source === 'stripe' && data.plan === 'Season Pass';
       if (isSeasonPass) {
-        billingHtml += '<br><strong style="color:var(--text1)">Access through:</strong> ' + expDate + ' <span style="color:var(--green)">(one-time pass — nothing renews)</span>';
+        billingHtml += '<br><strong style="color:var(--text1)">Access through:</strong> ' + expDate + ' <span style="color:var(--green)">(one-time Season Pass through Week 18 — never renews, no subscription)</span>';
       } else if (data.source === 'stripe' && data.cancelAtPeriodEnd) {
         billingHtml += '<br><strong style="color:var(--text1)">Access ends:</strong> ' + expDate + ' <span style="color:var(--accent)">(canceled — won’t renew)</span>';
       } else if (data.source === 'stripe') {

@@ -94,7 +94,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-20-passview" as="script">
+<link rel="preload" href="app.js?v=2026-11-20-renew" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -475,7 +475,7 @@ Continue with Google
 <!-- Search (2026-10-13): opens the Cmd+K palette from every page; hidden on
      Rankings, which has its own search box (main.css #authAnchorRankings rule). -->
 <button type="button" class="global-search-btn" id="globalSearchBtn" aria-label="Search players and pages" title="Search players and pages (Ctrl+K)" onclick="window._openCmdK&&window._openCmdK()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="gsb-lbl">Search</span><kbd class="gsb-kbd">Ctrl K</kbd></button>
-<button type="button" class="global-pass-btn" id="globalPassBtn" aria-label="Season Pass" style="display:none" onclick="window._openSeasonPass()" title="Season Pass — every premium feature through Jan 15, 2027 for a one-time $24.99"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg><span class="gpb-full">SEASON PASS $24.99</span><span class="gpb-mid">SEASON PASS</span></button>
+<button type="button" class="global-pass-btn" id="globalPassBtn" aria-label="Season Pass" style="display:none" onclick="window._openSeasonPass()" title="Season Pass — $24.99 one-time, every premium feature through Week 18 (ends Jan 15, 2027). Never renews, no subscription."><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg><span class="gpb-full">SEASON PASS $24.99</span><span class="gpb-mid">SEASON PASS</span></button>
 <button class="global-signin-btn" id="globalSigninBtn">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
 SIGN IN
@@ -714,18 +714,19 @@ Ask Jack — weekly start/sit, waiver &amp; trade Q&amp;A
 <div id="planMonthly" class="plan-option" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid var(--border);background:var(--elev-1);cursor:pointer;text-align:center;transition:all .15s">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">MONTHLY</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$9.99</div>
-<div style="font-size:.6875rem;color:var(--text2)">Billed monthly</div>
+<div style="font-size:.6875rem;color:var(--text2)">Renews monthly until you cancel</div>
 </div>
 <div id="planSeason" class="plan-option" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid var(--border);background:var(--elev-1);cursor:pointer;text-align:center;transition:all .15s">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">SEASON PASS</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$24.99</div>
-<div style="font-size:.6875rem;color:var(--text2)">One-time · all access through Jan 15, 2027</div>
+<div style="font-size:.6875rem;color:var(--text2)">One-time · through Week 18 (ends Jan 15, 2027) · never renews</div>
 </div>
 <div id="planYearly" class="plan-option selected" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid var(--accent);background:rgba(245,158,11,.08);cursor:pointer;text-align:center;transition:all .15s;position:relative">
 <div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-size:.6875rem;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:1px 8px;border-radius:3px;white-space:nowrap">BEST VALUE</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">YEARLY</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$69.99</div>
 <div style="font-size:.6875rem;color:var(--text2)">$5.83/mo — Save 42%</div>
+<div style="font-size:.6875rem;color:var(--text2)">Renews yearly until you cancel</div>
 </div>
 </div>
 <style>.plan-option.selected{border-color:var(--accent)!important;background:rgba(245,158,11,.08)!important}.plan-option:not(.selected){border-color:var(--border)!important;background:var(--elev-1)!important}.plan-option:not(.selected):hover{border-color:rgba(245,158,11,.3)!important}</style>
@@ -742,7 +743,7 @@ Ask Jack — weekly start/sit, waiver &amp; trade Q&amp;A
 <div style="margin-top:.75rem">
 <button class="premium-btn" id="premiumUpgradeBtn">UPGRADE NOW</button>
 </div>
-<div id="premiumPlanNote" style="font-size:.6875rem;color:var(--text2);margin-top:.5rem">Cancel anytime. Have a promo code? Enter it on the next step.</div>
+<div id="premiumPlanNote" style="font-size:.6875rem;color:var(--text2);margin-top:.5rem">$69.99/year (about $5.83/mo) · renews yearly until you cancel (cancel anytime). Have a promo code? Enter it on the next step.</div>
 <div id="premiumSupportNote" style="display:none;margin-top:.6rem;padding:.6rem .8rem;border-radius:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);font-size:.75rem;color:var(--text);line-height:1.5">Paid but still on the free plan? <a id="premiumSupportLink" href="mailto:jackbillings16@gmail.com?subject=Premium%20not%20active" style="color:var(--accent);font-weight:600">Email support</a> with the email you used at checkout and it gets sorted.</div>
 
 <!-- Redeem free-premium code -->
@@ -6874,7 +6875,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-20-passview"></script>
+<script defer src="app.js?v=2026-11-20-renew"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

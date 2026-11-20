@@ -3872,7 +3872,23 @@ details.aj-ww-roster>summary{cursor:pointer}
 .aj-free-toggle:disabled{opacity:.5;cursor:default}
 #pageAskJack.aj-inbox-on #ajViewAs{display:none}
 .aj-badge-free{background:var(--green)}
-.aj-locked-free{font-size:.72rem;color:var(--text2);margin-top:10px;max-width:360px;line-height:1.4}
+/* C-20261120-3: the Ask Jack paywall's blurred teaser is one line, so the absolute overlay
+   (lock, label, copy, UPGRADE TO PRO) was clipped to ~55px and the button showed as a sliver.
+   Here the overlay sets the height and the blurred teaser sits behind it. */
+.aj-locked-wrap .jt-locked-content{position:absolute;inset:0;overflow:hidden}
+.aj-locked-wrap .jt-locked-overlay{position:relative;inset:auto;padding:20px 14px}
+.aj-locked-price{font-size:.7rem;color:var(--text2);margin-top:10px;max-width:360px;line-height:1.4}
+/* C-20261120-3: Season Pass card for free members (above the free form / after it's used) */
+.aj-pass{display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap;margin:0 0 12px;padding:11px 14px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.45);border-radius:10px}
+.aj-pass.aj-pass-after{margin:12px 0 0}
+.aj-pass-txt{flex:1 1 320px;min-width:0}
+.aj-pass-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;color:var(--accent);line-height:1.15}
+.aj-pass-sub{font-size:.74rem;color:var(--text);line-height:1.45;margin-top:3px}
+.aj-pass-terms{font-size:.68rem;color:var(--text2);margin-top:4px;line-height:1.35}
+.aj-pass-btn{flex:0 0 auto;background:var(--accent);color:var(--accent-ink,#000);border:none;border-radius:8px;padding:9px 16px;min-height:40px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.2px;cursor:pointer;font-weight:700;white-space:nowrap}
+.aj-pass-btn:hover{filter:brightness(1.08)}
+@media (max-width:600px){.aj-pass{padding:10px 12px}.aj-pass-btn{flex:1 1 100%}}
+html.aj-onair .aj-pass{display:none}
 .aj-skip-cta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding:8px 10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:.7rem;color:var(--text2)}
 .aj-skip-cta span{flex:1;min-width:180px}
 .aj-skip-btn{background:var(--green);color:#000;border:none;border-radius:8px;padding:8px 14px;min-height:40px;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.2px;cursor:pointer;font-weight:700;white-space:nowrap}

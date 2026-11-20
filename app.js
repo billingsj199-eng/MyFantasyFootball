@@ -25731,6 +25731,9 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
     // was rewriting the session's acquisition source to "globalPassBtn".
     ['#globalPassBtn', () => ['premium_cta', { cta: 'globalPassBtn', page: page() }]],
     ['#globalAuthBar button', b => /sign\s*in/i.test(b.textContent) ? ['sign_in_open', { page: page() }] : null],
+    // C-20261120-3: Ask Jack Season Pass card; the button names its spot in data-cta
+    // (askjack-free-card above the free form, askjack-after-free once it's used).
+    ['.aj-pass-btn[data-cta]', b => ['premium_cta', { cta: b.dataset.cta, page: page() }]],
     ['#premiumUpgradeBtn, .jt-locked-btn, .md-rank-src-tab.locked, .premium-wall-btn', b => ['premium_cta', { cta: b.id || (b.className || '').split(' ')[0], page: page() }]],
     // Signed in only: signed out, switchPage('account') already sent premium_view
     // ctx=signedout and _openPremiumUpgrade's programmatic (hidden) tab click would double-count.
@@ -73868,6 +73871,29 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     });
   }
   function _qaFreeResetLabel() { return 'new free question tomorrow (midnight ET)'; }
+  // Season Pass upsell for free members (C-20261120-3, Jack 11-20 "Yes, build
+  // it"). While free questions were open the panel had no upgrade path at all,
+  // and sales stopped the day they opened (stall_2026-11-20.md). Shown only in
+  // mode 'free' (never premium/admin), above the form while today's question is
+  // unused ('askjack-free-card') and under it once it's sent
+  // ('askjack-after-free'). The button reuses the header CTA's opener; the
+  // click is tracked as premium_cta {cta: data-cta} in the analytics block.
+  // Hidden once the pass stops selling (same date as the header CTA).
+  const QA_PASS_TERMS = 'Season Pass $24.99 one-time · through Week 18 (ends Jan 15, 2027) · never renews';
+  function _qaPassOnSale() { return typeof SEASON_PASS_CTA_END === 'undefined' || Date.now() < SEASON_PASS_CTA_END; }
+  function _qaPassCardHtml(cta, after) {
+    if (!_qaPassOnSale()) return '';
+    try { if (typeof window.hasPremium === 'function' && window.hasPremium()) return ''; } catch (_) {}
+    if (_qaIsAdmin()) return '';
+    return '<div class="aj-pass' + (after ? ' aj-pass-after' : '') + '">' +
+      '<div class="aj-pass-txt">' +
+        '<div class="aj-pass-title">' + (after ? 'Want Jack\'s call every week?' : 'Want Jack\'s call every week, not just today?') + '</div>' +
+        '<div class="aj-pass-sub">Premium members get 2 questions every week (1 trade + 1 start/sit, waiver or lineup), free questions open or not, answered before the free line. Plus Jack\'s full rankings for every position and format.</div>' +
+        '<div class="aj-pass-terms">' + QA_PASS_TERMS + '</div>' +
+      '</div>' +
+      '<button type="button" class="aj-pass-btn" data-cta="' + cta + '" onclick="window._openSeasonPass()">GET THE SEASON PASS</button>' +
+    '</div>';
+  }
   // Line-skip CTA / badge under a member's open free question.
   function _qaSkipHtml(x) {
     if (x.tier === 'skip') return '<div class="aj-skip-done">⚡ Line skip paid — you\'re ahead of every free question in Jack\'s queue.</div>';
@@ -74641,7 +74667,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       window._qaMode = 'locked';
       const _locked =
         '<div class="aj-card">' + premHeader +
-        '<div class="jt-locked-wrap" style="margin-top:8px">' +
+        '<div class="jt-locked-wrap aj-locked-wrap" style="margin-top:8px">' +
           '<div class="jt-locked-content" style="filter:blur(3px);pointer-events:none;padding:18px">' +
             '<div style="font-size:.8rem;color:var(--text2)">Who do I start — Puka Nacua or Nico Collins? &nbsp;·&nbsp; Should I take this trade? &nbsp;·&nbsp; Who do I grab off waivers? &nbsp;·&nbsp; Set my lineup</div>' +
           '</div>' +
@@ -74649,8 +74675,12 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
             '<div class="jt-locked-icon">&#128274;</div>' +
             '<div class="jt-locked-label">PREMIUM FEATURE</div>' +
             '<div class="jt-locked-desc">Every week, send Jack a trade plus a start/sit, waiver-wire or full-lineup question. He makes the call right from your synced roster.</div>' +
-            '<button class="jt-locked-btn" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>{const t=document.querySelector(\'[data-acct-tab=premium]\');if(t)t.click();},150)">UPGRADE TO PRO</button>' +
-            '<div class="aj-locked-free">Not premium? When Jack is live streaming he opens free questions — 1 a day — right here.</div>' +
+            // C-20261120-3: lands on the plan page with the Season Pass preselected
+            // (was: Account › Premium with no plan picked). The "wait for free
+            // questions on stream" line that sat here is gone: it told people
+            // not to buy (stall_2026-11-20.md).
+            '<button class="jt-locked-btn" onclick="window._openPremiumUpgrade(\'season\')">UPGRADE TO PRO</button>' +
+            (_qaPassOnSale() ? '<div class="aj-locked-price">' + QA_PASS_TERMS + '</div>' : '') +
           '</div>' +
         '</div></div>';
       if (sect._qaLastHtml !== _locked) { sect._qaLastHtml = _locked; sect.innerHTML = _locked; }
@@ -74771,9 +74801,12 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       '<div style="font-size:.6875rem;color:var(--text2);margin-bottom:12px">Jack makes the call himself · ' +
         (mode === 'admin' ? 'admin: unlimited practice questions (' + (freeLook ? 'free' : 'premium') + ' view)' : freeLook ? _qaFreeResetLabel() : _qaResetLabel()) + '</div>' +
       creditBanner +
+      (mode === 'free' && !used ? _qaPassCardHtml('askjack-free-card', false) : '') +
       _qaLeagueBarHtml() +
       _qaTypePickerHtml(sel, mineBySlot, credits.length && mode !== 'admin' ? 'credit' : lblMode) +
-      pane + pastHtml + _qaDatalist() +
+      pane +
+      (mode === 'free' && used ? _qaPassCardHtml('askjack-after-free', true) : '') +
+      pastHtml + _qaDatalist() +
       '</div>';
     // Idempotent render: if nothing changed (questions, leagues, picked type,
     // reset label, player pool), leave the live DOM completely alone. Any

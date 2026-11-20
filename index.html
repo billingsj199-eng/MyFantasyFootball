@@ -94,7 +94,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-20-ajpass" as="script">
+<link rel="preload" href="app.js?v=2026-11-20-passoff" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -471,7 +471,8 @@ Continue with Google
 <!-- Global Auth Bar (moved between pages via JS) -->
 <div class="global-auth-bar" id="globalAuthBar">
 <!-- Season Pass CTA (2026-10-13): rides the auth bar onto every page; hidden for
-     premium/admin and after the pass end date (app.js _syncPassCta). -->
+     premium/admin, after the pass end date, and while SEASON_PASS_ON_SALE = false
+     (app.js _syncPassCta; Jack 11-20: off sale for the rest of 2026). -->
 <!-- Search (2026-10-13): opens the Cmd+K palette from every page; hidden on
      Rankings, which has its own search box (main.css #authAnchorRankings rule). -->
 <button type="button" class="global-search-btn" id="globalSearchBtn" aria-label="Search players and pages" title="Search players and pages (Ctrl+K)" onclick="window._openCmdK&&window._openCmdK()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="gsb-lbl">Search</span><kbd class="gsb-kbd">Ctrl K</kbd></button>
@@ -716,6 +717,7 @@ Ask Jack — weekly start/sit, waiver &amp; trade Q&amp;A
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$9.99</div>
 <div style="font-size:.6875rem;color:var(--text2)">Renews monthly until you cancel</div>
 </div>
+<!-- Season Pass card: app.js removes it at load while SEASON_PASS_ON_SALE = false (top of app.js). Jack 11-20: off sale for the rest of 2026; back for 2027 by early July. -->
 <div id="planSeason" class="plan-option" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected');if(window._updatePriceDisplay)window._updatePriceDisplay()" style="flex:1;min-width:110px;max-width:160px;padding:1rem .6rem;border-radius:10px;border:2px solid var(--border);background:var(--elev-1);cursor:pointer;text-align:center;transition:all .15s">
 <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:1.5px;color:var(--text);margin-bottom:4px">SEASON PASS</div>
 <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--accent)">$24.99</div>
@@ -6875,7 +6877,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-20-ajpass"></script>
+<script defer src="app.js?v=2026-11-20-passoff"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

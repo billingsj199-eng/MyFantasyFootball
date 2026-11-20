@@ -1,6 +1,20 @@
 // Global auth state flag — used by canEdit() before Firebase auth module loads
 window._authCurrentUser = null;
 
+// === Season Pass on/off switch (C-20261120-7) ===
+// Jack 11-20: off sale for the rest of 2026; back for 2027 by early July.
+// false = nothing on the site sells the $24.99 one-time Season Pass: the plan card is
+// removed at load (its markup stays in index.html), the header CTA stays hidden, Ask
+// Jack's card + locked paywall offer Monthly/Yearly, and lock copy says "premium".
+// Existing passes are untouched: access still runs to the stored currentPeriodEnd
+// (Jan 15 2027) and Account still labels them Season Pass. Bringing it back = set
+// true + the "each new season" checklist (memory project_season_pass.md). Server side,
+// createCheckoutSession still accepts plan 'season' until the functions change too.
+const SEASON_PASS_ON_SALE = false;
+window.SEASON_PASS_ON_SALE = SEASON_PASS_ON_SALE;
+// Product name in the lock copy ("... is a <name> feature"): Season Pass on sale, premium off.
+const _PREM_NAME = SEASON_PASS_ON_SALE ? 'Season Pass' : 'premium';
+
 // Positions that get a Strength-of-Schedule rating. K and DST use different
 // signals from the skill positions (see POSITION_SIGNAL_MIX in the SOS block)
 // but they are rated on the same 1-32 scale.
@@ -2613,7 +2627,7 @@ function _consColLabel() { return currentVersion === 'consensus' ? "Jack's" : 'C
 // (Jack 2026-09-14) — +/- column, Moved chip, sort keys and exports follow
 // because they all route through _consRankFor.
 function _consColLocked() { return currentVersion === 'consensus' && !hasPremium(); }
-const _CONS_LOCK_TIP = "Jack's rank is a Season Pass feature — unlock premium to see where Jack has every player.";
+const _CONS_LOCK_TIP = "Jack's rank is a " + _PREM_NAME + " feature — unlock premium to see where Jack has every player.";
 function _consRankFor(d) {
   if (!d || currentMode === 'weekly') return null;
   if (_consColLocked()) return null;
@@ -3439,7 +3453,7 @@ function _dynSimFor(d) {
            isPick: e.pos === 'PICK', cls: e.cls ? e.cls[_dynSimKey()] : null };
 }
 // Free window (same as SIM VOR's): Season Pass past the top 30.
-const _DYN_LOCK_TIP = 'Dynasty SIM values past the top 30 are a Season Pass feature — upgrade to see every player.';
+const _DYN_LOCK_TIP = 'Dynasty SIM values past the top 30 are a ' + _PREM_NAME + ' feature — upgrade to see every player.';
 function _dynLocked(x) { return !!x && !hasPremium() && x.rk > 30; }
 function _dynSortVal(d, k) { const x = _dynSimFor(d); return (!x || _dynLocked(x)) ? -Infinity : x[k]; }
 
@@ -3655,7 +3669,7 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   if (sim.locked) {
     const yrL = (S.meta && S.meta.valuationYear) || 2026;
     const outL = (typeof window._irIsOut === 'function' && window._irIsOut(d.n)) || /\b(IR|PUP|Out)\b/.test(String(d.inj || ''));
-    return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">🔒 Value tags past the Dynasty SIM top 30 are a Season Pass feature.</div>'
+    return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">🔒 Value tags past the Dynasty SIM top 30 are a ' + _PREM_NAME + ' feature.</div>'
       + _cdOffNoteHtml(window._offRisk ? window._offRisk(d) : null, null)
       + _cdSlideNoteHtml(outL ? _cdInjurySlide(d, yrL) : null, d) + _cdQbNoteHtml(d, yrL) + _cdBounceNoteHtml(d, yrL) + _cdFilmNoteHtml(d) + _cdFadeNoteHtml(d) + _cdManNoteHtml(d);
   }
@@ -3998,16 +4012,16 @@ function _cdRender() {
   let pts = null, note = '';
   const metric = st.src === 'jacks' ? 'ovr' : st.metric;
   if (st.src === 'mff') {
-    if (mff && mff.locked) note = 'MFF VALUE past the top ' + _MFFV_FREE_N + ' is a Season Pass feature.';
+    if (mff && mff.locked) note = 'MFF VALUE past the top ' + _MFFV_FREE_N + ' is a ' + _PREM_NAME + ' feature.';
     else { const s = _cdMffSeries(d, fmt, mff); if (s.length) pts = s.map(p => ({ d: p.d, y: p[metric] })).filter(p => p.y != null); }
   } else if (st.src === 'sim') {
-    if (sim && sim.locked) note = 'Dynasty SIM history past the top 30 is a Season Pass feature.';
+    if (sim && sim.locked) note = 'Dynasty SIM history past the top 30 is a ' + _PREM_NAME + ' feature.';
     else { const s = _cdSimSeries(d, fmt); if (s) pts = s.map(p => ({ d: p.d, y: p[metric] })).filter(p => p.y != null); }
   } else if (st.src === 'ktc') {
     const s = _cdKtcSeries(d.n, d.s, fmt);
     if (s) pts = s.map(p => ({ d: p.d, y: p[metric] })).filter(p => p.y != null);
   } else {
-    note = jk ? "Jack's dynasty rank today: #" + jk.ovr + ' overall, ' + posLbl(jk.pos) + ". A history of Jack's dynasty ranks isn't tracked yet." : "Not on Jack's dynasty board in this session" + (hasPremium() ? '.' : ' — the full board is a Season Pass feature.');
+    note = jk ? "Jack's dynasty rank today: #" + jk.ovr + ' overall, ' + posLbl(jk.pos) + ". A history of Jack's dynasty ranks isn't tracked yet." : "Not on Jack's dynasty board in this session" + (hasPremium() ? '.' : ' — the full board is a ' + _PREM_NAME + ' feature.');
   }
   if (pts && st.span) {
     const last = Date.parse(pts[pts.length - 1].d);
@@ -11472,7 +11486,7 @@ const SEASON_PASS_CTA_END = Date.parse('2027-01-16T04:59:59Z');   // Jan 15 2027
 function _syncPassCta() {
   const btn = document.getElementById('globalPassBtn');
   if (!btn) return;
-  let show = Date.now() < SEASON_PASS_CTA_END;
+  let show = SEASON_PASS_ON_SALE && Date.now() < SEASON_PASS_CTA_END;
   try { if (show && hasPremium()) show = false; } catch (_) {}
   btn.style.display = show ? 'flex' : 'none';
 }
@@ -11486,7 +11500,13 @@ function _syncPassCta() {
 // below the fold behind the hero + feature list, so CTA clicks landed on a
 // page that looked unchanged). Every upsell entry point lands here. For a
 // premium viewer the free view is hidden, so nothing is clicked or scrolled.
+// Off sale (SEASON_PASS_ON_SALE): no plan picker can sell the pass. Every
+// plan-picker view (Account > Premium, signed in or out) is this one card row.
+if (!SEASON_PASS_ON_SALE) { const c = document.getElementById('planSeason'); if (c) c.remove(); }
 window._openPremiumUpgrade = function (plan) {
+  // Old 'season' entry points (header CTA, Ask Jack, a pending sign-in-to-buy)
+  // land on the plan page with its default (Yearly) while the pass is off sale.
+  if (plan === 'season' && !SEASON_PASS_ON_SALE) plan = null;
   const nav = document.querySelector('[data-page=account]');
   if (nav) nav.click();
   setTimeout(() => {
@@ -17432,7 +17452,7 @@ function _vorFor(d) {
 // Free window for SIM VOR (Jack 2026-10-05: premium past the top 30): 30 on the
 // overall / FLEX views, 12 on a position pill (same split as Jack's 36/12).
 function _VOR_FREE_N(f) { return (f === 'ALL' || f === 'FLEX') ? 30 : 12; }
-const _VOR_LOCK_TIP = 'SIM VOR past the top 30 is a Season Pass feature — upgrade to see every player\'s value over replacement.';
+const _VOR_LOCK_TIP = 'SIM VOR past the top 30 is a ' + _PREM_NAME + ' feature — upgrade to see every player\'s value over replacement.';
 // VOR stats view on the free boards: lock players outside the SIM VOR free window.
 function _vorLocked(d, e) {
   if (!e || hasPremium()) return false;
@@ -38155,7 +38175,7 @@ window.fmtHeight = fmtHeight;
     if (!r) { el.style.display = 'none'; el.innerHTML = ''; return; }
     if (!free) {
       el.style.display = '';
-      el.innerHTML = head + '<div class="tvi-note">🔒 The week-by-week lineup simulation is a Season Pass feature. ' + nm.filter((n, i) => r.teams[i]).map(_esc).join(' and ') + ' lineup' + (r.teams[0] && r.teams[1] ? 's are' : ' is') + ' ready to run — upgrade to see how many season points this trade adds or costs, the rest of the way and in the playoffs.</div>';
+      el.innerHTML = head + '<div class="tvi-note">🔒 The week-by-week lineup simulation is a ' + _PREM_NAME + ' feature. ' + nm.filter((n, i) => r.teams[i]).map(_esc).join(' and ') + ' lineup' + (r.teams[0] && r.teams[1] ? 's are' : ' is') + ' ready to run — upgrade to see how many season points this trade adds or costs, the rest of the way and in the playoffs.</div>';
       return;
     }
     const sims = r.teams.filter(Boolean);
@@ -43076,7 +43096,7 @@ window.fmtHeight = fmtHeight;
   // Premium upgrade button — real Stripe Checkout
   function _selectedPlan() {
     if (document.querySelector('#planYearly.selected')) return 'yearly';
-    if (document.querySelector('#planSeason.selected')) return 'season';
+    if (SEASON_PASS_ON_SALE && document.querySelector('#planSeason.selected')) return 'season';
     return 'monthly';
   }
   premiumUpgradeBtn.addEventListener('click', async () => {
@@ -73879,19 +73899,25 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
   // ('askjack-after-free'). The button reuses the header CTA's opener; the
   // click is tracked as premium_cta {cta: data-cta} in the analytics block.
   // Hidden once the pass stops selling (same date as the header CTA).
+  // C-20261120-7 (Jack 11-20, pass off sale): the same card and cta values offer
+  // Monthly/Yearly instead (plan page, Yearly preselected), so the C-20261120-3
+  // measurement carries on. The card no longer hides after the pass end date.
   const QA_PASS_TERMS = 'Season Pass $24.99 one-time · through Week 18 (ends Jan 15, 2027) · never renews';
-  function _qaPassOnSale() { return typeof SEASON_PASS_CTA_END === 'undefined' || Date.now() < SEASON_PASS_CTA_END; }
+  const QA_PLAN_TERMS = 'Monthly $9.99 or Yearly $69.99 (about $5.83/mo) · both renew until you cancel';
+  function _qaPassOnSale() { return SEASON_PASS_ON_SALE && (typeof SEASON_PASS_CTA_END === 'undefined' || Date.now() < SEASON_PASS_CTA_END); }
   function _qaPassCardHtml(cta, after) {
-    if (!_qaPassOnSale()) return '';
+    const pass = _qaPassOnSale();
     try { if (typeof window.hasPremium === 'function' && window.hasPremium()) return ''; } catch (_) {}
     if (_qaIsAdmin()) return '';
     return '<div class="aj-pass' + (after ? ' aj-pass-after' : '') + '">' +
       '<div class="aj-pass-txt">' +
         '<div class="aj-pass-title">' + (after ? 'Want Jack\'s call every week?' : 'Want Jack\'s call every week, not just today?') + '</div>' +
         '<div class="aj-pass-sub">Premium members get 2 questions every week (1 trade + 1 start/sit, waiver or lineup), free questions open or not, answered before the free line. Plus Jack\'s full rankings for every position and format.</div>' +
-        '<div class="aj-pass-terms">' + QA_PASS_TERMS + '</div>' +
+        '<div class="aj-pass-terms">' + (pass ? QA_PASS_TERMS : QA_PLAN_TERMS) + '</div>' +
       '</div>' +
-      '<button type="button" class="aj-pass-btn" data-cta="' + cta + '" onclick="window._openSeasonPass()">GET THE SEASON PASS</button>' +
+      (pass
+        ? '<button type="button" class="aj-pass-btn" data-cta="' + cta + '" onclick="window._openSeasonPass()">GET THE SEASON PASS</button>'
+        : '<button type="button" class="aj-pass-btn" data-cta="' + cta + '" onclick="window._openPremiumUpgrade()">GO PREMIUM</button>') +
     '</div>';
   }
   // Line-skip CTA / badge under a member's open free question.
@@ -74679,8 +74705,9 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
             // (was: Account › Premium with no plan picked). The "wait for free
             // questions on stream" line that sat here is gone: it told people
             // not to buy (stall_2026-11-20.md).
+            // C-20261120-7: off sale, 'season' falls back to the default plan (_openPremiumUpgrade).
             '<button class="jt-locked-btn" onclick="window._openPremiumUpgrade(\'season\')">UPGRADE TO PRO</button>' +
-            (_qaPassOnSale() ? '<div class="aj-locked-price">' + QA_PASS_TERMS + '</div>' : '') +
+            '<div class="aj-locked-price">' + (_qaPassOnSale() ? QA_PASS_TERMS : QA_PLAN_TERMS) + '</div>' +
           '</div>' +
         '</div></div>';
       if (sect._qaLastHtml !== _locked) { sect._qaLastHtml = _locked; sect.innerHTML = _locked; }
@@ -74767,7 +74794,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     if (useCredit) {
       pane += (sel === 'lineup' ? _qaLineupFormHtml(_qaSelLeague()) : _qaFormHtml(sel));
     } else if (used && used._lockedSlot) {
-      pane += '<div class="aj-used-note">Premium questions are part of the Season Pass. Your bonus question from Jack is used up — upgrade for 2 questions every week.</div>';
+      pane += '<div class="aj-used-note">Premium questions are part of ' + (_qaPassOnSale() ? 'the Season Pass' : 'premium') + '. Your bonus question from Jack is used up — upgrade for 2 questions every week.</div>';
     } else if (used && used.type === sel) {
       pane += _qaSubmittedHtml(used);
     } else if (used) {

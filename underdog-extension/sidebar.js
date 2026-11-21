@@ -146,6 +146,8 @@
       <div class="lock-msg" id="mff-lock-msg">The MFF Underdog Helper is part of MyFantasyFootball Premium.</div>
       <ol class="lock-steps" id="mff-lock-steps"></ol>
       <a class="start-btn" id="mff-lock-btn" href="https://myfantasyfootball.co" target="_blank" rel="noopener noreferrer">Open MyFantasyFootball</a>
+      <!-- X-37: plan page link, sign-in state only (applyPremiumGate shows / hides it) -->
+      <div class="lock-plans" id="mff-lock-plans" style="display:none">No Premium yet? <a id="mff-lock-plans-link" href="https://www.myfantasyfootball.co/#premium?src=ext-underdog" target="_blank" rel="noopener noreferrer">See plans</a></div>
       <div class="lock-status" id="mff-lock-status"></div>
       <!-- v0.18.24: portfolio sync is FREE (Jack 2026-10-06). applyPremiumGate
            moves #mff-portfolio-block (same button/status ids + handlers) in
@@ -6525,12 +6527,17 @@
       if (_lockSteps) {
         const _steps = _stale
           ? ['Open myfantasyfootball.co in this Chrome profile and stay signed in.', 'Come back to this tab. It unlocks on its own.']
-          : _em ? ['Open myfantasyfootball.co and get Premium.', 'Come back to this tab. It unlocks on its own.']
+          : _em ? ['Press Get Premium and pick a plan. It opens myfantasyfootball.co in a new tab.', 'After you upgrade, come back to this tab. It unlocks on its own. If it stays locked, reload this page.']
           : ['Open myfantasyfootball.co in this same Chrome profile.', 'Sign in with your Premium account.', 'Come back to this tab. It unlocks on its own.'];
         _lockSteps.textContent = '';
         _steps.forEach(s => { const li = document.createElement('li'); li.textContent = s; _lockSteps.appendChild(li); });
       }
       if (_lockBtn) _lockBtn.textContent = _stale ? 'Re-sync now' : _em ? 'Get Premium' : 'Open MyFantasyFootball';
+      // X-37 (wording/layout only): 'Premium needed' -> the button opens the plan page; the sign-in
+      // state gets a small 'See plans' link; the re-sync state has no plan link.
+      if (_lockBtn) _lockBtn.setAttribute('href', (!_stale && _em) ? 'https://www.myfantasyfootball.co/#premium?src=ext-underdog' : 'https://myfantasyfootball.co');
+      const _lockPlans = document.getElementById('mff-lock-plans');
+      if (_lockPlans) _lockPlans.style.display = (!_stale && !_em) ? '' : 'none';
     } else {
       if (lockEl) lockEl.style.display = 'none';
       if (typeof enterDraftMode === 'function') enterDraftMode();

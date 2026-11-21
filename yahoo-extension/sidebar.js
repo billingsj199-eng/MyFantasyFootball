@@ -55,6 +55,10 @@
     // not a missing subscription; say so instead of 'Premium required'.
     const stale = !!(u && u.premium && !(u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS));
     // X-29 (wording/layout only): one heading + numbered next steps per state.
+    // X-37 (wording/layout only): the plan page deep link. Main button in the
+    // 'Premium needed' state, a small 'See plans' link in the sign-in state, not
+    // shown in the re-sync state (that user already has Premium).
+    const planUrl = 'https://www.myfantasyfootball.co/#premium?src=ext-yahoo';
     const em = signed ? String(u.email).replace(/[&<>"]/g, '') : '';
     const head = stale ? 'Re-sync needed' : signed ? 'Premium needed' : 'Sign in to unlock';
     const lead = stale
@@ -65,7 +69,7 @@
     const steps = stale
       ? ['Open myfantasyfootball.co in this Chrome profile and stay signed in.', 'Come back to this tab. It unlocks on its own.']
       : signed
-      ? ['Open myfantasyfootball.co and get Premium.', 'Come back to this tab. It unlocks on its own.']
+      ? ['Press Get Premium and pick a plan. It opens myfantasyfootball.co in a new tab.', 'After you upgrade, come back to this tab. It unlocks on its own. If it stays locked, reload this page.']
       : ['Open myfantasyfootball.co in this same Chrome profile.', 'Sign in with your Premium account.', 'Come back to this tab. It unlocks on its own.'];
     return '<div style="padding:22px 16px;text-align:center;font-size:12px;line-height:1.5;color:#e5e7eb">' +
       '<div style="font-size:26px">\ud83d\udd12</div>' +
@@ -73,8 +77,9 @@
       '<div style="color:#b4bac4;margin-bottom:8px">' + lead + '</div>' +
       '<ol style="margin:0 0 12px;padding:0 0 0 20px;text-align:left;color:#e5e7eb">' +
         steps.map((s) => '<li style="margin:2px 0">' + s + '</li>').join('') + '</ol>' +
-      '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#7d2eff;color:#fff;border-radius:6px;padding:8px 16px;font-weight:700;text-decoration:none;font-size:12px">' +
+      '<a href="' + (signed && !stale ? planUrl : 'https://www.myfantasyfootball.co') + '" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#7d2eff;color:#fff;border-radius:6px;padding:8px 16px;font-weight:700;text-decoration:none;font-size:12px">' +
       (stale ? 'Re-sync now' : signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
+      (!signed && !stale ? '<div style="margin-top:6px;color:#b4bac4;font-size:11px">No Premium yet? <a href="' + planUrl + '" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:4px 6px;line-height:16px;color:var(--mff-accent,#b388ff);font-weight:700;text-decoration:underline">See plans</a></div>' : '') +
       // League sync is FREE (Jack 2026-10-06): yahoo-export.js's export button
       // has no gate — say so, or free users read this lock as "the whole helper is paid".
       '<div style="margin-top:12px;padding:8px 10px;border:1px solid #1d7a34;border-radius:6px;background:rgba(34,197,94,.08);color:#d1fae5;font-size:11px;text-align:left">' +

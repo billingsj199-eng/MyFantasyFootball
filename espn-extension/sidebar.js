@@ -47,6 +47,10 @@
     // not a missing subscription; say so instead of 'Premium required'.
     const stale = !!(u && u.premium && !(u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS));
     // X-29 (wording/layout only): one heading + numbered next steps per state.
+    // X-37 (wording/layout only): the plan page deep link. Main button in the
+    // 'Premium needed' state, a small 'See plans' link in the sign-in state, not
+    // shown in the re-sync state (that user already has Premium).
+    const planUrl = 'https://www.myfantasyfootball.co/#premium?src=ext-espn';
     const em = signed ? String(u.email).replace(/[&<>"]/g, '') : '';
     const head = stale ? 'Re-sync needed' : signed ? 'Premium needed' : 'Sign in to unlock';
     const lead = stale
@@ -57,7 +61,7 @@
     const steps = stale
       ? ['Open myfantasyfootball.co in this Chrome profile and stay signed in.', 'Come back to this tab. It unlocks on its own.']
       : signed
-      ? ['Open myfantasyfootball.co and get Premium.', 'Come back to this tab. It unlocks on its own.']
+      ? ['Press Get Premium and pick a plan. It opens myfantasyfootball.co in a new tab.', 'After you upgrade, come back to this tab. It unlocks on its own. If it stays locked, reload this page.']
       : ['Open myfantasyfootball.co in this same Chrome profile.', 'Sign in with your Premium account.', 'Come back to this tab. It unlocks on its own.'];
     return '<div style="padding:22px 16px;text-align:center;font-size:12px;line-height:1.5;color:#e5e7eb">' +
       '<div style="font-size:26px">\ud83d\udd12</div>' +
@@ -65,8 +69,9 @@
       '<div style="color:#b4bac4;margin-bottom:8px">' + lead + '</div>' +
       '<ol style="margin:0 0 12px;padding:0 0 0 20px;text-align:left;color:#e5e7eb">' +
         steps.map((s) => '<li style="margin:2px 0">' + s + '</li>').join('') + '</ol>' +
-      '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#d50a0a;color:#fff;border-radius:6px;padding:8px 16px;font-weight:700;text-decoration:none;font-size:12px">' +
+      '<a href="' + (signed && !stale ? planUrl : 'https://www.myfantasyfootball.co') + '" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#d50a0a;color:#fff;border-radius:6px;padding:8px 16px;font-weight:700;text-decoration:none;font-size:12px">' +
       (stale ? 'Re-sync now' : signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
+      (!signed && !stale ? '<div style="margin-top:6px;color:#b4bac4;font-size:11px">No Premium yet? <a href="' + planUrl + '" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:4px 6px;line-height:16px;color:var(--mff-accent,#ff4040);font-weight:700;text-decoration:underline">See plans</a></div>' : '') +
       // League sync is FREE (Jack 2026-10-06): espn.js's export button has no
       // gate — say so, or free users read this lock as "the whole helper is paid".
       '<div style="margin-top:12px;padding:8px 10px;border:1px solid #1d7a34;border-radius:6px;background:rgba(34,197,94,.08);color:#d1fae5;font-size:11px;text-align:left">' +
@@ -4440,7 +4445,13 @@
     }
     if (!gateAllowed()) {
       const _b = root.querySelector('#mff-body');
-      if (_b) _b.innerHTML = gateLockHTML();
+      // X-37: the draft view calls render() about every 2 s. Rewriting the same lock HTML each
+      // time dropped keyboard focus (and hover) from the lock's links, so redraw only when the
+      // lock text changed or something else replaced it. gateAllowed() above still decides.
+      const _h = gateLockHTML();
+      if (_b && !(_b.__mffLockHTML === _h && _b.__mffLockNode && _b.firstChild === _b.__mffLockNode && _b.childNodes.length === 1)) {
+        _b.innerHTML = _h; _b.__mffLockHTML = _h; _b.__mffLockNode = _b.firstChild;
+      }
       return;
     }
     if (!isDynMode()) { // dynasty-only sources can't survive a flip to redraft

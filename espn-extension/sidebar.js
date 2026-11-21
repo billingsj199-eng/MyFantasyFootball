@@ -2599,7 +2599,7 @@
       const sched = E.buildSchedule();
       if (!sched || !Object.keys(sched.byTeam).length) return null;
       simEnsureGlobals();
-      const players = E.buildPlayers(sched);
+      const players = mffBuildPlayers(E, sched);
       const sc = E.scoringFromLeague(state.leagueScoring);
       players.list.forEach((ep) => {
         if (ep.isDST || ep.pos === 'K') return;
@@ -2633,7 +2633,7 @@
       const sched = E.buildSchedule();
       if (!sched || !Object.keys(sched.byTeam).length) return;
       simEnsureGlobals();
-      const players = E.buildPlayers(sched);
+      const players = mffBuildPlayers(E, sched);
       const sc = E.scoringFromLeague(state.leagueScoring);
       const list = players.list;
       let t0 = performance.now();
@@ -3061,14 +3061,65 @@
     });
     return pairsByWeek;
   }
-  // X-20 season sims: wait for an idle moment (max 1.5 s) so the engine's single
-  // synchronous simLeague call never shares a task with a paint or tab switch.
+  // X-20 season sims: wait for an idle moment (max 1.5 s) so a sim never starts in
+  // the same task as a paint or tab switch.
   function _simYield() {
     return new Promise((r) => {
       if (typeof requestIdleCallback === 'function') requestIdleCallback(() => r(), { timeout: 1500 });
       else setTimeout(r, 50);
     });
   }
+  // ---- league sims in slices (X-20261121-20, v0.20.77) ----
+  // The engine's simLeagueAsync does the lineup setup and the sims in ~16 ms slices, one run at a time, so the
+  // page keeps painting and scrolling (one call used to hold it for seconds). Same seed and same order of work:
+  // the tables are bit-identical to one simLeague call. A run is dropped (resolves null, nothing is written) when
+  // anything it reads changes before it is done, so a result can never be stale or half-built.
+  // Each slice ends with a plain macrotask (MessageChannel), not the engine's default scheduler.yield: yield
+  // continuations run ahead of timers and messages, which held up the page's own timers for the whole run
+  // (measured: a 50 ms interval did not fire for 3.1 s). Hidden tab: message tasks are not throttled, so the run
+  // carries on in the same slices and the same checks apply when it ends.
+  var _bpGen = 0; // bumped on every engine buildPlayers call made from this file
+  function mffBuildPlayers(E, sched) { _bpGen = (_bpGen || 0) + 1; return E.buildPlayers(sched); }
+  var _simMc = null, _simMcQ = [];
+  function _simSliceYield() {
+    return new Promise((r) => {
+      if (!_simMc) { _simMc = new MessageChannel(); _simMc.port1.onmessage = () => { const f = _simMcQ.shift(); if (f) f(); }; }
+      _simMcQ.push(r);
+      _simMc.port2.postMessage(0);
+    });
+  }
+  let _lsSig = null;
+  function _simWatch() { // everything a league sim reads while it works
+    const sv = state.scoringVals, ls = state.leagueScoring;
+    if (ls && (!_lsSig || _lsSig.src !== ls)) _lsSig = { src: ls, sig: JSON.stringify(ls) };
+    return [state.simProj, window.BETTING_2026, state.schedule, state.players, state.players.length,
+      state.seasonLeagueId, simRecHash(), sv ? sv.recPts + '|' + sv.passTd + '|' + sv.teBonus : '', ls ? _lsSig.sig : ''];
+  }
+  // buildOpts() is called when this run's turn comes and returns the simLeague options.
+  // extraStale() true = superseded for a reason of the caller's own (a newer run).
+  function leagueSimSliced(buildOpts, extraStale) {
+    const E2 = window.SimEngine;
+    let watch = null, gen = -1, ready = false;
+    const build = async () => { watch = _simWatch(); const o = await buildOpts(); gen = _bpGen; return o; };
+    const stale = () => {
+      if (extraStale && extraStale()) return true;
+      if (!watch) return false; // still waiting its turn: nothing read yet
+      const now = _simWatch();
+      for (let i = 0; i < now.length; i++) if (now[i] !== watch[i]) return true;
+      // a players object is only good until the next buildPlayers call, and the setup reads it
+      return !ready && gen !== -1 && _bpGen !== gen;
+    };
+    if (!E2.simLeagueAsync) { // older engine copy: one call, as before
+      return Promise.resolve().then(build).then((o) => ((o == null || stale()) ? null : E2.simLeague(o)));
+    }
+    return E2.simLeagueAsync(build, {
+      sliceMs: 16,
+      yieldFn: _simSliceYield,
+      isStale: stale,
+      onProgress: (done, total, setupDone) => { if (setupDone) ready = true; },
+    });
+  }
+  let _simRunSeq = 0;
   async function ensureSeasonSim() {
     const lid = state.seasonLeagueId;
     const ps = state.seasonSim;
@@ -3077,9 +3128,11 @@
     if (ps.leagueId === lid &&
       (ps.status === 'running' || (ps.status === 'done' && ps.recHash === recHash && ps.su === _simStamp()))) return;
     ps.leagueId = lid; ps.status = 'running'; ps.note = ''; ps.su = _simStamp();
+    const myRun = ps.run = ++_simRunSeq; // a newer run (RE-RUN, league switch) supersedes this one
+    const mine = () => state.seasonSim === ps && ps.run === myRun;
     render();
-    await new Promise((r) => setTimeout(r, 30)); // let the status paint before the sync sim
-    await _simYield(); // X-20: the simLeague call gets an idle task of its own
+    await new Promise((r) => setTimeout(r, 30)); // let the status paint first
+    await _simYield(); // start at an idle moment
     try {
       const day = new Date().toDateString();
       const cacheKey = 'espnSim_' + lid;
@@ -3094,26 +3147,42 @@
         }
       } catch (e) {}
       const E2 = window.SimEngine;
-      const sched = E2.buildSchedule();
-      if (!sched || !Object.keys(sched.byTeam).length) throw new Error('no game projections loaded');
-      const curWeek = state.byesActive ? state.seasonWeek : 1;
-      const playoffStart = state.playoffStart || 15;
       const regWeeks = [];
-      for (let w = curWeek; w < playoffStart; w++) regWeeks.push(w);
-      const teams = simTeams();
-      let pairsByWeek = state.seasonPairs || {};
-      const anyPairs = regWeeks.some((w) => (pairsByWeek[w] || []).length);
-      ps.synthPairs = !anyPairs;
-      if (!anyPairs) pairsByWeek = simRoundRobin(teams.map((t) => t.rosterId), regWeeks);
-      simEnsureGlobals();
-      const players = E2.buildPlayers(sched);
-      const res = E2.simLeague({
-        teams, sims: SIM_RUNS, seed: SIM_SEED,
-        scoring: E2.scoringFromLeague(state.leagueScoring),
-        schedule: sched, players, pairsByWeek, regWeeks,
-        playoffTeams: state.playoffTeams || 6, playoffStart,
-        lineupSlots: state.seasonSlots || [], unavailable: simUnavailable(), currentWeek: curWeek, meanFor: simMeanForEngine,
-      });
+      let runRecHash = recHash;
+      // the inputs are read when the run's turn comes (inside the engine's queue), then the work is sliced
+      const res = await leagueSimSliced(() => {
+        runRecHash = simRecHash();
+        const sched = E2.buildSchedule();
+        if (!sched || !Object.keys(sched.byTeam).length) throw new Error('no game projections loaded');
+        const curWeek = state.byesActive ? state.seasonWeek : 1;
+        const playoffStart = state.playoffStart || 15;
+        regWeeks.length = 0;
+        for (let w = curWeek; w < playoffStart; w++) regWeeks.push(w);
+        const teams = simTeams();
+        let pairsByWeek = state.seasonPairs || {};
+        const anyPairs = regWeeks.some((w) => (pairsByWeek[w] || []).length);
+        ps.synthPairs = !anyPairs;
+        if (!anyPairs) pairsByWeek = simRoundRobin(teams.map((t) => t.rosterId), regWeeks);
+        simEnsureGlobals();
+        const players = mffBuildPlayers(E2, sched);
+        return {
+          teams, sims: SIM_RUNS, seed: SIM_SEED,
+          scoring: E2.scoringFromLeague(state.leagueScoring),
+          schedule: sched, players, pairsByWeek, regWeeks: regWeeks.slice(),
+          playoffTeams: state.playoffTeams || 6, playoffStart,
+          lineupSlots: state.seasonSlots || [], unavailable: simUnavailable(), currentWeek: curWeek, meanFor: simMeanForEngine,
+        };
+      }, () => !mine());
+      if (!res) { // superseded: an input changed mid-run. Nothing was written; go again on the new inputs.
+        if (mine() && ps.status === 'running') {
+          ps.status = 'idle';
+          ps.retry = (ps.retry || 0) + 1;
+          setTimeout(ensureSeasonSim, Math.min(2000, 150 * ps.retry));
+        }
+        return;
+      }
+      if (!mine()) return;
+      ps.retry = 0;
       const placeCounts = {}, results = {};
       res.forEach((r) => {
         placeCounts[r.team.rosterId] = r.placeCounts;
@@ -3130,9 +3199,10 @@
           finals: +r.finalsOdds.toFixed(3), title: +r.titleOdds.toFixed(3), weekly,
         };
       });
-      Object.assign(ps, { status: 'done', placeCounts, results, sims: SIM_RUNS, recHash });
-      store.set({ [cacheKey]: { v: 2, su: _simStamp(), day, recHash, placeCounts, results, sims: SIM_RUNS, synthPairs: ps.synthPairs } });
+      Object.assign(ps, { status: 'done', placeCounts, results, sims: SIM_RUNS, recHash: runRecHash });
+      store.set({ [cacheKey]: { v: 2, su: _simStamp(), day, recHash: runRecHash, placeCounts, results, sims: SIM_RUNS, synthPairs: ps.synthPairs } });
     } catch (e) {
+      if (!mine()) return;
       ps.status = 'error';
       ps.note = e.message || String(e);
     }

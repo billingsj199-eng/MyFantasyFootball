@@ -2137,7 +2137,7 @@
       const sched = pkSchedule();
       if (!sched || !Object.keys(sched.byTeam).length) return null;
       pkEnsureGlobals();
-      const players = E.buildPlayers(sched);
+      const players = mffBuildPlayers(E, sched);
       const sc = E.scoringFromLeague(state.seasonLeague.scoring_settings);
       players.list.forEach((ep) => {
         if (ep.isDST || ep.pos === 'K') return;
@@ -2171,7 +2171,7 @@
       const sched = pkSchedule();
       if (!sched || !Object.keys(sched.byTeam).length) return;
       pkEnsureGlobals();
-      const players = E.buildPlayers(sched);
+      const players = mffBuildPlayers(E, sched);
       const sc = E.scoringFromLeague(state.seasonLeague.scoring_settings);
       const list = players.list;
       let t0 = performance.now();
@@ -3208,21 +3208,76 @@
     const pairsByWeek = pr.anyPairs ? pr.pairsByWeek
       : pkRoundRobin(teams.map((t) => t.rosterId), regWeeks);
     pkEnsureGlobals();
-    const players = E2.buildPlayers(sched);
+    const players = mffBuildPlayers(E2, sched);
     const slots = (lg.roster_positions || []).filter((s) => s !== 'BN' && s !== 'IR' && s !== 'TAXI');
     state._pkInputs = { lid, recHash, sched, teams, pairsByWeek, regWeeks, playoffStart, playoffTeams,
       slots, scoring: E2.scoringFromLeague(lg.scoring_settings), unavailable: pkUnavailable(),
       curWeek, players, synthPairs: !pr.anyPairs };
     return state._pkInputs;
   }
-  function pkRunSim(inp, teams) {
-    return window.SimEngine.simLeague({
-      teams, sims: PK_SIMS, seed: PK_SEED, scoring: inp.scoring,
-      schedule: inp.sched, players: inp.players, pairsByWeek: inp.pairsByWeek, regWeeks: inp.regWeeks,
-      playoffTeams: inp.playoffTeams, playoffStart: inp.playoffStart, lineupSlots: inp.slots,
-      unavailable: inp.unavailable, currentWeek: inp.curWeek, meanFor: simMeanForEngine,
+  // ---- league sims in slices (X-20261121-20, v0.29.66) ----
+  // The engine's simLeagueAsync does the lineup setup and the sims in ~16 ms slices, one run at a time, so the
+  // page keeps painting and scrolling (one call used to hold it for seconds). Same seed and same order of work:
+  // the tables are bit-identical to one simLeague call. A run is dropped (resolves null, nothing is written) when
+  // anything it reads changes before it is done, so a result can never be stale or half-built.
+  // Each slice ends with a plain macrotask (MessageChannel), not the engine's default scheduler.yield: yield
+  // continuations run ahead of timers and messages, which held up the page's own timers for the whole run
+  // (measured: a 50 ms interval did not fire for 3.1 s). Hidden tab: message tasks are not throttled, so the run
+  // carries on in the same slices and the same checks apply when it ends.
+  var _bpGen = 0; // bumped on every engine buildPlayers call made from this file
+  function mffBuildPlayers(E, sched) { _bpGen = (_bpGen || 0) + 1; return E.buildPlayers(sched); }
+  var _simMc = null, _simMcQ = [];
+  function _simSliceYield() {
+    return new Promise((r) => {
+      if (!_simMc) { _simMc = new MessageChannel(); _simMc.port1.onmessage = () => { const f = _simMcQ.shift(); if (f) f(); }; }
+      _simMcQ.push(r);
+      _simMc.port2.postMessage(0);
     });
   }
+  let _lsSig = null;
+  function _simWatch() { // everything a league sim reads while it works
+    const sv = state.scoringVals, ls = state.leagueScoring;
+    if (ls && (!_lsSig || _lsSig.src !== ls)) _lsSig = { src: ls, sig: JSON.stringify(ls) };
+    return [state.simProj, window.BETTING_2026, state.schedule, state.players, state.players.length,
+      state.seasonLeagueId, pkRecHash(), sv ? sv.recPts + '|' + sv.passTd + '|' + sv.teBonus : '', ls ? _lsSig.sig : ''];
+  }
+  // buildOpts() is called when this run's turn comes and returns the simLeague options (or a Promise of them).
+  // extraStale() true = superseded for a reason of the caller's own (newer run, another trade on screen).
+  function leagueSimSliced(buildOpts, extraStale) {
+    const E2 = window.SimEngine;
+    let watch = null, gen = -1, ready = false;
+    const build = async () => { watch = _simWatch(); const o = await buildOpts(); gen = _bpGen; return o; };
+    const stale = () => {
+      if (extraStale && extraStale()) return true;
+      if (!watch) return false; // still waiting its turn: nothing read yet
+      const now = _simWatch();
+      for (let i = 0; i < now.length; i++) if (now[i] !== watch[i]) return true;
+      // a players object is only good until the next buildPlayers call, and the setup reads it
+      return !ready && gen !== -1 && _bpGen !== gen;
+    };
+    if (!E2.simLeagueAsync) { // older engine copy: one call, as before
+      return Promise.resolve().then(build).then((o) => ((o == null || stale()) ? null : E2.simLeague(o)));
+    }
+    return E2.simLeagueAsync(build, {
+      sliceMs: 16,
+      yieldFn: _simSliceYield,
+      isStale: stale,
+      onProgress: (done, total, setupDone) => { if (setupDone) ready = true; },
+    });
+  }
+  // teamsOf(inp) picks the rosters to sim (as they are, or after a trade). Resolves null when superseded.
+  function pkRunSim(teamsOf, extraStale) {
+    return leagueSimSliced(async () => {
+      const inp = await pkSimInputs(); // cached per league + records; buildPlayers runs in here when it is not
+      return {
+        teams: teamsOf(inp), sims: PK_SIMS, seed: PK_SEED, scoring: inp.scoring,
+        schedule: inp.sched, players: inp.players, pairsByWeek: inp.pairsByWeek, regWeeks: inp.regWeeks,
+        playoffTeams: inp.playoffTeams, playoffStart: inp.playoffStart, lineupSlots: inp.slots,
+        unavailable: inp.unavailable, currentWeek: inp.curWeek, meanFor: simMeanForEngine,
+      };
+    }, extraStale);
+  }
+  let _pkRunSeq = 0;
   async function ensurePickSim() {
     const lid = state.seasonLeagueId;
     const ps = state.pickSim;
@@ -3230,8 +3285,10 @@
     if (ps.leagueId === lid &&
       (ps.status === 'running' || (ps.status === 'done' && ps.recHash === pkRecHash() && ps.su === _simStamp()))) return;
     ps.leagueId = lid; ps.status = 'running'; ps.note = ''; ps.su = _simStamp();
+    const myRun = ps.run = ++_pkRunSeq; // a newer run (RE-RUN, league switch) supersedes this one
+    const mine = () => state.pickSim === ps && ps.run === myRun;
     render();
-    await new Promise((r) => setTimeout(r, 30)); // let the status paint before the sync sim
+    await new Promise((r) => setTimeout(r, 30)); // let the status paint first
     try {
       const invRes = await pkFetchInventory(lid); // always fresh — trades move picks
       ps.inv = invRes.inv; ps.tradedCount = invRes.moved;
@@ -3248,12 +3305,22 @@
           return;
         }
       } catch (e) {}
-      const inp = await pkSimInputs();
-      const teams = inp.teams;
+      await pkSimInputs(); // assembled here, as before; the run below reads the same cached inputs
+      await _simYield(); // start at an idle moment
+      let inp = null;
+      const res = await pkRunSim((i) => { inp = i; return i.teams; }, () => !mine());
+      if (!res) { // superseded: an input changed mid-run. Nothing was written; go again on the new inputs.
+        if (mine() && ps.status === 'running') {
+          ps.status = 'idle';
+          ps.retry = (ps.retry || 0) + 1;
+          setTimeout(ensurePickSim, Math.min(2000, 150 * ps.retry));
+        }
+        return;
+      }
+      if (!mine()) return;
+      ps.retry = 0;
       const regWeeks = inp.regWeeks;
       ps.synthPairs = inp.synthPairs;
-      await _simYield(); // X-20: the 1,500-sim call gets a task of its own
-      const res = pkRunSim(inp, teams);
       const placeCounts = {}, results = {};
       res.forEach((r) => {
         placeCounts[r.team.rosterId] = r.placeCounts;
@@ -3274,6 +3341,7 @@
       Object.assign(ps, { status: 'done', placeCounts, results, sims: PK_SIMS, recHash });
       store.set({ [cacheKey]: { v: 3, su: _simStamp(), day, recHash, placeCounts, results, sims: PK_SIMS, synthPairs: ps.synthPairs } });
     } catch (e) {
+      if (!mine()) return;
       ps.status = 'error';
       ps.note = e.message || String(e);
     }
@@ -5800,12 +5868,13 @@
       else setTimeout(r, 50);
     });
   }
+  let _tradeSigNow = null; // the trade on screen (set by decorateTradeModal)
   async function tradeImpactRun(coreSig, moves) {
     if (_tradeImpactBusy) return;
     _tradeImpactBusy = true;
     try {
-      const inp = await pkSimInputs();
-      const teams2 = inp.teams.map((t) => {
+      await pkSimInputs();
+      const teamsAfter = (inp) => inp.teams.map((t) => {
         const mv = moves[t.rosterId];
         if (!mv) return t;
         const d = {};
@@ -5820,13 +5889,25 @@
         res.forEach((r) => { by[r.team.rosterId] = { w: r.avgWins, title: r.titleOdds }; });
         return by;
       };
-      // X-20261121-20 (v0.29.61): each simLeague call is its own task (the engine
-      // runs all sims in one synchronous call; it can't be sliced from here), so the
-      // trade modal paints and stays responsive between runs. Same seeds, same calls.
+      // X-20261121-20 (v0.29.66): both runs are sliced by the engine, so the trade modal keeps painting the
+      // whole time. Same seed both runs — deltas isolate the trade. Same order as before: a pick-value run
+      // that is waiting goes in between the two. Dropped without a result when an input changes anywhere
+      // between the first slice and the last, or another trade is on screen; the next pass starts over.
       await _simYield();
-      const before = tally(pkRunSim(inp, inp.teams)); // same seed both runs — deltas isolate the trade
+      const w0 = _simWatch();
+      const gone = () => {
+        if (_tradeSigNow !== coreSig) return true;
+        const now = _simWatch();
+        for (let i = 0; i < now.length; i++) if (now[i] !== w0[i]) return true;
+        return false;
+      };
+      const resB = await pkRunSim((inp) => inp.teams, gone);
+      if (!resB) { _tradeImpactBusy = false; return; }
       await _simYield();
-      const after = tally(pkRunSim(inp, teams2));
+      const resA = await pkRunSim(teamsAfter, gone);
+      if (!resA) { _tradeImpactBusy = false; return; }
+      const before = tally(resB);
+      const after = tally(resA);
       const byRid = {};
       Object.keys(after).forEach((rid) => {
         const b = before[rid] || { w: 0, title: 0 };
@@ -5837,6 +5918,9 @@
       state.tradeImpact = { sig: coreSig, byRid: null, err: e.message };
     }
     _tradeImpactBusy = false;
+    // the result is in: have the next on-page pass run now instead of waiting for the 10 s safety net
+    _decoDirty = true;
+    setTimeout(decorateTick, 0);
   }
   function decorateTradeModal() {
     const wrap = document.querySelector('.trade-center-wrapper');
@@ -5855,6 +5939,7 @@
     });
     const coreSig = state.mode + '|' + sides.map((s) =>
       s.uname + ':' + s.recv.concat(s.send).map((a) => a.name).join(',')).join('|');
+    _tradeSigNow = coreSig;
     const impact = (state.tradeImpact && state.tradeImpact.sig === coreSig) ? state.tradeImpact : null;
     // kick the before/after impact sims once per trade signature
     if (!impact && !_tradeImpactBusy && simAvailable() && state.seasonLeague) {

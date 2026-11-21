@@ -11526,6 +11526,76 @@ window._openPremiumUpgrade = function (plan) {
 };
 window._openSeasonPass = function () { window._openPremiumUpgrade('season'); };
 
+// === #premium deep link (C-20261121-1) ===
+// A web address for the plan page: https://www.myfantasyfootball.co/#premium, with
+// an optional ?src=<id> saying where the click came from (the helper extensions'
+// lock screens send ext-<platform>). The hash router hands it to _openPremiumLink()
+// on a cold load and on an in-page hash change. It opens what every other premium
+// button opens (_openPremiumUpgrade): plan cards + SIGN IN TO BUY signed out, the
+// plan picker for a free account, the PRO panel for a premium one.
+// Only the allow-listed src values below are kept. Anything else becomes a fixed
+// generic value, so the raw string never reaches the DOM, a URL or an event.
+const PREMIUM_LINK_SRCS = ['ext-sleeper', 'ext-espn', 'ext-yahoo', 'ext-underdog'];
+const PREMIUM_LINK_GENERIC = ['deeplink', 'deeplink-other'];   // no src / unrecognised src
+const PREMIUM_LINK_SRC_KEY = 'mff_prem_src';
+// The link's src for this tab, kept 30 minutes. It rides on the premium events that
+// follow (premium_view as `cta`, the buy-button premium_cta as `ctx`), so GA4 can
+// follow an extension click to the buy button. '' when the visit didn't use the link.
+window._mffPremSrc = function () {
+  try {
+    const p = JSON.parse(sessionStorage.getItem(PREMIUM_LINK_SRC_KEY) || 'null');
+    if (p && (PREMIUM_LINK_SRCS.includes(p.src) || PREMIUM_LINK_GENERIC.includes(p.src))
+        && Date.now() - (p.at || 0) < 30 * 60 * 1000) return p.src;
+  } catch (_) {}
+  return '';
+};
+// Run cb once the first auth state is known (the persisted session has resolved and
+// updateAccountUI has run), so the page opens in the right signed-in/out state and
+// the events carry it. Capped at 4s: a blocked or offline SDK opens signed out.
+function _premiumLinkWhenAuthKnown(cb) {
+  let done = false, unsub = null, iv = 0, cap = 0;
+  const go = () => {
+    if (done) return;
+    done = true;
+    clearInterval(iv); clearTimeout(cap);
+    try { if (unsub) unsub(); } catch (_) {}
+    cb();
+  };
+  const hook = () => {
+    if (done || unsub) return;
+    if (window._fbBlocked) { go(); return; }
+    if (!(window._fbAuthBooted || window._fbReady)) return;
+    try { unsub = firebase.auth().onAuthStateChanged(() => setTimeout(go, 0)); } catch (_) { go(); }
+  };
+  iv = setInterval(hook, 100);
+  cap = setTimeout(go, 4000);
+  hook();
+}
+let _premiumLinkPending = false;
+window._openPremiumLink = function (query) {
+  const m = /(?:^|[?&])src=([^&]*)/.exec(String(query || ''));
+  const src = (!m || !m[1]) ? PREMIUM_LINK_GENERIC[0] : PREMIUM_LINK_SRCS.includes(m[1]) ? m[1] : PREMIUM_LINK_GENERIC[1];
+  try { sessionStorage.setItem(PREMIUM_LINK_SRC_KEY, JSON.stringify({ src: src, at: Date.now() })); } catch (_) {}
+  if (_premiumLinkPending) return;   // already waiting on auth for this link
+  _premiumLinkPending = true;
+  // Slow first load (the sign-in SDK still downloading): say what's coming, so the
+  // jump from Rankings to the plan page a moment later isn't a surprise.
+  setTimeout(() => { if (_premiumLinkPending && typeof toast === 'function') toast('Opening premium plans…'); }, 800);
+  _premiumLinkWhenAuthKnown(() => {
+    _premiumLinkPending = false;
+    // The click happened off-site (extension lock screen, a shared link), so the
+    // arrival is the CTA event; `cta` names where it came from.
+    if (typeof window._mffTrack === 'function') window._mffTrack('premium_cta', { cta: src, page: 'deeplink' });
+    // One-shot: open as a router navigation so switchPage REPLACES #premium… with
+    // #account. Back or a refresh then can't land on the link and reopen the page.
+    window._mffRouterNav = true;
+    try { window._openPremiumUpgrade(); } finally { window._mffRouterNav = false; }
+    try {
+      if (/^#\/?premium/i.test(location.hash || '')) history.replaceState(history.state, '', location.pathname + location.search + '#account');
+    } catch (_) {}
+  });
+};
+
 // === Phone names (2026-10-14, Jack: "D. Henry" instead of "Derrick Henry") ===
 // The ≤600px rankings card gives the name ~88px, which wrapped two thirds of names
 // onto two lines. On phones the board renders first-initial names; suffixes stay
@@ -25382,7 +25452,8 @@ function switchPage(page) {
       window.gtag('event', 'page_view', { page_path: '/' + (page || 'rankings'), page_title: page || 'rankings' });
       // Signed-out Account shows the plan cards directly (2026-11-09), so count that as a premium view.
       if (page === 'account' && !document.body.classList.contains('mff-signed-in')) {
-        window.gtag('event', 'premium_view', { ctx: 'signedout' });
+        const _ps = typeof window._mffPremSrc === 'function' ? window._mffPremSrc() : '';   // #premium link src (C-20261121-1)
+        window.gtag('event', 'premium_view', _ps ? { ctx: 'signedout', cta: _ps } : { ctx: 'signedout' });
       }
     }
   } catch(_) {}
@@ -25485,6 +25556,10 @@ window.switchPage = switchPage;
 (function _initHashRouter() {
   function _applyHash() {
     const h = (location.hash || '').replace(/^#\/?/, '').toLowerCase();
+    // #premium / #premium?src=<id> (C-20261121-1): the plan-page deep link. Not a page
+    // of its own, so it must not fall through to the unknown-hash -> rankings branch.
+    const pm = /^premium(?:[?&\/](.*))?$/.exec(h);
+    if (pm) { if (typeof window._openPremiumLink === 'function') window._openPremiumLink(pm[1] || ''); return; }
     window._mffRouterNav = true;
     try {
       if (h && pageMap[h]) switchPage(h);
@@ -25739,6 +25814,10 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
   };
   window._mffTrack = track;
   const page = () => { const a = document.querySelector('.page.active'); return a ? a.id.replace(/^page/, '').toLowerCase() : ''; };
+  // C-20261121-1: a visit that came in through the #premium link carries the link's
+  // src (ext-sleeper, …) on its later premium events, in a param the event doesn't use
+  // yet: `cta` on premium_view, `ctx` on the buy-button premium_cta. Both are GA4 dims already.
+  const withPremSrc = (params, key) => { const s = typeof window._mffPremSrc === 'function' ? window._mffPremSrc() : ''; if (s) params[key] = s; return params; };
   const CLICK = [
     ['.version-tab[data-version]', b => ['board_version', { version: b.dataset.version }]],
     ['.view-mode-btn[data-viewmode]', b => ['view_mode', { view: b.dataset.viewmode, version: typeof currentVersion === 'string' ? currentVersion : '', premium: (typeof hasPremium === 'function' && hasPremium()) ? 1 : 0 }]],
@@ -25765,10 +25844,10 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
     // C-20261120-3: Ask Jack Season Pass card; the button names its spot in data-cta
     // (askjack-free-card above the free form, askjack-after-free once it's used).
     ['.aj-pass-btn[data-cta]', b => ['premium_cta', { cta: b.dataset.cta, page: page() }]],
-    ['#premiumUpgradeBtn, .jt-locked-btn, .md-rank-src-tab.locked, .premium-wall-btn', b => ['premium_cta', { cta: b.id || (b.className || '').split(' ')[0], page: page() }]],
+    ['#premiumUpgradeBtn, .jt-locked-btn, .md-rank-src-tab.locked, .premium-wall-btn', b => ['premium_cta', withPremSrc({ cta: b.id || (b.className || '').split(' ')[0], page: page() }, 'ctx')]],
     // Signed in only: signed out, switchPage('account') already sent premium_view
     // ctx=signedout and _openPremiumUpgrade's programmatic (hidden) tab click would double-count.
-    ['.acct-tab[data-acct-tab="premium"]', () => document.body.classList.contains('mff-signed-in') ? ['premium_view', { ctx: 'tab' }] : null],
+    ['.acct-tab[data-acct-tab="premium"]', () => document.body.classList.contains('mff-signed-in') ? ['premium_view', withPremSrc({ ctx: 'tab' }, 'cta')] : null],
     ['#mtSleeperImportBtn, #mtEspnImportBtn, #mtYahooImportBtn', b => ['league_import', { platform: b.id.replace(/^mt|ImportBtn$/g, '').toLowerCase() }]],
     ['#tcvFullscreenBtn', () => ['tier_cards_fullscreen', {}]],
     ['#sstDropdown', () => ['startsit_add', {}]],

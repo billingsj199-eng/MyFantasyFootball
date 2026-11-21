@@ -94,7 +94,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-21-flexcolors" as="script">
+<link rel="preload" href="app.js?v=2026-11-21-premiumlink" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -6880,7 +6880,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-21-flexcolors"></script>
+<script defer src="app.js?v=2026-11-21-premiumlink"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">
@@ -7008,7 +7008,12 @@ window.addEventListener('load', function() {
   // Auto-open on first visit (after a small delay so the rest of the page renders first)
   let seen = false;
   try { seen = localStorage.getItem(KEY) === '1'; } catch (_e) {}
-  if (!seen) setTimeout(open, 700);
+  // Not on the #premium plan-page link (C-20261121-1): a first-time visitor sent by a
+  // helper extension came to see the plans, and the tour would cover them. Same for
+  // the return from Stripe (?premium_success / ?premium_cancel) that follows. It isn't
+  // marked seen, so it opens on their next ordinary visit.
+  const _buying = /^#\/?premium(?:[?&\/]|$)/i.test(location.hash || '') || /[?&]premium_(?:success|cancel)=1/.test(location.search || '');
+  if (!seen && !_buying) setTimeout(open, 700);
 
   // Manual re-trigger
   window._openMffTour = open;

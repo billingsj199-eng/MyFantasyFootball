@@ -206,6 +206,28 @@
     return ((sv.recPts - 1) * (p.cRec || 0) + (sv.passTd - 4) * (p.cPtd || 0)) / p.cGm;
   }
 
+  // LEAGUE D/ST SCORING (2026-11-21, Jack: "switch it"): the site's D/ST rows are the engine's D/ST mean at DEFAULT D/ST
+  // rules (sack 1, INT/FR 2, def TD 6, safety/block 2, PA 10/7/4/1/0/-1/-4). This adds the league's rule difference for
+  // that week's matchup (engine dstScoringDelta; sim_lab README "League D/ST scoring"). 0 at default rules, without
+  // the engine, or with no line for the week.
+  let _dstSc = null;
+  function dstLeagueScoring() {
+    const E = window.SimEngine;
+    if (!E || !E.scoringFromLeague || !state.leagueScoring) return null;
+    if (!_dstSc || _dstSc.src !== state.leagueScoring) _dstSc = { src: state.leagueScoring, sc: E.scoringFromLeague(state.leagueScoring) };
+    return _dstSc.sc;
+  }
+  function dstOppImplied(tm, wk) {
+    const s = state.schedule, g = tm && s && s[tm] && s[tm][wk];
+    return g && g.total != null && g.implied != null ? g.total - g.implied : null;
+  }
+  function dstLeagueDelta(tm, wk) {
+    const E = window.SimEngine, sc = dstLeagueScoring();
+    if (!sc || !E.dstScoringDelta) return 0;
+    const oi = dstOppImplied(String(tm || '').toUpperCase(), wk);
+    return oi == null ? 0 : E.dstScoringDelta(oi, sc);
+  }
+
   // SIMS tab = the site's Sim Lab only (2026-10-09, Jack: "make sure extensions have only sim rest of season
   // logic"). The bundled engine runs on a Clay-only pack (no 2026 games, usage, injuries news or the shadow base),
   // so its own weekly means were preseason numbers. simLeague's opts.meanFor swaps in the site's exported weekly row
@@ -221,7 +243,7 @@
     for (const w of Object.keys(ix.weeks)) {
       if (+w < cw) continue;
       const r = ix.weeks[w][key];
-      if (r && typeof r[1] === 'number') { any = true; if (r[1] > 0) tot += r[1] + d; }
+      if (r && typeof r[1] === 'number') { any = true; if (r[1] > 0) tot += r[1] + d + (p.s === 'DST' ? dstLeagueDelta(p.sTm || p.t, +w) : 0); }
     }
     return any ? Math.round(tot * 10) / 10 : null;
   }
@@ -240,7 +262,7 @@
       _simExtByNorm = { n: state.players.length, mp };
     }
     const xp = ep.isDST ? null : _simExtByNorm.mp[key];
-    return Math.max(0, r[1] + (xp ? simLeagueDeltaPg(xp) : 0));
+    return Math.max(0, r[1] + (xp ? simLeagueDeltaPg(xp) : 0) + (ep.isDST ? dstLeagueDelta(ep.tm, wk) : 0));
   }
 
   // Name → site player. The loose fallback stays position-guarded: Yahoo's
@@ -1426,6 +1448,10 @@
   ];
   function dstProjFor(p, g) {
     const O = g && g.total != null && g.implied != null ? g.total - g.implied : 22.5;
+    // 2026-11-21: the engine's backtested Vegas-only mean, league-scored (no defense-rank boost: own D/ST history
+    // and quality add nothing over the line - sim_lab README DST TD regression / opponent sack-proneness).
+    const _E = window.SimEngine;
+    if (_E && _E.dstWeeklyMean) return _E.dstWeeklyMean(O, dstLeagueScoring() || _E.scoringFromLeague(null));
     const sc = state.leagueScoring || {};
     const val = (k, d) => (sc[k] != null ? sc[k] : d);
     const q = p.dRk != null ? 1 + (16.5 - p.dRk) * 0.012 : 1;
@@ -1461,13 +1487,13 @@
       if (_sr && typeof _sr[1] === 'number') {
         if (_sr[1] === 0 && _sr[3] == null) return 0; // ruled out at export time
         if (injOf(p) === 'OUT') return 0;
-        return Math.round(Math.max(0, _sr[1] + simLeagueDeltaPg(p)) * 100) / 100;
+        return Math.round(Math.max(0, _sr[1] + simLeagueDeltaPg(p) + (p.s === 'DST' ? dstLeagueDelta(p.sTm || p.t, state.seasonWeek) : 0)) * 100) / 100;
       }
     }
     if (p.s === 'K' || p.s === 'DST') {
       const g = p.sTm && state.schedule[p.sTm] && state.schedule[p.sTm][state.seasonWeek];
       v = p.s === 'K' ? kickerProjFor(p, g) : dstProjFor(p, g);
-      if (act) {
+      if (act && p.s === 'K') { // D/ST: no decay (2026-11-21, engine mean uses no D/ST history)
         const prior = p.s === 'K' ? (p.pPg != null ? p.pPg : 7.5) : dstProjFor(p, null);
         v += (act.ppg - prior) * shrink;
       }

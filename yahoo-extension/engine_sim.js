@@ -1,4 +1,4 @@
-// COPY of ../sim_lab/engine.js (synced 2026-11-10 10:15:22 by export_sleeper_extension_data.py — edit the sim_lab original)
+// COPY of ../sim_lab/engine.js (synced 2026-11-21 by export_sleeper_extension_data.py — edit the sim_lab original)
 // ============================================================================
 // SIM LAB ENGINE — projections + Monte Carlo simulation core.
 // Private research tool. Not part of the deployed MFF site.
@@ -644,7 +644,10 @@
       rec: num(ls.rec, 0), pass_td: num(ls.pass_td, 4), pass_yd: num(ls.pass_yd, 0.04),
       rush_yd: num(ls.rush_yd, 0.1), rec_yd: num(ls.rec_yd, 0.1),
       rush_td: num(ls.rush_td, 6), rec_td: num(ls.rec_td, 6),
-      bonus_rec_te: num(ls.bonus_rec_te, 0)
+      bonus_rec_te: num(ls.bonus_rec_te, 0),
+      // D/ST rules on Sleeper keys (ESPN sidebar espnScoringDict maps onto the same keys); unlisted = the DST_DEFAULT
+      // rule dstWeeklyMean was fit on, so a league / preset without them rescores to a zero delta.
+      dst: dstScoringFrom(ls)
     };
   }
   function num(v, d) { return typeof v === 'number' ? v : d; }
@@ -2431,14 +2434,63 @@
     var m = 1 + e * ((implied - (split ? teamAvg : avgImplied)) / avgImplied);
     return Math.min(1.35, Math.max(0.7, m));
   }
-  function dstWeeklyMean(oppImplied) {
+  // LEAGUE D/ST SCORING (2026-11-21, Jack: "fix scoring" - the D/ST mean ignored league rules, so a 2-pt-sack league got
+  // the same projection as a 1-pt league). The 16.2 - 0.436x fit is in points at DST_DEFAULT (sack 1, INT 2, FR 2, forced
+  // fumble 0, def TD 6, safety 2, blocked kick 2, PA 10/7/4/1/0/-1/-4 = pull_dst_history.py / the scorecard actuals / the
+  // tuner's dstShift basis). A league's mean adds sum_k (league_k - default_k) x E[count_k | oppImplied]; counts and the
+  // opponent-score normal (PA buckets) are fit_dst_components.py on 3,742 team-weeks 2019-25 (dst_components_fit.log; at
+  // default rules the components re-add to the shipped line within 0.1 pt at every implied 15-31). Default rules -> delta
+  // exactly 0, so the site lock, scorecards and tuner are unchanged. Not modeled: return / special-teams TD keys
+  // (st_td, def_st_*), yards-allowed tiers (yds_allow_*). Kill: window.SIM_DST_LEAGUE_SCORING = false.
+  var DST_DEFAULT = { sack: 1, int: 2, fum_rec: 2, ff: 0, def_td: 6, safe: 2, blk_kick: 2 };
+  var DST_COUNT = {   // E[count per game] = max(0, a + b x oppImplied)
+    sack: [4.3772, -0.08788], int: [1.2205, -0.02023], fum_rec: [0.7457, -0.00998], ff: [1.0494, -0.01180],
+    def_td: [0.2479, -0.00546], safe: [0.0519, -0.00105], blk_kick: [0.0770, -0.00096]
+  };
+  var DST_PA = { a: -0.1704, b: 1.0213, sd: 9.123 };   // opponent score ~ N(a + b x oppImplied, sd)
+  var DST_PA_BUCKETS = [   // Sleeper key, lo (exclusive), hi (inclusive), default pts
+    ['pts_allow_0', -1, 0, 10], ['pts_allow_1_6', 0, 6, 7], ['pts_allow_7_13', 6, 13, 4], ['pts_allow_14_20', 13, 20, 1],
+    ['pts_allow_21_27', 20, 27, 0], ['pts_allow_28_34', 27, 34, -1], ['pts_allow_35p', 34, 999, -4]
+  ];
+  function dstScoringFrom(ls) {
+    var out = {};
+    Object.keys(DST_DEFAULT).forEach(function (k) { out[k] = num(ls[k], DST_DEFAULT[k]); });
+    DST_PA_BUCKETS.forEach(function (b) { out[b[0]] = num(ls[b[0]], b[3]); });
+    return out;
+  }
+  function normCdf(x) {   // Abramowitz-Stegun 7.1.26 erf, |error| < 1.5e-7
+    var z = Math.abs(x) / Math.SQRT2, t = 1 / (1 + 0.3275911 * z);
+    var e = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z);
+    return x >= 0 ? 0.5 * (1 + e) : 0.5 * (1 - e);
+  }
+  // Points this league's D/ST rules add over DST_DEFAULT at this opponent implied total (0 at default rules / switch off).
+  function dstScoringDelta(oppImplied, sc) {
+    var r = sc && sc.dst;
+    if (!r || (typeof window !== 'undefined' && window.SIM_DST_LEAGUE_SCORING === false)) return 0;
+    var d = 0;
+    Object.keys(DST_DEFAULT).forEach(function (k) {
+      var dv = r[k] - DST_DEFAULT[k];
+      if (dv) d += dv * Math.max(0, DST_COUNT[k][0] + DST_COUNT[k][1] * oppImplied);
+    });
+    var mu = DST_PA.a + DST_PA.b * oppImplied, sd = DST_PA.sd;
+    DST_PA_BUCKETS.forEach(function (b) {
+      var dv = r[b[0]] - b[3];
+      if (!dv) return;
+      var pHi = normCdf((b[2] + 0.5 - mu) / sd), pLo = b[1] < 0 ? 0 : normCdf((b[1] + 0.5 - mu) / sd);
+      d += dv * (pHi - pLo);
+    });
+    return d;
+  }
+  function dstWeeklyMean(oppImplied, sc) {
     // refit on 3,625 pbp-reconstructed DST weeks vs closing implied totals:
     // realized 16.2 - 0.436x (engine's synthesized 15.5 - 0.42x was ~0.35
     // pts low but the slope was dead on)
     var m = 16.2 - 0.436 * oppImplied;
     // slow weekly tuner (data/sim_tuning.js): additive DST level shift, shrunk to 0
     if (typeof window !== 'undefined' && window.SIM_TUNING && typeof window.SIM_TUNING.dstShift === 'number') m += window.SIM_TUNING.dstShift;
-    return Math.max(1.0, m);
+    m = Math.max(1.0, m);
+    var d = dstScoringDelta(oppImplied, sc);
+    return d ? Math.max(0.5, m + d) : m;
   }
 
   // ---------- prop anchor (market-anchored weekly mean) ----------
@@ -3650,7 +3702,7 @@
     var mult, mean;
     if (p.isDST) {
       mult = 1;
-      mean = dstWeeklyMean(slot.oppImplied);
+      mean = dstWeeklyMean(slot.oppImplied, sc);
       return { mean: mean, mult: mult, slot: slot, comps: {} };
     }
     var vegTA = vegasTeamAvg(p, schedule);   // P-20261023-1: null = league-relative form (week 1 / kill switch)
@@ -5936,7 +5988,7 @@
     norm: norm, normTeam: normTeam, makeRng: makeRng,
     buildSchedule: buildSchedule, buildPlayers: buildPlayers,
     applyInSeasonInjuries: applyInSeasonInjuries, qsCandidates: qsCandidates, qsForce: qsForce, injAdj: injAdj, injAvail: injAvail, injGroup: injGroup, linesUp: linesUp, injSignalInfo: injSignalInfo, bangedDock: bangedDock, returnDock: returnDock, injuryState: injuryState, newsFlags: newsFlags, ascendingFlag: ascendingFlag, injPlay: injPlay, rookieLevel: rookieLevel, rbUsagePg: rbUsagePg, learnedShadowCorr: learnedShadowCorr, lgbPredict: lgbPredict, lgbExplain: lgbExplain, learnedShadowExplain: learnedShadowExplain, ctxNote: ctxNote,
-    scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints,
+    scoringFromLeague: scoringFromLeague, seasonPoints: seasonPoints, dstWeeklyMean: dstWeeklyMean, dstScoringDelta: dstScoringDelta,
     weeklyProjection: weeklyProjection, vegasMult: vegasMult, vegasTeamAvg: vegasTeamAvg, defenseAdj: defenseAdj, cbShadowMult: cbShadowMult, cb1OutBoost: cb1OutBoost, olOutDock: olOutDock, pressureMult: pressureMult, tdLuckAdj: tdLuckAdj, weatherMult: weatherMult, snapMult: snapMult, routeMult: routeMult, paceMult: paceMult,
     jsBasePg: jsBasePg, jsOppMult: jsOppMult, ncCacheReset: ncCacheReset,
     propAnchorMean: propAnchorMean, gammaMedRatio: gammaMedRatio, marketRate: marketRate, propImpliedFp: propImpliedFp, propCacheReset: propCacheReset,

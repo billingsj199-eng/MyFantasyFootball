@@ -147,7 +147,15 @@
     s = s.replace(/['’`]/g, '').replace(/[.,]/g, '').replace(/-/g, ' ');
     return s.replace(/\s+/g, ' ').trim();
   }
-  function keyOf(p) { return norm(p.n) + '|' + p.s; }
+  // X-9: memoized on the raw name|pos string (pure function of p.n + p.s); the
+  // draft render calls this thousands of times per pass via isDrafted().
+  const _keyMemo = new Map();
+  function keyOf(p) {
+    const raw = (p.n || '') + '\u0001' + p.s;
+    let k = _keyMemo.get(raw);
+    if (k === undefined) { k = norm(p.n) + '|' + p.s; _keyMemo.set(raw, k); }
+    return k;
+  }
 
   // ESPN spells some players differently than the site board (ESPN says
   // "Kenny Gainwell", the board says "Kenneth Gainwell") — with no alias step
@@ -2578,6 +2586,48 @@
     _engWk = { key, bySid, byNorm };
     return _engWk;
   }
+  // X-20261121-9 (v0.20.70): same map, built in ~12 ms slices that yield to the
+  // page between them, so a season boot no longer blocks ESPN + the sidebar for
+  // one ~160-370 ms task. Identical inputs, order and first-wins byNorm rule as
+  // engineWeekMap(); any sync caller before it finishes just computes the map
+  // itself (same result). Yields via MessageChannel so a background tab isn't
+  // held to the 1 s timer clamp.
+  function yieldToPage() {
+    return new Promise((r) => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); });
+  }
+  async function warmEngineWeekMap() {
+    if (!simAvailable() || !state.leagueScoring) return;
+    const key = state.seasonWeek + '|' + state.scoringLabel;
+    if (_engWk && _engWk.key === key) return;
+    const E = window.SimEngine;
+    const bySid = {}, byNorm = {};
+    try {
+      const sched = E.buildSchedule();
+      if (!sched || !Object.keys(sched.byTeam).length) return;
+      simEnsureGlobals();
+      const players = E.buildPlayers(sched);
+      const sc = E.scoringFromLeague(state.leagueScoring);
+      const list = players.list;
+      let t0 = performance.now();
+      for (let i = 0; i < list.length; i++) {
+        if (performance.now() - t0 > 12) {
+          await yieldToPage();
+          if (_engWk && _engWk.key === key) return;                    // a sync caller finished it
+          if (state.seasonWeek + '|' + state.scoringLabel !== key) return; // league/week changed: drop
+          t0 = performance.now();
+        }
+        const ep = list[i];
+        if (ep.isDST || ep.pos === 'K') continue;
+        const wp = E.weeklyProjection(ep, state.seasonWeek, sc, sched);
+        const m = wp && (wp.jsMean != null ? wp.jsMean : wp.mean);
+        if (!(m > 0)) continue;
+        const rec = { m, sig: ep.sigmaPct, pos: ep.pos };
+        if (ep.sid) bySid[ep.sid] = rec;
+        if (byNorm[ep.norm] === undefined) byNorm[ep.norm] = rec;
+      }
+    } catch (e) { console.warn('MFF warmEngineWeekMap failed:', e); return; }
+    if (!(_engWk && _engWk.key === key)) _engWk = { key, bySid, byNorm };
+  }
   function engineRecFor(p) {
     const m = engineWeekMap();
     if (!m) return null;
@@ -2871,6 +2921,7 @@
         (MOCK && MOCK.myTeamId) || state.myTeamId || null;
       state.seasonStatus = state.seasonTeams.length + ' teams · week ' + state.seasonWeek +
         (state.byesActive ? '' : ' (preseason)');
+      await warmEngineWeekMap(); // X-9: sliced, before the first lineup render / page decorate needs it
       startSeasonPolling();
       startDecorating(); // ESPN's own roster rows get verdict/matchup/proj pills
       fetchInjuries();
@@ -5569,14 +5620,29 @@
   }
   let lastHref = null;
   function watchUrl() {
-    setInterval(() => {
+    setInterval(async () => {
       if (location.href === lastHref) return;
       lastHref = location.href;
+      if (pageNeedsSidebar()) await ensureBooted();
       onUrlChange();
     }, URL_WATCH_MS);
   }
 
+  // X-9: only league / draft pages (the pages onUrlChange acts on) load the
+  // 340 KB board + live boards. Other fantasy.espn.com/football pages keep just
+  // the URL watcher, and boot the moment the SPA navigates to a league page.
+  function pageNeedsSidebar() { return !!(detectDraftLeagueId() || detectSeasonLeagueId()); }
+  let _booted = null;
+  function ensureBooted() { return _booted || (_booted = bootData()); }
+
   async function main() {
+    lastHref = location.href;
+    if (pageNeedsSidebar()) await ensureBooted();
+    onUrlChange();
+    watchUrl();
+  }
+
+  async function bootData() {
     await loadPlayers();
     store.get(['mff_jacks_boards']).then((r) => applyBridgeJackBoards(r && r.mff_jacks_boards));
     refreshJackBoards();
@@ -5588,9 +5654,6 @@
       if (MOCK.fpa) state.fpa = MOCK.fpa; // harness stand-in for fpa_2026.json (opp matchup grade)
     }
     if (MOCK && MOCK.scoreboard) state.liveGames = parseScoreboard(MOCK.scoreboard); liveFeedBaseline(); // harness live games
-    lastHref = location.href;
-    onUrlChange();
-    watchUrl();
   }
 
   window.__mffEspn = { state, render, initForLeague, initSeason, handleProtoLine, rebuildFromPicks,

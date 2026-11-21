@@ -91,7 +91,7 @@ team page. <button class="h" id="toPlayers">Switch to fake Players page</button>
     ] },
     players: data,
     nflState: { season_type: 'regular', week: 1, season: '2026' },
-    vegas: { gameTotals, weeklyProps: { '1': { 'Jahmyr Gibbs': { UD: { ry: 92, rcy: 34, atd: -160 }, PP: { ry: 95.5 } } } } },
+    gameEnv: { v: 1, gameTotals, weeklyLines: { '1': { 'Jahmyr Gibbs': { n: 2, ry: 95.5, rcy: 34, td: 160 / 260, pk: { ry: 93.75, rcy: 34, td: 160 / 260 } } } } },
     consensus: { week: 1, players: consensusPlayers },
     slMeta: (() => {
       // Injury-popover fixtures: give the fake team page's scraped-status

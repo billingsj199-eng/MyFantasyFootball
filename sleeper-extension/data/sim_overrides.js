@@ -1,4 +1,4 @@
-// COPY of ../sim_lab/overrides.js (synced 2026-11-21 14:27:00 by export_sleeper_extension_data.py — edit the sim_lab original)
+// COPY of ../sim_lab/overrides.js (synced 2026-11-21 15:29:51 by export_sleeper_extension_data.py — edit the sim_lab original)
 // ============================================================================
 // MANUAL OVERRIDES — edit this file as camp/season news breaks, then reload.
 //

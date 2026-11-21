@@ -205,7 +205,7 @@ order) within ~2s. Rows below mimic FantasyCast's compact player column: no OPP 
   const scoreboard = { events: Object.keys(LIVE_ST).map((id) => sbGame(window.MFF_ESPN.PRO_TEAM[id] || '', 'OPP',
     LIVE_ST[id], LIVE_ST[id] === 'in' ? 3 : 4, LIVE_ST[id] === 'in' ? '7:30' : '0:00')) };
 
-  // ---- Vegas fixture: weeks 1-17 pairings over all 32 teams (sim needs a full season)
+  // ---- Game totals fixture: weeks 1-17 pairings over all 32 teams (sim needs a full season)
   const abbrs = Object.values(window.MFF_ESPN.PRO_TEAM).filter((a) => a !== 'FA');
   const gameTotals = {};
   for (let wk = 1; wk <= 17; wk++) {
@@ -215,10 +215,10 @@ order) within ~2s. Rows below mimic FantasyCast's compact player column: no OPP 
     }
     abbrs.splice(1, 0, abbrs.pop()); // rotate matchups week to week
   }
-  // One star gets a W1 prop board to exercise the 80/20 blend
+  // One star gets a W1 lines row to exercise the 80/20 blend (row = consensus for the engine, pk = two-board mean)
   const star = (data.players || []).find((p) => p.s === 'RB');
-  const weeklyProps = { '1': {} };
-  if (star) weeklyProps['1'][star.n] = { UD: { ry: 88, rcy: 28, atd: -145 }, PP: { ry: 91.5 } };
+  const weeklyLines = { '1': {} };
+  if (star) weeklyLines['1'][star.n] = { n: 2, ry: 91.5, rcy: 28, td: 145 / 245, pk: { ry: 89.75, rcy: 28, td: 145 / 245 } };
 
   // Site consensus feed (weekly_projections.json shape) → "Wk 1 sources"
   // profile row. Sleeper h/p/s + ESPN/FP [half, ppr, std] arrays.
@@ -237,7 +237,7 @@ order) within ~2s. Rows below mimic FantasyCast's compact player column: no OPP 
     fantasycast: true, // rows get the grey "ESPN x.x" projection pill like the real FantasyCast page
     players: data, seasonLeague: league,
     nflState: { season_type: 'regular', week: 1, season: '2026' },
-    vegas: { gameTotals, weeklyProps },
+    gameEnv: { v: 1, gameTotals, weeklyLines },
     scoreboard,
     consensus: { week: 1, players: consensusPlayers },
     slMeta: (() => {
@@ -295,7 +295,7 @@ order) within ~2s. Rows below mimic FantasyCast's compact player column: no OPP 
       '<div class="game-status-inline" style="display:flex"><span style="font-size:10px;color:#797b7d" data-mock-team="' + team + '">' + team + ' Sun 4:25 PM</span></div>';
     fc.appendChild(row);
   });
-  // fill the opponent from the helper's Vegas schedule once it has loaded
+  // fill the opponent from the helper's schedule once it has loaded
   setInterval(() => {
     const st = window.__mffEspn && window.__mffEspn.state;
     if (!st || !st.schedule || !st.seasonWeek) return;

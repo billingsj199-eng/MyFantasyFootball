@@ -101,11 +101,12 @@ console.log('[MFF/bg] background worker ready (v0.18.20)');
 
 // --- Live game-projection refresh (v0.10.52) -----------------------------------------
 // Plain fetch of the site's machine-readable game-projection data JSON (written by
-// pull_betting_lines.py, deployed on GitHub Pages). sidebar.js overlays the
+// the site's daily data pull, deployed on GitHub Pages). sidebar.js overlays the
 // gameTotals onto the bundled MFF_PLAYOFF_SOS so bringback/SOS numbers stay
 // current without re-exporting the extension. No auth, no cookies.
 // www is the canonical host — the apex 301s to it; fetch it directly.
-const MFF_VEGAS_URL = 'https://www.myfantasyfootball.co/data/betting_lines_2026.json';
+// v0.18.32: the slim schedule file (game totals + margins only as far as this helper reads it).
+const MFF_GAME_ENV_URL = 'https://www.myfantasyfootball.co/data/game_env_2026.json';
 // v0.10.59: site-hosted UD ADP history (written daily by the site's 9 AM
 // consensus-ADP task from the shared/ud_adp_latest Firestore mirror).
 // sidebar.js merges it into local mff_adp_history so ADP-movement arrows
@@ -130,7 +131,7 @@ const MFF_JACKS_PUBLIC_URL =
 const MFF_SIMPROJ_URL = 'https://www.myfantasyfootball.co/data/sim_proj_2026.json';
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg) return false;
-  const url = msg.type === 'mff-vegas-fetch' ? MFF_VEGAS_URL
+  const url = msg.type === 'mff-gameenv-fetch' ? MFF_GAME_ENV_URL
             : msg.type === 'mff-adp-history-fetch' ? MFF_ADP_HISTORY_URL
             : msg.type === 'mff-jacks-fetch' ? MFF_JACKS_URL
             : msg.type === 'mff-jacks-public-fetch' ? MFF_JACKS_PUBLIC_URL

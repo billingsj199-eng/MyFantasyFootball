@@ -323,11 +323,12 @@ should tint by matchup. The "Wk. 3" label matches the mock week — edit it to
     var TRENDING = pool.slice(0, 5).map(function (p, i) {
       return { player_id: String(p.sid), count: 4200 - i * 700 };
     });
-    // Vegas + weekly-props stand-in for the live betting_lines_2026.json fetch
+    // Game totals + weekly-lines stand-in for the live game_env_2026.json fetch
     // (week 3 to match /state/nfl). Teams cover my roster; totals/spreads span
-    // the color tiers. Props: Allen board, big Puka board, thin Waddle board.
+    // the color tiers. Lines: Allen row, big Puka row, thin Waddle row (row = consensus
+    // numbers for the engine, pk = the two-board mean the sidebar reads; td = a chance).
     function tm(n) { return playersByName[n] ? playersByName[n].sTm : null; }
-    var VEGAS = { gameTotals: {}, weeklyProps: { '3': {} } };
+    var GAME_ENV = { v: 1, gameTotals: {}, weeklyLines: { '3': {} } };
     var games = [
       [tm('Josh Allen'), tm('Jaylen Waddle'), 49.5, -6.5],
       [tm("Ja'Marr Chase"), tm('Jahmyr Gibbs'), 52.5, 1.5],
@@ -340,14 +341,14 @@ should tint by matchup. The "Wk. 3" label matches the mock week — edit it to
     for (var vw = 1; vw <= 17; vw++) {
       games.forEach(function (g) {
         if (g[0] && g[1] && g[0] !== g[1]) {
-          VEGAS.gameTotals['W' + vw + '_' + g[0] + '_' + g[1]] = { total: g[2], spread: g[3] };
+          GAME_ENV.gameTotals['W' + vw + '_' + g[0] + '_' + g[1]] = { total: g[2], spread: g[3] };
         }
       });
     }
-    VEGAS.weeklyProps['3']['Josh Allen'] = { UD: { py: 249.5, ry: 42.5, atd: 260 }, PP: { py: 245.5, ry: 44.5 } };
-    VEGAS.weeklyProps['3']['Puka Nacua'] = { UD: { rcy: 88.5, atd: -105 }, PP: { rcy: 90.5 } };
-    VEGAS.weeklyProps['3']['Jaylen Waddle'] = { UD: { rcy: 48.5, atd: 210 } };
-    VEGAS.weeklyProps['3']['Bijan Robinson'] = { UD: { ry: 84.5, rcy: 24.5, atd: -170 }, PP: { ry: 86.5, rcy: 25.5 } };
+    GAME_ENV.weeklyLines['3']['Josh Allen'] = { n: 2, py: 249.5, ry: 44.5, td: 100 / 360, pk: { py: 247.5, ry: 43.5, td: 100 / 360 } };
+    GAME_ENV.weeklyLines['3']['Puka Nacua'] = { n: 2, rcy: 90.5, td: 105 / 205, pk: { rcy: 89.5, td: 105 / 205 } };
+    GAME_ENV.weeklyLines['3']['Jaylen Waddle'] = { n: 1, rcy: 48.5, td: 100 / 310, pk: { rcy: 48.5, td: 100 / 310 } };
+    GAME_ENV.weeklyLines['3']['Bijan Robinson'] = { n: 2, ry: 86.5, rcy: 25.5, td: 170 / 270, pk: { ry: 85.5, rcy: 25, td: 170 / 270 } };
 
     // Site consensus feed (weekly_projections.json shape) → "Wk 3 sources"
     // profile row. Sleeper h/p/s + ESPN/FP [half, ppr, std] arrays.
@@ -364,7 +365,7 @@ should tint by matchup. The "Wk. 3" label matches the mock week — edit it to
     window.__MFF_MOCK = {
       draftId: '9990001112223334445',
       players: data,
-      vegas: VEGAS,
+      gameEnv: GAME_ENV,
       consensus: CONSENSUS,
       scoreboard: SCOREBOARD,
       api: function (path) {

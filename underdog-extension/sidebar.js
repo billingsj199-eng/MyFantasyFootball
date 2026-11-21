@@ -25,7 +25,7 @@
   // overwrite those three fields in place. rank/label/color stay bundled
   // (they blend Clay unit grades etc. that only live in the site's app.js).
   // Fails silently: no network -> bundled numbers stand.
-  function _mffApplyLiveVegas(gameTotals) {
+  function _mffApplyGameEnv(gameTotals) {
     const SOS = window.MFF_PLAYOFF_SOS;
     if (!SOS || !gameTotals) return 0;
     let updated = 0;
@@ -53,9 +53,9 @@
     return updated;
   }
   try {
-    chrome.runtime.sendMessage({ type: 'mff-vegas-fetch' }, (res) => {
+    chrome.runtime.sendMessage({ type: 'mff-gameenv-fetch' }, (res) => {
       if (chrome.runtime.lastError || !res || !res.ok || !res.data) return;
-      const n = _mffApplyLiveVegas(res.data.gameTotals);
+      const n = _mffApplyGameEnv(res.data.gameTotals);
       if (n) console.log('[MFF] playoff schedule refresh: ' + n + ' SOS records updated'
         + (res.data.generatedAt ? ' (site data from ' + res.data.generatedAt + ')' : ''));
     });
@@ -2893,8 +2893,8 @@
     }
     // v0.10.1: tear down the now-removed "First Pick At Position" panel
     // if it lingers from a prior version's DOM.
-    const _staleOdds = document.getElementById('mff-bbm-round-odds');
-    if (_staleOdds) _staleOdds.remove();
+    const _staleRound = document.getElementById('mff-bbm-round-chances');
+    if (_staleRound) _staleRound.remove();
 
     const wrap = document.getElementById('mff-roster-wrap');
     if (!wrap) return;
@@ -2924,7 +2924,7 @@
     }).filter(function(c){ return c==='Q'||c==='R'||c==='W'||c==='T'; }).join('');
 
     // v0.9.93: pass active tournament level so badge + rate match the tab.
-    const _badgeLvl = (window._mffOddsLevel === 's' || window._mffOddsLevel === 'f') ? window._mffOddsLevel : 'q';
+    const _badgeLvl = (window._mffAdvLevel === 's' || window._mffAdvLevel === 'f') ? window._mffAdvLevel : 'q';
     const _badgeBaseKey = { q:'made_quarters', s:'made_semis', f:'made_finals' }[_badgeLvl];
     const _badgeLabel = { q:'playoffs', s:'semis', f:'finals' }[_badgeLvl];
     const _badgeDecimals = { q:1, s:2, f:3 }[_badgeLvl];
@@ -2965,10 +2965,10 @@
     // all 3 tournament levels (QF/SF/Fin), so the static first-pick grid
     // was redundant. The TOP-2/SEMIS/FINALS tab toggle lived here too;
     // the BBM Optimal Shape badge now locks to the QF/playoffs level
-    // (its existing default when window._mffOddsLevel is undefined).
+    // (its existing default when window._mffAdvLevel is undefined).
 
     // v0.9.83: STACK STATUS — your QB+pass-catcher stack vs historical advance rates
-    // v0.10.1: anchored to badge (was oddsPanel, removed).
+    // v0.10.1: anchored to badge (was the first-pick panel, removed).
     let stackRow = document.getElementById('mff-bbm-stack');
     if (!stackRow) {
       stackRow = document.createElement('div');

@@ -489,6 +489,178 @@ TEAM_ABBR = {
 }
 
 
+# ---- engine copy for the helpers: comments out, neutral data-global name (2026-11-21) ----
+# The helpers ship a copy of ../sim_lab/engine.js as engine_sim.js. The copy is passed through one mechanical step:
+# every comment is removed and the window global the engine reads its game data from is renamed
+# (ENGINE_ENV_OLD -> ENGINE_ENV_NEW; the helper sidebars set the new name). sim_lab/engine.js itself is never touched.
+#   - The step is a parser pass (the acorn copy inside the local Node binary), no download, no network.
+#   - It proves its own output before anything is written: same tokens and same syntax tree as the source,
+#     apart from the one renamed identifier.
+#   - Same engine.js in = same bytes out (the header carries the source hash, no timestamp).
+#   - If anything fails (no Node, parse error, a check does not hold) the copy is written UNCHANGED plus a small
+#     shim that serves the old global name from the new one, so the helpers keep working, and a warning is printed.
+ENGINE_ENV_OLD = "BETTING_2026"
+ENGINE_ENV_NEW = "GAME_ENV_2026"
+ENGINE_XFORM_JS = r'''
+'use strict';
+const fs = require('fs');
+function main() {
+  const acorn = require('internal/deps/acorn/acorn/dist/acorn');
+  const a = process.argv.slice(2);
+  const src = a[0], OLD = a[1], NEW = a[2];
+  let text = fs.readFileSync(src, 'utf8');
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  text = text.replace(/\r\n/g, '\n');
+  const MARK = '\uE000';
+  if (text.indexOf(MARK) !== -1) throw new Error('marker character already in the source');
+  const OPT = { ecmaVersion: 'latest', sourceType: 'script', allowHashBang: true };
+  const scan = (t) => {
+    const comments = [], tokens = [];
+    const ast = acorn.parse(t, Object.assign({}, OPT, { onComment: comments, onToken: tokens }));
+    return { comments, tokens, ast };
+  };
+  const tokKey = (t, rename) => {
+    let v = t.value;
+    if (v && typeof v === 'object' && v.pattern !== undefined) v = '/' + v.pattern + '/' + v.flags;
+    if (rename && t.type.label === 'name' && v === OLD) v = NEW;
+    return t.type.label + '\u0001' + String(v);
+  };
+  const A = scan(text);
+  if (A.tokens.some((t) => t.type.label === 'name' && t.value === NEW)) throw new Error(NEW + ' is already an identifier in the source');
+  const inText = A.tokens.filter((t) => (t.type.label === 'string' || t.type.label === 'template') && String(t.value).indexOf(OLD) !== -1).length;
+  if (inText) throw new Error(OLD + ' appears inside ' + inText + ' string literal(s): this pass does not rename those');
+  const edits = [];
+  let renamed = 0;
+  for (const t of A.tokens) if (t.type.label === 'name' && t.value === OLD) { edits.push([t.start, t.end, NEW]); renamed++; }
+  if (!renamed) throw new Error(OLD + ' not found as an identifier: nothing to rename (did the engine change?)');
+  for (const c of A.comments) {
+    const body = text.slice(c.start, c.end);
+    // a comment counts as white space; one with a line break in it counts as a line break
+    edits.push([c.start, c.end, c.type === 'Line' ? MARK : (body.indexOf('\n') !== -1 ? MARK + '\n' + MARK : MARK + ' ')]);
+  }
+  edits.sort((x, y) => y[0] - x[0]);
+  let out = text;
+  for (const e of edits) out = out.slice(0, e[0]) + e[2] + out.slice(e[1]);
+  // tidy only the lines a comment was taken from: drop the line when nothing else is left on it, trim the
+  // spaces in front of a comment that ended its line. Lines without a marker stay byte for byte.
+  const lines = out.split('\n'), kept = [];
+  for (let ln of lines) {
+    if (ln.indexOf(MARK) === -1) { kept.push(ln); continue; }
+    const trailing = /\uE000[ \t]*$/.test(ln);
+    ln = ln.split(MARK).join('');
+    if (trailing) ln = ln.replace(/[ \t]+$/, '');
+    if (ln.trim() === '') continue;
+    kept.push(ln);
+  }
+  out = kept.join('\n');
+  // proof 1: it parses, has no comments, and is the same token for token (with the one name swapped)
+  const B = scan(out);
+  if (B.comments.length) throw new Error(B.comments.length + ' comment(s) left after the pass');
+  if (B.tokens.length !== A.tokens.length) throw new Error('token count changed: ' + A.tokens.length + ' -> ' + B.tokens.length);
+  for (let i = 0; i < A.tokens.length; i++) {
+    if (tokKey(A.tokens[i], true) !== tokKey(B.tokens[i], false)) throw new Error('token ' + i + ' differs');
+  }
+  if (B.tokens.some((t) => t.type.label === 'name' && t.value === OLD)) throw new Error(OLD + ' still present');
+  // proof 2: the same syntax tree, so no statement boundary moved when a comment's line went away
+  let nodes = 0;
+  const same = (x, y, renameOk) => {
+    if (x === y) return true;
+    if (typeof x !== typeof y || x === null || y === null || typeof x !== 'object') return renameOk && x === OLD && y === NEW;
+    if (Array.isArray(x)) {
+      if (!Array.isArray(y) || x.length !== y.length) return false;
+      for (let i = 0; i < x.length; i++) if (!same(x[i], y[i], false)) return false;
+      return true;
+    }
+    if (x instanceof RegExp) return y instanceof RegExp && String(x) === String(y);
+    nodes++;
+    const kx = Object.keys(x).filter((k) => k !== 'start' && k !== 'end'), ky = Object.keys(y).filter((k) => k !== 'start' && k !== 'end');
+    if (kx.length !== ky.length) return false;
+    for (const k of kx) if (!same(x[k], y[k], x.type === 'Identifier' && k === 'name')) return false;
+    return true;
+  };
+  if (!same(A.ast, B.ast, false)) throw new Error('syntax tree differs after the pass');
+  return { ok: true, out: out, comments: A.comments.length, renamed: renamed, tokens: A.tokens.length, nodes: nodes };
+}
+let res;
+try { res = main(); } catch (e) { res = { ok: false, error: String((e && e.message) || e) }; }
+process.stdout.write(JSON.stringify(res));
+'''
+# Served only when the step above could not run: the unchanged engine reads the old name, the sidebars set the new one.
+ENGINE_ENV_SHIM = (
+    "\n;(function () { try { if (typeof window !== 'undefined' && !Object.getOwnPropertyDescriptor(window, '%(old)s')) "
+    "Object.defineProperty(window, '%(old)s', { configurable: true, "
+    "get: function () { return window.%(new)s; }, set: function (v) { window.%(new)s = v; } }); } catch (e) {} })();\n"
+    % {"old": ENGINE_ENV_OLD, "new": ENGINE_ENV_NEW})
+
+
+def _find_node():
+    import shutil
+    for cand in (os.environ.get("MFF_NODE"), r"E:\node\node.exe", shutil.which("node")):
+        if cand and os.path.exists(cand):
+            return cand
+    return None
+
+
+def transform_engine_copy(src):
+    """Engine text with comments removed and the data global renamed. Raises on any failure."""
+    import subprocess
+    node = _find_node()
+    if not node:
+        raise RuntimeError("Node not found (set MFF_NODE or install to E:\\node)")
+    r = subprocess.run([node, "--expose-internals", "-", os.path.abspath(src), ENGINE_ENV_OLD, ENGINE_ENV_NEW],
+                       input=ENGINE_XFORM_JS.encode("utf-8"), capture_output=True, timeout=180)
+    if r.returncode != 0 or not r.stdout:
+        raise RuntimeError("node exit %s: %s" % (r.returncode, r.stderr.decode("utf-8", "replace")[-400:].strip()))
+    res = json.loads(r.stdout.decode("utf-8"))
+    if not res.get("ok"):
+        raise RuntimeError(res.get("error") or "transform failed")
+    out = res["out"]
+    # belt and braces on the Python side
+    if ENGINE_ENV_OLD in out:
+        raise RuntimeError(ENGINE_ENV_OLD + " still in the output")
+    if out.count(ENGINE_ENV_NEW) != res["renamed"]:
+        raise RuntimeError("rename count mismatch")
+    if "SimEngine" not in out or len(out) < 50000:
+        raise RuntimeError("output does not look like the engine")
+    return out, res
+
+
+def build_engine_copy(src, stamp):
+    """Text of engine_sim.js for the helpers: (text, transformed?)."""
+    import hashlib
+    raw = open(src, encoding="utf-8").read()
+    try:
+        body, info = transform_engine_copy(src)
+        sha = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+        header = ("// GENERATED from sim_lab/engine.js (source sha256 " + sha + ") by export_sleeper_extension_data.py.\n"
+                  "// Comments removed, data global named " + ENGINE_ENV_NEW + ". Edit the sim_lab original, never this copy.\n")
+        print("Engine copy: %d comments removed, global renamed in %d places, %s -> %s chars, %d tokens / %d tree nodes identical"
+              % (info["comments"], info["renamed"], format(len(raw), ","), format(len(body), ","), info["tokens"], info["nodes"]))
+        return header + body + ("" if body.endswith("\n") else "\n"), True
+    except Exception as e:
+        print("=" * 78)
+        print("WARNING: engine copy transform FAILED: %s" % e)
+        print("WARNING: engine_sim.js written UNCHANGED (comments kept, old global name) plus a compatibility shim.")
+        print("WARNING: the helpers still work. Fix the cause and re-run before building store zips.")
+        print("=" * 78)
+        header = ("// COPY of " + src + " (synced " + stamp
+                  + " by export_sleeper_extension_data.py \u2014 edit the sim_lab original)\n")
+        return header + raw + ENGINE_ENV_SHIM, False
+
+
+def _write_if_changed(dst, text):
+    """Write text (same newline handling as before); skip when the file already holds exactly this."""
+    try:
+        with open(dst, encoding="utf-8") as f:
+            if f.read() == text:
+                return False
+    except (OSError, UnicodeDecodeError):
+        pass
+    with open(dst, "w", encoding="utf-8") as fo:
+        fo.write(text)
+    return True
+
+
 def write_sim_pack():
     """Bundle the season-sim engine + its data into the extension (v0.14.0
     PICKS tab). Three parts, all local-only (extension dirs never reach the
@@ -500,8 +672,9 @@ def write_sim_pack():
                               declares the global the engine expects:
                               MIKE_CLAY_PROJ / PLAYER_WEEKLY_SIGMA /
                               window.CLAY_TEAM_GRADES_2026 / window.SIM_TUNING)
-      engine_sim.js         — verbatim copy of ../sim_lab/engine.js (source of
-                              truth stays sim_lab; this copy step prevents drift)
+      engine_sim.js         — copy of ../sim_lab/engine.js (source of truth stays
+                              sim_lab) with comments removed and the data global
+                              renamed: see build_engine_copy above
       data/sim_overrides.js — verbatim copy of ../sim_lab/overrides.js
                               (QB room / injury-window camp-news overrides)
     """
@@ -544,13 +717,21 @@ def write_sim_pack():
                 print("Wrote", pack_dst)
 
     import shutil
+    engine_copy = None  # built once, written to the three helpers
     for src, dst in [("../sim_lab/engine.js", "sleeper-extension/engine_sim.js"),
                      ("../sim_lab/overrides.js", "sleeper-extension/data/sim_overrides.js"),
                      ("../sim_lab/engine.js", "espn-extension/engine_sim.js"),
                      ("../sim_lab/overrides.js", "espn-extension/data/sim_overrides.js"),
                      ("../sim_lab/engine.js", "yahoo-extension/engine_sim.js"),
                      ("../sim_lab/overrides.js", "yahoo-extension/data/sim_overrides.js")]:
-        if os.path.exists(src):
+        if os.path.exists(src) and src.endswith("engine.js"):
+            if engine_copy is None:
+                engine_copy = build_engine_copy(src, stamp)
+            changed = _write_if_changed(dst, engine_copy[0])
+            print("Synced", src, "->", dst,
+                  "(transformed)" if engine_copy[1] else "(UNCHANGED + shim, see warning)",
+                  "" if changed else "[already up to date]")
+        elif os.path.exists(src):
             header = ("// COPY of " + src + " (synced " + stamp
                       + " by export_sleeper_extension_data.py — edit the sim_lab original)\n")
             with open(src, encoding="utf-8") as fi, open(dst, "w", encoding="utf-8") as fo:

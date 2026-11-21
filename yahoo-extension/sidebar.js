@@ -135,7 +135,7 @@
     slMeta: {},          // sid -> {n,pos,tm,inj} from Sleeper /players/nfl
     schedule: {},        // TEAM -> wk -> {opp,home,total,implied}
     fpa: null,           // site fpa_2026.json: fantasy pts allowed per defense-week → opp matchup grade
-    wkPropsAll: null,
+    wkLinesAll: null,
     seasonStats: null,
     liveGames: {},       // TEAM(site abbr) -> {st:'pre'|'in'|'post', f, tag, opp, home, pts, oppPts, kick} (ESPN public scoreboard)
     livePts: {},         // entry key -> Yahoo "Fan Pts" scraped off the page (league-scored, live)
@@ -560,7 +560,7 @@
   } catch (_) {}
 
   // ---------- live game-projection overlay + schedule (GitHub Pages sends CORS *) ----------
-  function applyLiveVegas(gameTotals) {
+  function applyGameEnv(gameTotals) {
     const SOS = window.MFF_PLAYOFF_SOS;
     if (!SOS || !gameTotals) return 0;
     let updated = 0;
@@ -584,6 +584,44 @@
       });
     });
     return updated;
+  }
+
+  // ---- site game data: game_env_2026.json (v0.9.67) ----
+  // One file for the schedule and one consensus line per player-week:
+  //   gameTotals["W12_BUF_KC"] = { total, spread }
+  //   weeklyLines["12"]["Player Name"] = { asOf, n, py, ry, rcy, rec, ptd, kpts, fgm, td, pk: { py, ry, rcy, ptd, int, td } }
+  // The sidebar reads gameTotals and the pk block as they are. The bundled engine copy wants each player-week row
+  // under a source slot, with the touchdown chance written as a whole-number price, so gameEnvForEngine() puts the
+  // same numbers in that shape (checked: 0 of ~40,000 projections differ from the larger file it replaces).
+  function gameEnvForEngine(env) {
+    const out = { generatedAt: env.generatedAt, gameTotals: env.gameTotals, weeklyProps: {} };
+    const STATS = ['py', 'ry', 'rcy', 'rec', 'ptd', 'kpts', 'fgm'];
+    Object.keys(env.weeklyLines || {}).forEach((wk) => {
+      const rows = env.weeklyLines[wk], o = out.weeklyProps[wk] = {};
+      Object.keys(rows).forEach((nm) => {
+        const r = rows[nm], c = {};
+        STATS.forEach((k) => { if (typeof r[k] === 'number') c[k] = r[k]; });
+        if (typeof r.td === 'number') c.atd = r.td >= 0.5 ? -Math.round(100 * r.td / (1 - r.td)) : Math.round(100 * (1 - r.td) / r.td);
+        const e = { UD: c };
+        if (r.asOf) e.asOf = r.asOf;
+        o[nm] = e;
+      });
+    });
+    return out;
+  }
+  // The engine copy reads its game data from one window global. The name is read off the engine itself, so a
+  // sidebar and an engine copy from different export days always agree on it.
+  const GAME_ENV_KEY = 'GAME_ENV_2026';
+  function gameEnvKey() {
+    const E = window.SimEngine;
+    const m = E && E.buildSchedule && /window\.([A-Za-z_$][\w$]*)\.gameTotals/.exec(String(E.buildSchedule));
+    return (m && m[1]) || GAME_ENV_KEY;
+  }
+  function setGameEnv(d) {
+    const env = (d && d.weeklyLines) ? gameEnvForEngine(d) : d;
+    window[GAME_ENV_KEY] = env;
+    const k = gameEnvKey();
+    if (k !== GAME_ENV_KEY) window[k] = env;
   }
   function buildSchedule(gameTotals) {
     if (!gameTotals) return;
@@ -1166,26 +1204,23 @@
     const m = p.sid && state.slMeta[p.sid];
     return (m && m.inj) || null;
   }
-  function propsProjFor(p) {
-    const all = state.wkPropsAll;
+  function marketProjFor(p) {
+    const all = state.wkLinesAll;
     if (!all || p._unmatched) return null;
     const wk = String(state.seasonWeek);
     const cacheKey = wk + '|' + state.scoringLabel;
     if (p._wkpKey === cacheKey) return p._wkpVal;
-    if (!state._wkPropsIdx || state._wkPropsIdx.wk !== wk) {
+    if (!state._wkLinesIdx || state._wkLinesIdx.wk !== wk) {
       const map = {};
       const block = all[wk] || {};
       for (const nm of Object.keys(block)) map[norm(nm)] = block[nm];
-      state._wkPropsIdx = { wk, map };
+      state._wkLinesIdx = { wk, map };
     }
-    const rec = state._wkPropsIdx.map[norm(p.n)];
+    const rec = state._wkLinesIdx.map[norm(p.n)];
     let out = null;
-    const books = rec ? [rec.UD, rec.PP].filter(Boolean) : [];
-    if (books.length) {
-      const avg = (k) => {
-        const vs = books.map((b) => b[k]).filter((v) => typeof v === 'number');
-        return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null;
-      };
+    const pk = rec && rec.pk; // the mean of the two projection boards per stat, as the file carries it
+    if (pk) {
+      const avg = (k) => (typeof pk[k] === 'number' ? pk[k] : null);
       const py = avg('py'), ry = avg('ry'), rcy = avg('rcy');
       if (py != null || ry != null || rcy != null) {
         const sv = state.scoringVals || { recPts: 0.5, passTd: 4 };
@@ -1202,11 +1237,8 @@
           const recEst = rcy / (p.s === 'RB' ? 7.5 : 11.5);
           pts += recEst * (sv.recPts != null ? sv.recPts : 0.5);
         }
-        const atd = avg('atd');
-        if (atd != null) {
-          const prob = atd < 0 ? -atd / (-atd + 100) : 100 / (atd + 100);
-          pts += prob * (p.s === 'QB' ? 1 : 1.1) * 6;
-        }
+        const td = avg('td'); // chance of a touchdown this week (a QB's is rushing only)
+        if (td != null) pts += td * (p.s === 'QB' ? 1 : 1.1) * 6;
         out = Math.round(pts * 10) / 10;
       }
     }
@@ -1531,8 +1563,8 @@
       let base = p.pPg != null ? p.pPg : 0;
       if (act) base += (act.ppg - base) * shrink;
       v = base;
-      const props = propsProjFor(p);
-      if (props != null) v = (p.pPg != null || act) ? 0.8 * props + 0.2 * base : props;
+      const mkt = marketProjFor(p);
+      if (mkt != null) v = (p.pPg != null || act) ? 0.8 * mkt + 0.2 * base : mkt;
     }
     const inj = injOf(p);
     if (inj) {
@@ -1660,7 +1692,7 @@
 
   // ---------- SIMS tab: Monte Carlo season sims (port of the ESPN helper's) ----------
   // Engine + data ride the same bundle (engine_sim.js + data/sim_pack.js);
-  // live game-projection lands in window.BETTING_2026 from the site fetch in main().
+  // live game-projection lands in window[GAME_ENV_KEY] from the site fetch in main().
   // League rosters: Yahoo's pub-api has no fantasy-ownership route, so every
   // team's roster is read the way the EXPORT feature reads them — one
   // same-origin HTML fetch per team page, parsed with the sidebar's own row
@@ -1675,7 +1707,7 @@
     sims: SIM_RUNS, recHash: null, synthPairs: true, note: '', selTeam: null };
   function simAvailable() {
     return !!(window.SimEngine && typeof MIKE_CLAY_PROJ !== 'undefined' &&
-      typeof PLAYER_WEEKLY_SIGMA !== 'undefined' && window.BETTING_2026);
+      typeof PLAYER_WEEKLY_SIGMA !== 'undefined' && window[GAME_ENV_KEY]);
   }
   function simEnsureGlobals() {
     if (!window.SIM_SLEEPER) {
@@ -1872,7 +1904,7 @@
   function _simWatch() { // everything a league sim reads while it works
     const sv = state.scoringVals, ls = state.leagueScoring;
     if (ls && (!_lsSig || _lsSig.src !== ls)) _lsSig = { src: ls, sig: JSON.stringify(ls) };
-    return [state.simProj, window.BETTING_2026, state.schedule, state.players, state.players.length,
+    return [state.simProj, window[GAME_ENV_KEY], state.schedule, state.players, state.players.length,
       state.leagueId, simRecHash(), sv ? sv.recPts + '|' + sv.passTd + '|' + sv.teBonus : '', ls ? _lsSig.sig : ''];
   }
   // buildOpts() is called when this run's turn comes and returns the simLeague options.
@@ -2265,14 +2297,14 @@
   }
   function seasonHeaderHTML() {
     const modeLbl = MODES[state.mode] ? MODES[state.mode].label : '';
-    const hasProps = !!(state.wkPropsAll && state.wkPropsAll[String(state.seasonWeek)]);
+    const hasLines = !!(state.wkLinesAll && state.wkLinesAll[String(state.seasonWeek)]);
     return `
       <div id="mff-pick-line">
         <span class="pl-pick">${esc(state.teamName || ('League ' + (state.leagueId || '')))}</span>
         <span class="pl-sep">·</span><span class="pl-round">Wk ${state.seasonWeek}${state.byesActive ? '' : ' (pre)'}</span>
         <span class="pl-sep">·</span><span class="pl-mine">${esc(state.scoringLabel)}</span>
         <span class="pl-sep">·</span><span class="pl-mine">${esc(modeLbl)}</span>
-        ${hasProps ? '<span class="pl-sep">·</span><span class="pl-mine" style="color:#6dd06d" title="Weekly values = the site\'s Sim Lab Wk ' + state.seasonWeek + ' projections; market projections only fill in players outside the sim">W' + state.seasonWeek + ' market proj</span>' : ''}
+        ${hasLines ? '<span class="pl-sep">·</span><span class="pl-mine" style="color:#6dd06d" title="Weekly values = the site\'s Sim Lab Wk ' + state.seasonWeek + ' projections; market projections only fill in players outside the sim">W' + state.seasonWeek + ' market proj</span>' : ''}
       </div>`;
   }
   // Site consensus weekly numbers (Sleeper h/p/s, ESPN/FP [half,ppr,std]) in
@@ -2756,7 +2788,7 @@
     return tgt;
   }
   // Weekly chances pill — the site's exported boom/bust for this week's sim row.
-  function simOddsPillHTML(sr) {
+  function simChancePillHTML(sr) {
     const tip = 'From the site sim: ' + sr[3] + '% boom (≥1.5× his median game) · ' +
       sr[4] + '% bust (≤0.5× his median game)';
     return `<span title="${esc(tip)}" style="background:#f0f2f5;font-size:10px;font-weight:700;` +
@@ -3276,7 +3308,7 @@
       `<span style="color:#c8ccd4;margin:0 6px">|</span>` +
       `<b style="font-size:15px;color:${wCol(w)}">${w}%</b> <span style="color:#5b6068">win</span></span>`;
     const inner = side(proj[0].total, winL, false) +
-      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px;text-align:center">MFF ${live ? 'LIVE' : 'PROJ'} · WIN ODDS<br>WK ${state.seasonWeek}</span>` +
+      `<span style="flex:0 0 auto;color:#5b6068;font-size:10px;font-weight:800;letter-spacing:.5px;text-align:center">MFF ${live ? 'LIVE' : 'PROJ'} · WIN %<br>WK ${state.seasonWeek}</span>` +
       side(proj[1].total, 100 - winL, true);
     const anchor = chanceToWinAnchor();
     if (existing && existing.dataset.mffSig === inner && existing.isConnected &&
@@ -3334,7 +3366,7 @@
           'Projected points this week (' + state.scoringLabel + ' · MFF blend of market projections + Clay + Jack)'));
         if (!matchupPage) {
           const sr = simWeekRowFor(p);
-          if (sr && sr[3] != null && sr[4] != null) pills.push(simOddsPillHTML(sr));
+          if (sr && sr[3] != null && sr[4] != null) pills.push(simChancePillHTML(sr));
         }
       }
       if (playersPage && !isMine && state.faSeen[info.key] && calc) {
@@ -3446,24 +3478,24 @@
     await loadPlayers();
     store.get(['mff_jacks_boards']).then((r) => applyBridgeJackBoards(r && r.mff_jacks_boards));
     refreshJackBoards();
-    if (MOCK && MOCK.vegas) {
-      applyLiveVegas(MOCK.vegas.gameTotals);
-      buildSchedule(MOCK.vegas.gameTotals);
-      state.wkPropsAll = MOCK.vegas.weeklyProps || null;
+    if (MOCK && MOCK.gameEnv) {
+      applyGameEnv(MOCK.gameEnv.gameTotals);
+      buildSchedule(MOCK.gameEnv.gameTotals);
+      state.wkLinesAll = MOCK.gameEnv.weeklyLines || null;
       if (MOCK.fpa) state.fpa = MOCK.fpa; // harness stand-in for fpa_2026.json (opp matchup grade)
-      window.BETTING_2026 = MOCK.vegas; // season-sim engine reads gameTotals here
+      setGameEnv(MOCK.gameEnv); // the season-sim engine reads its game data from here
       if (MOCK.consensus) state.wkConsensus = MOCK.consensus;
       if (MOCK.simProj) { // harness stand-in for the sim_proj_2026.json fetch
         state.simProj = MOCK.simProj;
         state.simProjIdx = null;
       }
     } else {
-      fetchJson('https://www.myfantasyfootball.co/data/betting_lines_2026.json?t=' + Date.now())
+      fetchJson('https://www.myfantasyfootball.co/data/game_env_2026.json?t=' + Date.now())
         .then((d) => {
-          const n = applyLiveVegas(d.gameTotals);
+          const n = applyGameEnv(d.gameTotals);
           buildSchedule(d.gameTotals);
-          state.wkPropsAll = d.weeklyProps || null;
-          window.BETTING_2026 = d; // season-sim engine (SIMS tab) reads gameTotals here
+          state.wkLinesAll = d.weeklyLines || null;
+          setGameEnv(d); // the season-sim engine reads its game data from here
           if (n) console.log('[MFF/Yahoo] playoff schedule refresh: ' + n + ' SOS records updated');
           render();
         }).catch(() => {});

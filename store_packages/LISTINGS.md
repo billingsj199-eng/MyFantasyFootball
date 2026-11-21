@@ -68,11 +68,11 @@ In the permission justifications, replace `myfantasyfootball.org` with
 ```
 firestore.googleapis.com: the user's saved rankings on myfantasyfootball.co
 are stored in Google Firestore; the extension reads the user's own boards
-from it. betting-line/playoff-SOS data files are refreshed from
+from it. game-projection/playoff-SOS data files are refreshed from
 myfantasyfootball.co at startup. Read-only; no user data is written.
 ```
 
-Since the last upload the extension gained: live Vegas playoff-SOS refresh,
+Since the last upload the extension gained: live playoff-SOS refresh,
 JM prospect pills, the rec leapfrog guard and elite-QB/TE positional logic —
 no new permissions, so mention in the "What's new" notes only if asked.
 
@@ -98,7 +98,7 @@ DRAFT MODE
 
 SEASON MODE
 • Optimal weekly lineup from your league's exact lineup slots and scoring
-• Start/sit verdicts with Vegas matchup context on Sleeper's own pages
+• Start/sit verdicts with game-environment matchup context on Sleeper's own pages
 • Waiver targets ranked by the points they'd actually add to YOUR lineup
 • Roster values by source (Jack's boards, KTC, FantasyPros, Sleeper ranks)
 
@@ -126,7 +126,7 @@ Display draft-pick recommendations and lineup/waiver advice on Sleeper fantasy f
 - Host `api.sleeper.app` — Sleeper's own public JSON API for league/draft/player
   state (read-only).
 - Host `myfantasyfootball.co` + `firestore.googleapis.com` — refreshes the
-  bundled rankings/Vegas data files and reads the user's own saved boards
+  bundled rankings/game-projection data files and reads the user's own saved boards
   (Firestore is the site's database). Read-only.
 
 **Data usage disclosure:** User activity = Yes (draft picks/lineups read from
@@ -154,9 +154,9 @@ DRAFT MODE
 
 SEASON MODE
 • Optimal weekly lineup from your league's exact slots and scoring
-• Start/sit pills and Vegas matchup context on ESPN's own roster pages
+• Start/sit pills and game-environment matchup context on ESPN's own roster pages
 • Waiver targets ranked by the points they'd add to YOUR lineup
-• SIMS tab: 1,500 Monte Carlo season simulations — projected standings, playoff and title odds, week-by-week win probabilities
+• SIMS tab: 1,500 Monte Carlo season simulations — projected standings, playoff and title chances, week-by-week win probabilities
 • One-click league import to your myfantasyfootball.co account
 
 HOW IT WORKS
@@ -209,8 +209,8 @@ DRAFT MODE
 
 SEASON MODE
 • Optimal weekly lineup from your league's exact slots and scoring
-• Start/sit moves, Vegas matchup context, and waiver targets ranked by the points they'd add to YOUR lineup
-• SIMS tab: 1,500 Monte Carlo season simulations — projected standings, playoff and title odds, week-by-week win probabilities
+• Start/sit moves, game-environment matchup context, and waiver targets ranked by the points they'd add to YOUR lineup
+• SIMS tab: 1,500 Monte Carlo season simulations — projected standings, playoff and title chances, week-by-week win probabilities
 • One-click league export to your myfantasyfootball.co account
 
 HOW IT WORKS

@@ -562,7 +562,7 @@
         const n = applyLiveVegas(d.gameTotals);
         buildSchedule(d.gameTotals); // full-season week→opponent map for season mode
         state.wkPropsAll = d.weeklyProps || null; // site W1+ prop boards → weekly projections
-        if (n) console.log('[MFF/ESPN] live Vegas overlay: ' + n + ' SOS records refreshed');
+        if (n) console.log('[MFF/ESPN] playoff schedule refresh: ' + n + ' SOS records updated');
         if (state.appMode === 'season') render();
       }).catch(() => {});
     // Fantasy points allowed per defense-week (site postgame importer, FINAL
@@ -2376,9 +2376,9 @@
     return {
       txt, bg: col[0], fg: col[1], cls: good ? 'good' : bad ? 'bad' : 'mid',
       tip: 'Wk ' + state.seasonWeek + ' ' + txt +
-        (g.total != null ? ' · O/U ' + g.total : '') +
-        (g.implied != null ? ' · implied ' + g.implied : '') +
-        (p.s === 'DST' && val != null ? ' · opp implied ' + val : '') +
+        (g.total != null ? ' · ~' + g.total + ' projected game points' : '') +
+        (g.implied != null ? ' · ~' + g.implied + ' projected team points' : '') +
+        (p.s === 'DST' && val != null ? ' · ~' + val + ' projected opponent points' : '') +
         (m ? ' — ' + oppGradeNote(m, p.s) : ''),
     };
   }
@@ -2970,7 +2970,7 @@
   // league — real mMatchup pairings (round-robin synth preseason fallback),
   // mid-season records carried, IR/OUT exclusions, lineups picked from the
   // league's real slots + scoring — and keeps each team's finish
-  // distribution + per-week results. Standings/odds only: no traded-pick
+  // distribution + per-week results. Standings/chances only: no traded-pick
   // valuations here (ESPN leagues don't trade future picks).
   const SIM_RUNS = 1500, SIM_SEED = 99;
   state.seasonSim = { leagueId: null, status: 'idle', results: null, placeCounts: null,
@@ -3076,7 +3076,7 @@
       } catch (e) {}
       const E2 = window.SimEngine;
       const sched = E2.buildSchedule();
-      if (!sched || !Object.keys(sched.byTeam).length) throw new Error('no Vegas lines loaded');
+      if (!sched || !Object.keys(sched.byTeam).length) throw new Error('no game projections loaded');
       const curWeek = state.byesActive ? state.seasonWeek : 1;
       const playoffStart = state.playoffStart || 15;
       const regWeeks = [];
@@ -3208,14 +3208,14 @@
       'font-size:10px;font-weight:700;border-radius:3px;padding:0 4px;line-height:15px;' +
       'border:1px solid rgba(0,0,0,.08);white-space:nowrap;flex:0 0 auto">' + esc(text) + '</span>';
   }
-  // ---- MFF matchup strip: our proj totals + win odds under ESPN's own
+  // ---- MFF matchup strip: our proj totals + win chances under ESPN's own
   // "Proj Total" header on the boxscore/matchup page ----
   // Anchored by the header TEXT (ESPN's class names churn): the strip drops
   // in right after the lowest common ancestor of the two "Proj Total" cells.
   // Teams come from the boxscore URL's teamId + the mMatchup pairs; totals
   // are the same wkVal the row pills show, summed over each side's current
-  // starters (slotId ≠ bench/IR); win odds = normal approximation over the
-  // starters' sim spreads (engine sigma, position default outside it),
+  // starters (slotId ≠ bench/IR); win chances = normal approximation over the
+  // starters' sim ranges (engine sigma, position default outside it),
   // player correlations ignored.
   const POS_SIG_DEFAULT = { QB: 0.42, RB: 0.52, WR: 0.58, TE: 0.65, K: 0.55, DST: 0.6 };
   function normCdf(z) {
@@ -3711,13 +3711,13 @@
     const tip = (live
       ? 'MFF LIVE numbers for ' + tA.name + ' vs ' + tB.name + ' — each starter = points scored so far (ESPN, ' +
         'league-scored) + what he should still score (pregame proj × game left, nudged toward his pace late); ' +
-        'finals count as scored. Win odds only vary the unplayed part. ' +
+        'finals count as scored. Win chances only vary the unplayed part. ' +
         tA.name + ': ' + a.scored.toFixed(1) + ' in, ' + a.done + '/' + a.n + ' final · ' +
         tB.name + ': ' + b.scored.toFixed(1) + ' in, ' + b.done + '/' + b.n + ' final.'
       : 'MFF numbers for ' + tA.name + ' vs ' + tB.name + ' — our proj totals (same weekly ' +
         'projection as the row pills: site sim first, ' + state.scoringLabel + ' league-scored, injuries ' +
-        'priced) summed over each side\'s current starters, and our win odds (normal approximation ' +
-        'over the starters\' sim spreads; player correlations ignored).') +
+        'priced) summed over each side\'s current starters, and our win chances (normal approximation ' +
+        'over the starters\' sim ranges; player correlations ignored).') +
       (missing ? ' ' + missing + ' starter(s) without a projection count 0.' : '');
     const wCol = (w) => (w >= 55 ? '#1d7a34' : w <= 45 ? '#b33636' : '#a06a00');
     const lbl = live ? '<span style="color:#1d7a34">● live</span>' : '<span style="color:#5b6068">proj</span>';
@@ -3801,7 +3801,7 @@
         pills.push(livePillHTML(lv)); // in-game: scored + remaining (final = scored)
       } else if (v > 0 || p.pPg != null) {
         pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#f0f2f5', '#2a2c33',
-          'Projected points this week (' + state.scoringLabel + ' · sim-engine mean: Clay × Vegas × matchup, league-scored)'));
+          'Projected points this week (' + state.scoringLabel + ' · sim-engine mean: Clay × game environment × matchup, league-scored)'));
         if (!onBoxscore) {
           const bb = boomBustFor(p, v);
           if (bb) pills.push(bbPillHTML(bb));
@@ -4405,7 +4405,7 @@
     const pills = ['15', '16', '17'].map((w) => {
       const m = sos[w];
       if (!m) return '';
-      return `<span style="background:${esc(sosColor(m))};color:#0e0f12;border-radius:3px;padding:0 4px;font-size:8px;font-weight:700;line-height:12px" title="Week ${w} playoff matchup · SOS rank ${m.rank}/32 for ${p.s} · implied ${m.impliedTotal} pts">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
+      return `<span style="background:${esc(sosColor(m))};color:#0e0f12;border-radius:3px;padding:0 4px;font-size:8px;font-weight:700;line-height:12px" title="Week ${w} playoff matchup · SOS rank ${m.rank}/32 for ${p.s} · ~${m.impliedTotal} projected team points">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
     }).join('');
     if (!pills) return '';
     return `<div class="meta" style="margin-top:2px;display:flex;gap:3px;align-items:center;flex-wrap:wrap"><span style="color:#8a8d96;font-size:8px;letter-spacing:.4px">PLAYOFFS</span>${pills}</div>`;
@@ -4807,7 +4807,7 @@
         <span class="pl-sep">·</span><span class="pl-round">Wk ${state.seasonWeek}${state.byesActive ? '' : ' (pre)'}</span>
         <span class="pl-sep">·</span><span class="pl-mine">${esc(state.scoringLabel)}</span>
         <span class="pl-sep">·</span><span class="pl-mine">${esc(modeLbl)}</span>
-        ${hasProps ? '<span class="pl-sep">·</span><span class="pl-mine" style="color:#6dd06d" title="Wk ' + state.seasonWeek + ' prop boards (UD+PP) loaded — weekly values are the sim-engine mean (Vegas priced in); props cover players outside the engine">W' + state.seasonWeek + ' props</span>' : ''}
+        ${hasProps ? '<span class="pl-sep">·</span><span class="pl-mine" style="color:#6dd06d" title="Wk ' + state.seasonWeek + ' market projections loaded — weekly values are the sim-engine mean (game environment priced in); market projections cover players outside the engine">W' + state.seasonWeek + ' market proj</span>' : ''}
       </div>`;
   }
   function seasonLineupHTML() {
@@ -5085,7 +5085,7 @@
         <button id="mff-sim-rerun" style="background:#2a2c33;border:none;color:#e9e9ec;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600">RE-RUN SIM</button>
         <span style="font-size:9px;color:#8a8d96">${statTxt}</span>
       </div>
-      <div style="font-size:9px;color:#8a8d96;margin-top:6px;line-height:1.35">Standings/odds = ${SIM_RUNS.toLocaleString()} Monte Carlo seasons (the site's Sim Lab rest-of-season weekly projections, league-scored, real ESPN matchups${ps.synthPairs ? ' — synth round-robin fallback' : ''}), mid-season records carried, IR/OUT excluded. Assumes rest-of-season rosters as-is; players outside the site sim fall back to the bundled engine (Clay).</div>`;
+      <div style="font-size:9px;color:#8a8d96;margin-top:6px;line-height:1.35">Standings/chances = ${SIM_RUNS.toLocaleString()} Monte Carlo seasons (the site's Sim Lab rest-of-season weekly projections, league-scored, real ESPN matchups${ps.synthPairs ? ' — synth round-robin fallback' : ''}), mid-season records carried, IR/OUT excluded. Assumes rest-of-season rosters as-is; players outside the site sim fall back to the bundled engine (Clay).</div>`;
   }
 
   function seasonHTML() {
@@ -5277,8 +5277,8 @@
         ? (g.total != null && g.implied != null ? g.total - g.implied : null)
         : g.implied;
       const tip = 'W' + wk + ' ' + oppTxt +
-        (imp != null ? ' · ' + (p.s === 'DST' ? 'opp implied ' : 'implied ') + (Math.round(imp * 10) / 10) : '') +
-        (g.total != null ? ' · O/U ' + g.total : '') +
+        (imp != null ? ' · ~' + (Math.round(imp * 10) / 10) + (p.s === 'DST' ? ' projected opponent points' : ' projected team points') : '') +
+        (g.total != null ? ' · ~' + g.total + ' projected game points' : '') +
         ' · ' + (delta >= 0 ? '+' : '') + delta.toFixed(1) + ' vs ' + base.toFixed(1) + ' baseline (league scoring)';
       cells += `<div style="flex:0 0 44px;text-align:center;padding:3px 1px;border-radius:4px;background:#141a2e;cursor:help;${border}" title="${esc(tip)}">` +
         `<div style="font-size:8px;color:#8b94b3">W${wk}</div>` +
@@ -5286,7 +5286,7 @@
         `<div style="font-size:7.5px;color:#8b94b3;white-space:nowrap">${esc(oppTxt)}${imp != null ? '·' + Math.round(imp) : ''}</div></div>`;
     }
     return `<div class="prof-row" style="display:block">` +
-      `<span class="k" style="display:block;margin-bottom:3px">WEEKLY PROJ <span style="color:#8b94b3;font-weight:400">· Vegas model, league scoring · amber = W15-17</span></span>` +
+      `<span class="k" style="display:block;margin-bottom:3px">WEEKLY PROJ <span style="color:#8b94b3;font-weight:400">· game-environment model, league scoring · amber = W15-17</span></span>` +
       `<div style="display:flex;gap:3px;overflow-x:auto;padding-bottom:3px">${cells}</div></div>`;
   }
 
@@ -5324,7 +5324,7 @@
       const pills = ['15', '16', '17'].map((w) => {
         const m = sos[w];
         if (!m) return '';
-        return `<span style="background:${esc(sosColor(m))};color:#0e0f12;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700" title="SOS rank ${m.rank}/32 · implied ${m.impliedTotal} pts">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
+        return `<span style="background:${esc(sosColor(m))};color:#0e0f12;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700" title="SOS rank ${m.rank}/32 · ~${m.impliedTotal} projected team points">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
       }).join('');
       sosRow = `<div class="prof-row"><span class="k">Playoff SOS</span><span class="v" style="display:flex;gap:3px;flex-wrap:wrap">${pills}</span></div>`;
     }

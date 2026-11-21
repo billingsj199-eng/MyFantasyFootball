@@ -1408,9 +1408,9 @@
     return {
       txt, bg: col[0], fg: col[1], cls: good ? 'good' : bad ? 'bad' : 'mid',
       tip: 'Wk ' + state.seasonWeek + ' ' + txt +
-        (g.total != null ? ' · O/U ' + g.total : '') +
-        (g.implied != null ? ' · implied ' + g.implied : '') +
-        (p.s === 'DST' && val != null ? ' · opp implied ' + val : '') +
+        (g.total != null ? ' · ~' + g.total + ' projected game points' : '') +
+        (g.implied != null ? ' · ~' + g.implied + ' projected team points' : '') +
+        (p.s === 'DST' && val != null ? ' · ~' + val + ' projected opponent points' : '') +
         (m ? ' — ' + oppGradeNote(m, p.s) : ''),
     };
   }
@@ -1857,7 +1857,7 @@
       } catch (e) {}
       const E2 = window.SimEngine;
       const sched = E2.buildSchedule();
-      if (!sched || !Object.keys(sched.byTeam).length) throw new Error('no Vegas lines loaded');
+      if (!sched || !Object.keys(sched.byTeam).length) throw new Error('no game projections loaded');
       const curWeek = state.byesActive ? state.seasonWeek : 1;
       const playoffStart = state.playoffStart || 15;
       const regWeeks = [];
@@ -1988,7 +1988,7 @@
         <button id="mff-sim-rerun" style="background:#2a2c33;border:none;color:#e9e9ec;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600">RE-RUN SIM</button>
         <span style="font-size:9px;color:#8a8d96">${statTxt}</span>
       </div>
-      <div style="font-size:9px;color:#8a8d96;margin-top:6px;line-height:1.35">Standings/odds = ${SIM_RUNS.toLocaleString()} Monte Carlo seasons (the site's Sim Lab rest-of-season weekly projections, scored to this league's settings). Yahoo doesn't expose real matchup pairings, so a synthetic round-robin schedule is used. Rosters read from each team page, refreshed daily; IR-slot players excluded; players outside the site sim fall back to the bundled engine (Clay).</div>`;
+      <div style="font-size:9px;color:#8a8d96;margin-top:6px;line-height:1.35">Standings/chances = ${SIM_RUNS.toLocaleString()} Monte Carlo seasons (the site's Sim Lab rest-of-season weekly projections, scored to this league's settings). Yahoo doesn't expose real matchup pairings, so a synthetic round-robin schedule is used. Rosters read from each team page, refreshed daily; IR-slot players excluded; players outside the site sim fall back to the bundled engine (Clay).</div>`;
   }
 
   // ---------- UI ----------
@@ -2182,7 +2182,7 @@
         <span class="pl-sep">·</span><span class="pl-round">Wk ${state.seasonWeek}${state.byesActive ? '' : ' (pre)'}</span>
         <span class="pl-sep">·</span><span class="pl-mine">${esc(state.scoringLabel)}</span>
         <span class="pl-sep">·</span><span class="pl-mine">${esc(modeLbl)}</span>
-        ${hasProps ? '<span class="pl-sep">·</span><span class="pl-mine" style="color:#6dd06d" title="Weekly values = the site\'s Sim Lab Wk ' + state.seasonWeek + ' projections; the prop boards (UD+PP) only fill in players outside the sim">W' + state.seasonWeek + ' props</span>' : ''}
+        ${hasProps ? '<span class="pl-sep">·</span><span class="pl-mine" style="color:#6dd06d" title="Weekly values = the site\'s Sim Lab Wk ' + state.seasonWeek + ' projections; market projections only fill in players outside the sim">W' + state.seasonWeek + ' market proj</span>' : ''}
       </div>`;
   }
   // Site consensus weekly numbers (Sleeper h/p/s, ESPN/FP [half,ppr,std]) in
@@ -2243,8 +2243,8 @@
         ? (g.total != null && g.implied != null ? g.total - g.implied : null)
         : g.implied;
       const tip = 'W' + wk + ' ' + oppTxt +
-        (imp != null ? ' · ' + (p.s === 'DST' ? 'opp implied ' : 'implied ') + (Math.round(imp * 10) / 10) : '') +
-        (g.total != null ? ' · O/U ' + g.total : '') +
+        (imp != null ? ' · ~' + (Math.round(imp * 10) / 10) + (p.s === 'DST' ? ' projected opponent points' : ' projected team points') : '') +
+        (g.total != null ? ' · ~' + g.total + ' projected game points' : '') +
         ' · ' + (delta >= 0 ? '+' : '') + delta.toFixed(1) + ' vs ' + base.toFixed(1) + ' baseline (league scoring)';
       cells += `<div style="flex:0 0 44px;text-align:center;padding:3px 1px;border-radius:4px;background:#141a2e;cursor:help;${border}" title="${esc(tip)}">` +
         `<div style="font-size:8px;color:#8b94b3">W${wk}</div>` +
@@ -2252,7 +2252,7 @@
         `<div style="font-size:7.5px;color:#8b94b3;white-space:nowrap">${esc(oppTxt)}${imp != null ? '·' + Math.round(imp) : ''}</div></div>`;
     }
     return `<div class="prof-row" style="display:block">` +
-      `<span class="k" style="display:block;margin-bottom:3px">WEEKLY PROJ <span style="color:#8b94b3;font-weight:400">· Vegas model, league scoring · amber = W15-17</span></span>` +
+      `<span class="k" style="display:block;margin-bottom:3px">WEEKLY PROJ <span style="color:#8b94b3;font-weight:400">· game-environment model, league scoring · amber = W15-17</span></span>` +
       `<div style="display:flex;gap:3px;overflow-x:auto;padding-bottom:3px">${cells}</div></div>`;
   }
 
@@ -2286,7 +2286,7 @@
       const pills = ['15', '16', '17'].map((w) => {
         const m = sos[w];
         if (!m) return '';
-        return `<span style="background:${esc(sosColor(m))};color:#0e0f12;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700" title="SOS rank ${m.rank}/32 · implied ${m.impliedTotal} pts">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
+        return `<span style="background:${esc(sosColor(m))};color:#0e0f12;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700" title="SOS rank ${m.rank}/32 · ~${m.impliedTotal} projected team points">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
       }).join('');
       sosRow = `<div class="prof-row"><span class="k">Playoff SOS</span><span class="v" style="display:flex;gap:3px;flex-wrap:wrap">${pills}</span></div>`;
     }
@@ -2673,12 +2673,12 @@
       'white-space:nowrap;flex:0 0 auto">' +
       `<span style="color:#1d7a34">▲${sr[3]}</span>&nbsp;<span style="color:#b33636">▼${sr[4]}</span></span>`;
   }
-  // ---- MFF matchup strip (Yahoo matchup page): our proj totals + win odds ----
+  // ---- MFF matchup strip (Yahoo matchup page): our proj totals + win chances ----
   // The matchup page renders BOTH teams' slot-labeled starter rows (mirrored
   // one-row-per-slot on desktop, a column per team otherwise). Scrape both
   // sides, score them with the same wkVal the row pills use, and pin a strip
-  // with our totals + win odds above the first roster table — right under
-  // Yahoo's own projected-points header. Win odds = normal approximation
+  // with our totals + win chances above the first roster table — right under
+  // Yahoo's own projected-points header. Win chances = normal approximation
   // (each starter sd = proj × position sigma; correlations ignored).
   const POS_SIG_DEFAULT = { QB: 0.42, RB: 0.52, WR: 0.58, TE: 0.65, K: 0.55, DST: 0.6 };
   // ---------- LIVE projections (v0.9.23, Sleeper 0.29.24 / ESPN 0.20.31 port) ----------
@@ -3169,12 +3169,12 @@
     const missing = proj[0].missing + proj[1].missing;
     const tip = (live
       ? 'MFF LIVE numbers for this matchup — each starter = Yahoo\'s Fan Pts so far + what he should still ' +
-        'score (pregame proj × game left, nudged toward his pace late); finals count as scored. Win odds ' +
+        'score (pregame proj × game left, nudged toward his pace late); finals count as scored. Win chances ' +
         'only vary the unplayed part. Left: ' + proj[0].scored.toFixed(1) + ' in, ' + proj[0].done + '/' + proj[0].n +
         ' final · Right: ' + proj[1].scored.toFixed(1) + ' in, ' + proj[1].done + '/' + proj[1].n + ' final.'
       : 'MFF numbers for this matchup — our proj totals (same weekly projection as the row ' +
         'pills: site sim first, ' + state.scoringLabel + ' scored, injuries priced) summed over the ' +
-        'starters shown on each side, and our win odds (normal approximation; player correlations ' +
+        'starters shown on each side, and our win chances (normal approximation; player correlations ' +
         'ignored). Left/right match the page\'s two teams.') +
       (missing ? ' ' + missing + ' starter(s) without a projection count 0.' : '');
     const wCol = (w) => (w >= 55 ? '#1d7a34' : w <= 45 ? '#b33636' : '#a06a00');
@@ -3240,7 +3240,7 @@
         pills.push(livePillHTML(lv)); // in-game: scored + remaining (final = scored)
       } else if (v > 0 || p.pPg != null) {
         pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#f0f2f5', '#2a2c33',
-          'Projected points this week (' + state.scoringLabel + ' · MFF blend of props + Clay + Jack)'));
+          'Projected points this week (' + state.scoringLabel + ' · MFF blend of market projections + Clay + Jack)'));
         if (!matchupPage) {
           const sr = simWeekRowFor(p);
           if (sr && sr[3] != null && sr[4] != null) pills.push(simOddsPillHTML(sr));
@@ -3373,7 +3373,7 @@
           buildSchedule(d.gameTotals);
           state.wkPropsAll = d.weeklyProps || null;
           window.BETTING_2026 = d; // season-sim engine (SIMS tab) reads gameTotals here
-          if (n) console.log('[MFF/Yahoo] live Vegas overlay: ' + n + ' SOS records refreshed');
+          if (n) console.log('[MFF/Yahoo] playoff schedule refresh: ' + n + ' SOS records updated');
           render();
         }).catch(() => {});
       // Fantasy points allowed per defense-week (site postgame importer, FINAL

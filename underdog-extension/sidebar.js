@@ -47,8 +47,8 @@
     chrome.runtime.sendMessage({ type: 'mff-vegas-fetch' }, (res) => {
       if (chrome.runtime.lastError || !res || !res.ok || !res.data) return;
       const n = _mffApplyLiveVegas(res.data.gameTotals);
-      if (n) console.log('[MFF] live Vegas overlay: ' + n + ' SOS records refreshed'
-        + (res.data.generatedAt ? ' (site lines from ' + res.data.generatedAt + ')' : ''));
+      if (n) console.log('[MFF] playoff schedule refresh: ' + n + ' SOS records updated'
+        + (res.data.generatedAt ? ' (site data from ' + res.data.generatedAt + ')' : ''));
     });
   } catch (_) {}
 
@@ -1581,6 +1581,33 @@
     };
   }
 
+  // ---------- BBM advance data, on demand (X-20261121-11) ----------
+  // data/bbm_data.js ships unchanged (window.BBM_DATA = {...JSON...};) as a
+  // web_accessible_resource; it is fetched once per page and JSON-parsed (same
+  // object a script tag would build), only where recs are actually shown.
+  let _bbmP = null, _bbmWanted = false;
+  function isDraftRoute() {
+    const path = (location && location.pathname) || '';
+    return /\/draft(?:\/|$)/i.test(path) || /\/draft-/i.test(path);
+  }
+  function ensureBbmData() {
+    if (window.BBM_DATA) return Promise.resolve(window.BBM_DATA);
+    if (_bbmP) return _bbmP;
+    _bbmP = fetch(chrome.runtime.getURL('data/bbm_data.js'))
+      .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then((t) => {
+        const data = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1));
+        if (!window.BBM_DATA) window.BBM_DATA = data;
+        return window.BBM_DATA;
+      })
+      .catch((e) => { _bbmP = null; try { console.warn('[MFF] BBM data load failed:', e); } catch (_) {} throw e; });
+    return _bbmP;
+  }
+  function wireBbmLoadBtn(scope) {
+    const b = scope && scope.querySelector('[data-mff-bbm-load]');
+    if (b) b.addEventListener('click', () => { _bbmWanted = true; render(); });
+  }
+
   function render() {
     const ENGINE = window.MFFEngine;
     if (!ENGINE) return;
@@ -1589,6 +1616,25 @@
     maybeFireTurnAlert();
     // Persist any state change that landed before this render.
     persistState();
+    // X-20261121-11 (v0.18.26): the 2 MB BBM advance data is no longer a content
+    // script on every Underdog page; it loads on demand (draft rooms, or "Load
+    // here"). No recs render until it is in, so they can never silently differ
+    // from the full-data recs.
+    if (!window.BBM_DATA) {
+      const recsEl = document.getElementById('mff-recs');
+      const msg = (html) => { if (recsEl) recsEl.innerHTML = '<div class="mff-bbm-wait" style="padding:10px 4px;color:#9a9da6;font-size:11px;line-height:1.5">' + html + '</div>'; };
+      if (isDraftRoute() || _bbmWanted) {
+        msg('Loading BBM advance data…');
+        ensureBbmData().then(() => render(), () => {
+          msg('Couldn\'t load BBM advance data. <button data-mff-bbm-load="1" class="pos-filter">Retry</button>');
+          wireBbmLoadBtn(recsEl);
+        });
+      } else {
+        msg('Live recs load in the draft room. <button data-mff-bbm-load="1" class="pos-filter">Load here</button>');
+        wireBbmLoadBtn(recsEl);
+      }
+      return;
+    }
     const round = ENGINE.pickToRound(state.pickNum, TEAM_SIZE);
     const myTurn = isMyTurn(state.pickNum, state.slot);
     const until = picksUntilMyNext(state.pickNum, state.slot);
@@ -2032,8 +2078,8 @@
             const _tt = 'W' + w + ' ' + _arrow + ' ' + m.opp +
                         ' — ' + (m.label === 'E' ? 'easy' : m.label === 'M' ? 'mid' : 'hard') +
                         ' (rank ' + m.rank + '/32 for ' + p.s + ')' +
-                        (typeof m.gameTotal === 'number' ? ', O/U ' + m.gameTotal : '') +
-                        (typeof m.teamSpread === 'number' ? ', ' + (m.teamSpread > 0 ? '+' : '') + m.teamSpread + ' spread' : '') +
+                        (typeof m.gameTotal === 'number' ? ', ~' + m.gameTotal + ' projected game points' : '') +
+                        (typeof m.teamSpread === 'number' ? ', ' + (m.teamSpread < 0 ? 'projected to win by ' + (-m.teamSpread) : m.teamSpread > 0 ? 'projected to lose by ' + m.teamSpread : 'projected even') : '') +
                         (_isDome ? ' · dome (' + _host + ')' : '');
             return '<span style="color:' + m.color + ';font-weight:700" title="' + _tt.replace(/"/g, '&quot;') + '">' +
                    'W' + w + ' ' + _arrow + m.opp + (_isDome ? ' Ⓓ' : '') + '</span>';
@@ -3781,7 +3827,7 @@
             const bbWeeks = bringback.hits.map(h => 'W' + h.wk).join('+');
             labelSuffix += ' · BB ' + bbWeeks;
             const bbDetail = bringback.hits.map(h =>
-              'W' + h.wk + ' vs ' + h.opp + ' (' + h.total.toFixed(1) + ' O/U) — paired with ' +
+              'W' + h.wk + ' vs ' + h.opp + ' (~' + h.total.toFixed(1) + ' projected game points) — paired with ' +
               h.oppPlayers.map(p => p.n).join(', ')
             ).join('; ');
             combinedTitle += '\n⚡ BRINGBACK ' + bbWeeks + ' — ' + bbDetail;
@@ -3819,11 +3865,11 @@
           outlineTarget.dataset.mffOutline = 'bringback';
           const weeksStr = bringback.hits.map(h => 'W' + h.wk).join('+');
           const detail = bringback.hits.map(h =>
-            'W' + h.wk + ' vs ' + h.opp + ' (' + h.total.toFixed(1) + ' O/U) — paired with ' +
+            'W' + h.wk + ' vs ' + h.opp + ' (~' + h.total.toFixed(1) + ' projected game points) — paired with ' +
             h.oppPlayers.map(p => p.n).join(', ')
           ).join('; ');
           outlineTarget.title = '⚡ BRINGBACK ' + weeksStr +
-            ' — high-total (≥47) playoff game(s) with: ' + detail +
+            ' — high-scoring (~47+ projected points) playoff game(s) with: ' + detail +
             '. +10% QF advance / +6% SF lift (BBM II-VI).';
           outlineTarget.appendChild(makeRowLabel('⚡ BB ' + weeksStr, '#f59e0b', '#0e0f12'));
         } else if (weekPlayoff) {
@@ -3846,7 +3892,7 @@
             const opp = h.opposing && h.opposing.length
               ? 'vs ' + h.opp + ': ' + h.opposing.map(p => p.n).join(', ')
               : '';
-            const ouStr = typeof h.total === 'number' ? ' (' + h.total.toFixed(1) + ' O/U)' : '';
+            const ouStr = typeof h.total === 'number' ? ' (~' + h.total.toFixed(1) + ' projected game points)' : '';
             return 'W' + h.wk + ouStr + ' — ' + [same, opp].filter(Boolean).join('; ');
           }).join(' | ');
           outlineTarget.title = 'WEEK ' + weeksStr +
@@ -3979,9 +4025,9 @@
             const _tt = 'W' + w + ' ' + _arrow + ' ' + m.opp + ' — ' +
                         (m.label === 'E' ? 'easy' : m.label === 'M' ? 'mid' : 'hard') +
                         ' (rank ' + m.rank + '/32 for ' + player.s + ')' +
-                        (typeof m.gameTotal === 'number' ? ', O/U ' + m.gameTotal : '') +
+                        (typeof m.gameTotal === 'number' ? ', ~' + m.gameTotal + ' projected game points' : '') +
                         (typeof m.teamSpread === 'number'
-                          ? ', ' + (m.teamSpread > 0 ? '+' : '') + m.teamSpread + ' sprd'
+                          ? ', ' + (m.teamSpread < 0 ? 'proj. win by ' + (-m.teamSpread) : m.teamSpread > 0 ? 'proj. lose by ' + m.teamSpread : 'proj. even')
                           : '') +
                         (_isDome ? ' · dome (' + _host + ')' : '');
             const hex = (m.color || '#94a3b8').replace('#', '');

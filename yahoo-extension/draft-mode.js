@@ -1197,16 +1197,16 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
   const CSS = {
-    panel: 'position:fixed;top:64px;right:10px;width:340px;max-height:84vh;z-index:2147483000;background:#0e0916;border:1px solid #7d2eff;border-radius:10px;color:#e5e7eb;font:12px/1.45 system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden',
-    head: 'padding:8px 12px;background:#1d1430;border-bottom:1px solid #3b2b55;display:flex;align-items:center;gap:8px;cursor:move',
-    tabs: 'display:flex;gap:2px;padding:6px 8px 0;border-bottom:1px solid #33245c',
-    tab: (on) => 'flex:1;text-align:center;padding:6px 4px;border-radius:6px 6px 0 0;cursor:pointer;font-weight:700;letter-spacing:.4px;font-size:11px;' + (on ? 'background:#7d2eff;color:#fff' : 'background:#1c142e;color:#a89cc8'),
+    panel: 'position:fixed;top:64px;right:10px;width:340px;max-height:84vh;z-index:2147483000;background:#0e0916;border:1px solid #7d2eff;border-radius:10px;color:#ece8f7;font:12px/1.45 system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden',
+    head: 'padding:8px 12px;background:linear-gradient(90deg,#171025,#1c142e);border-bottom:1px solid #33245c;display:flex;align-items:center;gap:8px;cursor:move',
+    tabs: 'display:flex;gap:0;padding:0 8px;border-bottom:1px solid #2a2140;margin-bottom:4px',
+    tab: (on) => 'flex:1;min-width:0;min-height:28px;box-sizing:border-box;text-align:center;padding:6px 2px;margin-bottom:-1px;cursor:pointer;font-weight:700;letter-spacing:.8px;font-size:11px;white-space:nowrap;overflow:hidden;border-bottom:2px solid ' + (on ? '#b388ff;color:#b388ff' : 'transparent;color:#a89cc8'),
     body: 'overflow-y:auto;padding:8px;flex:1',
-    card: 'background:#171025;border:1px solid #33245c;border-radius:8px;padding:8px 10px;margin-bottom:7px;position:relative',
+    card: 'background:#171025;border:1px solid #33245c;border-radius:6px;padding:8px 10px;margin-bottom:7px;position:relative',
     chip: 'display:inline-block;background:#2a2140;color:#c9a4ff;border-radius:4px;padding:1px 6px;margin:2px 3px 0 0;font-size:10px',
     row: 'display:flex;align-items:center;gap:8px;padding:5px 6px;border-bottom:1px solid #251a3e',
-    posBtn: (on) => 'padding:3px 8px;border-radius:5px;cursor:pointer;font-size:10px;font-weight:700;' + (on ? 'background:#7d2eff;color:#fff' : 'background:#1c142e;color:#a89cc8'),
-    select: 'background:#1c142e;color:#cfc7e8;border:1px solid #33245c;border-radius:5px;font-size:10px;padding:2px 4px',
+    posBtn: (on) => 'padding:4px 8px;min-height:24px;box-sizing:border-box;display:inline-flex;align-items:center;border-radius:3px;cursor:pointer;font-size:10px;font-weight:600;letter-spacing:.4px;' + (on ? 'background:#7d2eff;color:#fff' : 'background:#2a2140;color:#cfc7e8'),
+    select: 'background:#2a2140;color:#ece8f7;border:1px solid #3b2b55;border-radius:3px;font-size:11px;font-weight:600;padding:3px 6px;min-height:24px',
   };
   const POS_COLORS = { QB: '#ef4444', RB: '#2ee6c8', WR: '#3b82f6', TE: '#f59e0b', K: '#a78bfa', DST: '#94a3b8', DEF: '#94a3b8' };
   const MEDALS = ['#ff4040', '#c0c7d1', '#c9926b'];
@@ -1569,7 +1569,7 @@
   function render() {
     if (!root || !st.ready) return;
     if (!gateAllowed()) {
-      root.innerHTML = '<div style="' + CSS.head + '"><b style="color:#c9a4ff;letter-spacing:.6px">MFF YAHOO HELPER</b></div>' + gateLockHTML();
+      root.innerHTML = '<div style="' + CSS.head + '"><b style="color:#b388ff;font-size:12px;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto">MFF YAHOO HELPER</b></div>' + gateLockHTML();
       return;
     }
     const until = picksUntilMine();
@@ -1577,13 +1577,13 @@
     const nextNo = nextPickNo();
     const t = st.slots.teams || 12;
     const rd = Math.ceil(nextNo / t), rdPick = ((nextNo - 1) % t) + 1;
-    let h = '<div id="mffYdHead" style="' + CSS.head + '" title="Drag to move"><b style="color:#c9a4ff;letter-spacing:.6px">MFF YAHOO HELPER</b>' +
-      '<span style="display:flex;border:1px solid #3b2b55;border-radius:5px;overflow:hidden;font-size:9px;font-weight:700;letter-spacing:.8px">' +
-      '<span data-mode="draft" style="padding:2px 7px;cursor:pointer;background:#7d2eff;color:#fff">DRAFT</span>' +
-      '<span data-mode="season" style="padding:2px 7px;cursor:pointer;background:#1c142e;color:#a89cc8">SEASON</span></span>' +
+    let h = '<div id="mffYdHead" style="' + CSS.head + '" title="Drag to move"><b style="color:#b388ff;font-size:12px;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto">MFF YAHOO HELPER</b>' +
+      '<span style="display:flex;flex-shrink:0;background:#0e0916;border:1px solid #2a2140;border-radius:4px;overflow:hidden;font-size:10px;font-weight:800;letter-spacing:.8px">' +
+      '<span data-mode="draft" style="padding:3px 8px;min-height:24px;box-sizing:border-box;display:inline-flex;align-items:center;cursor:pointer;background:#7d2eff;color:#fff">DRAFT</span>' +
+      '<span data-mode="season" style="padding:3px 8px;min-height:24px;box-sizing:border-box;display:inline-flex;align-items:center;cursor:pointer;background:transparent;color:#a89cc8">SEASON</span></span>' +
       '<span style="color:#a89cc8;font-size:10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
       esc(st.leagueName) + ' · ' + t + 'tm · ' + esc(st.scoringLabel) + '</span>' +
-      '<span id="mffYdClock" style="color:#fbbf24;font-weight:700">' + fmtClock(st.clock) + '</span></div>';
+      '<span id="mffYdClock" style="color:#fbbf24;font-weight:700;flex-shrink:0">' + fmtClock(st.clock) + '</span></div>';
     const started = st.currentPick > 0 && st.onClockTeam > 0;
     const done = st.order.length && nextNo > st.order.length;
     h += '<div style="padding:5px 12px;background:#140e20;border-bottom:1px solid #251a3e;font-size:11px;color:#cfc7e8">' +

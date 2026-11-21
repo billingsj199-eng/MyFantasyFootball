@@ -272,7 +272,18 @@
 
   function start() {
     recordInitialBaseline();
-    setInterval(pollOnce, POLL_MS);
+    // X-20261121-15 (v0.18.27): this ribbon scan feeds picks to the sidebar
+    // (and so the on-the-clock alert), so a hidden tab keeps scanning, just
+    // every HIDDEN_POLL_MS instead of every 1.5 s; immediate scan on return.
+    var HIDDEN_POLL_MS = 10000, lastScan = 0;
+    setInterval(function () {
+      if (document.visibilityState === "hidden" && Date.now() - lastScan < HIDDEN_POLL_MS) return;
+      lastScan = Date.now();
+      pollOnce();
+    }, POLL_MS);
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible") { lastScan = Date.now(); pollOnce(); }
+    });
     console.log("[MFF/live-watcher] v0.10.58 ready — __mffDebugScan() to inspect, __mffScanRejects for parse failures");
   }
 

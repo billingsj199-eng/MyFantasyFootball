@@ -3250,6 +3250,7 @@
 
   // ---------- probe persistence (events from probe.js in MAIN world) ----------
   const probeUrls = [];
+  let _seasonPolledAt = Date.now();
   let probeSaveTimer = null;
   function mffDebugOn() { try { return localStorage.getItem('mffDebug') === '1'; } catch (_) { return false; } }
   document.addEventListener('mff-yahoo-probe', (e) => {
@@ -3307,9 +3308,11 @@
       (state.byesActive ? '' : ' (preseason)');
     await refreshScoreboard(false); // live game clocks (no-op preseason)
     scrapeTick();
-    if (!state.scrapeTimer) state.scrapeTimer = setInterval(scrapeTick, SCRAPE_MS);
+    if (!state.scrapeTimer) state.scrapeTimer = setInterval(() => { if (document.visibilityState !== 'hidden') scrapeTick(); }, SCRAPE_MS);
     if (!state.pollTimer) {
       state.pollTimer = setInterval(() => {
+        if (document.visibilityState === 'hidden') return; // X-15
+        _seasonPolledAt = Date.now();
         fetchTrending();
         fetchSeasonStats();
         refreshScoreboard(false).then(() => { if (state.leagueId) render(); });
@@ -3393,10 +3396,23 @@
     lastHref = location.href;
     onUrlChange();
     setInterval(() => {
+      if (document.visibilityState === 'hidden') return; // X-15
       if (location.href === lastHref) return;
       lastHref = location.href;
       onUrlChange();
     }, URL_WATCH_MS);
+    // X-20261121-15 (v0.9.59): hidden tab = no page scrape, URL watch or 60 s
+    // refresh; one catch-up pass when shown again.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      if (location.href !== lastHref) { lastHref = location.href; onUrlChange(); }
+      if (state.scrapeTimer) scrapeTick();
+      if (state.pollTimer && state.leagueId && Date.now() - _seasonPolledAt >= SEASON_POLL_MS) {
+        _seasonPolledAt = Date.now();
+        fetchTrending(); fetchSeasonStats();
+        refreshScoreboard(false).then(() => { if (state.leagueId) render(); });
+      }
+    });
   }
 
   window.__mffYahoo = { state, render, initForLeague, scrapeTeamPage, scrapePlayersPage,

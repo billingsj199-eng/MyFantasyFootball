@@ -878,7 +878,7 @@
   }
   function startBoardPolling() {
     if (boardTimer) return;
-    boardTimer = setInterval(pollBoard, 2500);
+    boardTimer = setInterval(() => { if (document.visibilityState === 'hidden') return; pollBoard(); }, 2500); // X-15: WS picks still flow while hidden
   }
 
   // ---------- live WS feed ----------
@@ -2947,6 +2947,8 @@
     stopSeasonPolling();
     state.seasonPollTimer = setInterval(async () => {
       if (state.appMode !== 'season' || !state.seasonLeagueId) return;
+      if (document.visibilityState === 'hidden') return; // X-15
+      _seasonPolledAt = Date.now();
       try { await refreshSeasonLeague(); render(); } catch (e) {}
     }, SEASON_POLL_MS);
   }
@@ -3807,7 +3809,7 @@
   }
   function startDecorating() {
     if (decorateTimer) return;
-    decorateTimer = setInterval(decorateSeasonPages, 2000);
+    decorateTimer = setInterval(() => { if (document.visibilityState === 'hidden') return; decorateSeasonPages(); }, 2000);
     decorateSeasonPages();
   }
   function stopDecorating() {
@@ -3966,6 +3968,7 @@
       // Rows repaint here too: the same re-render that rebuilds the strip
       // re-texts the player list's recycled rows, stranding pill strips —
       // waiting for the 2s interval leaves dead chips visible after a pick.
+      if (document.visibilityState === 'hidden') { _hiddenDecoPending = true; return; } // X-15
       stripDebounce = setTimeout(() => { decorateDraftStrip(); decorateDraftRows(); }, 100);
     });
     stripObserver.observe(root, { childList: true, subtree: true });
@@ -3973,7 +3976,7 @@
   let stripTimer = null;
   function startStripDecorating() {
     if (stripTimer) return;
-    stripTimer = setInterval(decorateDraftStrip, 2000);  // safety net / first find
+    stripTimer = setInterval(() => { if (document.visibilityState === 'hidden') return; decorateDraftStrip(); }, 2000);  // safety net / first find
     decorateDraftStrip();
     startRowDecorating();
   }
@@ -4106,7 +4109,7 @@
   let rowTimer = null;
   function startRowDecorating() {
     if (rowTimer) return;
-    rowTimer = setInterval(decorateDraftRows, 2000);
+    rowTimer = setInterval(() => { if (document.visibilityState === 'hidden') return; decorateDraftRows(); }, 2000);
     decorateDraftRows();
   }
   function stopRowDecorating() {
@@ -5619,8 +5622,25 @@
     }
   }
   let lastHref = null;
+  // X-20261121-15 (v0.20.71): hidden tab = no board scrape, page decorating,
+  // URL watch or 60 s league refresh (the WS pick feed keeps flowing). One
+  // catch-up pass when the tab is shown again.
+  let _seasonPolledAt = 0, _hiddenDecoPending = false;
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible') return;
+    if (location.href !== lastHref) { lastHref = location.href; if (pageNeedsSidebar()) await ensureBooted(); onUrlChange(); }
+    if (boardTimer) pollBoard();
+    if (stripTimer || _hiddenDecoPending) { _hiddenDecoPending = false; decorateDraftStrip(); }
+    if (rowTimer) decorateDraftRows();
+    if (decorateTimer) decorateSeasonPages();
+    if (state.seasonPollTimer && state.appMode === 'season' && state.seasonLeagueId && Date.now() - _seasonPolledAt >= SEASON_POLL_MS) {
+      _seasonPolledAt = Date.now();
+      try { await refreshSeasonLeague(); render(); } catch (e) {}
+    }
+  });
   function watchUrl() {
     setInterval(async () => {
+      if (document.visibilityState === 'hidden') return;
       if (location.href === lastHref) return;
       lastHref = location.href;
       if (pageNeedsSidebar()) await ensureBooted();

@@ -3369,11 +3369,22 @@
   }
   function startSeasonPolling() {
     stopSeasonPolling();
-    state.seasonPollTimer = setInterval(async () => {
-      if (state.appMode !== 'season' || !state.seasonLeagueId) return;
-      try { await refreshLeagueData(); render(); } catch (e) {}
-    }, SEASON_POLL_MS);
+    state.seasonPollTimer = setInterval(seasonPollTick, SEASON_POLL_MS);
   }
+  // X-20261121-15 (v0.29.60): no league refresh while the tab is hidden; one
+  // catch-up refresh when it is shown again if the last one is >= 60 s old.
+  let _seasonPolledAt = 0;
+  async function seasonPollTick(force) {
+    if (state.appMode !== 'season' || !state.seasonLeagueId) return;
+    if (force !== true && document.visibilityState === 'hidden') return;
+    _seasonPolledAt = Date.now();
+    try { await refreshLeagueData(); render(); } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    if (state.seasonPollTimer && Date.now() - _seasonPolledAt >= SEASON_POLL_MS) seasonPollTick(true);
+    if (location.href !== lastHref) { lastHref = location.href; onUrlChange(); }
+  });
   function stopSeasonPolling() {
     if (state.seasonPollTimer) { clearInterval(state.seasonPollTimer); state.seasonPollTimer = null; }
   }
@@ -6322,6 +6333,7 @@
   }
   function watchUrl() {
     setInterval(() => {
+      if (document.visibilityState === 'hidden') return; // X-15: checked again on visibilitychange
       if (location.href === lastHref) return;
       lastHref = location.href;
       onUrlChange();

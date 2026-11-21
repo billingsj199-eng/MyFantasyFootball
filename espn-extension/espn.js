@@ -183,6 +183,7 @@
   maybeAutoExport();
   var lastHref = location.href;
   setInterval(function () {
+    if (document.visibilityState === 'hidden') return; // X-15: nav while hidden is picked up on the next visible tick
     if (location.href !== lastHref) {
       lastHref = location.href;
       if (!leagueIdFromUrl() && btn) { btn.remove(); btn = null; }

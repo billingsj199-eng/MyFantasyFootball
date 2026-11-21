@@ -1264,7 +1264,7 @@
     document.body.appendChild(root);
     enableDragResize();
     syncPanels();
-    setInterval(syncPanels, 2000);
+    setInterval(() => { if (document.visibilityState !== 'hidden') syncPanels(); }, 2000); // X-15
     render();
   }
 
@@ -1310,10 +1310,18 @@
   }
 
   let renderTimer = null;
+  // X-20261121-15 (v0.9.59): frames keep updating st while the tab is hidden
+  // (probe.js / the socket are untouched); only the panel repaint waits, and
+  // one render on return shows the caught-up board.
+  let _renderWhenShown = false;
   function scheduleRender() {
+    if (document.visibilityState === 'hidden') { _renderWhenShown = true; return; }
     if (renderTimer) return;
     renderTimer = setTimeout(() => { renderTimer = null; render(); }, 250);
   }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && _renderWhenShown) { _renderWhenShown = false; try { render(); } catch (_) {} }
+  });
   function renderClock() {
     const c = root && root.querySelector('#mffYdClock');
     if (c && st.clock != null) c.textContent = fmtClock(st.clock);

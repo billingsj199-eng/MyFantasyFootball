@@ -4100,7 +4100,8 @@
   let _exposureTimer = null;
   function startExposureDecorator() {
     if (_exposureTimer) return;
-    _exposureTimer = setInterval(decoratePlayerList, 1500);
+    _exposureTimer = setInterval(() => { if (document.visibilityState !== 'hidden') decoratePlayerList(); }, 1500); // X-15
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') decoratePlayerList(); });
     // Run once immediately so the first paint isn't empty.
     setTimeout(decoratePlayerList, 200);
   }

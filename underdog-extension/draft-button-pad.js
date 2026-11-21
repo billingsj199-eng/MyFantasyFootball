@@ -219,5 +219,6 @@
   } else {
     tick();
   }
-  setInterval(tick, POLL_MS);
+  setInterval(function () { if (document.visibilityState !== 'hidden') tick(); }, POLL_MS); // X-15: layout fix-ups only matter when visible
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') tick(); });
 })();

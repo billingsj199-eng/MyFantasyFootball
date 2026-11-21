@@ -49,7 +49,7 @@
     drafted, myRoster: mine, history: [], rankSrc: null, posFilter: 'ALL', sortBy: null, isSuperflex: false, isRedraft: false, superflexSource: null };
   history.pushState(null, '', route === 'draft' ? '/draft/' + DRAFT_ID : '/lobby');
   const files = ['data/bbm_pick_by_rank_round.js', 'data/bbm_path_optimal.js', 'data/bbm_stack_comp_multistage.js',
-    'data/bbm_structural_multistage.js', 'data/playoff_sos_2026.js', 'engine.js', qs.get('sb') || 'sidebar.js'];
+    'data/bbm_structural_multistage.js', 'data/playoff_sos_2026.js', 'engine.js', qs.get('sb') || 'sidebar.js', 'live-watcher.js', 'draft-button-pad.js'];
   if (qs.get('preload') === '1') files.unshift('data/bbm_data.js');
   const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = BASE + 'sidebar.css'; document.head.appendChild(link);
   for (const f of files) {

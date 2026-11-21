@@ -163,6 +163,7 @@
   mount();
   var lastHref = location.href;
   setInterval(function () {
+    if (document.visibilityState === 'hidden') return; // X-15
     if (location.href !== lastHref) {
       lastHref = location.href;
       if ((!leagueIdFromUrl() || inDraftRoom()) && btn) { btn.remove(); btn = null; }

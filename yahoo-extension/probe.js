@@ -17,11 +17,12 @@
   const MAX_FRAMES = 300;
   const FRAME_CHARS = 400;
   let frames = 0;
+  const DEBUG = (() => { try { return localStorage.getItem('mffDebug') === '1'; } catch (_) { return false; } })();
   window.__mffYahooProbe = { urls: [] };
   function emit(kind, payload) {
     try {
       window.__mffYahooProbe.urls.push({ t: Date.now(), kind, url: payload });
-      console.log('[MFF/yahoo-probe]', kind, payload);
+      if (DEBUG) console.log('[MFF/yahoo-probe]', kind, payload);
       document.dispatchEvent(new CustomEvent('mff-yahoo-probe', {
         detail: JSON.stringify({ kind, url: payload }),
       }));
@@ -50,7 +51,7 @@
       }));
       if (frames <= MAX_FRAMES) {
         window.__mffYahooProbe.urls.push({ t: Date.now(), kind, url: data.slice(0, FRAME_CHARS) });
-        console.log('[MFF/yahoo-probe]', kind, data.slice(0, 120));
+        if (DEBUG) console.log('[MFF/yahoo-probe]', kind, data.slice(0, 120));
       }
     } catch (_) {}
   }

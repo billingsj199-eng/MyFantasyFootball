@@ -117,10 +117,10 @@
   const SIDEBAR_HTML = `
 <div id="mff-sidebar">
   <div id="mff-header">
-    <div class="title">MFF DRAFT HELPER <span id="mff-ver" style="font-size:9px;font-weight:500;opacity:.6;margin-left:4px"></span></div>
+    <div class="title">MFF UNDERDOG HELPER <span id="mff-ver" style="font-size:9px;font-weight:500;opacity:.6;margin-left:4px"></span></div>
     <div class="controls">
-      <button id="mff-collapse" title="Collapse">_</button>
-      <button id="mff-close" title="Hide">×</button>
+      <button id="mff-collapse" title="Collapse">–</button>
+      <button id="mff-close" title="Hide">✕</button>
     </div>
   </div>
   <div id="mff-resize-n" class="mff-resize-edge" title="Drag to resize height (top)"></div>
@@ -1679,7 +1679,7 @@
 
     // Render banked VOR + dropoff per position.
     if (report.vorByPos) {
-      const posColors = { QB: "#ef4444", RB: "#22c55e", WR: "#3b82f6", TE: "#f59e0b" };
+      const posColors = { QB: "#ef4444", RB: "#2ee6c8", WR: "#3b82f6", TE: "#f59e0b" };
       const recommendedPos = posSuggestion ? posSuggestion.pos : null;
       for (const pos of ["QB", "RB", "WR", "TE"]) {
         const el = document.getElementById("v-" + pos);
@@ -2247,7 +2247,7 @@
     if (!blEl || !infoEl || !gridEl || !totalEl || !rosterEl) return;
 
     const POS = ['QB','RB','WR','TE'];
-    const POS_COLORS = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b' };
+    const POS_COLORS = { QB: '#ef4444', RB: '#2ee6c8', WR: '#3b82f6', TE: '#f59e0b' };
 
     // --- 1) Your live roster aggregation ---
     const mine = { QB: 0, RB: 0, WR: 0, TE: 0 };
@@ -2467,7 +2467,7 @@
       chart = data.positions;
       source = data.source;
     } catch (e) { el.innerHTML = ""; return; }
-    const posColors = { QB: "#ef4444", RB: "#22c55e", WR: "#3b82f6", TE: "#f59e0b" };
+    const posColors = { QB: "#ef4444", RB: "#2ee6c8", WR: "#3b82f6", TE: "#f59e0b" };
     const isBbm = source === "bbm";
     let maxVal = isBbm ? 0.01 : 1;
     for (const pos of ["QB", "RB", "WR", "TE"]) {
@@ -2542,7 +2542,7 @@
     const counts = { QB:0, RB:0, WR:0, TE:0 };
     roster.forEach(p => { if (counts[p.s] != null) counts[p.s]++; });
     const POS_LIST = ['QB','RB','WR','TE'];
-    const POS_COLORS = { QB:'#ef4444', RB:'#22c55e', WR:'#3b82f6', TE:'#f59e0b' };
+    const POS_COLORS = { QB:'#ef4444', RB:'#2ee6c8', WR:'#3b82f6', TE:'#f59e0b' };
     const STAGES = [
       { key: 'qf',  label: '→QF',  base: BBM_BASELINE_QF_RATE,  decimals: 1 },
       { key: 'sf',  label: '→SF',  base: BBM_BASELINE_SF_RATE,  decimals: 2 },
@@ -3488,7 +3488,7 @@
   // which rows fill which holes in the user's roster.
   function colorForNeed(pos) {
     if (pos === 'QB') return { bg: '#7c3aed', fg: '#fff' };  // purple
-    if (pos === 'RB') return { bg: '#22c55e', fg: '#0e0f12' }; // green
+    if (pos === 'RB') return { bg: '#2ee6c8', fg: '#0e0f12' }; // teal (green = #1 rec)
     if (pos === 'WR') return { bg: '#3b82f6', fg: '#fff' };  // blue
     if (pos === 'TE') return { bg: '#f59e0b', fg: '#0e0f12' }; // amber
     return { bg: '#6b6e76', fg: '#e9e9ec' };
@@ -3760,7 +3760,7 @@
       // or irrelevant (you already have them).
       if (!isRosterFormat) {
         if (stack) {
-          outlineTarget.style.boxShadow = 'inset 0 0 0 2px #22c55e';
+          outlineTarget.style.boxShadow = 'inset 0 0 0 2px #58a7ff';
           outlineTarget.style.borderRadius = outlineTarget.style.borderRadius || '4px';
           if (getComputedStyle(outlineTarget).position === 'static') {
             outlineTarget.style.position = 'relative';
@@ -3806,7 +3806,7 @@
             : '';
           outlineTarget.appendChild(makeRowLabel(
             '★ STACK' + (withName ? ' ' + withName : '') + labelSuffix,
-            '#22c55e', '#0e0f12'
+            '#58a7ff', '#0e0f12'
           ));
         } else if (bringback) {
           // v0.10.28: Gold outline for high-total playoff-week bringbacks.

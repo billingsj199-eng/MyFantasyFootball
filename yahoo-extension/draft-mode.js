@@ -1208,7 +1208,7 @@
     posBtn: (on) => 'padding:3px 8px;border-radius:5px;cursor:pointer;font-size:10px;font-weight:700;' + (on ? 'background:#7d2eff;color:#fff' : 'background:#1c142e;color:#a89cc8'),
     select: 'background:#1c142e;color:#cfc7e8;border:1px solid #33245c;border-radius:5px;font-size:10px;padding:2px 4px',
   };
-  const POS_COLORS = { QB: '#ef4444', RB: '#22c55e', WR: '#3b82f6', TE: '#f59e0b', K: '#a78bfa', DST: '#94a3b8', DEF: '#94a3b8' };
+  const POS_COLORS = { QB: '#ef4444', RB: '#2ee6c8', WR: '#3b82f6', TE: '#f59e0b', K: '#a78bfa', DST: '#94a3b8', DEF: '#94a3b8' };
   const MEDALS = ['#ff4040', '#c0c7d1', '#c9926b'];
   const TAG_COLORS = {
     STEAL: 'background:#0d3321;color:#4ade80', Value: 'background:#0d2b33;color:#38bdf8',
@@ -1332,7 +1332,7 @@
         const rd = Math.ceil(no / t), rp = ((no - 1) % t) + 1;
         return '<div>' + rd + '.' + String(rp).padStart(2, '0') + ' <b style="color:#c6bde0">' +
           esc(rec ? rec.name : '#' + pk.pid) + '</b> ' + esc(rec ? rec.pos : '') +
-          ' <span style="color:#665c85">— ' + esc(teamLabel(pk.tid)) + '</span></div>';
+          ' <span style="color:#9a8fc0">— ' + esc(teamLabel(pk.tid)) + '</span></div>';
       }).join('') + '</div>';
   }
 
@@ -1361,7 +1361,7 @@
         (tag ? '<span style="' + CSS.chip + ';' + (TAG_COLORS[tag] || '') + '">' + tag + '</span>' : '') +
         x.reasons.map((r) => '<span style="' + CSS.chip + '">' + esc(r) + '</span>').join('') +
         (rec && rec.inj ? '<span style="' + CSS.chip + ';background:#33130d;color:#f87171">' + esc(rec.inj) + '</span>' : '');
-      return '<div style="' + CSS.card + (i === 0 ? ';border-color:#7d2eff' : '') + '">' +
+      return '<div style="' + CSS.card + (i === 0 ? ';border-color:#22c55e;background:rgba(34,197,94,0.16);box-shadow:inset 0 0 0 1px rgba(34,197,94,0.5)' : '') + '">' +
         '<div style="display:flex;align-items:baseline;gap:8px">' +
         '<b style="font-size:15px;color:' + MEDALS[i] + '">' + (i + 1) + '</b>' +
         '<b style="font-size:13px">' + esc(p.n) + '</b>' +

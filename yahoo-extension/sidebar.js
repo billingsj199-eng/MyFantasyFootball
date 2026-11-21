@@ -2483,9 +2483,9 @@
         <div style="font-size:11px;color:#c8ccd4">${state.roster.length ? state.roster.length + ' players · read ' + (state.rosterTs ? Math.round((Date.now() - state.rosterTs) / 60000) + ' min ago' : '—') : 'not read yet — open your team page'}</div>
         <div style="font-size:11px;color:#c8ccd4">${Object.keys(state.faSeen).length} free agents captured from the Players page</div>
         <button data-clearfa="1" class="pos-filter" style="margin-top:3px">CLEAR FA CACHE</button></div>
-      <div class="mff-section"><h3>API probe</h3>
+      ${mffDebugOn() ? `<div class="mff-section"><h3>API probe</h3>
         <div style="font-size:10px;color:#8a8d96">${state.probeCount} internal endpoints recorded this session (upgrade path off DOM scraping).</div>
-        <button data-copyprobe="1" class="pos-filter" style="margin-top:3px">COPY PROBE LOG</button></div>
+        <button data-copyprobe="1" class="pos-filter" style="margin-top:3px">COPY PROBE LOG</button></div>` : ''}
       <div style="font-size:10px;color:#8a8d96">Players: ${state.players.length} · data ${esc(state.exportedAt)}${ver ? ' · v' + ver : ''}</div>`;
   }
   function seasonHTML() {
@@ -3250,13 +3250,18 @@
 
   // ---------- probe persistence (events from probe.js in MAIN world) ----------
   const probeUrls = [];
+  let probeSaveTimer = null;
+  function mffDebugOn() { try { return localStorage.getItem('mffDebug') === '1'; } catch (_) { return false; } }
   document.addEventListener('mff-yahoo-probe', (e) => {
     try {
       const d = JSON.parse(e.detail);
       probeUrls.push({ t: Date.now(), kind: d.kind, url: d.url });
       state.probeCount = probeUrls.length;
-      if (probeUrls.length <= 600) {
-        store.set({ mff_yahoo_probe: { updatedAt: Date.now(), urls: probeUrls.slice(-600) } });
+      if (probeUrls.length <= 600 && !probeSaveTimer) {
+        probeSaveTimer = setTimeout(() => {
+          probeSaveTimer = null;
+          store.set({ mff_yahoo_probe: { updatedAt: Date.now(), urls: probeUrls.slice(0, 600) } });
+        }, 3000);
       }
     } catch (_) {}
   });

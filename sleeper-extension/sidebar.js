@@ -3221,6 +3221,7 @@
       const teams = inp.teams;
       const regWeeks = inp.regWeeks;
       ps.synthPairs = inp.synthPairs;
+      await _simYield(); // X-20: the 1,500-sim call gets a task of its own
       const res = pkRunSim(inp, teams);
       const placeCounts = {}, results = {};
       res.forEach((r) => {
@@ -4376,7 +4377,7 @@
 
   function seasonSimsHTML() {
     const ps = state.pickSim;
-    if (ps.status === 'running') {
+    if (ps.status === 'running' && !(ps.placeCounts && ps.results)) {
       return `<div style="padding:16px 6px;color:#8b94b3;font-size:12px">Running ${PK_SIMS.toLocaleString()} season sims…</div>`;
     }
     if (ps.status === 'idle') setTimeout(ensurePickSim, 0); // landed here via saved prefs
@@ -4496,7 +4497,7 @@
           <th style="text-align:right;padding:2px 4px">'27 2nd</th>
           <th style="text-align:right;padding:2px 4px">'28 1st</th>
         </tr></thead><tbody>${boardRows}</tbody></table>`;
-    return `${note}${standingsHtml}${picksHtml}
+    return `${(ps.status === 'running' ? '<div class="mff-sim-rerun" style="padding:4px 6px;margin-bottom:4px;font-size:11px;color:var(--mff-muted,#8a8d96)">Simulating… (showing the previous results until the new ones are in)</div>' : '')}${note}${standingsHtml}${picksHtml}
       <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
         <button id="mff-pk-rerun" style="background:#26304d;border:none;color:#eef1f9;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600">RE-RUN SIM</button>
         <span style="font-size:9px;color:#8b94b3">${statTxt}</span>
@@ -5747,6 +5748,14 @@
   // One "after" run covers every side at once; runs async off the decorate
   // tick, result keyed by the trade signature so the bars upgrade in place.
   let _tradeImpactBusy = false;
+  // Wait for an idle moment (max 1.5 s) so a sim never lands in the same task
+  // as a page/modal paint or a SEASON switch.
+  function _simYield() {
+    return new Promise((r) => {
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(() => r(), { timeout: 1500 });
+      else setTimeout(r, 50);
+    });
+  }
   async function tradeImpactRun(coreSig, moves) {
     if (_tradeImpactBusy) return;
     _tradeImpactBusy = true;
@@ -5767,7 +5776,12 @@
         res.forEach((r) => { by[r.team.rosterId] = { w: r.avgWins, title: r.titleOdds }; });
         return by;
       };
+      // X-20261121-20 (v0.29.61): each simLeague call is its own task (the engine
+      // runs all sims in one synchronous call; it can't be sliced from here), so the
+      // trade modal paints and stays responsive between runs. Same seeds, same calls.
+      await _simYield();
       const before = tally(pkRunSim(inp, inp.teams)); // same seed both runs — deltas isolate the trade
+      await _simYield();
       const after = tally(pkRunSim(inp, teams2));
       const byRid = {};
       Object.keys(after).forEach((rid) => {

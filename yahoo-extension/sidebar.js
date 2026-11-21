@@ -1813,6 +1813,14 @@
     _rostersLoading = false;
     render();
   }
+  // X-20 season sims: wait for an idle moment (max 1.5 s) so the engine's single
+  // synchronous simLeague call never shares a task with a paint or tab switch.
+  function _simYield() {
+    return new Promise((r) => {
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(() => r(), { timeout: 1500 });
+      else setTimeout(r, 50);
+    });
+  }
   async function ensureSeasonSim() {
     const lid = state.leagueId;
     const ps = state.seasonSim;
@@ -1824,6 +1832,7 @@
     ps.leagueId = lid; ps.status = 'running'; ps.note = ''; ps.su = _simStamp();
     render();
     await new Promise((r) => setTimeout(r, 30)); // let the status paint before the sync sim
+    await _simYield(); // X-20: the simLeague call gets an idle task of its own
     try {
       const day = new Date().toDateString();
       const cacheKey = 'yahooSim_' + lid;
@@ -1897,7 +1906,7 @@
   }
   function seasonSimsHTML() {
     const ps = state.seasonSim;
-    if (ps.status === 'running' || _rostersLoading) {
+    if ((ps.status === 'running' && !(ps.placeCounts && ps.results)) || _rostersLoading) {
       return seasonHeaderHTML() +
         `<div style="padding:16px 6px;color:#8a8d96;font-size:12px">${_rostersLoading ? esc(state.seasonStatus) : 'Running ' + SIM_RUNS.toLocaleString() + ' season sims…'}</div>`;
     }
@@ -1965,7 +1974,7 @@
           <th style="text-align:right;padding:2px 3px">Title</th><th style="padding:2px 3px">Fin</th>
         </tr></thead><tbody>${standRows}</tbody></table>${weeklyHtml}` : '';
     const statTxt = ps.status === 'done' ? SIM_RUNS.toLocaleString() + ' sims · synth schedule' : '';
-    return `${seasonHeaderHTML()}${note}${standingsHtml}
+    return `${seasonHeaderHTML()}${(ps.status === 'running' ? '<div class="mff-sim-rerun" style="padding:4px 6px;margin-bottom:4px;font-size:11px;color:var(--mff-muted,#8a8d96)">Simulating… (showing the previous results until the new ones are in)</div>' : '')}${note}${standingsHtml}
       <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
         <button id="mff-sim-rerun" style="background:#2a2c33;border:none;color:#e9e9ec;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600">RE-RUN SIM</button>
         <span style="font-size:9px;color:#8a8d96">${statTxt}</span>

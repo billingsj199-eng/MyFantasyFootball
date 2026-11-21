@@ -137,6 +137,29 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             : msg.type === 'mff-simproj-fetch' ? MFF_SIMPROJ_URL
             : null;
   if (!url) return false;
+  // 2026-11-21: sim_proj_2026.json is ~570 KB and was re-downloaded on every
+  // Underdog page load; the sidebar only reads seasonPpg. Keep {updated,
+  // seasonPpg} in storage for 15 min (the file refreshes daily + before
+  // kickoffs); serve the cached copy if a refresh fails.
+  if (msg.type === 'mff-simproj-fetch') {
+    const KEY = 'mff_simproj_cache', TTL = 15 * 60 * 1000;
+    chrome.storage.local.get([KEY], (got) => {
+      const c = got && got[KEY];
+      if (c && c.seasonPpg && Date.now() - c.fetchedAt < TTL) { sendResponse({ ok: true, data: { updated: c.updated, seasonPpg: c.seasonPpg } }); return; }
+      fetch(url + '?t=' + Date.now(), { headers: { 'Accept': 'application/json' } })
+        .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then((data) => {
+          const slim = { updated: data.updated || null, seasonPpg: data.seasonPpg || null };
+          if (slim.seasonPpg) chrome.storage.local.set({ [KEY]: Object.assign({ fetchedAt: Date.now() }, slim) });
+          sendResponse({ ok: true, data: slim });
+        })
+        .catch((e) => {
+          if (c && c.seasonPpg) sendResponse({ ok: true, data: { updated: c.updated, seasonPpg: c.seasonPpg }, stale: true });
+          else sendResponse({ ok: false, error: String(e) });
+        });
+    });
+    return true;
+  }
   // Cache-bust the GitHub-Pages JSON only — Firestore REST sends no-cache
   // headers itself and Google APIs can 400 on unexpected query params.
   fetch(url + (url.indexOf('?') >= 0 ? '' : '?t=' + Date.now()), { headers: { 'Accept': 'application/json' } })

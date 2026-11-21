@@ -2121,6 +2121,49 @@
     _engWk = { key, bySid, byNorm };
     return _engWk;
   }
+  // X-10 (v0.29.59): same map built in ~12 ms slices (MessageChannel yields) so
+  // the SEASON switch / league boot is no longer one ~170-250 ms task. Same
+  // inputs, order and first-wins byNorm; a sync caller mid-warm just builds it
+  // itself (identical result). The decorate pass waits for it (_engWarming).
+  var _engWarming = false;
+  function _yieldToPage() {
+    return new Promise((r) => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); });
+  }
+  async function warmEngineWeekMap() {
+    if (!simAvailable() || !state.seasonLeague || !state.seasonLeague.scoring_settings) return;
+    const key = state.seasonWeek + '|' + state.scoringLabel;
+    if (_engWk && _engWk.key === key) return;
+    const E = window.SimEngine;
+    const bySid = {}, byNorm = {};
+    _engWarming = true;
+    try {
+      const sched = pkSchedule();
+      if (!sched || !Object.keys(sched.byTeam).length) return;
+      pkEnsureGlobals();
+      const players = E.buildPlayers(sched);
+      const sc = E.scoringFromLeague(state.seasonLeague.scoring_settings);
+      const list = players.list;
+      let t0 = performance.now();
+      for (let i = 0; i < list.length; i++) {
+        if (performance.now() - t0 > 12) {
+          await _yieldToPage();
+          if (_engWk && _engWk.key === key) return;
+          if (state.seasonWeek + '|' + state.scoringLabel !== key) return;
+          t0 = performance.now();
+        }
+        const ep = list[i];
+        if (ep.isDST || ep.pos === 'K') continue;
+        const wp = E.weeklyProjection(ep, state.seasonWeek, sc, sched);
+        const m = wp && (wp.jsMean != null ? wp.jsMean : wp.mean);
+        if (!(m > 0)) continue;
+        const rec = { m, sig: ep.sigmaPct, pos: ep.pos };
+        if (ep.sid) bySid[ep.sid] = rec;
+        if (byNorm[ep.norm] === undefined) byNorm[ep.norm] = rec;
+      }
+      if (!(_engWk && _engWk.key === key)) _engWk = { key, bySid, byNorm };
+    } catch (e) { console.warn('MFF warmEngineWeekMap failed:', e); }
+    finally { _engWarming = false; }
+  }
   function engineRecFor(p) {
     const m = engineWeekMap();
     if (!m) return null;
@@ -3310,6 +3353,7 @@
       if (!state.modeManual) applyMode(state.modeDetected, false);
       await refreshLeagueData();
       if (!state.myLeagueRosterId) await findSeasonTeam();
+      await warmEngineWeekMap(); // X-10: sliced, before the lineup render / page pills need it
       startSeasonPolling();
       startDecorating(); // league TEAM page rows get matchup/ppg/verdict pills
       fetchInjuries();
@@ -3473,6 +3517,7 @@
   function render() {
     if (!root) return;
     state._rendered = true;
+    _decoVer++; // X-10: sidebar data changed -> next decorate pass runs
     const body = root.querySelector('#mff-body');
     if (!gateAllowed()) { body.innerHTML = gateLockHTML(); return; }
     const recsEl = body.querySelector('#mff-recs');
@@ -6098,23 +6143,55 @@
     }
   }
 
+  // X-20261121-10 (v0.29.59): the 2 s pass only runs when something it reads
+  // could have changed: Sleeper's DOM changed (rows added/recycled/scrolled in,
+  // text changed — our own pills/sig writes are ignored), the sidebar
+  // re-rendered (= its data changed), or 10 s passed (safety net). Hidden tab =
+  // no passes; one immediate pass when it is shown again. Same decorators, same
+  // per-row signatures, so pills land exactly as before.
+  var _decoDirty = true, _decoVer = 0, _decoSeenVer = -1, _decoIdle = 0, _decoMO = null;
+  const DECO_FALLBACK_TICKS = 5;
+  function _decoOwn(n) {
+    const el = n && (n.nodeType === 1 ? n : n.parentElement);
+    return !!(el && el.closest && el.closest('[class*="mff-"], [id^="mff-"]'));
+  }
+  function _decoWatch() {
+    if (_decoMO || !document.body) return;
+    _decoMO = new MutationObserver((recs) => {
+      if (_decoDirty) return;
+      for (const r of recs) {
+        if (r.type === 'characterData') { if (!_decoOwn(r.target)) { _decoDirty = true; return; } continue; }
+        if (_decoOwn(r.target)) continue;
+        for (const n of r.addedNodes) if (!_decoOwn(n)) { _decoDirty = true; return; }
+        for (const n of r.removedNodes) if (!(n.nodeType === 1 && /(^|\s)mff-/.test(n.className || ''))) { _decoDirty = true; return; }
+      }
+    });
+    _decoMO.observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+  function decorateAll() {
+    _decoDirty = false; _decoSeenVer = _decoVer; _decoIdle = 0;
+    decoratePlayerList(); decorateRosterPanel(); decorateTeamPage();
+    decorateMatchupPage(); decorateTradeModal(); decorateDraftHeader();
+  }
+  function decorateTick() {
+    if (!gateAllowed()) return;
+    if (document.visibilityState === 'hidden') return;
+    if (_engWarming) return; // season switch: the sliced engine warm-up finishes first (X-10)
+    if (!_decoDirty && _decoSeenVer === _decoVer && ++_decoIdle < DECO_FALLBACK_TICKS) return;
+    decorateAll();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && decorateTimer) { _decoDirty = true; decorateTick(); }
+  });
   function startDecorating() {
     if (decorateTimer) return;
-    decorateTimer = setInterval(() => {
-      if (!gateAllowed()) return;
-      decoratePlayerList(); decorateRosterPanel(); decorateTeamPage();
-      decorateMatchupPage(); decorateTradeModal(); decorateDraftHeader();
-    }, 2000);
-    if (gateAllowed()) {
-      decoratePlayerList();
-      decorateRosterPanel();
-      decorateTeamPage();
-      decorateMatchupPage();
-      decorateTradeModal();
-      decorateDraftHeader();
-    }
+    _decoWatch();
+    _decoDirty = true;
+    decorateTimer = setInterval(decorateTick, 2000);
+    if (gateAllowed() && !_engWarming) decorateAll();
   }
   function stopDecorating() {
+    if (_decoMO) { _decoMO.disconnect(); _decoMO = null; }
     if (decorateTimer) { clearInterval(decorateTimer); decorateTimer = null; }
     document.querySelectorAll('.mff-page-chip, .mff-roster-pills, .mff-corner, .mff-rank-pills, .mff-tr-pills, .mff-trade-pill, .mff-trade-net, .mff-hdr-needs, .mff-mu-pills, .mff-mu-chip').forEach((c) => c.remove());
     document.querySelectorAll('.mff-opp-hl').forEach(clearOppTint);

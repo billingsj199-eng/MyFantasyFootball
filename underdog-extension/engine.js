@@ -565,10 +565,38 @@
   //   adp ≥ waitPick   → 0.85  (coin-flip to survive your next turn)
   //   adp ≥ actPick+ts → 0.93  (goes a round+ later, but gone before your
   //                             next turn — mild reach fade only)
-  function recWaitMult(player, actPick, waitPick, teamSize, isSuperflex) {
+  // X-28 (backtested on 150 real BBM VII drafts, date-split): chance a player
+  // is taken before your NEXT turn, from his QUEUE position — he is the r-th
+  // best player left by UD ADP, so he is "due" r-1 picks from now, with a
+  // margin that gets wider later in the draft. Queue position (not raw ADP vs
+  // pick number) keeps working when ADP is stale or the room runs ahead of it.
+  // Back-to-back picks (nothing in between) return no map: the legacy ADP
+  // test still runs there, unchanged.
+  const GONE = { s0: 1.5, s1: 0.02, strong: 0.17, any: 0.37 };
+  function goneProbMap(available, pickNum, waitPick, isSuperflex) {
+    const m = new Map();
+    if (waitPick == null || pickNum == null || waitPick - pickNum - 1 <= 0) return m;
+    const q = [];
+    for (const p of available) {
+      const a = (isSuperflex && p.sfa != null) ? p.sfa : p.udA;
+      if (a != null && a < 240) q.push([p, a]);
+    }
+    q.sort((x, y) => x[1] - y[1]);
+    const l1p = (x) => (x > 30 ? x : Math.log1p(Math.exp(x)));
+    for (let i = 0; i < q.length; i++) {
+      const mu = pickNum + i, s = GONE.s0 + GONE.s1 * mu;
+      const zP = (pickNum + 0.5 - mu) / s, zN = (waitPick - 0.5 - mu) / s;
+      m.set(q[i][0], 1 - Math.exp(l1p(zP) - l1p(zN)));
+    }
+    return m;
+  }
+  function recWaitMult(player, actPick, waitPick, teamSize, isSuperflex, pGone) {
     const adp = (isSuperflex && player.sfa != null) ? player.sfa : player.udA;
     if (adp == null) return 1.0;
-    if (waitPick != null) {
+    if (waitPick != null && pGone != null) {
+      if (pGone <= GONE.strong) return 0.75;   // about 1 in 20 of these gets taken
+      if (pGone <= GONE.any) return 0.85;      // about 1 in 4 gets taken
+    } else if (waitPick != null) {
       if (adp >= waitPick + 5) return 0.75;
       if (adp >= waitPick) return 0.85;
     }
@@ -1206,7 +1234,8 @@
   }
 
   function scorePlayer(player, ctx) {
-    const { round, counts, roster, pickNum, rankSrc = "jacks", isSuperflex = false, teamSize = FORMAT.teamSize, available = null, posMults = null, actPick = null, waitPick = null, valueMults = null, prefixMults = null, gone = null, rosterKnown = true, quality = null, timingMults = null, stdBB = false, needPos = null, deferMults = null, mode = "bb" } = ctx;
+    const { round, counts, roster, pickNum, rankSrc = "jacks", isSuperflex = false, teamSize = FORMAT.teamSize, available = null, posMults = null, actPick = null, waitPick = null, valueMults = null, prefixMults = null, gone = null, rosterKnown = true, quality = null, timingMults = null, stdBB = false, needPos = null, deferMults = null, mode = "bb", goneMap = null } = ctx;
+    const pGone = goneMap && goneMap.has(player) ? goneMap.get(player) : null;
     const r = rankFromSource(player, rankSrc, isSuperflex);
     const base = 100 * Math.exp(-Math.pow(r / 80, 1.0));
     const adp = adpValue(player, pickNum);
@@ -1224,13 +1253,15 @@
       const ms = bbmStackMultFor(player, roster);
       if (ms != null) stackM = Math.max(0.85, Math.min(1.15, ms));
     }
-    const waitM = recWaitMult(player, actPick, waitPick, teamSize, isSuperflex);
+    const waitMq = recWaitMult(player, actPick, waitPick, teamSize, isSuperflex, pGone);
     // v0.16.1: STACK NOW — big urgency boost for the QB who completes an
     // existing WR/TE stack while his ADP window is at the current pick.
     // BEST BALL ONLY (Jack): W16/17 stack correlation is a tournament edge;
     // in redraft (mode "rd" — Weekly Winner etc.) stacking is not worth a
     // reach, so the urgency boost must never fire there.
     const stackNowM = mode !== "rd" ? stackNowMult(player, roster, actPick, waitPick, isSuperflex) : 1.0;
+    // A STACK NOW quarterback keeps today's ADP wait test, so the stack-now boost is never faded by the new tiers.
+    const waitM = stackNowM > 1.0 ? recWaitMult(player, actPick, waitPick, teamSize, isSuperflex) : waitMq;
     // v0.16.3 (Jack, live draft 2026-08-05): with a strong QB1 already
     // banked, an UNSTACKED QB2 was still topping the recs on pure board rank
     // (Hurts #1 at R7 with Josh Allen rostered — the QB slot target is 2, so
@@ -1281,7 +1312,7 @@
       bringM: Math.round(bringM * 100) / 100,
       timingM: Math.round(timingM * 100) / 100,
       structM: Math.round(structM * 100) / 100,
-      flags: { stack: stack > 1.0, stackNow: stackNowM > 1.0, need: needFlag, bye: bye < 1.0, tier: tierInfo, wait: waitM < 1.0 ? waitM : null },
+      flags: { stack: stack > 1.0, stackNow: stackNowM > 1.0, need: needFlag, bye: bye < 1.0, tier: tierInfo, wait: waitM <= 0.85 ? waitM : null, pGone: pGone },
       why
     };
   }
@@ -1368,7 +1399,8 @@
       const urg = (1 - Math.min(1, fill)) * dep;
       if (urg > needUrg) { needUrg = urg; needPos = pos; }
     }
-    const ctx = { round, counts, roster: myRoster, pickNum, rankSrc, isSuperflex, teamSize, available, posMults, actPick, waitPick, valueMults, prefixMults, gone, rosterKnown, quality, timingMults, stdBB, needPos, deferMults, mode };
+    const goneMap = goneProbMap(available, pickNum, waitPick, isSuperflex);
+    const ctx = { round, counts, roster: myRoster, pickNum, rankSrc, isSuperflex, teamSize, available, posMults, actPick, waitPick, valueMults, prefixMults, gone, rosterKnown, quality, timingMults, stdBB, needPos, deferMults, mode, goneMap };
     const candidates = [];
     for (const p of available) {
       const s = scorePlayer(p, ctx);
@@ -1997,7 +2029,7 @@
     rosterVorByPos: rosterVorByPos, bestVorAvailable: bestVorAvailable,
     analyzePositions: analyzePositions, suggestPosition: suggestPosition,
     recPositionMults: recPositionMults, recStackMult: recStackMult,
-    recWaitMult: recWaitMult, userPickAtOrAfter: userPickAtOrAfter,
+    recWaitMult: recWaitMult, userPickAtOrAfter: userPickAtOrAfter, goneProbMap: goneProbMap,
     recValueMults: recValueMults, FORMAT_RD: FORMAT_RD, fmtMode: fmtMode,
     recPrefixBuildMults: recPrefixBuildMults,
     bbmTimingMults: bbmTimingMults,

@@ -740,14 +740,34 @@
   }
 
   // ---------- polling ----------
-  async function pollOnce() {
+  // X-20261121-4 (v0.29.58): the picks poll only runs while it can matter.
+  //  - DRAFT mode only (SEASON mode stops it; switching back resumes it).
+  //  - Stops for good once the draft is complete (status 'complete' or every slot picked).
+  //  - Hidden tab: one poll per POLL_HIDDEN_MS instead of every POLL_MS (background.js
+  //    still watches tracked drafts each minute for the on-clock notification);
+  //    polls immediately when the tab is shown again.
+  // Visible + drafting = unchanged: every POLL_MS.
+  const POLL_HIDDEN_MS = 15000;
+  let _lastPollAt = 0;
+  function draftIsComplete() {
+    const d = state.draft;
+    if (d && d.status === 'complete') return true;
+    const s = d && d.settings;
+    const total = s && s.teams && s.rounds ? s.teams * s.rounds : 0;
+    return total > 0 && state.picks.length >= total;
+  }
+  async function pollOnce(force) {
     if (!state.draftId) return;
+    if (state.appMode !== 'draft') return;
+    if (force !== true && document.visibilityState === 'hidden' && Date.now() - _lastPollAt < POLL_HIDDEN_MS) return;
+    _lastPollAt = Date.now();
     try {
       const picks = await api('/draft/' + state.draftId + '/picks');
       if (Array.isArray(picks)) {
         const changed = picks.length !== state.picks.length;
         processPicks(picks);
         if (changed || !state._rendered) render();
+        if (draftIsComplete()) { state._draftDone = true; stopPolling(); }
       }
     } catch (e) {
       state.statusMsg = 'API error: ' + e.message;
@@ -756,12 +776,24 @@
   }
   function startPolling() {
     stopPolling();
+    state._draftDone = false;
+    if (state.appMode !== 'draft') return; // resumePolling() starts it on the switch back
     state.pollTimer = setInterval(pollOnce, POLL_MS);
-    pollOnce();
+    pollOnce(true);
   }
   function stopPolling() {
     if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
   }
+  // Back in DRAFT mode with a tracked, unfinished draft: restart the poll.
+  function resumePolling() {
+    if (state.tracking && state.draftId && !state.pollTimer && !state._draftDone && state.appMode === 'draft') {
+      state.pollTimer = setInterval(pollOnce, POLL_MS);
+      pollOnce(true);
+    }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && state.pollTimer) pollOnce(true);
+  });
 
   // ---------- league-scoring adjustment ----------
   // Clay's cPts is FULL PPR with 4-pt passing TDs. Re-score pPg/szn to the
@@ -3305,6 +3337,7 @@
     if (mode === state.appMode) { render(); return; }
     state.appMode = mode;
     store.set({ 'sleeperHelper.appMode': mode });
+    if (mode === 'season') stopPolling(); else resumePolling(); // X-4: picks poll is DRAFT-only
     if (mode === 'season') {
       const lid = detectLeagueId() || (state.draft && state.draft.league_id) || state.seasonLeagueId;
       if (lid && lid !== state.seasonLeagueId) { initForLeague(lid); return; }
@@ -6192,6 +6225,7 @@
         initForDraft(did);
       } else if (state.appMode !== 'draft') {
         state.appMode = 'draft';
+        resumePolling(); // X-4
         render();
       }
     } else if (lid) {

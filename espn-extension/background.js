@@ -24,3 +24,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true; // async sendResponse
   }
 });
+
+// X-20261121-3 (v0.20.69): the Phase-1 draft-feed probe (draft-probe.js) no longer ships. Drop the
+// rolling log it left in storage (up to 600 entries) once, on install/update.
+chrome.runtime.onInstalled.addListener(() => {
+  try { chrome.storage.local.remove('mff_espn_draft_probe'); } catch (_) {}
+});

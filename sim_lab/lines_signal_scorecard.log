@@ -1,72 +1,71 @@
-=== lines-up + practice-trend scorecard: 881 designated player-weeks, weeks [1, 2, 3, 4, 5, 6, 7, 8, 9] (pre-inactives state) ===
+=== lines-up + practice-trend scorecard: 1003 designated player-weeks, weeks [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] (pre-inactives state) ===
 
   game status: Questionable
-    all                                            played 101/156  ( 65%)
-    lines up at 2+ books                           played  66/ 80  ( 82%)
-    lines up at 1 book                             played   4/  8  ( 50%)
-    no lines, usually has them                     played  17/ 40  ( 42%)
-    no lines, never lined                          played  14/ 28  ( 50%)
+    all                                            played 115/176  ( 65%)
+    lines up at 2+ books                           played  76/ 91  ( 84%)
+    lines up at 1 book                             played   4/  9  ( 44%)
+    no lines, usually has them                     played  20/ 46  ( 43%)
+    no lines, never lined                          played  15/ 30  ( 50%)
 
   game status: Doubtful
-    all                                            played   0/ 13  (  0%)
-    no lines, usually has them                     played   0/  6  (  0%)
-    no lines, never lined                          played   0/  7  (  0%)
+    all                                            played   0/ 17  (  0%)
+    lines up at 2+ books                           played   0/  1  (  0%)
+    no lines, usually has them                     played   0/  8  (  0%)
+    no lines, never lined                          played   0/  8  (  0%)
 
   game status: Out
-    all                                            played   0/157  (  0%)
+    all                                            played   1/172  (  1%)
     lines up at 2+ books                           played   0/  1  (  0%)
-    no lines, usually has them                     played   0/123  (  0%)
-    no lines, never lined                          played   0/ 33  (  0%)
+    no lines, usually has them                     played   1/137  (  1%)
+    no lines, never lined                          played   0/ 34  (  0%)
 
   game status: none (on the report, no designation)
-    all                                            played 430/555  ( 77%)
-    lines up at 2+ books                           played 340/347  ( 98%)
-    lines up at 1 book                             played   3/  3  (100%)
-    no lines, usually has them                     played  27/ 67  ( 40%)
-    no lines, never lined                          played  60/138  ( 43%)
+    all                                            played 498/638  ( 78%)
+    lines up at 2+ books                           played 392/399  ( 98%)
+    lines up at 1 book                             played   5/  5  (100%)
+    no lines, usually has them                     played  35/ 80  ( 44%)
+    no lines, never lined                          played  66/154  ( 43%)
 
   Questionable by the week's practice sequence:
-    last FP, upgraded                              played  17/ 21  ( 81%)
-    last FP, flat                                  played  14/ 14  (100%)
-    last LP, upgraded                              played  18/ 33  ( 55%)
-    last LP, flat                                  played  38/ 60  ( 63%)
+    last FP, upgraded                              played  21/ 27  ( 78%)
+    last FP, flat                                  played  15/ 15  (100%)
+    last FP, one day                               played   1/  1  (100%)
+    last LP, upgraded                              played  21/ 36  ( 58%)
+    last LP, flat                                  played  42/ 65  ( 65%)
     last LP, downgraded                            played   2/  2  (100%)
-    last LP, one day                               played   0/  2  (  0%)
-    last DNP, flat                                 played   6/ 12  ( 50%)
+    last LP, one day                               played   0/  3  (  0%)
+    last DNP, flat                                 played   7/ 14  ( 50%)
     last DNP, downgraded                           played   5/ 11  ( 45%)
-    last DNP, one day                              played   1/  1  (100%)
+    last DNP, one day                              played   1/  2  ( 50%)
 
   Questionable, lines x last practice:
-    last FP, lines at 2+ books                     played  22/ 22  (100%)
-    last FP, no lines                              played   9/ 13  ( 69%)
-    last LP, lines at 2+ books                     played  36/ 48  ( 75%)
-    last LP, no lines                              played  20/ 44  ( 45%)
+    last FP, lines at 2+ books                     played  28/ 28  (100%)
+    last FP, no lines                              played   9/ 15  ( 60%)
+    last LP, lines at 2+ books                     played  40/ 53  ( 75%)
+    last LP, no lines                              played  23/ 48  ( 48%)
     last DNP, lines at 2+ books                    played   8/ 10  ( 80%)
-    last DNP, no lines                             played   2/ 11  ( 18%)
+    last DNP, no lines                             played   3/ 13  ( 23%)
 
-  sample for a weight: 156 Questionable player-weeks so far (target ~100 before the lines signal moves a projection)
+  sample for a weight: 176 Questionable player-weeks so far (target ~100 before the lines signal moves a projection)
 
-  week 9 Questionable detail:
-    Amon-Ra St. Brown      WR DET LP-LP-LP-LP    5 books  PLAYED
-    Emeka Egbuka           WR TB  DNP-FP-FP-FP-FP 5 books  PLAYED
-    Demarcus Robinson      WR SF  LP-LP-LP-LP    5 books  PLAYED
-    George Pickens         WR DAL LP-LP-LP-LP    4 books  sat
-    Pat Bryant             WR DEN FP-FP-FP-FP    4 books  PLAYED
-    Sione Vaki             RB DET DNP-DNP        4 books  PLAYED
-    Hunter Henry           TE NE  DNP-DNP-LP-LP  3 books  PLAYED
-    Jaylen Wright          RB MIA DNP-LP-LP-LP   3 books  sat
-    MarShawn Lloyd         RB GB  LP-LP-LP       3 books  sat
-    Bhayshul Tuten         RB JAX DNP-DNP        1 books  PLAYED
-    Colby Parkinson        TE LAR DNP-DNP-LP-LP  0 books  PLAYED
-    Jacob Saylors          RB DET LP-LP-LP-LP    0 books  sat
-    Jake Ferguson          TE DAL DNP-DNP-LP-LP  0 books  PLAYED
-    Kyle Monangai          RB CHI DNP-LP-LP-LP   0 books  sat
-    Luke Schoonmaker       TE DAL LP-LP-LP-LP    0 books  sat
-    Charlie Jones          WR NYG LP-LP-LP-LP    0 books  PLAYED
-    Chris Brooks           RB GB  LP-LP-LP-LP    0 books  sat
-    Deshaun Watson         QB CLE DNP-DNP-LP-LP  0 books  sat
-    Jordan Whittington     WR LAR LP-LP-LP-LP    0 books  PLAYED
-    Jordyn Tyson           WR NO  LP-LP-LP-LP    0 books  PLAYED
-    Kaytron Allen          RB MIA LP-LP-FP-FP    0 books  PLAYED
-    Mack Hollins           WR NE  LP-LP-LP-LP    0 books  PLAYED
-    Tanner McKee           QB PHI FP-LP-LP-LP    0 books  PLAYED
+  week 10 Questionable detail:
+    Garrett Wilson         WR NYJ LP-LP-FP       5 books  PLAYED
+    Amon-Ra St. Brown      WR DET LP-LP-LP       5 books  PLAYED
+    Omar Cooper Jr.        WR NYJ LP-LP-FP       5 books  PLAYED
+    Adonai Mitchell        WR NYJ FP             5 books  PLAYED
+    Jordan Addison         WR MIN LP             5 books  sat
+    A.J. Brown             WR NE  LP-LP-LP       4 books  PLAYED
+    Denzel Boston          WR CLE DNP-DNP-LP     4 books  PLAYED
+    Sione Vaki             RB DET DNP-DNP-LP     4 books  PLAYED
+    Xavier Legette         WR CAR FP-FP-FP       3 books  PLAYED
+    Tyjae Spears           RB TEN DNP-LP-FP      2 books  PLAYED
+    Travis Etienne         RB NO  LP-LP-FP       2 books  PLAYED
+    Kenneth Walker III     RB KC  DNP            1 books  sat
+    David Montgomery       RB HOU DNP-DNP-FP     0 books  sat
+    Dont'e Thornton Jr.    WR LV  DNP-DNP        0 books  PLAYED
+    Ladd McConkey          WR LAC DNP-DNP-DNP    0 books  sat
+    Rhamondre Stevenson    RB NE  DNP-LP-LP      0 books  PLAYED
+    Chris Brooks           RB GB  LP-LP-LP       0 books  PLAYED
+    Skyy Moore             WR GB  LP-LP-LP       0 books  PLAYED
+    Jaydn Ott              RB KC  LP-LP          0 books  sat
+    David Njoku            TE LAC LP-FP-FP       0 books  sat

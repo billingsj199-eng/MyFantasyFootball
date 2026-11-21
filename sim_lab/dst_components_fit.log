@@ -1,0 +1,34 @@
+3742 DST team-weeks 2019-2025 | opp implied mean 22.55
+
+E[count | oppImplied] = a + b x imp
+  sack     a +4.3772 b -0.08788 | mean 2.395 | at imp 17/22.5/28: 2.883 2.400 1.917
+  int      a +1.2205 b -0.02023 | mean 0.764 | at imp 17/22.5/28: 0.877 0.765 0.654
+  fum_rec  a +0.7457 b -0.00998 | mean 0.521 | at imp 17/22.5/28: 0.576 0.521 0.466
+  ff       a +1.0494 b -0.01180 | mean 0.783 | at imp 17/22.5/28: 0.849 0.784 0.719
+  def_td   a +0.2479 b -0.00546 | mean 0.125 | at imp 17/22.5/28: 0.155 0.125 0.095
+  safe     a +0.0519 b -0.00105 | mean 0.028 | at imp 17/22.5/28: 0.034 0.028 0.023
+  blk_kick a +0.0770 b -0.00096 | mean 0.055 | at imp 17/22.5/28: 0.061 0.055 0.050
+
+opp score ~ N(-0.170 + 1.0213 x imp, sd 9.123)
+PA bucket share, actual vs normal model:
+  pts_allow_0      actual 0.0096  model 0.0123
+  pts_allow_1_6    actual 0.0361  model 0.0378
+  pts_allow_7_13   actual 0.1350  model 0.1235
+  pts_allow_14_20  actual 0.2528  model 0.2326
+  pts_allow_21_27  actual 0.2624  model 0.2729
+  pts_allow_28_34  actual 0.1873  model 0.1996
+  pts_allow_35p    actual 0.1168  model 0.1214
+
+components re-added at default rules vs shipped 16.2 - 0.436 x imp:
+  imp  15.0: components  9.82 | shipped  9.66
+  imp  18.0: components  8.34 | shipped  8.35
+  imp  20.0: components  7.40 | shipped  7.48
+  imp  22.5: components  6.28 | shipped  6.39
+  imp  25.0: components  5.20 | shipped  5.30
+  imp  28.0: components  3.95 | shipped  3.99
+  imp  31.0: components  2.73 | shipped  2.68
+  realized mean pts 6.368 | shipped at realized imps 6.366
+
+engine.js DST_COMP:
+  sack: [4.3772, -0.08788], int: [1.2205, -0.02023], fum_rec: [0.7457, -0.00998], ff: [1.0494, -0.01180], def_td: [0.2479, -0.00546], safe: [0.0519, -0.00105], blk_kick: [0.0770, -0.00096]
+  pa: [-0.1704, 1.0213, 9.123]

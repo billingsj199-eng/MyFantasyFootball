@@ -64,43 +64,29 @@ window.INJURY_WINDOW_OVERRIDES = {
 //     A player practicing (LP / FP) on the current report also lands firm.
 //     So `to` = the last week he is surely out (usually the IR minimum).
 // Bump the ASOF date whenever the whole list is re-checked.
-window.IN_SEASON_OUT_OVERRIDES_ASOF = '2026-09-27';
+window.IN_SEASON_OUT_OVERRIDES_ASOF = '2026-11-15';
 window.IN_SEASON_OUT_OVERRIDES = {
-  // 2026-10-05: full list rechecked (team / insider / injury-doc reports). Expired single-week entries removed -
-  // Jefferson, Dowdle, Douglas and Hollywood Brown are W5-uncertain: landing entries below (practicing LP / FP -> the designation decides).
-  'Justin Jefferson': [4, 4, '2026-10-05', 7],   // 2026-10-05 recheck: minor ankle sprain W3, missed W4, no practice; O'Connell "unsure" for W5, Fowler says could play (NBC 10/3-4, med) - W6 bye
-  'Rico Dowdle': [3, 4, '2026-10-05', 6],        // 2026-10-05 recheck: toe, missed W2-W4; Rapoport "pretty good chance" back W5 after the mini-bye (NBC 10/1, med)
-  'Caleb Douglas': [3, 5, '2026-10-05', 7],      // 2026-10-05 recheck: ankle from W2, inactive W3-W4, no practice yet; W6 realistic (NBC 10/4, low-med)
-  'Marquise Brown': [3, 5, '2026-10-05', 7],     // 2026-10-05 recheck: ankle, missed W3-W4, no practice; "a bit of a mystery how long" - W6 most likely (Inside the Iggles 10/5, low)
-  'Jordan Mason': [2, 6, '2026-10-05', 'firm'],   // 2026-10-05 recheck: thumb, IR 9/16; O'Connell expects only the 4-game minimum, W6 bye -> back W7 vs IND (ESPN, high)
-  'Lamar Jackson': [5, 5, '2026-10-07'],   // 2026-10-07 (Jack): ankle, listed Q, but DK/FD/UD/PP pulled his W5 props and post Huntley as starter (173.5 py); BAL@ATL went BAL -6/49.5 -> ATL -3.5/43.5
-  'Jaxson Dart': [3, 18, '2026-10-05'],   // 2026-10-05 recheck: MCL/PCL/meniscus surgery, 6-9 months, done for '26 (NBC 9/23); Winston starts
+  // 2026-11-15: full list rechecked for W10 (Sleeper + NFL report 11-13, team / insider / beat reports). 19 expired entries removed:
+  // healthy / designation decides (Jefferson, Dowdle, Douglas, M. Brown, Mason, Daniels, C. Williams, Tyson, Goedert, Coleman, Sampson,
+  // Stowers, M. Taylor, Dell, A.J. Brown Q, Omar Cooper Q, Njoku Q in window, Henderson illness) or covered by newer news windows
+  // (Lamar Jackson thumb = season, Josh Jacobs finger = 2-3 wks, in sim_injury_signals).
+  'Jaxson Dart': [3, 18, '2026-11-15'],   // 2026-11-15 recheck: MCL/PCL/meniscus surgery, IR, done for '26 (NBC 9/23, high)
+  'Ricky Pearsall': [3, 18, '2026-11-15'],   // 2026-11-15 recheck: PCL reconstruction, IR, season over (PFR / CBS, high)
+  'Jayden Reed': [3, 18, '2026-11-15'],   // 2026-11-15 recheck: neck surgery, IR, season-ending (LaFleur 9/30, high)
+  'Jayden Higgins': [3, 18, '2026-11-15'],   // 2026-11-15 recheck: torn ACL, IR, season over (NFL Network, high)
+  'Trey Benson': [3, 18, '2026-11-15'],   // 2026-11-15 recheck: meniscus, ARI IR, season over (SI, high)
+  'Chris Brazzell II': [3, 18, '2026-11-15'],   // 2026-11-15 recheck: torn LCL, IR, season over (ESPN, high)
   // ---- IR / multi-week windows (format: [from, lastSurelyOut, 'date', latestWeek | 'firm']) ----
-  'Josh Jacobs': [3, 5, '2026-10-05', 8],   // 2026-10-05 recheck: still on the Commissioner's Exempt List, no ruling; 4-6 game ban with time credited floated (low)
-  'A.J. Brown': [3, 5, '2026-10-05', 9],   // 2026-10-05 recheck: high ankle W1, IR; team 'hopes' W6 (Garafolo 10/4, far from certain), 6-8 wks (Schefter) = W7-W9 (med)
-  'Jayden Daniels': [3, 4, '2026-10-05'],   // 2026-10-05 recheck: elbow, missed W3-W4, limited in a brace; could play W5 if full all week (J. Jones 10/3)
-  'Alec Pierce': [3, 6, '2026-10-05', 9],   // 2026-10-05 recheck: heel, IR 9/26, cast + scooter, no timeline; eligible W7, likely later (ESPN, low)
-  'Caleb Williams': [3, 5, '2026-10-05', 7],   // 2026-10-05 recheck: Grade 2 hamstring; ruled out W5 (Ben Johnson 10/5), 'at least one more week' -> W6 @ATL possible
-  'Jordyn Tyson': [3, 6, '2026-10-05', 9],   // 2026-10-05 recheck: hamstring, IR-DTR, not practicing; unlikely before W7, W9 logical after the W8 bye (Schefter 10/5)
-  'Ricky Pearsall': [3, 18, '2026-10-05'],   // 2026-10-05 recheck: PCL reconstruction, ~9 months, season over (PFR / CBS)
-  'Jayden Reed': [3, 18, '2026-10-05'],   // 2026-10-05 recheck: neck surgery, season-ending (LaFleur 9/30)
-  'Jayden Higgins': [3, 18, '2026-10-05'],   // 2026-10-05 recheck: torn ACL in camp, season over (NFL Network)
-  'Omar Cooper Jr.': [3, 5, '2026-10-05'],   // 2026-10-05 recheck: high ankle, IR-DTR 9/19; eligible W6, not expected to miss much beyond the minimum (med)
-  'TreVeyon Henderson': [6, 7, '2026-10-12', 9],   // 2026-10-12 (P-20261014-1, Jack approved 10-14): high ankle W5, no surgery, 'multiple weeks' (Schefter); 4 car W5 = hurt in game
-  'Dallas Goedert': [3, 4, '2026-10-11'],   // 2026-10-11: practiced LP/LP/FP, no game designation -> active W5 (was MCL, 'a few weeks')
-  'Jonah Coleman': [3, 6, '2026-10-05'],   // 2026-10-05 recheck: high ankle, IR 9/26; expected back when first eligible, W7 vs ARI (ESPN / 9News, med)
-  'Jonathon Brooks': [3, 8, '2026-10-05', 10],   // 2026-10-05 recheck: core muscle surgery, IR 9/23; 6-8 wks (Canales) = W9-W10
-  'Isiah Pacheco': [3, 13, '2026-10-05', 15],   // 2026-10-05 recheck: back surgery 9/14, 12-wk recovery, 'chance' by early December (Rapoport); W13 is the optimistic end
-  'Dylan Sampson': [3, 5, '2026-10-05', 8],   // 2026-10-05 recheck: knee, IR 9/15, 'significant time' (Fowler); eligible W6, W7+ realistic (low)
-  'Eli Stowers': [3, 5, '2026-10-05', 8],   // 2026-10-05 recheck: quad + hamstring, IR 9/12, no practice window, no update (low)
-  'James Conner': [3, 5, '2026-10-05', 8],   // 2026-10-05 recheck: foot, IR-DTR, window not opened; LaFleur wants him back at his normal level, not just practicing (10/2, low)
-  'Trey Benson': [3, 18, '2026-10-05'],   // 2026-10-05 recheck: meniscus; waived-injured, reverted to ARI IR, season over (SI)
-  'Christian Kirk': [3, 6, '2026-10-05', 8],   // 2026-10-05 recheck: calf, IR-DTR; Shanahan hopes to open the window 'in about two weeks' (10/4) -> about W7
-  'Mason Taylor': [3, 4, '2026-10-05', 6],   // 2026-10-05 recheck: thumb, missed W3-W4, DNP all week, week-to-week; W5 TBD, W6 safer (low)
-  'Tank Dell': [3, 5, '2026-10-05', 7],   // 2026-10-05 recheck: knee, IR-DTR, window opens Wed 10/7 (Ryans 10/5); unlikely W5, W6-W7
-  'Chris Brazzell II': [3, 18, '2026-10-05'],   // 2026-10-05 recheck: torn LCL, July surgery, season over (ESPN)
-  'David Njoku': [3, 6, '2026-10-05', 9],   // 2026-10-05 recheck: fibula, IR ~9/21; eligible W7, no timeline beyond the minimum (low)
-  'Mike Evans': [6, 6, '2026-10-20', 9],   // 2026-10-20 (Jack: "he doesnt have a torn achille"): aggravated Achilles MNF W6 (played 2 qtrs, 3-94), NOT a tear - ESPN: "could put him in danger of missing his first game". Sleeper's "Achilles, Out" tripped dx-season (out thru W18). Landing form: W7 = partial play odds (NFL report Out -> 0), W8 SF bye, ~90% by W9.
+  'Isiah Pacheco': [3, 13, '2026-11-15', 15],   // 2026-11-15 recheck: back surgery 9/14, still IR, no window; 12-wk recovery = ~Dec 7 (W13), ramp-up likely (Rapoport via ESPN, med)
+  'Jonathon Brooks': [3, 10, '2026-11-15', 12],   // 2026-11-15 recheck: core/groin, IR-DTR window opened 11/11 (Kaye, ESPN); Doubtful -> Out W10 (Person, Athletic); back before end of Nov, behind Hubbard (med)
+  'Mike Evans': [6, 10, '2026-11-15', 12],   // 2026-11-15 recheck: right Achilles tendinitis (not IR), missed W7 + W9, Out W10 (DNP all week); Shanahan 'sooner than later', 'may return W11' (NBCS Bay Area / 49ers Webzone 11/5, TFF, low-med)
+  'Alec Pierce': [3, 11, '2026-11-15', 15],   // 2026-11-15 recheck: heel, IR, rehab (no surgery), window still not opened; Steichen no timetable 11/11 (RotoBaller / 4for4, low)
+  'James Conner': [3, 11, '2026-11-15', 14],   // 2026-11-15 recheck: foot, still IR, window not opened, out W9 (RotoWire 11/5); no timeline (low)
+  'Christian Kirk': [9, 12, '2026-11-15', 15],   // 2026-11-15 recheck: right meniscus (practice ~11/5), back on IR 11/7 = out W9-W12 min; surgery undecided, SF short on DTR slots (49ers Webzone / NBCS Bay Area, med)
+  'Jeremiyah Love': [9, 12, '2026-11-15', 14],   // 2026-11-15 add: high ankle (re-injured W8), IR 11/3, out 4-5 weeks (NFL Network / azfamily 11/3-4, med-high)
+  'Brian Robinson Jr.': [9, 12, '2026-11-15'],   // 2026-11-15 add: hamstring, IR 11/7, at least 4 games (AJC / Underdog, med); no timeline past the minimum
+  'Romeo Doubs': [7, 11, '2026-11-15', 13],   // 2026-11-15 add: right shoulder, IR 10/19; targeting post-bye return W12 vs LAC (FantasyNerds 10/20), Vrabel no timeline (Boston.com 10/20, low-med)
+  'RJ Harvey': [9, 12, '2026-11-15', 13],   // 2026-11-15 add: knee (practice), short-term IR, 'not severe or long term', can't return before W13 vs MIA (Denver Post via TFF, low-med; season dating unclear)
 };
 
 // ELITE_CBS_2026: the shadow-corner list (backtest_cb_shadow.py — an elite

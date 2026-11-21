@@ -1300,6 +1300,78 @@ LUCK FAMILY - FINAL: shipped RB k .75 (-0.36%), WR/TE k 1.0 (-0.93%), QB
 pass k .5 (-0.44%); intel-only K (accuracy = luck, own history ~worthless)
 and DST (TDs = noise, Vegas-only mean is right); QB rush luck flat.
 
+## Opponent sack-proneness for the D/ST mean (backtest_dst_opp_sack.py) - REJECTED 2026-11-21
+
+Jack approved "Yes, build it" after a first pass (opp offense sacks-taken/g over league,
+shrunk og/(5+og): -0.16% MSE 4/7). Full build: pred = shipped (16.2 - 0.436 x oppImplied)
++ k x (expected opp sacks - league sacks/g), k and every shape knob picked per fold.
+6,398 D/ST team-weeks 2013-25 (main 2019-25 n 3,518), final week excluded, playoff-week
+cut, forward 2022-25 (train on all prior seasons), 2026 W1-11 as an untouched holdout
+(n 302). Log: dst_opp_sack_backtest.log.
+
+- Persistence per DROPBACK: team early->late +0.40, YoY +0.35; QB YoY +0.43. Starters with
+  <100 career dropbacks are sacked 7.1% vs league 6.2%.
+- **Sack-proneness itself adds nothing.** Rate per dropback (league volume): team -0.03%
+  (4/7), + prior-season carry-in -0.02% (3/7), QB-level shrunk to league +0.00% (4/7;
+  2013-25 +0.10%, 2/13), QB shrunk to team -0.05%, QB/team mix +0.01%. Rate at the opp's
+  own volume with no volume term: -0.01% 4/7, 2013-25 +0.00% 7/13. The QB/new-starter
+  version is WORSE than team level, even though QB rates persist better.
+- **What the first pass picked up is pass VOLUME** (the opponent's own dropbacks/g), not
+  sack rate. Volume alone: -0.17% 5/7, 2013-25 -0.10% 9/13, fwd 3/4. Best overall (V8: team
+  rate shrunk K 1000 dropbacks x volume shrunk 4 g, k 1.25-1.5): **-0.34% 6/7, playoff
+  weeks -0.50%, fwd 4/4 (-0.47%), bootstrap P(improve) .96 - but 2013-25 only -0.11% 9/13**
+  (2013-18 a wash: +.38 +.08 -.10 -.20 -.34 +.51) and the 2026 holdout -0.11% with rho flat.
+  It was the best of ~25 variants on the same 2019-25 data. Vegas-based expected dropbacks
+  are useless (b = +0.02 db per point of spread; r with actual .207 vs .206 to-date only).
+- Rank: within-week Spearman +0.004 to +0.009 (V8 +0.006, 5/7); top-12 overlap .519 ->
+  .527; top-5 actual 9.03 -> 9.00 (no streaming gain at the top); top-12 actual 8.04 -> 8.14.
+- D/ST own pass rush: alone +0.06% (2/7) again; on top of V8 as a matchup ratio -0.21% 4/7,
+  additive -0.31% 6/7 but 2013-25 -0.14/-0.15% 9/13 - no consistent add.
+- **NOT SHIPPED.** The shipped bar (pressure -0.36% with P .97 on one pre-set design; Vegas
+  split -0.31% 6/7 and 13/14 on 2012-25; RB curve -0.42% on 2012-25) needs the long pool to
+  hold. Here it is a third of the size with 9/13 years, and the mechanism is volume, not
+  sack-proneness. Nothing changed in engine.js; no data file built.
+- Re-test rule: only with new evidence. The one pre-registered re-check: V8 as fixed above
+  (G 4, K 1000, k 1.25) graded on the full 2026 season after Week 17. Don't re-pitch QB-level
+  sack rate or own pass-rush matchups.
+- Out of scope, noted: dstWeeklyMean ignores league scoring settings (a 2-pt-sack league
+  gets the same projection).
+
+## League D/ST scoring in the D/ST mean (fit_dst_components.py) - SHIPPED 2026-11-21
+
+Jack: "fix scoring". dstWeeklyMean was scoring-blind: a league with 2-pt sacks, 3-pt INTs or no PA tiers got the
+same D/ST mean as a default league. Found while testing opponent sack-proneness (rejected, section above).
+
+- The 16.2 - 0.436 x oppImplied line is in points at DST_DEFAULT: sack 1, INT 2, FR 2, forced fumble 0, def TD 6,
+  safety 2, blocked kick 2, PA 10/7/4/1/0/-1/-4. That is the same basis as pull_dst_history.py, the scorecard actuals
+  and the tuner's dstShift.
+- New: mean += sum_k (league_k - default_k) x E[count_k | oppImplied], plus the PA-tier differences weighted by
+  P(bucket) from an opponent-score normal. Fit on 3,742 team-weeks 2019-25 (dst_components_fit.log):
+  sacks 4.377 - 0.0879x, INT 1.221 - 0.0202x, FR 0.746 - 0.0100x, FF 1.049 - 0.0118x, def TD 0.248 - 0.0055x,
+  safety 0.052 - 0.0011x, block 0.077 - 0.0010x; opp score ~ N(-0.17 + 1.021x, sd 9.12). The PA bucket shares
+  match within 2 pts. At default rules the components re-add to the shipped line within 0.1 pt at every implied 15-31
+  (realized 6.368 vs shipped 6.366).
+- Default rules give a delta of exactly 0. Null, {}, skill-only leagues, PRESETS and old scoring objects without .dst
+  are all bit-identical across implied 10-36, so the site lock, the scorecards and tuner are unchanged.
+- What moves: 2-pt sacks add E[sacks] (+2.88 at opp implied 17, +1.92 at 28), so they also widen the gap between good
+  and bad matchups. Sleeper's default ff 1 adds about +0.78. No PA scoring lifts bad matchups and trims good ones.
+- Keys: Sleeper scoring_settings, and the ESPN sidebar's espnScoringDict, which already maps ESPN statIds onto them.
+  Yahoo's leagueScoring carries only rec / pass_td, so Yahoo stays at default.
+- Not modeled: return / special-teams TD keys (st_td, def_st_td, def_st_ff, def_st_fum_rec) and yards-allowed tiers
+  (yds_allow_*).
+- Engine paths: season / league / playoff sims, streaming DST waivers and simWeek.
+- EXTENSION SIDEBARS (sleeper / espn / yahoo sidebar.js, Jack "switch it", same day). The site's D/ST rows are this engine
+  at default rules, so the sidebars add dstLeagueDelta(team, week) = engine dstScoringDelta(opp implied from the
+  sidebar schedule, league rules) on top of the row in all three places that read it: the weekly value (wkVal), the
+  rest-of-season total (simRosTotal) and the SIMS tab meanFor (simMeanForEngine). dstProjFor (the no-row fallback and
+  the 18-week matchup strip) now returns engine dstWeeklyMean(opp implied, league rules). The old heuristic, with its
+  defense-rank boost (rank 1 x1.19) and ran about +1.7 high for a top unit, stays only for when the engine isn't
+  loaded. The fallback no longer decays D/ST toward realized PPG (K unchanged), because the right amount of D/ST history
+  is zero. Default rules give unchanged values. jsdom harness, old vs new, 27/27 pass: a 2-pt-sack league adds E[sacks]
+  per week. Backups sidebar.js.bak_pre_dstscoring_20261121; manifests 0.29.56 / 0.20.67 / 0.9.57.
+- Kill: window.SIM_DST_LEAGUE_SCORING = false. Backups engine.js / README.md .bak_pre_dstscoring_20261121. Engine
+  synced to sleeper / espn / yahoo engine_sim.js.
+
 ## Luck-layer live grading + morning NOTES export (2026-09-15)
 
 Jack: "grade the luck layers live, not just in backtest" and "write the notes

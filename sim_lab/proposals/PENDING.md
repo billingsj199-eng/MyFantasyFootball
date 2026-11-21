@@ -1,42 +1,9 @@
 # Sim proposals - PENDING (approve/reject in chat: "approve P-20261013-1")
 
 
-## P-20261013-1 - Vacancy ALLOCATION from observed shares (replaces the depth-rank pool boost, CURRENT week)
-- What: for a healthy RB/WR/TE whose teammate is out, size the boost from the position-group VOLUME BUDGET instead of the
-  depth-rank POOL rule: ratio = budget xFP with next game's availability / budget xFP without availability renorm, applied at e 1
-  (clip .6-1.8) on the shadow WITHOUT the pool / vacx boost. Shares are the player's recency-weighted (d .9) share of team
-  targets / non-QB carries, each past game normalised to full strength and re-normalised to next game's roster:
-  s = u x (1 + rho x missing same-group share / present same-group share), rho targets .25, carries .6. Every body with a snap is
-  in the group; an absence already seen in games played is not paid again by construction.
-- File / knob: engine.js weeklyProjection shadow vacancy block (SIM_NC_EXACT / vacx / workhorse) -> new budget allocation for the
-  current week only; needs per-team-game target / carry shares (pbp 2026 already builds them) in a data file. Later weeks: see -2.
-- Size: harness pool rows mean boost 1.10 (RB 1.2); Kamara W6 2026: budget +8% (9.6 xFP vs 8.9) instead of iA 1.486 -> ~7.5
-  half instead of 10.35. Miller 7.2 xFP, Donaldson 2.9 xFP.
-- Evidence (research_volume_budget.py points, volume_budget.log; next game, top-150 weighted, 2019-25, vs shadow + pool k .75):
-  fixed e 1: -0.39% (5/7, fwd 3/4), rank rho .4272 -> .4320; LOYO-picked -0.32% (5/7), forward 2022-25 -0.43% (3/4).
-  Folds e1: 2019 +0.02 | 2020 -0.27 | 2021 -0.22 | 2022 +0.38 | 2023 -1.18 | 2024 -0.23 | 2025 -0.99 (%).
-  Kamara-size boosts (pool >= 1.3) never-seen absences: act/proj 1.136 under the pool, 1.005 under the allocation (n 49).
-  Rest of season FAILS (+0.37%, 2/7) unless decayed - current week only.
-- Caveat: harness pool = usage-based replica at k .75, not the engine's exact vacx + workhorse + NMU + TEAM_VAC + promo stack ->
-  must be re-graded as an engine port (replay) before wiring. Confidence: medium-low. Expiry: 2026-11-10.
+- P-20261013-1 (vacancy allocation from observed shares) - expired 2026-11-10, not approved; engine port stays OFF (SIM_NC_BUDGET_ALLOC), re-test needs the departed-member + newcomer fixes. Full text in EXPIRED.md.
+- P-20261013-4 (rest-of-season x1.02 after a blowout) - expired 2026-11-10, never re-tested in engine form. Full text in EXPIRED.md.
 
-- UPDATE 2026-10-13 (Jack: port OFF + replay on the full stack): engine.js `budgetAllocRatio` + `BUDGET_ALLOC`, switch
-  window.SIM_NC_BUDGET_ALLOC === true (default OFF; parity check: 423 current-week rows identical to the pre-change engine).
-  Replay vs the wired teammate stack (shadow + pool x NMU x PROMO x TEAM_VAC; research_alloc_fullstack.py / alloc_fullstack.log):
-  ALLOC-A (replaces pool/vacx only) e .75 -0.30% (5/7, fwd 3/4), LOYO -0.30% (5/7) fwd -0.30% (2/4) = at the bar's edge;
-  e 1 -0.21% (4/7); RB -0.52% (6/7) WR +0.10% TE -0.26% (3/7); ADP 1-60 worse, 61-150 better (-0.51 / -1.61%).
-  ALLOC-B (replaces the whole stack) FAILS (LOYO +0.27%, 0/7). Not replicable: workhorse cell, fill-in rescale.
-  W6 2026 with it ON (e .75): Kamara 10.65 -> 8.75, Miller 6.11 -> 5.42, Donaldson 2.04 -> 1.67; 132 W6 rows move >= .05
-  (Dameon Pierce 6.77 -> 3.65, Brandin Cooks 5.43 -> 3.88: bodies whose vacx gain was larger than their observed-share renorm).
-  LOSING SEASONS (ALLOC-A e1 vs stack): 2019 +0.24% - David Johnson ARI wk10/13/15 (Edmonds out; Kenyan Drake traded IN wk9 has no
-  history share, so DJ got the room: NEWCOMER gap, fixable), Keenan Allen wk4 (Henry + M. Williams out, scored 7.3: noise),
-  Kupp wk11 (Cooks out, Kupp's role was shrinking: role change), Saquon wk7 (first games back: noise); 2021 +0.06% - Zeke wk14,
-  Swift wk8, Chubb wk8 (lead RB's backup out, lead scored 5-8: outlier games / own injuries, noise); 2022 +0.57% - Jonathan
-  Taylor IND wk3/4/15 (cut WR Dezmon Patmon counted as an ABSENT member; Taylor himself hurt: DEPARTED-MEMBER flaw, fixable),
-  Elijah Mitchell SF wk10 (Ra 1.53: Jeff Wilson TRADED away + McCaffrey traded in with no share = both flaws), Ekeler wk13.
-  Fixable before any re-test: (1) a member who left the team (cut / traded) is not "absent"; (2) a newcomer gets his share from
-  his previous team (or his shadow level) instead of 0. The engine port already drops departed players (pool = current team) but
-  credits a newcomer's pre-trade weeks to his new team - fix that too. Recommendation: do NOT ship; re-test with (1)+(2).
 
 ## P-20261013-3 - Stop the blowout ctxShare RE-MEASURE of snap / route share (keep the v2.32 no-dock)
 - What: ctxShare re-measures a blowout week's share on competitive plays when his count fits (>= 85%) - it inflates. Return the raw
@@ -57,15 +24,6 @@
   St. Brown wk7, Tyreek wk14. Pattern: STARS after blowout LOSSES (pulled early) - the re-measure lifted their snap trend and they
   then had huge games; partly outlier games (noise), partly real (a star pulled in garbage time is not a role cut). Possible
   re-test: raw pct for everyone except ADP <= 30 after a loss. Leave pending for Jack.
-
-
-## P-20261013-4 - (weak) rest-of-season lift after a blowout game x~1.02
-- What: players (RB/WR/TE top 150) whose team's LAST game was a blowout (6+ garbage plays, |margin| >= 17) x ~1.02 for later
-  weeks. Under-projected next game 1.041 vs ~1.015 board (6/7 seasons) and ROS 1.049 (7/7).
-- Evidence (_tmp/vb_c5.py, volume_budget_c5.log): LOYO flag multiplier (fit on training, shrunk 50%) ROS board -0.58% (6/7, fwd
-  4/4), flagged rows -2.6%; next game -0.13% (7/7, fwd 4/4) below the -0.3% bar. Down-weighting blowout games in the points
-  evidence instead FAILS (LOYO ROS +0.35%). Mechanism unknown (win / loss both under) - may be a harness gap.
-- Confidence: low; needs an engine-form re-test before any number. Expiry: 2026-11-10.
 
 
 ## P-20261023-2 - QB inherit: shrink the fill-in starter toward his own HISTORY level (replaces the flat .85 x starter form)
@@ -109,3 +67,44 @@
   Dart 3.4), so .85 S never binds and P-2 = avg(L, own); (2) P-2 must be GATED to a genuine next-man-up start (fill-in effective string 1,
   absent starter cap <= .5, absent = engine main / better chart string) or it lifts Kaliakmanis WAS 2.7 -> 9.2, Bagent CHI 4.6 -> 9.2 and
   every starter with a backup out. W7/W8 if wired: McCarthy NYG 8.7 -> 12.6 (W7), McKee PHI 12.8 -> 13.8 (W7) / 12.7 -> 13.8 (W8).
+
+
+## P-20261110-1 - (weak) QB rest-of-season tilt for missing pass-catchers
+- What: for LATER weeks only (never the current week), tilt a QB's number down when a large share of his team's targets is
+  absent this week, up when the room is whole: x (1 - 0.10 x (min(v, .6) - .18)), v = sum of the season-to-date target shares
+  of teammates who are Out / Doubtful / on a reserve list / off the roster (ctx feature `vac_tgt`; QB average .18). Range x1.018
+  (nobody missing) to x0.958 (60%+ of targets missing). Same family as the shipped rest-of-season volume tilts (ROS_TILT / +rtilt).
+- File / knob: engine.js shadow later-weeks block (next to `rbPlays` / `teTilt` in NC_SHADOW.next); v is already computable from
+  the vacancy pool shares. New why step + NOTES chip ("QB: 34% of targets out"). Kill switch suggestion: window.SIM_NC_QB_VACT = false.
+- Size: typical move 0 to -0.5 pts on a later-week QB number; biggest cells -4%. Whole top-150 board -0.2 to -0.5% (QB rows only).
+- Evidence (research_stat_sweep.py -> research_stat_sweep_ros.py -> research_stat_sweep_qbvac.py; _tmp/qbvac4.out, _tmp/qbvac1.out;
+  rest-of-season harness backtest_shadow_ros.py on the WIRED stack through v2.28, 2019-25, top-150 QB checkpoints with 3-10
+  games played, final week out; survivor filter 4+ games left n 833, no filter n 922):
+  act / proj by share of targets missing (4+ left | no filter): 0-.05 1.034 | 1.026; .05-.15 1.021 | 1.020; .15-.30 .968 | .967;
+  .30-.45 .973 | .926; .45+ .976 | .899.
+  | form | run | wtd MSE | yrs | MAE | yrs | rank d | yrs | fwd | yrs |
+  |---|---|---|---|---|---|---|---|---|---|
+  | **centred e .10** | 4+ left | -1.22% | 5/7 | -0.89% | 7/7 | +.011 | 6/7 | -1.15% | 3/4 |
+  | **centred e .10** | no filter | -1.70% | 6/7 | -1.02% | 6/7 | +.013 | 6/7 | -1.82% | 4/4 |
+  | centred e .15 | 4+ left | -1.36% | 5/7 | -1.12% | 6/7 | +.009 | 6/7 | -1.28% | 3/4 |
+  | centred e .15 | no filter | -2.19% | 5/7 | -1.32% | 6/7 | +.012 | 6/7 | -2.39% | 3/4 |
+  | dock only e .10 (not centred) | 4+ left | -1.29% | 5/7 | -0.61% | 5/7 | +.012 | 6/7 | -1.09% | 3/4 |
+  | dock only e .10 (not centred) | no filter | -2.67% | 6/7 | -1.00% | 5/7 | +.015 | 7/7 | -2.65% | 3/4 |
+  | LOYO-fit z tilt (k -.03 every fold) | 4+ left | -1.14% | 5/7 | -1.03% | 5/7 | +.009 | 5/7 | -1.38% | 3/4 |
+  | LOYO-fit z tilt | no filter | -2.61% | 5/7 | -1.60% | 5/7 | +.019 | 5/7 | -2.75% | 3/4 |
+  Folds, centred e .10 (wtd MSE %): 4+ left 2019 -4.1 | 2020 -1.2 | 2021 +1.3 | 2022 -3.1 | 2023 -0.8 | 2024 -1.3 | 2025 +0.3;
+  no filter 2019 -4.1 | 2020 -2.0 | 2021 +1.2 | 2022 -4.2 | 2023 -0.1 | 2024 -1.4 | 2025 -1.5.
+  FAILS as: a step dock (>= .30 x.95: 4/7 on the 4+ run), sizes e .20+ (2020 / 2024 blow up), QB ADP 101-150 alone (0-1/4
+  forward), and at 6-10 games played on the 4+ run (-0.01%, fwd 2/4) - the gain sits in checkpoints with 3-5 games played.
+- Not the same as the rejected 10-08 "QB dock when lead WR out": that was the CURRENT week (base already 1.003). Next game the
+  raw read here is also ~0 (r -.025, 4/7 seasons) - so later weeks only.
+- Caveats: small effect, 2019 and 2022 carry the pooled number; the harness stack stops at v2.28 (no QB starter floor for later
+  weeks, no QB opportunity leg v2.34, no split Vegas form, no vacancy fade) - any of those may already absorb part of it, so it
+  MUST be re-graded as an engine replay before wiring. No 2026 read (the ctx table is not built for 2026).
+  Confidence: low. Expiry: 2026-12-31.
+- **Update 2026-11-17 (STATS run): first 2026 read - same direction as history.** `research_qbvac_2026_read.py` -> `_tmp/qbvac_2026_read.log`:
+  ROS locks W5-7 graded through W10 (3+ games since, locked ros >= 12), 71 QB rows (~30 QBs, overlapping locks). v = share of
+  season-to-date team targets held by teammates who did NOT play the QB's first played projected week (simpler than ctx `vac_tgt`).
+  act / proj: 0-.05 1.125 (n 11) | .05-.15 .957 (27) | .15-.30 .961 (26) | .30+ .814 (7). Proposal form on these rows: e .10 MSE
+  -1.5%, MAE -0.3%; e .15 MSE -2.1%, MAE -0.5%; closer on 46% of rows. Supportive, not a test (one season, n 7 in the top bucket,
+  Daniel Jones twice). Confidence unchanged (low); still needs the engine replay.

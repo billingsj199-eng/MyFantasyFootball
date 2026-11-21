@@ -13611,6 +13611,90 @@ _whenFirebaseReady(function(){
 });
 window._refreshAdminViewToggle = _refreshAdminViewToggle;
 
+// 2027 SIMS tab (admin-only, 2026-11-21). A tab in the rankings Format row that opens the private
+// 2027 preseason sim rankings over the page. It is NOT a board mode (no data-mode), so the
+// .mode-tab[data-mode] handlers skip it and currentMode never changes.
+// Privacy: hiding the tab is cosmetic. The numbers are not in this repo or in any public file:
+// sim2027.js (loaded on first open) reads them from Firestore admin_sims/*, which firestore.rules
+// locks to isJack(). No iframe: the page CSP's frame-src does not allow framing our own origin.
+function _sim2027IsAdmin() {
+  if (typeof window.isAdmin === 'function' && window.isAdmin()) return true;
+  const u = window._authCurrentUser;
+  return !!(u && u.email && u.emailVerified === true && window._JSMODEL_ADMIN_EMAILS
+    && window._JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
+}
+function _sim2027Esc(e) { if (e.key === 'Escape') _sim2027Close(); }
+function _sim2027Close() {
+  const ov = document.getElementById('sim2027Overlay');
+  if (!ov) return;
+  try { if (window.MFFSim2027) window.MFFSim2027.unmount(); } catch (_) {}
+  ov.remove();
+  document.removeEventListener('keydown', _sim2027Esc);
+  document.documentElement.style.overflow = '';
+  const tab = document.getElementById('sim2027Tab');
+  if (tab) { tab.classList.remove('active'); try { tab.focus(); } catch (_) {} }
+}
+function _sim2027Open() {
+  if (!_sim2027IsAdmin() || document.getElementById('sim2027Overlay')) return;
+  const ov = document.createElement('div');
+  ov.id = 'sim2027Overlay';
+  ov.setAttribute('role', 'dialog');
+  ov.setAttribute('aria-modal', 'true');
+  ov.setAttribute('aria-label', '2027 sim rankings (admin only)');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10050;background:var(--bg);display:flex;flex-direction:column';
+  ov.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex:0 0 auto">'
+    + '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.25rem;letter-spacing:1.5px;color:var(--text)">2027 SIM <span style="color:var(--accent)">RANKINGS</span></span>'
+    + '<span style="font-size:.625rem;font-weight:700;letter-spacing:1px;padding:2px 8px;border-radius:999px;color:var(--accent);border:1px solid rgba(245,158,11,.4);background:rgba(245,158,11,.12)">ADMIN ONLY</span>'
+    + '<button type="button" id="sim2027CloseBtn" aria-label="Close 2027 sim rankings" style="margin-left:auto;font-family:\'Bebas Neue\',sans-serif;font-size:.9rem;letter-spacing:1.5px;padding:5px 14px;border:1px solid var(--border-strong);border-radius:6px;background:none;color:var(--text);cursor:pointer">&#10005; CLOSE</button>'
+    + '</div>'
+    + '<div id="sim2027Body" style="flex:1 1 auto;overflow:auto;-webkit-overflow-scrolling:touch">'
+    + '<div style="padding:48px 16px;text-align:center;color:var(--text2)">Loading…</div></div>';
+  document.body.appendChild(ov);
+  document.documentElement.style.overflow = 'hidden';
+  document.getElementById('sim2027CloseBtn').addEventListener('click', _sim2027Close);
+  document.addEventListener('keydown', _sim2027Esc);
+  const tab = document.getElementById('sim2027Tab');
+  if (tab) tab.classList.add('active');
+  _sim2027Load(function (ok) {
+    const body = document.getElementById('sim2027Body');
+    if (!body) return; // closed while the script was loading
+    if (!ok || !window.MFFSim2027) {
+      body.innerHTML = '<div style="padding:48px 16px;text-align:center;color:var(--text2)">Couldn\'t load the 2027 rankings view. Reload the site and try again.</div>';
+      return;
+    }
+    window.MFFSim2027.mount(body);
+  });
+}
+// sim2027.js is fetched only when an admin opens the tab, so no other visitor downloads it.
+function _sim2027Load(cb) {
+  if (window.MFFSim2027) { cb(true); return; }
+  const s = document.createElement('script');
+  s.src = 'sim2027.js?v=2026-11-21';
+  s.onload = function () { cb(true); };
+  s.onerror = function () { s.remove(); cb(false); };
+  document.head.appendChild(s);
+}
+function _sim2027Refresh() {
+  const tab = document.getElementById('sim2027Tab');
+  if (!tab) return;
+  const adm = _sim2027IsAdmin();
+  tab.style.display = adm ? '' : 'none';
+  if (!adm) _sim2027Close();
+}
+(function () {
+  const tab = document.getElementById('sim2027Tab');
+  if (tab) tab.addEventListener('click', _sim2027Open);
+  _sim2027Refresh();
+  // Admin status arrives after Firebase auth resolves (and flips on sign-in / sign-out).
+  _whenFirebaseReady(function () {
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      try { firebase.auth().onAuthStateChanged(() => { setTimeout(_sim2027Refresh, 300); setTimeout(_sim2027Refresh, 2500); }); } catch (e) {}
+    }
+  });
+})();
+window._sim2027Refresh = _sim2027Refresh;
+
 // Scoring format toggle (PPR / Half / STD)
 const _scoringLabelsRnk = { ppr: 'PPR', half: 'Half PPR', std: 'Standard' };
 document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {

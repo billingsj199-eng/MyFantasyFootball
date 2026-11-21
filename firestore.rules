@@ -388,6 +388,15 @@ service cloud.firestore {
     match /rankings_history/{docId} {
       allow read, write: if isJack();
     }
+    // admin_sims/{docId}: private Sim Lab outputs that are not ready for users
+    // (rankings_2027 = the 2027 preseason rankings shown by the admin-only
+    // "2027 SIMS" tab on the rankings page, sim2027.js).
+    // Admin-only both ways. The site code is public static files and holds no
+    // data, so this rule is the only thing keeping the numbers private. Never
+    // loosen it to "signed in" or public read. Added 2026-11-21.
+    match /admin_sims/{docId} {
+      allow read, write: if isJack();
+    }
     // roster_overrides/{playerKey}: post-draft roster moves (trades/cuts) that
     // adjust prospect landing-spot signals. Loaded for ALL users (public read,
     // no auth required) so signals are consistent; admin-only write.

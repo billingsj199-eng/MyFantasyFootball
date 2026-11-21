@@ -4,6 +4,15 @@
 // exact player_id + draft_slot + picked_by, so attribution never guesses.
 (() => {
   'use strict';
+
+  // W15-17 playoff SOS pill colors, same scale in all four MFF helpers (2026-11-21):
+  // easy -> mid -> hard = light stone -> light orange -> deep orange (luminance
+  // carries the order, so it reads without hue; no stack blue, no #1-rec green).
+  // Remapped from the data's E/M/H label; data/playoff_sos_2026.js is untouched.
+  function sosColor(m) {
+    const S = { E: '#e7e5e4', M: '#fdba74', H: '#ea580c' };
+    return (m && S[m.label]) || (m && m.color) || '#94a3b8';
+  }
   if (window.__mffSleeper) return;
 
   // --- Live Vegas overlay (v0.10.4) ----------------------------------------
@@ -4743,7 +4752,7 @@
       const pills = ['15', '16', '17'].map((w) => {
         const m = sos[w];
         if (!m) return '';
-        return `<span style="background:${esc(m.color)};color:#0b1220;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700" title="SOS rank ${m.rank}/32 · implied ${m.impliedTotal} pts">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
+        return `<span style="background:${esc(sosColor(m))};color:#0b1220;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700" title="SOS rank ${m.rank}/32 · implied ${m.impliedTotal} pts">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
       }).join('');
       sosRow = `<div class="prof-row"><span class="k">Playoff SOS</span><span class="v" style="display:flex;gap:3px;flex-wrap:wrap">${pills}</span></div>`;
     }
@@ -5117,7 +5126,7 @@
         for (const w of ['15', '16', '17']) {
           const m = sos[w];
           if (!m) continue;
-          sosInner += pillHTML(w + ' ' + (m.home ? 'vs' : '@') + m.opp, m.color, '#0b1220',
+          sosInner += pillHTML(w + ' ' + (m.home ? 'vs' : '@') + m.opp, sosColor(m), '#0b1220',
             'Week ' + w + ' playoff matchup · SOS rank ' + m.rank + '/32 · implied ' + m.impliedTotal + ' pts');
         }
       }
@@ -5211,7 +5220,7 @@
         for (const w of ['15', '16', '17']) {
           const m = sos[w];
           if (!m) continue;
-          pills.push(pillHTML(w + ' ' + (m.home ? 'vs' : '@') + m.opp, m.color, '#0b1220',
+          pills.push(pillHTML(w + ' ' + (m.home ? 'vs' : '@') + m.opp, sosColor(m), '#0b1220',
             'Week ' + w + ' playoff matchup · SOS rank ' + m.rank + '/32 · implied ' + m.impliedTotal + ' pts'));
         }
       }

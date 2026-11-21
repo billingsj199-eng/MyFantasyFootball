@@ -11,6 +11,15 @@
 // draft ends, which is why the WS feed is the pick source).
 (() => {
   'use strict';
+
+  // W15-17 playoff SOS pill colors, same scale in all four MFF helpers (2026-11-21):
+  // easy -> mid -> hard = light stone -> light orange -> deep orange (luminance
+  // carries the order, so it reads without hue; no stack blue, no #1-rec green).
+  // Remapped from the data's E/M/H label; data/playoff_sos_2026.js is untouched.
+  function sosColor(m) {
+    const S = { E: '#e7e5e4', M: '#fdba74', H: '#ea580c' };
+    return (m && S[m.label]) || (m && m.color) || '#94a3b8';
+  }
   console.log('[MFF/ESPN] sidebar.js evaluating (v0.20.0)');
   if (window.__mffEspn) return;
 
@@ -4396,7 +4405,7 @@
     const pills = ['15', '16', '17'].map((w) => {
       const m = sos[w];
       if (!m) return '';
-      return `<span style="background:${esc(m.color)};color:#0e0f12;border-radius:3px;padding:0 4px;font-size:8px;font-weight:700;line-height:12px" title="Week ${w} playoff matchup · SOS rank ${m.rank}/32 for ${p.s} · implied ${m.impliedTotal} pts">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
+      return `<span style="background:${esc(sosColor(m))};color:#0e0f12;border-radius:3px;padding:0 4px;font-size:8px;font-weight:700;line-height:12px" title="Week ${w} playoff matchup · SOS rank ${m.rank}/32 for ${p.s} · implied ${m.impliedTotal} pts">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
     }).join('');
     if (!pills) return '';
     return `<div class="meta" style="margin-top:2px;display:flex;gap:3px;align-items:center;flex-wrap:wrap"><span style="color:#8a8d96;font-size:8px;letter-spacing:.4px">PLAYOFFS</span>${pills}</div>`;
@@ -5315,7 +5324,7 @@
       const pills = ['15', '16', '17'].map((w) => {
         const m = sos[w];
         if (!m) return '';
-        return `<span style="background:${esc(m.color)};color:#0e0f12;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700" title="SOS rank ${m.rank}/32 · implied ${m.impliedTotal} pts">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
+        return `<span style="background:${esc(sosColor(m))};color:#0e0f12;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700" title="SOS rank ${m.rank}/32 · implied ${m.impliedTotal} pts">W${w} ${m.home ? 'vs' : '@'}${esc(m.opp)}</span>`;
       }).join('');
       sosRow = `<div class="prof-row"><span class="k">Playoff SOS</span><span class="v" style="display:flex;gap:3px;flex-wrap:wrap">${pills}</span></div>`;
     }

@@ -6,6 +6,15 @@
  */
 (function () {
   "use strict";
+
+  // W15-17 playoff SOS pill colors, same scale in all four MFF helpers (2026-11-21):
+  // easy -> mid -> hard = light stone -> light orange -> deep orange (luminance
+  // carries the order, so it reads without hue; no stack blue, no #1-rec green).
+  // Remapped from the data's E/M/H label; data/playoff_sos_2026.js is untouched.
+  function sosColor(m) {
+    const S = { E: '#e7e5e4', M: '#fdba74', H: '#ea580c' };
+    return (m && S[m.label]) || (m && m.color) || '#94a3b8';
+  }
   if (window.__mffSidebarLoaded) return;
   window.__mffSidebarLoaded = true;
 
@@ -2081,7 +2090,7 @@
                         (typeof m.gameTotal === 'number' ? ', ~' + m.gameTotal + ' projected game points' : '') +
                         (typeof m.teamSpread === 'number' ? ', ' + (m.teamSpread < 0 ? 'projected to win by ' + (-m.teamSpread) : m.teamSpread > 0 ? 'projected to lose by ' + m.teamSpread : 'projected even') : '') +
                         (_isDome ? ' · dome (' + _host + ')' : '');
-            return '<span style="color:' + m.color + ';font-weight:700" title="' + _tt.replace(/"/g, '&quot;') + '">' +
+            return '<span style="color:' + sosColor(m) + ';font-weight:700" title="' + _tt.replace(/"/g, '&quot;') + '">' +
                    'W' + w + ' ' + _arrow + m.opp + (_isDome ? ' Ⓓ' : '') + '</span>';
           }).join('');
           if (_pills) {
@@ -2503,7 +2512,8 @@
   function renderValueChart() {
     const el = document.getElementById("mff-value-chart");
     if (!el) return;
-    if (!ENGINE.recValueChartData || !state.players || !state.players.length) { el.innerHTML = ""; return; }
+    const ENGINE = window.MFFEngine; // X-21: was an undefined free variable
+    if (!ENGINE || !ENGINE.recValueChartData || !state.players || !state.players.length) { el.innerHTML = ""; return; }
     let chart, source;
     const mode = state.isRedraft ? "rd" : "bb";
     const round = Math.max(1, Math.min(18, Math.ceil((state.pickNum || 1) / (TEAM_SIZE || 12))));
@@ -2527,13 +2537,13 @@
       const c = chart[pos];
       if (!c) continue;
       const m = c.mult;
-      const mCol = m >= 1.08 ? "#22c55e" : m >= 0.95 ? "#94a3b8" : m >= 0.80 ? "#f59e0b" : "#ef4444";
+      const mCol = m >= 1.08 ? "var(--mff-good,#6dd06d)" : m >= 0.95 ? "var(--mff-muted,#9a9da6)" : m >= 0.80 ? "#f59e0b" : "var(--mff-danger,#e88888)";
       const mStr = "×" + m.toFixed(2);
       let barPct, valStr, fillTxt, rowTitle;
       if (isBbm) {
         barPct = (c.lift != null && c.lift > 0) ? Math.max(4, Math.round(c.lift / maxVal * 100)) : 4;
         valStr = c.lift != null ? c.lift.toFixed(2) + "x" : "—";
-        fillTxt = '<span style="color:#64748b">#' + c.nextRank + "</span>";
+        fillTxt = '<span style="color:var(--mff-muted,#9a9da6)">#' + c.nextRank + "</span>";
         rowTitle = pos + ": teams that took " + pos + c.nextRank + " in R" + round +
           " historically advanced at " + valStr + " baseline (BBM II–VI" +
           (c.n != null ? ", n=" + c.n.toLocaleString() : "") + ", 50/30/20 QF/SF/Finals blend)" +
@@ -2544,8 +2554,8 @@
         valStr = c.avail != null ? ((c.avail >= 0 ? "+" : "") + c.avail) : "—";
         const isFull = c.fillPct >= 100;
         fillTxt = isFull
-          ? '<span style="color:#ef4444;font-weight:700">FULL</span>'
-          : '<span style="color:' + (c.fillPct >= 75 ? "#f59e0b" : "#64748b") + '">' + c.have + "/" + c.target + "</span>";
+          ? '<span style="color:var(--mff-danger,#e88888);font-weight:700">FULL</span>'
+          : '<span style="color:' + (c.fillPct >= 75 ? "#f59e0b" : "var(--mff-muted,#9a9da6)") + '">' + c.have + "/" + c.target + "</span>";
         rowTitle = pos + ": top-3 available avg VOR " + valStr +
           (c.rel != null ? " (" + (c.rel >= 0 ? "+" : "") + c.rel + " vs cross-position avg)" : "") +
           " • roster fill " + c.have + "/" + c.target +
@@ -2553,10 +2563,10 @@
       }
       rows += '<div style="display:flex;align-items:center;gap:6px;line-height:1.5" title="' + rowTitle.replace(/"/g, "&quot;") + '">' +
         '<span style="flex:0 0 20px;color:' + posColors[pos] + ';font-weight:700">' + pos + '</span>' +
-        '<span style="flex:1;min-width:0;background:#1e2027;border-radius:3px;height:7px;overflow:hidden">' +
-          '<span style="display:block;height:100%;width:' + barPct + '%;background:' + posColors[pos] + ';opacity:' + (m < 0.80 ? "0.35" : m < 0.95 ? "0.6" : "0.9") + '"></span>' +
+        '<span style="flex:1;min-width:0;background:var(--mff-border,#2a2c33);border-radius:3px;height:7px;overflow:hidden">' +
+          '<span style="display:block;height:100%;width:' + barPct + '%;background:' + posColors[pos] + ';opacity:' + (m < 0.80 ? "0.55" : m < 0.95 ? "0.75" : "1") + '"></span>' +
         '</span>' +
-        '<span style="flex:0 0 34px;text-align:right;color:#cbd5e1;font-family:monospace">' + valStr + '</span>' +
+        '<span style="flex:0 0 34px;text-align:right;color:var(--mff-text,#e9e9ec);font-family:monospace">' + valStr + '</span>' +
         '<span style="flex:0 0 32px;text-align:right;font-family:monospace">' + fillTxt + '</span>' +
         '<span style="flex:0 0 40px;text-align:right;color:' + mCol + ';font-weight:700;font-family:monospace">' + mStr + '</span>' +
         '</div>';
@@ -2565,9 +2575,9 @@
       ? "Real BBM II–VI history: advance-rate lift of taking your next player at each position this round, your next positional rank (#N), and the resulting REC-sort buff/nerf"
       : "Value still available per position (bar + number = avg VOR of the top-3 on the board), your roster fill, and the resulting REC-sort buff/nerf";
     el.innerHTML =
-      '<div style="font-size:9px;letter-spacing:.8px;color:#8a8d96;text-transform:uppercase;font-weight:600;margin-bottom:3px;display:flex;justify-content:space-between">' +
+      '<div style="font-size:9px;letter-spacing:.8px;color:var(--mff-muted,#9a9da6);text-transform:uppercase;font-weight:600;margin-bottom:3px;display:flex;justify-content:space-between">' +
         '<span title="' + headTitle.replace(/"/g, "&quot;") + '">VALUE BOARD</span>' +
-        '<span style="color:#64748b">' + modeLabel + '</span>' +
+        '<span style="color:var(--mff-muted,#9a9da6)">' + modeLabel + '</span>' +
       '</div>' +
       '<div style="display:flex;flex-direction:column;gap:2px;font-size:.62rem">' + rows + '</div>';
   }
@@ -3878,7 +3888,7 @@
           // overlaps. Falls below BRINGBACK in priority because BB has
           // the explicit high-total edge; WEEK 16/17 surfaces softer
           // playoff-week connections so the user can spot exposure.
-          outlineTarget.style.boxShadow = 'inset 0 0 0 2px #3b82f6';
+          outlineTarget.style.boxShadow = 'inset 0 0 0 2px #d946ef'; // W16/W17 (was #3b82f6, too close to stack blue)
           outlineTarget.style.borderRadius = outlineTarget.style.borderRadius || '4px';
           if (getComputedStyle(outlineTarget).position === 'static') {
             outlineTarget.style.position = 'relative';
@@ -3897,7 +3907,7 @@
           }).join(' | ');
           outlineTarget.title = 'WEEK ' + weeksStr +
             ' — playoff-week roster overlap: ' + detail;
-          outlineTarget.appendChild(makeRowLabel(weeksStr, '#3b82f6', '#fff'));
+          outlineTarget.appendChild(makeRowLabel(weeksStr, '#d946ef', '#0e0f12'));
         } else if (teamSig) {
           // v0.9.74: TEAM — softer correlation than STACK. Subtle slate outline
           // and light-gray label so it reads as "nice-to-have" not "must-have".
@@ -4030,11 +4040,11 @@
                           ? ', ' + (m.teamSpread < 0 ? 'proj. win by ' + (-m.teamSpread) : m.teamSpread > 0 ? 'proj. lose by ' + m.teamSpread : 'proj. even')
                           : '') +
                         (_isDome ? ' · dome (' + _host + ')' : '');
-            const hex = (m.color || '#94a3b8').replace('#', '');
+            const hex = sosColor(m).replace('#', '');
             const r = parseInt(hex.substr(0,2), 16), g = parseInt(hex.substr(2,2), 16), b = parseInt(hex.substr(4,2), 16);
             const colors = {
               bg: 'rgba(' + r + ',' + g + ',' + b + ',0.18)',
-              fg: m.color,
+              fg: sosColor(m),
             };
             teamBadges.push(mkBadge('mff-playoff-sos', _txt, _tt, colors));
           });

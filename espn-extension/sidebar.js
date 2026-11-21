@@ -2963,6 +2963,7 @@
     // must not ride into this one - season mode re-detects per league (2026-10-05).
     state.modeManual = false;
     state.seasonStatus = 'Loading league…';
+    state.seasonLoadFailed = ''; // X-39
     buildPanel();
     render();
     try {
@@ -2991,7 +2992,8 @@
       Object.assign(state.seasonSim, { status: 'idle', placeCounts: null, results: null, recHash: null, selTeam: null });
       if (state.seasonTab === 'sims' && simAvailable()) setTimeout(ensureSeasonSim, 0);
     } catch (e) {
-      state.seasonStatus = 'Could not load this league from ESPN (' + why(e) + '). Make sure you are signed in to ESPN, then press REFRESH LEAGUE DATA in SETTINGS.';
+      state.seasonLoadFailed = why(e) || 'no answer'; // X-39: seasonLoadFailHTML shows the reason + Retry
+      state.seasonStatus = 'League not loaded';
     }
     render();
   }
@@ -4257,6 +4259,7 @@
   }
 
   function setAppMode(mode) {
+    if (state.bootError) return; // X-38: nothing to switch to until the data loads
     if (mode === state.appMode) { render(); return; }
     if (mode === 'season') {
       // From a draft room the room's own leagueId doubles as the season league.
@@ -4399,9 +4402,42 @@
     window.addEventListener('mouseup', () => { mode = null; });
   }
 
+  // X-20261121-38: the bundled players.json did not load. The panel says so and offers
+  // Retry instead of never appearing. No league or draft work has started at this point.
+  let _bootBusy = false;
+  function bootErrorHTML() {
+    return '<div class="mff-ux-state" role="alert">' +
+      '<div class="mff-ux-h">Helper data did not load</div>' +
+      '<div class="mff-ux-p">The MFF ESPN Helper could not read its player data. Press Retry. If that does not fix it, reload this page.</div>' +
+      '<button type="button" class="mff-ux-btn" id="mff-boot-retry"' + (_bootBusy ? ' disabled' : '') + '>' + (_bootBusy ? 'Retrying\u2026' : 'Retry') + '</button></div>';
+  }
+  function bootFailed(e) {
+    _booted = null; // the next ensureBooted() tries the load again
+    state.bootError = true;
+    try { console.warn('[MFF/ESPN] player data did not load:', e); } catch (_) {}
+  }
+  async function bootRetry() {
+    if (_bootBusy) return;
+    _bootBusy = true;
+    render(); // button shows "Retrying" (disabled)
+    try { await ensureBooted(); state.bootError = false; } catch (e) { bootFailed(e); }
+    _bootBusy = false;
+    onUrlChange();
+  }
+  // X-20261121-39: the league did not load -> the message and a Retry button right under the tabs
+  function seasonLoadFailHTML() {
+    if (!state.seasonLoadFailed) return '';
+    return '<div class="mff-ux-warn" role="alert">Could not load this league from ESPN (' + esc(state.seasonLoadFailed) + '). Make sure you are signed in to ESPN.' +
+      '<button type="button" class="mff-ux-btn" id="mff-sn-retry">Retry</button></div>';
+  }
   function render() {
     if (!root) return;
     state._rendered = true;
+    if (state.bootError) { // X-38
+      const _bb = root.querySelector('#mff-body');
+      if (_bb) _bb.innerHTML = bootErrorHTML();
+      return;
+    }
     if (!gateAllowed()) {
       const _b = root.querySelector('#mff-body');
       if (_b) _b.innerHTML = gateLockHTML();
@@ -5232,7 +5268,7 @@
       : seasonLineupHTML();
     return `
       <div id="mff-tabs">${tabs}</div>
-      ${content}
+      ${seasonLoadFailHTML()}${content}
       <div id="mff-mode-line" style="display:flex;gap:6px;font-size:10px;color:#8a8d96;align-items:center">
         <span class="badge live" style="background:#2a4030;color:#6dd06d;padding:2px 6px;border-radius:3px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600">SEASON</span>
         <span id="mff-status-line" style="flex:1">${esc(state.seasonStatus)}</span>
@@ -5478,6 +5514,11 @@
 
   // ---------- events ----------
   function onBodyClick(e) {
+    if (e.target.id === 'mff-boot-retry') { bootRetry(); return; } // X-38
+    if (e.target.id === 'mff-sn-retry') { // X-39: same full load a page visit does; it re-renders at once, so the button is gone
+      if (state.seasonLeagueId) initSeason(state.seasonLeagueId);
+      return;
+    }
     // ---- season-mode controls ----
     const snTab = e.target.closest('[data-sntab]');
     if (snTab) {
@@ -5739,6 +5780,10 @@
   function onUrlChange() {
     const did = detectDraftLeagueId();
     const sid = detectSeasonLeagueId();
+    if (state.bootError) { // X-38: no player data, so nothing starts; the message shows where the panel would be
+      if (did || sid) { buildPanel(); render(); } else if (root) destroyPanel();
+      return;
+    }
     if (did) {
       if (did !== state.leagueId) {
         state.appMode = 'draft';
@@ -5772,7 +5817,7 @@
   let _seasonPolledAt = 0, _hiddenDecoPending = false;
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState !== 'visible') return;
-    if (location.href !== lastHref) { lastHref = location.href; if (pageNeedsSidebar()) await ensureBooted(); onUrlChange(); }
+    if (location.href !== lastHref) { lastHref = location.href; if (pageNeedsSidebar()) { try { await ensureBooted(); state.bootError = false; } catch (e) { bootFailed(e); } } onUrlChange(); }
     if (boardTimer) pollBoard();
     if (stripTimer || _hiddenDecoPending) { _hiddenDecoPending = false; decorateDraftStrip(); }
     if (rowTimer) decorateDraftRows();
@@ -5787,7 +5832,7 @@
       if (document.visibilityState === 'hidden') return;
       if (location.href === lastHref) return;
       lastHref = location.href;
-      if (pageNeedsSidebar()) await ensureBooted();
+      if (pageNeedsSidebar()) { try { await ensureBooted(); state.bootError = false; } catch (e) { bootFailed(e); } }
       onUrlChange();
     }, URL_WATCH_MS);
   }
@@ -5801,7 +5846,8 @@
 
   async function main() {
     lastHref = location.href;
-    if (pageNeedsSidebar()) await ensureBooted();
+    // X-38: a failed load used to reject here, so no panel and no URL watcher
+    if (pageNeedsSidebar()) { try { await ensureBooted(); state.bootError = false; } catch (e) { bootFailed(e); } }
     onUrlChange();
     watchUrl();
   }

@@ -1210,3 +1210,50 @@ button.mff-proj-bl[disabled] {
   cursor: pointer;
 }
 #mff-sidebar .mff-help-link:hover { border-color: var(--mff-accent, #b388ff); }
+
+/* ==== X-20261121-36/38/39/40/41: empty / error state bits (state card, retry + link buttons).
+   Rendered only in empty, error or lobby states; nothing here applies to a loaded panel. ==== */
+#mff-sidebar .mff-ux-btn {
+  display: inline-block;
+  box-sizing: border-box;
+  min-height: 24px;
+  min-width: 24px;
+  margin: 0;
+  padding: 3px 10px;
+  background: none;
+  border: 1px solid var(--mff-accent, #b388ff);
+  border-radius: 4px;
+  color: var(--mff-accent, #b388ff);
+  font-family: inherit;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0;
+  text-transform: none;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+}
+#mff-sidebar .mff-ux-btn:hover { background: rgba(255, 255, 255, 0.08); }
+#mff-sidebar .mff-ux-btn[disabled] { opacity: 0.7; cursor: default; }
+#mff-sidebar .mff-ux-warn .mff-ux-btn { margin-left: 6px; border-color: #ffd9b3; color: #ffd9b3; }
+#mff-sidebar .mff-ux-state {
+  margin: 8px 0;
+  padding: 16px 12px;
+  text-align: center;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.5;
+  color: var(--mff-text, #e9e9ec);
+  background: var(--mff-card, #14171c);
+  border: 1px solid var(--mff-card-border, #24272d);
+  border-radius: 6px;
+}
+#mff-sidebar .mff-ux-state .mff-ux-h { margin: 0 0 4px; font-size: 14px; font-weight: 800; }
+#mff-sidebar .mff-ux-state .mff-ux-p { margin: 0 0 10px; color: #b4bac4; }
+#mff-sidebar .mff-ux-state .mff-ux-p:last-child { margin-bottom: 0; }
+/* X-40: "Go to my team" sits at the end of the existing "open your team page" row; the row gives
+   back the padding the 24px link adds, so the panel is not taller than before. */
+#mff-sidebar .mff-proj-empty.mff-has-go { padding-top: 9px; padding-bottom: 9px; }
+#mff-sidebar .mff-proj-empty .mff-ux-btn, #mff-sidebar .mff-has-go .mff-ux-btn { margin-left: 6px; }

@@ -287,7 +287,7 @@
       <h3 style="margin-top:8px">Portfolio</h3>
       <button id="mff-sync-btn" class="start-btn" style="margin-bottom:4px">Sync from Underdog</button>
       <div id="mff-sync-status" style="font-size:10px;color:#8a8d96;line-height:1.4"></div>
-      <div id="mff-portfolio-diag" style="font-size:9px;color:#8a8d96;line-height:1.4;margin-top:4px;opacity:.85"></div>
+      <div id="mff-portfolio-diag" class="mff-ux-sync"></div>
       </div></div>
 
       <h3 style="margin-top:8px">BBM Overall Leaderboard</h3>
@@ -1619,6 +1619,27 @@
     const b = scope && scope.querySelector('[data-mff-bbm-load]');
     if (b) b.addEventListener('click', () => { _bbmWanted = true; render(); });
   }
+  // X-20261121-41: lobby (no draft open, data not asked for) = one "Join a draft to start" card on
+  // RANKINGS / ROSTER / PROJ instead of an empty list and zeroed widgets (sidebar.css .mff-lobby).
+  let _lobbyOn = false;
+  function lobbyCardHTML(withLoad) {
+    return '<div class="mff-ux-state mff-lobby-card">' +
+      '<div class="mff-ux-h">Join a draft to start</div>' +
+      '<div class="mff-ux-p">Open a draft room on Underdog. Your rankings, roster and projections fill in here on their own.</div>' +
+      (withLoad ? '<button type="button" data-mff-bbm-load="1" class="mff-ux-btn">Load rankings here</button>' : '') + '</div>';
+  }
+  function lobbyState(on) {
+    if (on === _lobbyOn) return;
+    const sb = document.getElementById('mff-sidebar');
+    if (!sb) return;
+    _lobbyOn = on;
+    sb.classList.toggle('mff-lobby', on);
+    sb.querySelectorAll('#mff-roster-wrap > .mff-lobby-card, #mff-projections-wrap > .mff-lobby-card').forEach((c) => c.remove());
+    if (on) ['mff-roster-wrap', 'mff-projections-wrap'].forEach((id) => {
+      const w = document.getElementById(id);
+      if (w) w.insertAdjacentHTML('beforeend', lobbyCardHTML(false));
+    });
+  }
 
   function render() {
     const ENGINE = window.MFFEngine;
@@ -1636,17 +1657,20 @@
       const recsEl = document.getElementById('mff-recs');
       const msg = (html) => { if (recsEl) recsEl.innerHTML = '<div class="mff-bbm-wait" style="padding:10px 4px;color:#9a9da6;font-size:11px;line-height:1.5">' + html + '</div>'; };
       if (isDraftRoute() || _bbmWanted) {
+        lobbyState(false);
         msg('Loading BBM advance data…');
         ensureBbmData().then(() => render(), () => {
           msg('Couldn\'t load BBM advance data. <button data-mff-bbm-load="1" class="pos-filter">Retry</button>');
           wireBbmLoadBtn(recsEl);
         });
       } else {
-        msg('Live recs load in the draft room. <button data-mff-bbm-load="1" class="pos-filter">Load here</button>');
+        lobbyState(true); // X-41
+        if (recsEl) recsEl.innerHTML = lobbyCardHTML(true);
         wireBbmLoadBtn(recsEl);
       }
       return;
     }
+    if (_lobbyOn) lobbyState(false);
     const round = ENGINE.pickToRound(state.pickNum, TEAM_SIZE);
     const myTurn = isMyTurn(state.pickNum, state.slot);
     const until = picksUntilMyNext(state.pickNum, state.slot);
@@ -4609,9 +4633,35 @@
   }
 
   // v0.18.11: one-line store inventory under the Sync button.
+  // X-20261121-36: users see one plain line ("Synced N drafts, last sync <time>"). The store
+  // inventory (a troubleshooting aid) is behind a "details" toggle and also goes to the console.
+  let _diagOpen = false, _diagLogged = '';
   function renderPortfolioDiag() {
-    const el = document.getElementById('mff-portfolio-diag');
-    if (!el || !_isExtensionContextValid()) return;
+    const wrap = document.getElementById('mff-portfolio-diag');
+    if (!wrap || !_isExtensionContextValid()) return;
+    let sum = wrap.querySelector('#mff-portfolio-sum');
+    let tog = wrap.querySelector('#mff-diag-toggle');
+    let el = wrap.querySelector('#mff-portfolio-dbg');
+    if (!sum || !tog || !el) {
+      wrap.textContent = '';
+      sum = document.createElement('span'); sum.id = 'mff-portfolio-sum';
+      tog = document.createElement('button'); tog.type = 'button'; tog.id = 'mff-diag-toggle'; tog.className = 'mff-ux-details';
+      tog.title = 'Sync details, for troubleshooting';
+      tog.setAttribute('aria-controls', 'mff-portfolio-dbg');
+      el = document.createElement('div'); el.id = 'mff-portfolio-dbg';
+      const dbgEl = el, togEl = tog;
+      tog.addEventListener('click', () => {
+        _diagOpen = !_diagOpen;
+        dbgEl.hidden = !_diagOpen;
+        togEl.textContent = _diagOpen ? 'hide details' : 'details';
+        togEl.setAttribute('aria-expanded', String(_diagOpen));
+      });
+      wrap.appendChild(sum); wrap.appendChild(tog); wrap.appendChild(el);
+    }
+    el.hidden = !_diagOpen;
+    tog.textContent = _diagOpen ? 'hide details' : 'details';
+    tog.setAttribute('aria-expanded', String(_diagOpen));
+    const logDiag = () => { try { if (el.textContent !== _diagLogged) { _diagLogged = el.textContent; console.log('[MFF/sync] store inventory: ' + _diagLogged); } } catch (_) {} };
     try {
       chrome.storage.local.get(['mff_portfolio', 'mff_portfolio_sync', 'mff_site_drafts', 'mff_existing_draft_ids'], function (res) {
         try {
@@ -4627,13 +4677,17 @@
                            ' · site copy ' + nSite + (site && site.lastPushCount != null ? ' (last push ' + site.lastPushCount + ')' : '') +
                            ' · site id list ' + nIds + ' · written ' + when + (p && p.source ? ' via ' + p.source : ' via UNTAGGED writer') +
                            (p && p.season ? ' · season ' + p.season + (p.excludedOld ? ' (' + p.excludedOld + ' older excluded)' : '') : '');
-          el.style.color = (nP && (nP < nSync || nP < nSite)) ? '#f59e0b' : '#8a8d96';
+          el.style.color = (nP && (nP < nSync || nP < nSite)) ? '#f59e0b' : '';
           if (_lastPortfolioWriteError) el.textContent += ' · LAST WRITE FAILED: ' + _lastPortfolioWriteError;
+          const whenShort = p && p.syncedAt ? new Date(p.syncedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+          sum.textContent = (nP ? 'Synced ' + nP + ' draft' + (nP === 1 ? '' : 's') + (whenShort ? ' · last sync ' + whenShort : '') : 'No drafts synced yet') +
+            (_lastPortfolioWriteError ? ' · the last save did not finish' : '');
           try {
             chrome.storage.local.getBytesInUse(null, function (b) {
               if (typeof b === 'number') el.textContent += ' · storage ' + (b / 1048576).toFixed(1) + ' MB';
+              logDiag();
             });
-          } catch (_) {}
+          } catch (_) { logDiag(); }
         } catch (_) {}
       });
     } catch (_) {}

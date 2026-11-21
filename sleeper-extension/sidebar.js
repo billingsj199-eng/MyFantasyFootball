@@ -3483,6 +3483,7 @@
     state.seasonMatchups = [];
     state.myLeagueRosterId = null;
     state.seasonStatus = 'Loading league…';
+    state.seasonLoadFailed = ''; // X-39
     stopSeasonPolling();
     buildPanel();
     render();
@@ -3516,7 +3517,8 @@
       Object.assign(state.pickSim, { status: 'idle', placeCounts: null, results: null, inv: null, recHash: null, selTeam: null });
       if (state.seasonTab === 'sims' && pkTabVisible()) setTimeout(ensurePickSim, 0);
     } catch (e) {
-      state.seasonStatus = 'Could not load this league from Sleeper (' + why(e) + '). Press REFRESH LEAGUE DATA in SETTINGS to try again.';
+      state.seasonLoadFailed = why(e) || 'no answer'; // X-39: seasonLoadFailHTML shows the reason + Retry
+      state.seasonStatus = 'League not loaded';
     }
     render();
   }
@@ -3542,6 +3544,7 @@
     if (state.seasonPollTimer) { clearInterval(state.seasonPollTimer); state.seasonPollTimer = null; }
   }
   function setAppMode(mode) {
+    if (state.bootError) return; // X-38: nothing to switch to until the data loads
     if (mode === state.appMode) { render(); return; }
     state.appMode = mode;
     store.set({ 'sleeperHelper.appMode': mode });
@@ -3679,11 +3682,27 @@
     window.addEventListener('mouseup', () => { mode = null; });
   }
 
+  // X-20261121-38: the bundled players.json did not load. The panel says so and offers
+  // Retry (runs main() again) instead of never appearing. Nothing else has started yet.
+  let _bootBusy = false, _urlWatchOn = false;
+  function bootErrorHTML() {
+    return '<div class="mff-ux-state" role="alert">' +
+      '<div class="mff-ux-h">Helper data did not load</div>' +
+      '<div class="mff-ux-p">The MFF Sleeper Helper could not read its player data. Press Retry. If that does not fix it, reload this page.</div>' +
+      '<button type="button" class="mff-ux-btn" id="mff-boot-retry"' + (_bootBusy ? ' disabled' : '') + '>' + (_bootBusy ? 'Retrying\u2026' : 'Retry') + '</button></div>';
+  }
+  // X-20261121-39: the league did not load -> the message and a Retry button right under the tabs
+  function seasonLoadFailHTML() {
+    if (!state.seasonLoadFailed) return '';
+    return '<div class="mff-ux-warn" role="alert">Could not load this league from Sleeper (' + esc(state.seasonLoadFailed) + ').' +
+      '<button type="button" class="mff-ux-btn" id="mff-sn-retry">Retry</button></div>';
+  }
   function render() {
     if (!root) return;
     state._rendered = true;
     _decoVer++; // X-10: sidebar data changed -> next decorate pass runs
     const body = root.querySelector('#mff-body');
+    if (state.bootError) { body.innerHTML = bootErrorHTML(); return; } // X-38
     if (!gateAllowed()) { body.innerHTML = gateLockHTML(); return; }
     const recsEl = body.querySelector('#mff-recs');
     const scrollTop = recsEl ? recsEl.scrollTop : 0;
@@ -4682,7 +4701,7 @@
       : seasonLineupHTML();
     return `
       <div id="mff-tabs">${tabs}</div>
-      ${content}
+      ${seasonLoadFailHTML()}${content}
       <div id="mff-mode-line" style="display:flex;gap:6px;font-size:10px;color:#8b94b3;align-items:center">
         <span class="badge live" style="background:#2a4030;color:#6dd06d;padding:2px 6px;border-radius:3px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600">SEASON</span>
         <span id="mff-status-line" style="flex:1">${esc(state.seasonStatus)}</span>
@@ -4950,6 +4969,16 @@
 
   // ---------- events ----------
   function onBodyClick(e) {
+    if (e.target.id === 'mff-boot-retry') { // X-38
+      if (_bootBusy) return;
+      main();   // sets _bootBusy before its first await
+      render(); // button shows "Retrying" (disabled) until main() settles
+      return;
+    }
+    if (e.target.id === 'mff-sn-retry') { // X-39: same full load a page visit does; it re-renders at once, so the button is gone
+      if (state.seasonLeagueId) initForLeague(state.seasonLeagueId);
+      return;
+    }
     // ---- season-mode controls ----
     const snTab = e.target.closest('[data-sntab]');
     if (snTab) {
@@ -6503,6 +6532,10 @@
   function onUrlChange() {
     const did = detectDraftId();
     const lid = detectLeagueId();
+    if (state.bootError) { // X-38: no player data, so nothing starts; the message shows where the panel would be
+      if (did || lid) { buildPanel(); render(); } else if (root) destroyPanel();
+      return;
+    }
     if (did) {
       if (did !== state.draftId) {
         state.appMode = 'draft';
@@ -6536,8 +6569,17 @@
     }, URL_WATCH_MS);
   }
 
+  function startUrlWatch() { if (_urlWatchOn) return; _urlWatchOn = true; watchUrl(); }
   async function main() {
-    await loadPlayers();
+    // X-38: a failed load of the bundled players.json shows a message + Retry (bootErrorHTML)
+    // instead of leaving no panel. Retry calls main() again; _bootBusy stops a second run.
+    if (_bootBusy) return;
+    _bootBusy = true;
+    let bootOk = true;
+    try { await loadPlayers(); } catch (e) { bootOk = false; try { console.warn('[MFF/Sleeper] player data did not load:', e); } catch (_) {} }
+    _bootBusy = false;
+    state.bootError = !bootOk;
+    if (!bootOk) { lastHref = location.href; onUrlChange(); startUrlWatch(); return; }
     store.get(['mff_jacks_boards']).then((r) => applyBridgeJackBoards(r && r.mff_jacks_boards));
     refreshJackBoards(); // non-blocking; baked boards work until it lands
     if (MOCK && MOCK.gameEnv) { // harness stand-in for the live site-lines fetch
@@ -6557,7 +6599,7 @@
     } catch (e) {}
     lastHref = location.href;
     onUrlChange();
-    watchUrl();
+    startUrlWatch();
   }
 
   window.__mffSleeper = { state, render, pollOnce, initForDraft, initForLeague, wkVal, wkLive, liveExitMult, liveBackupInherit, liveVarSd, liveCovar, parseScoreboard,

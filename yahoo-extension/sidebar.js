@@ -2221,11 +2221,43 @@
     });
     window.addEventListener('mouseup', () => { mode = null; });
   }
+  // X-20261121-38: the bundled players.json did not load. The panel says so and offers
+  // Retry (runs main() again) instead of never appearing. Nothing else has started yet.
+  let _bootBusy = false;
+  function bootErrorHTML() {
+    return '<div class="mff-ux-state" role="alert">' +
+      '<div class="mff-ux-h">Helper data did not load</div>' +
+      '<div class="mff-ux-p">The MFF Yahoo Helper could not read its player data. Press Retry. If that does not fix it, reload this page.</div>' +
+      '<button type="button" class="mff-ux-btn" id="mff-boot-retry"' + (_bootBusy ? ' disabled' : '') + '>' + (_bootBusy ? 'Retrying\u2026' : 'Retry') + '</button></div>';
+  }
+  // X-20261121-40: one click to the user's own team page from the "open your team page" rows.
+  // The team id comes from the league rosters when they are in, else from Yahoo's own "My Team"
+  // link on the page (looked up at most every 5 s). No link when neither is known.
+  let _myTeamLink = { lid: null, at: 0, href: '' };
+  function myTeamHref() {
+    const lid = state.leagueId;
+    if (!lid) return '';
+    let tid = state.myTeamId;
+    if (tid == null) {
+      const now = Date.now();
+      if (_myTeamLink.lid === lid && now - _myTeamLink.at < 5000) return _myTeamLink.href;
+      try { tid = detectMyTeamId(document); } catch (_) { tid = null; }
+      _myTeamLink = { lid, at: now, href: tid != null ? '/f1/' + encodeURIComponent(lid) + '/' + encodeURIComponent(tid) : '' };
+      return _myTeamLink.href;
+    }
+    return '/f1/' + encodeURIComponent(lid) + '/' + encodeURIComponent(tid);
+  }
+  function myTeamLinkHTML() {
+    const h = myTeamHref();
+    if (!h || location.pathname.replace(/\/+$/, '') === h) return '';
+    return '<a class="mff-ux-btn" href="' + esc(h) + '">Go to my team</a>';
+  }
   function render() {
     if (!root) return;
     if (!isDynMode() && state.seasonTeamSrc === 'ktc') state.seasonTeamSrc = 'jack';
     const body = root.querySelector('#mff-body');
     if (!body) return;
+    if (state.bootError) { body.innerHTML = bootErrorHTML(); return; } // X-38 (the gate starts after the data loads)
     if (!gateAllowed()) { body.innerHTML = gateLockHTML(); return; }
     const recsEl = body.querySelector('#mff-recs');
     const scrollTop = recsEl ? recsEl.scrollTop : 0;
@@ -2416,8 +2448,9 @@
   }
   function seasonLineupHTML() {
     if (!state.roster.length || !state.seasonSlots) {
+      const go = myTeamLinkHTML(); // X-40
       return seasonHeaderHTML() +
-        '<div class="mff-proj-empty">Open YOUR team page (My Team) so the helper can read your roster.</div>';
+        '<div class="mff-proj-empty' + (go ? ' mff-has-go' : '') + '">Open YOUR team page (My Team) so the helper can read your roster.' + go + '</div>';
     }
     const calc = seasonLineupCalc();
     const pool = calc.pool;
@@ -2496,8 +2529,9 @@
   }
   function seasonWaiversHTML() {
     if (!state.roster.length) {
+      const go = myTeamLinkHTML(); // X-40
       return seasonHeaderHTML() +
-        '<div class="mff-proj-empty">Open YOUR team page first so waivers can rank vs YOUR lineup.</div>';
+        '<div class="mff-proj-empty' + (go ? ' mff-has-go' : '') + '">' + (go ? 'Open YOUR team page to rank waivers.' : 'Open YOUR team page first so waivers can rank vs YOUR lineup.') + go + '</div>';
     }
     const posChips = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST'].map((p) =>
       `<button class="pos-filter ${state.seasonPosFilter === p ? 'active' : ''}" data-snpos="${p}">${p}</button>`
@@ -2553,8 +2587,9 @@
   const POS_ORDER = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
   function seasonTeamHTML() {
     if (!state.roster.length) {
+      const go = myTeamLinkHTML(); // X-40
       return seasonHeaderHTML() +
-        '<div style="font-size:11px;color:#8a8d96;padding:8px 2px">Open YOUR team page first.</div>';
+        '<div' + (go ? ' class="mff-has-go"' : '') + ' style="font-size:11px;color:#8a8d96;padding:' + (go ? '3px' : '8px') + ' 2px">Open YOUR team page first.' + go + '</div>';
     }
     const srcId = (SOURCES[state.seasonTeamSrc] && (state.seasonTeamSrc !== 'ktc' || isDynMode()))
       ? state.seasonTeamSrc : (isDynMode() ? 'ktc' : 'jack');
@@ -2651,6 +2686,12 @@
 
   // ---------- events ----------
   function onBodyClick(e) {
+    if (e.target.id === 'mff-boot-retry') { // X-38
+      if (_bootBusy) return;
+      main();   // sets _bootBusy before its first await
+      render(); // button shows "Retrying" (disabled) until main() settles
+      return;
+    }
     const snTab = e.target.closest('[data-sntab]');
     if (snTab) {
       state.seasonTab = snTab.dataset.sntab;
@@ -3475,7 +3516,16 @@
     }
   }
   async function main() {
-    await loadPlayers();
+    // X-38: a failed load of the bundled players.json shows a message + Retry (bootErrorHTML)
+    // instead of leaving no panel. Retry calls main() again; _bootBusy stops a second run, and
+    // the timers and listeners below are only reached once, after a load that worked.
+    if (_bootBusy) return;
+    _bootBusy = true;
+    let bootOk = true;
+    try { await loadPlayers(); } catch (e) { bootOk = false; try { console.warn('[MFF/Yahoo] player data did not load:', e); } catch (_) {} }
+    _bootBusy = false;
+    state.bootError = !bootOk;
+    if (!bootOk) { if (detectLeagueId()) { buildPanel(); render(); } return; }
     store.get(['mff_jacks_boards']).then((r) => applyBridgeJackBoards(r && r.mff_jacks_boards));
     refreshJackBoards();
     if (MOCK && MOCK.gameEnv) {

@@ -1327,6 +1327,25 @@
   // baseline the ranks assume), ADP (fallers boosted, 20+ pick reaches faded
   // hard), stacks, and positional cliffs — each contribution doubles as a
   // human-readable reason chip.
+  // X-28: chance a player is taken before your NEXT pick, from his QUEUE position: he is the r-th best
+  // player left by this mode's ADP, so he is "due" r-1 picks from now, with a margin that widens as the
+  // draft goes on (home leagues follow ADP far more loosely than Underdog rooms: s1 0.10 vs 0.02).
+  // Queue position, not raw ADP vs pick number, so rookie drafts, IDP/K picks and stale ADP don't break it.
+  const GONE = { s0: 1.5, s1: 0.10, fade: 0.25, last: 0.10 };
+  function goneProbMap(avail) {
+    const m = new Map();
+    const nextPk = myNextPickOverall();
+    const cur = state.picks.length + 1;
+    if (nextPk == null || nextPk - cur - 1 <= 0) return m;   // back-to-back picks: no map, the legacy ADP test runs
+    const k = modeKeys().adp;
+    const q = avail.filter((p) => p[k] != null).sort((a, b) => a[k] - b[k]);
+    const l1p = (x) => (x > 30 ? x : Math.log1p(Math.exp(x)));
+    for (let i = 0; i < q.length; i++) {
+      const mu = cur + i, s = GONE.s0 + GONE.s1 * mu;
+      m.set(q[i], 1 - Math.exp(l1p((cur + 0.5 - mu) / s) - l1p((nextPk - 0.5 - mu) / s)));
+    }
+    return m;
+  }
   function recommendPicks() {
     const avail = availablePlayers();
     const sortedAll = sortListBySource(avail);
@@ -1415,6 +1434,7 @@
     const _needPosIdx = posRankIndex();
     const _needGone = draftedPosCounts();
     const _needT = st.teams || 12;
+    const goneMap = goneProbMap(avail);
     const scored = board.map((p, idx) => {
       let score = Math.max(0, 30 - idx);
       const reasons = [];
@@ -1528,18 +1548,19 @@
       // that "ADP says he lasts" is least reliable exactly at QB.
       const nextPk = myNextPickOverall();
       const padp = p[modeKeys().adp];
-      if (nextPk != null && padp != null && padp >= nextPk) {
+      const pGone = goneMap.get(p);
+      if (nextPk != null && padp != null && (pGone != null ? pGone <= GONE.fade : padp >= nextPk)) {
         // Scales with HOW FAR past your next pick he goes, and always states
         // itself. The old version faded a 4-picks-past player by a flat 5 and
         // pushed no reason at all, so the card gave no hint that the engine
         // already knew he'd probably still be sitting there next turn.
         const fadeMult = (sfMode && p.s === 'QB') ? 0.5 : 1;
         const over = padp - nextPk;
-        const fade = Math.min(16, 6 + over * 0.7) * fadeMult * adpTrust;
+        const fade = (pGone != null ? 16 * (1 - pGone / GONE.fade) : Math.min(16, 6 + over * 0.7)) * fadeMult * adpTrust;
         score -= fade;
         // Only claim it when it actually cost him something — a decayed-away
         // fade shouldn't put a confident tag on the card.
-        if (fade >= 3) reasons.push('Likely there at your next pick');
+        if (fade >= 3 && (pGone == null || pGone <= GONE.last)) reasons.push('Likely there at your next pick');
       }
       // Stacks matter far less in lineup redraft (they're a best-ball /
       // tournament lever) — tiny tiebreaker there, real bonus in dynasty.

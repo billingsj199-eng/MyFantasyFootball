@@ -3052,10 +3052,10 @@ function last4Ppg(d) {
 // up (green ▲) if L4 ≥ season + 1, down (red ▼) if ≤ season − 1, else flat (·).
 // 2026-10-08 (Jack): coloured on the usual PPG tier scale for the position, not on
 // the gap to the season PPG; the ▲ / ▼ still marks the trend vs season.
-function l4PpgCellHtml(l4, seasonPpg, pos) {
+function l4PpgCellHtml(l4, seasonPpg, pos, colorFn) {
   if (l4 == null) return { html: '—', color: null };
   const v = l4.toFixed(1);
-  const tier = (pos && typeof posFptsColor === 'function') ? posFptsColor(l4, pos) : null;
+  const tier = (pos && typeof posFptsColor === 'function') ? (colorFn || posFptsColor)(l4, pos) : null;
   if (seasonPpg == null) return { html: v, color: tier };
   const diff = l4 - seasonPpg;
   if (diff >= 1) return { html: v + ' <span style="font-size:.6875rem">▲</span>', color: tier || '#22c55e' };
@@ -4918,11 +4918,11 @@ function _bookPpgFor(d) {
   const P = (typeof window._propsProjectionFor === 'function') ? window._propsProjectionFor(d) : null;
   return (P && P.ppg && P.ppg[rankingScoringFmt] != null) ? P : null;
 }
-function _bookPpgCellHtml(d) {
+function _bookPpgCellHtml(d, colorFn) {
   const P = _bookPpgFor(d);
   if (!P) return '—';
   const v = P.ppg[rankingScoringFmt];
-  const c = posFptsColor(v, d.s);
+  const c = (colorFn || posFptsColor)(v, d.s);
   const tip = 'Blended ' + (P.freshBooks || P.books).join('/') + ' season props scored as ' +
     (_scoringLabelsRnk[rankingScoringFmt] || 'PPR') + ': ' + P.total[rankingScoringFmt] +
     ' pts ÷ ' + P.games + ' games' + (P.asOf ? ' (as of ' + P.asOf + ')' : '');
@@ -4964,10 +4964,10 @@ function _weeklyBookPpgFor(d) {
   }
   return { ppg: Math.round(fp * 10) / 10, books: W.books, asOf: W.asOf, parts };
 }
-function _weeklyBookPpgCellHtml(d) {
+function _weeklyBookPpgCellHtml(d, colorFn) {
   const W = _weeklyBookPpgFor(d);
   if (!W) return '—';
-  const c = posFptsColor(W.ppg, d.s);
+  const c = (colorFn || posFptsColor)(W.ppg, d.s);
   const wk = window._weeklyActiveWeek || window._weeklyPublishedWeek || 1;
   const tip = 'Week ' + wk + ' ' + W.books.join('/') + ' lines scored as ' +
     (_scoringLabelsRnk[rankingScoringFmt] || 'PPR') + ': ' + W.parts.join(' · ') +
@@ -5687,10 +5687,10 @@ function _clayPpgFor(d) {
   const G = window._PROPS_GAMES || 17;
   return { ppg: Math.round((total / G) * 10) / 10, total: Math.round(total * 10) / 10, games: G, gm: cp.gm || null };
 }
-function _clayPpgCellHtml(d) {
+function _clayPpgCellHtml(d, colorFn) {
   const C = _clayPpgFor(d);
   if (!C) return '—';
-  const c = posFptsColor(C.ppg, d.s);
+  const c = (colorFn || posFptsColor)(C.ppg, d.s);
   const tip = 'Mike Clay 2026 stat line scored as ' + (_scoringLabelsRnk[rankingScoringFmt] || 'PPR') +
     ': ' + C.total + ' pts ÷ ' + C.games + ' games' +
     (C.gm && C.gm !== C.games ? ' (Clay projects ' + C.gm + ' gm)' : '') +
@@ -5702,12 +5702,12 @@ function _clayPpgCellHtml(d) {
 // Weekly PROJECTIONS: same Clay stat line read as PER-GAME PACE — ÷ Clay's
 // projected games instead of ÷ 17, matching the weekly Yds/TD columns' scale
 // (what to expect in a week the player actually plays).
-function _clayWkPpgCellHtml(d) {
+function _clayWkPpgCellHtml(d, colorFn) {
   const C = _clayPpgFor(d);
   if (!C) return '—';
   const gm = C.gm || C.games;
   const ppg = Math.round((C.total / gm) * 10) / 10;
-  const c = posFptsColor(ppg, d.s);
+  const c = (colorFn || posFptsColor)(ppg, d.s);
   const tip = 'Mike Clay 2026 pace, scored as ' + (_scoringLabelsRnk[rankingScoringFmt] || 'PPR') +
     ': ' + C.total + ' pts ÷ ' + gm + ' projected games' +
     (d.s === 'QB' ? ' — INTs not in Clay\'s lines' : '');
@@ -11771,6 +11771,11 @@ function render() {
   const _projPpgMode = _statMode === 'proj' && !_isWeekly;
   const _wkLinesPpgMode = _statMode === 'lines' && _isWeekly;
   const _wkProjPpgMode = _statMode === 'proj' && _isWeekly;
+  // FLEX and ALL boards (weekly + season) compare RB/WR/TE head-to-head, so
+  // their PPG cells use ONE shared scale there (Jack 2026-11-21) — a 15-PPG RB,
+  // WR and TE color the same. QB / K / D/ST and the positional pills keep the
+  // per-position scale.
+  const _rowPpgColor = (v, pos) => ((filter === 'FLEX' || filter === 'ALL') && (pos === 'RB' || pos === 'WR' || pos === 'TE')) ? flexFptsColor(v) : posFptsColor(v, pos);
   // FANTASY view: the tail column is Total Yds (all positions; K/DST have
   // no yardage line so the K / D/ST pills hide it). Y/RR + Rush YPG retired.
   // Total Yds tail: WEEKLY board only (Yds/G). Jack 2026-09-14: no total-yards
@@ -12048,11 +12053,9 @@ function render() {
       const _25ppg = _sp.v;
       const _25Tip = _sp.yr === 26 ? (_sp.v != null ? ' title="2026 to date · ' + _sp.gp + ' gp"' : ' title="No 2026 game played yet"') : '';
       const _l4ppg = last4Ppg(d);
-      const _l4Cell = l4PpgCellHtml(_l4ppg, _25ppg, d.s);
-      // WEEKLY FLEX view compares RB/WR/TE head-to-head — color PROJ PPG on
-      // one shared scale there; positional pills keep the per-position scale.
-      const _projColor = (_projPpg != null) ? ((currentMode === 'weekly' && filter === 'FLEX') ? flexFptsColor(_projPpg) : posFptsColor(_projPpg, d.s)) : null;
-      const _25Color = (_25ppg != null) ? posFptsColor(_25ppg, d.s) : null;
+      const _l4Cell = l4PpgCellHtml(_l4ppg, _25ppg, d.s, _rowPpgColor);
+      const _projColor = (_projPpg != null) ? _rowPpgColor(_projPpg, d.s) : null;
+      const _25Color = (_25ppg != null) ? _rowPpgColor(_25ppg, d.s) : null;
       let _cwTip = '';
       if (currentMode === 'weekly' && currentVersion === 'consensus' && window._consensusWeeklyProj) {
         const c = window._consensusWeeklyProj[d.n];
@@ -12103,7 +12106,7 @@ function render() {
           _ppgTip = ' title="Season sim (half-PPR totals): median ' + _ssRow[0] + ' · floor(p10) ' + _ssRow[1] + ' · ceiling(p90) ' + _ssRow[2] + '" style="cursor:help"';
         }
       }
-      const _vc = (_v != null) ? ((currentMode === 'weekly' && filter === 'FLEX') ? flexFptsColor(_v) : posFptsColor(_v, d.s)) : null;
+      const _vc = (_v != null) ? _rowPpgColor(_v, d.s) : null;
       // In-season: "org / now" sub-line under the rest-of-season PPG —
       // original = preseason baseline (frozen at Week 1 kickoff), now =
       // actual 2026 PPG to date. Preseason (no 2026 games) no sub renders.
@@ -12142,7 +12145,7 @@ function render() {
           : _simSeasonPpgRow(d);
         _v = _sr ? _sr[_fi] : null;
       }
-      const _vc = (_v != null) ? ((_isWeekly && filter === 'FLEX') ? flexFptsColor(_v) : posFptsColor(_v, d.s)) : null;
+      const _vc = (_v != null) ? _rowPpgColor(_v, d.s) : null;
       const _sgn = v => (v > 0 ? '+' : '') + v.toFixed(1);
       const _vorTxt = _ve ? _sgn(_ve.vor) : '—';
       // One per-game scale for every VOR cell: +6 green · +3 light green · >0 yellow · else grey.
@@ -12243,8 +12246,8 @@ function render() {
       // PPG leads the stat block (Jack 2026-08-14); the yds line moves to the
       // tail (yrr) column via _statYdsTail below.
       const _ppgHtml = _statMode === 'lines'
-        ? (_isWeekly ? _weeklyBookPpgCellHtml(d) : _bookPpgCellHtml(d))
-        : (_isWeekly ? _clayWkPpgCellHtml(d) : _clayPpgCellHtml(d));
+        ? (_isWeekly ? _weeklyBookPpgCellHtml(d, _rowPpgColor) : _bookPpgCellHtml(d, _rowPpgColor))
+        : (_isWeekly ? _clayWkPpgCellHtml(d, _rowPpgColor) : _clayPpgCellHtml(d, _rowPpgColor));
       _statTd1 = `<td class="pts-cell ppg-proj-cell">${_ppgHtml}</td>`;
       if (_isWeekly) {
         // WEEKLY (Jack 2026-09-08): PPG, then the matchup block (OPP / SPREAD /
@@ -18708,7 +18711,7 @@ function teFptsColor(pts) {
 
 // Cross-positional scale for the WEEKLY FLEX view: flex decisions compare
 // RB/WR/TE points head-to-head, so one shared scale — a 13-PPG RB and a
-// 13-PPG TE color the same. Thresholds bracket the RB (20/16/12/10/8/5) and
+// 13-PPG TE color the same. Used on the FLEX and ALL boards (QBs excluded). Thresholds bracket the RB (20/16/12/10/8/5) and
 // WR (20/16/14/12/10/7) positional scales. Positional pills keep posFptsColor.
 function flexFptsColor(pts) {
   if (pts >= 20) return '#4ade80'; // light green

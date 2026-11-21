@@ -4894,7 +4894,72 @@
     return order;
   }
 
-  function simLeague(opts) {
+  // BATCHED RUNS (2026-11-21, helper extensions: one 1,500-sim call froze the page 3-4 s, more than half of it the
+  // lineup setup before the first sim). The league sim is one code path with three ways in:
+  //   simLeague(opts)            everything in one call (site, Sim Lab, exports: same signature, same output)
+  //   simLeagueStart(opts)       reads the options and returns a run; no projection work happens yet. The caller
+  //                              spreads the work over tasks:
+  //       run.stepFor(ms)   work for about ms (setup first, then sims; always at least one unit); true = all done
+  //       run.setupFor(ms)  setup work only for about ms; true = setup done (lineups picked, no sim run yet)
+  //       run.step(n)       run up to n more sims (no n = all that are left; finishes the setup first if it is
+  //                         not done); true = all done
+  //       run.finish()      do whatever is left in this call, return the same array simLeague returns
+  //       run.cancel()      drop a superseded run: the step calls do nothing and return true, finish returns null
+  //       run.sims, run.completed() (sims done), run.ready() (setup done), run.isDone(), run.cancelled()
+  //   simLeagueAsync(opts, ctl)  Promise form: one slice per task, runs queued one at a time
+  // Setup units and sims always run in the same order on the run's own RNG stream and add into the same tallies, so
+  // the result is bit-identical for any batch size or slice length (_tmp/compare_sim_batch.js). The engine reads the
+  // inputs (rosters, weekly lines, opts.meanFor, injuries) during the SETUP slices, so they must not change before
+  // run.ready(); and a players object is only good until the next buildPlayers call (older engine behaviour: the
+  // usage layers follow the latest build), so never call buildPlayers while a run built on an earlier one is in
+  // setup. If either happens, cancel the run and start a new one.
+  function simLeague(opts) { return simLeagueStart(opts).finish(); }
+  // opts: the simLeague options, or a function returning them (or a Promise of them), called when the run's turn
+  //       comes: build the inputs (buildSchedule / buildPlayers) inside it and queued runs can never overlap them.
+  // ctl:  { sliceMs: 16 (time per slice; a number or a function returning one), batch: n (sims per slice instead of
+  //         a time budget; setup still goes by sliceMs), yieldFn: function returning a Promise that resolves in a
+  //         later task (default scheduler.yield, else setTimeout 0), isStale: function, true = stop and resolve
+  //         null, onProgress(simsDone, sims, setupDone), queue: false = do not wait for earlier async runs }
+  var _lgAsyncTail = null;
+  function simLeagueAsync(opts, ctl) {
+    ctl = ctl || {};
+    var batch = ctl.batch > 0 ? Math.floor(ctl.batch) : 0;
+    function sliceMs() { var v = typeof ctl.sliceMs === 'function' ? ctl.sliceMs() : ctl.sliceMs; return v > 0 ? v : 16; }
+    function wait() {
+      if (typeof ctl.yieldFn === 'function') return Promise.resolve(ctl.yieldFn());
+      if (typeof scheduler !== 'undefined' && scheduler && typeof scheduler.yield === 'function') return Promise.resolve(scheduler.yield());
+      return new Promise(function (r) { setTimeout(r, 0); });
+    }
+    function stale() { return typeof ctl.isStale === 'function' && !!ctl.isStale(); }
+    function runOne() {
+      return wait().then(function () {
+        if (stale()) return null;
+        return typeof opts === 'function' ? opts() : opts;
+      }).then(function (o) {
+        if (o == null || stale()) return null;
+        var run = simLeagueStart(o);
+        return new Promise(function (resolve, reject) {
+          function slice() {
+            try {
+              if (stale()) { run.cancel(); resolve(null); return; }
+              var done;
+              if (!batch) done = run.stepFor(sliceMs());
+              else if (run.ready()) done = run.step(batch);
+              else { run.setupFor(sliceMs()); done = false; }
+              if (typeof ctl.onProgress === 'function') ctl.onProgress(run.completed(), run.sims, run.ready());
+              if (done) { resolve(run.finish()); return; }
+              wait().then(slice, reject);
+            } catch (e) { reject(e); }
+          }
+          slice();
+        });
+      });
+    }
+    var p = (ctl.queue === false || !_lgAsyncTail) ? runOne() : _lgAsyncTail.then(runOne);
+    if (ctl.queue !== false) _lgAsyncTail = p.then(function () {}, function () {});
+    return p;
+  }
+  function simLeagueStart(opts) {
     var sims = opts.sims || 100, sc = opts.scoring, rng = makeRng(opts.seed != null ? opts.seed : null);
     var schedule = opts.schedule, players = opts.players;
     var teams = opts.teams, pairsByWeek = opts.pairsByWeek;
@@ -4949,168 +5014,197 @@
     // Starters chosen by projected mean (that's how real managers set lineups).
     var allWeeks = regWeeks.slice(), poRounds = bracketRounds(playoffTeams);
     for (var w = playoffStart; w < playoffStart + poRounds; w++) allWeeks.push(w);
-    var candsBy = {}; // candsBy[rosterId][week] = sorted candidate list
-    teams.forEach(function (t) {
-      candsBy[t.rosterId] = {};
-      var roster = t.playerIds.map(function (sid) { return players.bySid[sid]; }).filter(Boolean)
-        .filter(function (p) { return unavailable[p.sid] !== 'ir'; });
-      allWeeks.forEach(function (wk) {
-        candsBy[t.rosterId][wk] = roster.filter(function (p) {
-          return !(wk === currentWeek && unavailable[p.sid] === 'out');
-        }).map(function (p) { return mkCand(p, wk, t.rosterId); }).filter(Boolean).sort(function (a, b) { return ((b.force || 0) - (a.force || 0)) || (effMean(b.wp) - effMean(a.wp)); });
-      });
-    });
-
-    // ---- D/ST streaming (league-size aware) ----
-    // Real managers churn D/ST weekly, and the model already says DST value is
-    // pure matchup (dstWeeklyMean = f(opp implied)) — so a roster locked to one
-    // DST would eat bad matchups and a bye week that nobody actually eats.
-    // Each week: teams whose rostered DST projects STREAM_TOL points below the
-    // best D/ST still on waivers (or whose DST is on bye) claim a DISTINCT
-    // waiver DST — worst rostered unit claims first, mirroring waiver priority —
-    // while close calls keep the rostered unit. The pool is the truly
-    // unrostered DSTs, so a deeper league (or 2-DST rosters) gets a thinner
-    // streaming baseline automatically. Claimed DSTs are real player objects,
-    // so sampling, sigma and game correlations all price normally.
-    // "significantly worse" threshold, in projected pts. Backtested
-    // (backtest_stream_tol.py, 2019-25 closing lines + pbp DST actuals):
-    // projected gap → realized points at slope ~1.07 (the edge is real at
-    // every size), and the season policy sweep is FLAT from TOL 1.5 down to
-    // 0 (±0.3 ppg noise) — 1.0 sits within 2.3 season pts of the noisy
-    // optimum while modeling that managers don't churn for slivers.
-    var STREAM_TOL = 1.0;
-    // A/B kill switch (mirrors SIM_USE_JS_MEAN): window.SIM_WAIVER_FILLS = false
-    // reverts to fully roster-locked lineups (no DST streaming, no hole fills).
-    var waiversOn = typeof window === 'undefined' || window.SIM_WAIVER_FILLS !== false;
-    var rosteredIds = {};
-    teams.forEach(function (t) { t.playerIds.forEach(function (id) { rosteredIds[id] = 1; }); });
-    // waiver pool for a position in a week: unrostered, playing, not IR/out
-    function waiverPool(list, wk) {
-      return list.filter(function (p) {
-        if (unavailable[p.sid] === 'ir') return false;
-        if (wk === currentWeek && unavailable[p.sid] === 'out') return false;
-        return true;
-      }).map(function (p) { return mkCand(p, wk); }).filter(Boolean).sort(function (a, b) { return ((b.force || 0) - (a.force || 0)) || (effMean(b.wp) - effMean(a.wp)); });
-    }
-    var hasDefSlot = lineupSlots.some(function (s) { return (SLOT_ELIGIBLE[s] || []).indexOf('DST') >= 0; });
-    if (waiversOn && hasDefSlot) {
-      var waiverDsts = players.list.filter(function (p) { return p.isDST && !rosteredIds[p.sid]; });
-      allWeeks.forEach(function (wk) {
-        var pool = waiverPool(waiverDsts, wk);
-        if (!pool.length) return;
-        var order = teams.map(function (t) {
-          var have = -1;
-          candsBy[t.rosterId][wk].forEach(function (c) {
-            if (c.p.isDST) have = Math.max(have, effMean(c.wp));
-          });
-          return { rid: t.rosterId, have: have }; // -1 = no DST playing (bye / none rostered)
-        }).sort(function (a, b) { return a.have - b.have; });
-        var next = 0;
-        order.forEach(function (o) {
-          if (next >= pool.length) return;
-          var claim = pool[next];
-          if (o.have < 0 || effMean(claim.wp) - o.have > STREAM_TOL) {
-            var cands = candsBy[o.rid][wk];
-            cands.push(claim);
-            cands.sort(function (a, b) { return ((b.force || 0) - (a.force || 0)) || (effMean(b.wp) - effMean(a.wp)); });
-            next++;
-          }
-        });
-      });
-    }
-
-    // ---- lineup-hole fills (every slot) ----
-    // The objective: NO simulated team ever fields an incomplete lineup.
-    // A slot the roster literally cannot fill this week (byes, IR/Out
-    // exclusions, thin rosters — QB with no backup, TE hole, empty FLEX)
-    // gets the best eligible player still on waivers, because that's what a
-    // real manager does rather than start an empty slot. No tolerance and no
-    // upgrade streaming here — rostered players always keep their jobs; only
-    // genuinely unfillable slots trigger a claim. Claims are distinct across
-    // teams within a week (shared byes = waiver contention), and the pool is
-    // this league's actual unrostered list, so replacement level scales with
-    // league size and roster depth automatically.
-    var waiverByPos = {}; // pos -> unrostered players (DST handled above too)
-    players.list.forEach(function (p) {
-      if (rosteredIds[p.sid]) return;
-      (waiverByPos[p.pos] = waiverByPos[p.pos] || []).push(p);
-    });
-    function unfilledSlots(cands, slots) {
-      var used = {}, un = [];
-      var order = slots.map(function (s, i) { return { s: s, i: i }; })
-        .sort(function (a, b) {
-          var fa = a.s.indexOf('FLEX') >= 0 ? 1 : 0, fb = b.s.indexOf('FLEX') >= 0 ? 1 : 0;
-          return fa - fb || a.i - b.i;
-        });
-      order.forEach(function (o) {
-        var elig = SLOT_ELIGIBLE[o.s] || [];
-        if (!elig.length) return; // IDP etc. — can never fill, don't count
-        for (var i = 0; i < cands.length; i++) {
-          if (used[i]) continue;
-          if (elig.indexOf(cands[i].p.pos) >= 0) { used[i] = 1; return; }
-        }
-        un.push(o.s);
-      });
-      return un;
-    }
-    if (waiversOn) allWeeks.forEach(function (wk) {
-      var pools = {};   // pos -> sorted waiver pool this week (lazy)
-      var claimed = {}; // sid -> 1, distinct claims across teams this week
-      teams.forEach(function (t) {
-        var cands = candsBy[t.rosterId][wk];
-        var holes = unfilledSlots(cands, lineupSlots);
-        if (!holes.length) return;
-        var changed = false;
-        holes.forEach(function (slot) {
-          var best = null;
-          (SLOT_ELIGIBLE[slot] || []).forEach(function (pos) {
-            if (!(pos in pools)) pools[pos] = waiverPool(waiverByPos[pos] || [], wk);
-            for (var i = 0; i < pools[pos].length; i++) {
-              var c = pools[pos][i];
-              if (claimed[c.p.sid]) continue;
-              if (!best || effMean(c.wp) > effMean(best.wp)) best = c;
-              break; // pools are sorted — first unclaimed is that pos's best
-            }
-          });
-          if (best) {
-            claimed[best.p.sid] = 1;
-            cands.push(best);
-            changed = true;
-          }
-        });
-        if (changed) cands.sort(function (a, b) { return ((b.force || 0) - (a.force || 0)) || (effMean(b.wp) - effMean(a.wp)); });
-      });
-    });
-
-    var prep = {}; // prep[rosterId][week] = [{p, wp}]
-    teams.forEach(function (t) {
-      prep[t.rosterId] = {};
-      allWeeks.forEach(function (wk) {
-        prep[t.rosterId][wk] = pickLineup(candsBy[t.rosterId][wk], lineupSlots);
-      });
-    });
-
-    // deterministic projected score per playoff week (sum of starter means)
-    var playoffProj = {};
-    teams.forEach(function (t) {
-      playoffProj[t.rosterId] = {};
-      for (var w2 = playoffStart; w2 < playoffStart + poRounds; w2++) {
-        var lu = prep[t.rosterId][w2] || [];
-        playoffProj[t.rosterId][w2] = lu.reduce(function (s2, slot) { return s2 + effMean(slot.wp); }, 0);
-      }
-    });
-
+    var prep = {}; // prep[rosterId][week] = [{p, wp}] (filled by the setup)
+    var playoffProj = {}; // deterministic projected score per playoff week (filled by the setup)
     var curShocks; // per-sim {playerKey: seasonShock}, persists reg season + playoffs
-    // teammate-coupled shocks (TEAM_SHOCK): rooms over the WHOLE NFL pool (a rostered WR's QB is usually on another
-    // fantasy team or on waivers), ranked by the mean of the next 3 weeks of this league's schedule window
-    var tsCtx = null, tsDraw = null;
-    if (teamShockOn()) {
-      var tsWeeks = allWeeks.slice(0, 3);
-      tsCtx = teamShockCtx(players.list.filter(function (p) { return !p.isDST && p.pos !== 'K'; }).map(function (p) {
-        var v = 0; tsWeeks.forEach(function (wk) { var wp = weeklyProjection(p, wk, sc, schedule); if (wp) v += effMean(wp); });
-        return { p: p, v: v };
-      }));
+    var tsCtx = null, tsDraw = null; // teammate-coupled shock rooms (setup) / this sim's draw
+    // SETUP as a generator (2026-11-21): the same statements in the same order as the one-call version, pausing
+    // (yield) after every weekly projection so a caller can spread the lineup prep over tasks. simLeague and
+    // run.finish() drain it in one go. No random draws happen in here.
+    function* setupSteps() {
+      var candsBy = {}; // candsBy[rosterId][week] = sorted candidate list
+      for (var cti = 0; cti < teams.length; cti++) {
+        var cT = teams[cti];
+        candsBy[cT.rosterId] = {};
+        var roster = cT.playerIds.map(function (sid) { return players.bySid[sid]; }).filter(Boolean)
+          .filter(function (p) { return unavailable[p.sid] !== 'ir'; });
+        for (var cwi = 0; cwi < allWeeks.length; cwi++) {
+          var cWk = allWeeks[cwi], cList = [];
+          for (var cri = 0; cri < roster.length; cri++) {
+            if (cWk === currentWeek && unavailable[roster[cri].sid] === 'out') continue;
+            var cand = mkCand(roster[cri], cWk, cT.rosterId);
+            if (cand) cList.push(cand);
+            yield;
+          }
+          candsBy[cT.rosterId][cWk] = cList.sort(function (a, b) { return ((b.force || 0) - (a.force || 0)) || (effMean(b.wp) - effMean(a.wp)); });
+        }
+      }
+
+      // ---- D/ST streaming (league-size aware) ----
+      // Real managers churn D/ST weekly, and the model already says DST value is
+      // pure matchup (dstWeeklyMean = f(opp implied)) — so a roster locked to one
+      // DST would eat bad matchups and a bye week that nobody actually eats.
+      // Each week: teams whose rostered DST projects STREAM_TOL points below the
+      // best D/ST still on waivers (or whose DST is on bye) claim a DISTINCT
+      // waiver DST — worst rostered unit claims first, mirroring waiver priority —
+      // while close calls keep the rostered unit. The pool is the truly
+      // unrostered DSTs, so a deeper league (or 2-DST rosters) gets a thinner
+      // streaming baseline automatically. Claimed DSTs are real player objects,
+      // so sampling, sigma and game correlations all price normally.
+      // "significantly worse" threshold, in projected pts. Backtested
+      // (backtest_stream_tol.py, 2019-25 closing lines + pbp DST actuals):
+      // projected gap → realized points at slope ~1.07 (the edge is real at
+      // every size), and the season policy sweep is FLAT from TOL 1.5 down to
+      // 0 (±0.3 ppg noise) — 1.0 sits within 2.3 season pts of the noisy
+      // optimum while modeling that managers don't churn for slivers.
+      var STREAM_TOL = 1.0;
+      // A/B kill switch (mirrors SIM_USE_JS_MEAN): window.SIM_WAIVER_FILLS = false
+      // reverts to fully roster-locked lineups (no DST streaming, no hole fills).
+      var waiversOn = typeof window === 'undefined' || window.SIM_WAIVER_FILLS !== false;
+      var rosteredIds = {};
+      teams.forEach(function (t) { t.playerIds.forEach(function (id) { rosteredIds[id] = 1; }); });
+      // waiver pool for a position in a week: unrostered, playing, not IR/out
+      function* waiverPool(list, wk) {
+        var out = [];
+        for (var i = 0; i < list.length; i++) {
+          var p = list[i];
+          if (unavailable[p.sid] === 'ir') continue;
+          if (wk === currentWeek && unavailable[p.sid] === 'out') continue;
+          var c = mkCand(p, wk);
+          if (c) out.push(c);
+          yield;
+        }
+        return out.sort(function (a, b) { return ((b.force || 0) - (a.force || 0)) || (effMean(b.wp) - effMean(a.wp)); });
+      }
+      var hasDefSlot = lineupSlots.some(function (s) { return (SLOT_ELIGIBLE[s] || []).indexOf('DST') >= 0; });
+      if (waiversOn && hasDefSlot) {
+        var waiverDsts = players.list.filter(function (p) { return p.isDST && !rosteredIds[p.sid]; });
+        for (var dwi = 0; dwi < allWeeks.length; dwi++) {
+          var dPool = yield* waiverPool(waiverDsts, allWeeks[dwi]);
+          if (dPool.length) (function (wk, pool) {
+            var order = teams.map(function (t) {
+              var have = -1;
+              candsBy[t.rosterId][wk].forEach(function (c) {
+                if (c.p.isDST) have = Math.max(have, effMean(c.wp));
+              });
+              return { rid: t.rosterId, have: have }; // -1 = no DST playing (bye / none rostered)
+            }).sort(function (a, b) { return a.have - b.have; });
+            var next = 0;
+            order.forEach(function (o) {
+              if (next >= pool.length) return;
+              var claim = pool[next];
+              if (o.have < 0 || effMean(claim.wp) - o.have > STREAM_TOL) {
+                var cands = candsBy[o.rid][wk];
+                cands.push(claim);
+                cands.sort(function (a, b) { return ((b.force || 0) - (a.force || 0)) || (effMean(b.wp) - effMean(a.wp)); });
+                next++;
+              }
+            });
+          })(allWeeks[dwi], dPool);
+        }
+      }
+
+      // ---- lineup-hole fills (every slot) ----
+      // The objective: NO simulated team ever fields an incomplete lineup.
+      // A slot the roster literally cannot fill this week (byes, IR/Out
+      // exclusions, thin rosters — QB with no backup, TE hole, empty FLEX)
+      // gets the best eligible player still on waivers, because that's what a
+      // real manager does rather than start an empty slot. No tolerance and no
+      // upgrade streaming here — rostered players always keep their jobs; only
+      // genuinely unfillable slots trigger a claim. Claims are distinct across
+      // teams within a week (shared byes = waiver contention), and the pool is
+      // this league's actual unrostered list, so replacement level scales with
+      // league size and roster depth automatically.
+      var waiverByPos = {}; // pos -> unrostered players (DST handled above too)
+      players.list.forEach(function (p) {
+        if (rosteredIds[p.sid]) return;
+        (waiverByPos[p.pos] = waiverByPos[p.pos] || []).push(p);
+      });
+      function unfilledSlots(cands, slots) {
+        var used = {}, un = [];
+        var order = slots.map(function (s, i) { return { s: s, i: i }; })
+          .sort(function (a, b) {
+            var fa = a.s.indexOf('FLEX') >= 0 ? 1 : 0, fb = b.s.indexOf('FLEX') >= 0 ? 1 : 0;
+            return fa - fb || a.i - b.i;
+          });
+        order.forEach(function (o) {
+          var elig = SLOT_ELIGIBLE[o.s] || [];
+          if (!elig.length) return; // IDP etc. — can never fill, don't count
+          for (var i = 0; i < cands.length; i++) {
+            if (used[i]) continue;
+            if (elig.indexOf(cands[i].p.pos) >= 0) { used[i] = 1; return; }
+          }
+          un.push(o.s);
+        });
+        return un;
+      }
+      if (waiversOn) for (var hwi = 0; hwi < allWeeks.length; hwi++) {
+        var hWk = allWeeks[hwi];
+        var pools = {};   // pos -> sorted waiver pool this week (lazy)
+        var claimed = {}; // sid -> 1, distinct claims across teams this week
+        for (var hti = 0; hti < teams.length; hti++) {
+          var hCands = candsBy[teams[hti].rosterId][hWk];
+          var holes = unfilledSlots(hCands, lineupSlots);
+          if (!holes.length) continue;
+          var changed = false;
+          for (var hsi = 0; hsi < holes.length; hsi++) {
+            var best = null, elig = SLOT_ELIGIBLE[holes[hsi]] || [];
+            for (var hei = 0; hei < elig.length; hei++) {
+              var hPos = elig[hei];
+              if (!(hPos in pools)) pools[hPos] = yield* waiverPool(waiverByPos[hPos] || [], hWk);
+              for (var hpi = 0; hpi < pools[hPos].length; hpi++) {
+                var hc = pools[hPos][hpi];
+                if (claimed[hc.p.sid]) continue;
+                if (!best || effMean(hc.wp) > effMean(best.wp)) best = hc;
+                break; // pools are sorted - first unclaimed is that pos's best
+              }
+            }
+            if (best) {
+              claimed[best.p.sid] = 1;
+              hCands.push(best);
+              changed = true;
+            }
+          }
+          if (changed) hCands.sort(function (a, b) { return ((b.force || 0) - (a.force || 0)) || (effMean(b.wp) - effMean(a.wp)); });
+        }
+      }
+
+      // lineups: prep[rosterId][week] = [{p, wp}]
+      teams.forEach(function (t) {
+        prep[t.rosterId] = {};
+        allWeeks.forEach(function (wk) {
+          prep[t.rosterId][wk] = pickLineup(candsBy[t.rosterId][wk], lineupSlots);
+        });
+      });
+
+      // deterministic projected score per playoff week (sum of starter means)
+      teams.forEach(function (t) {
+        playoffProj[t.rosterId] = {};
+        for (var w2 = playoffStart; w2 < playoffStart + poRounds; w2++) {
+          var lu = prep[t.rosterId][w2] || [];
+          playoffProj[t.rosterId][w2] = lu.reduce(function (s2, slot) { return s2 + effMean(slot.wp); }, 0);
+        }
+      });
+
+      // teammate-coupled shocks (TEAM_SHOCK): rooms over the WHOLE NFL pool (a rostered WR's QB is usually on another
+      // fantasy team or on waivers), ranked by the mean of the next 3 weeks of this league's schedule window
+      if (teamShockOn()) {
+        var tsWeeks = allWeeks.slice(0, 3), tsList = [];
+        for (var tsi = 0; tsi < players.list.length; tsi++) {
+          var tsP = players.list[tsi];
+          if (tsP.isDST || tsP.pos === 'K') continue;
+          var tsV = 0;
+          for (var tswi = 0; tswi < tsWeeks.length; tswi++) {
+            var tsWp = weeklyProjection(tsP, tsWeeks[tswi], sc, schedule);
+            if (tsWp) tsV += effMean(tsWp);
+            yield;
+          }
+          tsList.push({ p: tsP, v: tsV });
+        }
+        tsCtx = teamShockCtx(tsList);
+      }
     }
+
     function getShock(p) {
       if (p.isDST || p.pos === 'K') return 1;
       var k = p.sid || p.norm;
@@ -5129,7 +5223,7 @@
       weekTally[t.rosterId] = {};
     });
 
-    for (var s = 0; s < sims; s++) {
+    function runSim(s) {   // one simulated season; s = its index (the body of the old for-loop over sims)
       curShocks = {};
       tsDraw = tsCtx ? drawTeamShocks(rng, tsCtx) : null;
       var rec = {};
@@ -5180,23 +5274,70 @@
       tally[champ].titles++;
     }
 
-    return teams.map(function (t) {
-      var tl = tally[t.rosterId];
-      var weekly = {};
-      Object.keys(weekTally[t.rosterId]).forEach(function (wk) {
-        var w = weekTally[t.rosterId][wk];
-        weekly[wk] = { opp: w.opp, winPct: w.w / sims, avgPf: w.pf / sims, avgPa: w.pa / sims };
-      });
-      return {
-        team: t,
-        avgWins: tl.wins / sims, avgPF: tl.pf / sims,
-        playoffOdds: tl.playoffs / sims, byeOdds: tl.byes / sims,
-        titleOdds: tl.titles / sims, finalsOdds: tl.finals / sims,
-        pfLeadOdds: tl.pfLead / sims, pfDist: tl.pfs,
-        winCounts: tl.winCounts, placeCounts: tl.placeCounts, seedCounts: tl.seedCounts,
-        weekly: weekly, playoffProj: playoffProj[t.rosterId], playoffOpps: tl.pOpp || {}, sims: sims
-      };
-    }).sort(function (a, b) { return b.titleOdds - a.titleOdds || b.avgWins - a.avgWins; });
+    var setupIt = setupSteps(), setupDone = false, sDone = 0, dropped = false, broken = false, built = null;
+    function nowMs() { return typeof performance !== 'undefined' && performance && typeof performance.now === 'function' ? performance.now() : Date.now(); }
+    // the setup units that are left, then sims sDone..simEnd-1, in order; with ms it stops once that much time has passed
+    function work(simEnd, ms) {
+      if (broken) throw new Error('simLeague run failed earlier; start a new one');
+      var t0 = ms != null ? nowMs() : 0;
+      try {
+        while (!setupDone) {
+          if (setupIt.next().done) { setupDone = true; setupIt = null; }
+          if (ms != null && nowMs() - t0 >= ms) return false;
+        }
+        while (sDone < simEnd) {
+          runSim(sDone); sDone++;
+          if (ms != null && nowMs() - t0 >= ms) break;
+        }
+      } catch (e) { broken = true; throw e; }
+      return sDone >= sims;
+    }
+    function step(n) {
+      if (dropped) return true;
+      return work(n == null ? sims : Math.min(sims, sDone + Math.max(1, Math.floor(n) || 1)), null);
+    }
+    function stepFor(ms) {
+      if (dropped) return true;
+      return work(sims, ms > 0 ? ms : 0);
+    }
+    function setupFor(ms) {
+      if (dropped) return true;
+      if (!setupDone) work(sDone, ms > 0 ? ms : 0);
+      return setupDone;
+    }
+    function finish() {
+      if (dropped) return null;
+      if (!built) { work(sims, null); built = buildResults(); }
+      return built;
+    }
+    return {
+      sims: sims, step: step, stepFor: stepFor, setupFor: setupFor, finish: finish,
+      cancel: function () { dropped = true; built = null; setupIt = null; },
+      completed: function () { return sDone; },
+      ready: function () { return setupDone; },
+      isDone: function () { return setupDone && sDone >= sims; },
+      cancelled: function () { return dropped; }
+    };
+
+    function buildResults() {
+      return teams.map(function (t) {
+        var tl = tally[t.rosterId];
+        var weekly = {};
+        Object.keys(weekTally[t.rosterId]).forEach(function (wk) {
+          var w = weekTally[t.rosterId][wk];
+          weekly[wk] = { opp: w.opp, winPct: w.w / sims, avgPf: w.pf / sims, avgPa: w.pa / sims };
+        });
+        return {
+          team: t,
+          avgWins: tl.wins / sims, avgPF: tl.pf / sims,
+          playoffOdds: tl.playoffs / sims, byeOdds: tl.byes / sims,
+          titleOdds: tl.titles / sims, finalsOdds: tl.finals / sims,
+          pfLeadOdds: tl.pfLead / sims, pfDist: tl.pfs,
+          winCounts: tl.winCounts, placeCounts: tl.placeCounts, seedCounts: tl.seedCounts,
+          weekly: weekly, playoffProj: playoffProj[t.rosterId], playoffOpps: tl.pOpp || {}, sims: sims
+        };
+      }).sort(function (a, b) { return b.titleOdds - a.titleOdds || b.avgWins - a.avgWins; });
+    }
 
     function teamScore(lineup, env, rng2) {
       var total = 0;
@@ -5992,7 +6133,7 @@
     jsBasePg: jsBasePg, jsOppMult: jsOppMult, ncCacheReset: ncCacheReset,
     propAnchorMean: propAnchorMean, gammaMedRatio: gammaMedRatio, marketRate: marketRate, propImpliedFp: propImpliedFp, propCacheReset: propCacheReset,
     marketObsContaminated: marketObsContaminated,
-    simWeek: simWeek, simSeason: simSeason, simLeague: simLeague, bracketRounds: bracketRounds, simBestBall: simBestBall, simBBField: simBBField, bbFieldRun: bbFieldRun, bbFieldAddWeek: bbFieldAddWeek, bbRosterOf: bbRosterOf, bbSleeperIndex: bbSleeperIndex, bbResolveSid: bbResolveSid, bbAliasNorm: bbAliasNorm, pickLineup: pickLineup,
+    simWeek: simWeek, simSeason: simSeason, simLeague: simLeague, simLeagueStart: simLeagueStart, simLeagueAsync: simLeagueAsync, bracketRounds: bracketRounds, simBestBall: simBestBall, simBBField: simBBField, bbFieldRun: bbFieldRun, bbFieldAddWeek: bbFieldAddWeek, bbRosterOf: bbRosterOf, bbSleeperIndex: bbSleeperIndex, bbResolveSid: bbResolveSid, bbAliasNorm: bbAliasNorm, pickLineup: pickLineup,
     drawWeekEnv: drawWeekEnv, samplePlayerScore: samplePlayerScore, effMean: effMean, CORR: CORR,
     drawSeasonShock: drawSeasonShock, teamShockCtx: teamShockCtx, drawTeamShocks: drawTeamShocks, coupledShock: coupledShock, SLOT_ELIGIBLE: SLOT_ELIGIBLE
   };

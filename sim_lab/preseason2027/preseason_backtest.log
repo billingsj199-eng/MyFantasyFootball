@@ -1,0 +1,133 @@
+=== 2027 preseason prototype: walk-forward 2015-2025 (train on seasons < Y only) ===
+  tables: 7787 player-seasons, 448 team-seasons, win totals 448, ADP rows 2489, depth 6690 (3s)
+  2013: 656 candidates (5s)
+  2014: 657 candidates (6s)
+  2015: 656 candidates (7s)
+  2016: 743 candidates (9s)
+  2017: 750 candidates (10s)
+  2018: 742 candidates (12s)
+  2019: 777 candidates (13s)
+  2020: 737 candidates (15s)
+  2021: 750 candidates (17s)
+  2022: 792 candidates (18s)
+  2023: 761 candidates (20s)
+  2024: 711 candidates (21s)
+  2025: 741 candidates (23s)
+  fitted 2015
+  fitted 2016
+  fitted 2017
+  fitted 2018
+  fitted 2019
+  fitted 2020
+  fitted 2021
+  fitted 2022
+  fitted 2023
+  fitted 2024
+  fitted 2025
+
+=== ADP top-150 pool, 2015-25: PPG (games-weighted), n=1519 player-seasons ===
+  model               MAE   RMSE   bias    rho  top12 yrs<base
+  anchor_mix        2.531  3.195  0.999  0.549  0.665     2/11
+  anchor_f          2.584  3.247  0.995  0.545  0.653     0/11
+  anchor_r30        2.668  3.355  0.994  0.505  0.653     0/11
+  mkt50             2.490  3.146  1.003  0.543  0.671     5/11
+  ens               2.577  3.248  0.999  0.510  0.649     1/11
+  ridge_full        2.609  3.298  0.998  0.500  0.655     1/11
+  gbm_full          2.654  3.353  0.999  0.486  0.645     0/11
+  ridge_stats       2.713  3.460  1.024  0.441  0.631     1/11
+  adp_curve_f       2.494  3.157  1.007  0.550  0.675     0/11
+  naive_f           3.103  3.936  0.976  0.411  0.619     0/11
+
+=== ADP 1-30: PPG (games-weighted), n=313 player-seasons ===
+  model               MAE   RMSE   bias    rho  top12 yrs<base
+  anchor_mix        2.837  3.533  1.002  0.277  0.867     5/11
+  ens               2.832  3.518  1.009  0.267  0.867     5/11
+  adp_curve_f       2.760  3.474  1.014  0.303  0.883     0/11
+  naive_f           3.513  4.396  0.952  0.187  0.844     0/11
+
+=== ADP 31-100: PPG (games-weighted), n=743 player-seasons ===
+  model               MAE   RMSE   bias    rho  top12 yrs<base
+  anchor_mix        2.447  3.091  1.003  0.258  0.623     3/11
+  ens               2.480  3.161  1.003  0.233  0.623     2/11
+  adp_curve_f       2.399  3.047  1.008  0.308  0.652     0/11
+  naive_f           2.949  3.790  0.981  0.137  0.554     0/11
+
+=== ADP 101-150: PPG (games-weighted), n=478 player-seasons ===
+  model               MAE   RMSE   bias    rho  top12 yrs<base
+  anchor_mix        2.444  3.101  0.990  0.175  0.800     6/11
+  ens               2.545  3.177  0.979  0.086  0.783     5/11
+  adp_curve_f       2.452  3.090  0.994    nan  0.796     0/11
+  naive_f           3.039  3.803  0.993 -0.001  0.771     0/11
+
+=== QB (ADP top 150): PPG (games-weighted), n=193 player-seasons ===
+  model               MAE   RMSE   bias    rho  top12 yrs<base
+  anchor_mix        2.535  3.174  0.998  0.420  0.717      1/3
+  ens               2.620  3.307  0.990  0.360  0.667      0/3
+  ridge_stats       2.758  3.523  1.005  0.240  0.658      0/3
+  adp_curve_f       2.542  3.149  1.011  0.454  0.717      0/3
+  naive_f           3.249  4.248  0.981  0.233  0.692      0/3
+
+=== RB (ADP top 150): PPG (games-weighted), n=572 player-seasons ===
+  model               MAE   RMSE   bias    rho  top12 yrs<base
+  anchor_mix        2.920  3.646  1.017  0.612  0.598     2/11
+  ens               2.950  3.673  1.027  0.586  0.568     3/11
+  ridge_stats       3.161  3.989  1.047  0.511  0.500     1/11
+  adp_curve_f       2.839  3.584  1.021  0.640  0.621     0/11
+  naive_f           3.588  4.484  0.986  0.460  0.485     0/11
+
+=== WR (ADP top 150): PPG (games-weighted), n=609 player-seasons ===
+  model               MAE   RMSE   bias    rho  top12 yrs<base
+  anchor_mix        2.344  2.939  0.990  0.582  0.485     4/11
+  ens               2.387  2.990  0.981  0.567  0.500     3/11
+  ridge_stats       2.452  3.086  1.009  0.537  0.523     2/11
+  adp_curve_f       2.322  2.912  0.998  0.601  0.530     0/11
+  naive_f           2.820  3.515  0.964  0.486  0.485     0/11
+
+=== TE (ADP top 150): PPG (games-weighted), n=160 player-seasons ===
+  model               MAE   RMSE   bias    rho  top12 yrs<base
+  anchor_mix        1.878  2.364  0.973  0.564  0.879      0/0
+  ens               1.934  2.419  0.986  0.509  0.879      0/0
+  ridge_stats       2.102  2.713  1.050  0.440  0.871      0/0
+  adp_curve_f       1.870  2.374  0.972  0.489  0.856      0/0
+  naive_f           2.254  2.808  0.980  0.455  0.841      0/0
+
+=== rookies (ADP top 150): PPG (games-weighted), n=157 player-seasons ===
+  model               MAE   RMSE   bias    rho  top12 yrs<base
+  anchor_mix        2.896  3.631  0.996    nan    nan      0/0
+  ens               2.942  3.690  1.013    nan    nan      0/0
+  adp_curve_f       2.794  3.501  1.003    nan    nan      0/0
+
+=== 2019-25 vs ESPN wk1 / Clay / engine wk1 (rows with all five): PPG (games-weighted), n=676 player-seasons ===
+  model               MAE   RMSE   bias    rho  top12 yrs<base
+  anchor_mix        2.444  3.114  1.015  0.584  0.728      3/6
+  ens               2.491  3.140  1.010  0.540  0.717      3/6
+  adp_curve_f       2.437  3.094  1.025  0.597  0.743      2/6
+  espn_wk1          2.461  3.110  1.024  0.612  0.728      2/6
+  clay              2.393  2.986  0.999  0.615  0.739      0/6
+  engine_wk1        2.591  3.283  1.095  0.581  0.754      0/6
+
+=== 2019-25 ensembles: PPG (games-weighted), n=813 player-seasons ===
+  model               MAE   RMSE   bias    rho  top12 yrs<base
+  anchor_mix        2.471  3.126  1.002  0.576  0.691      3/6
+  anc_espn          2.372  2.977  1.007  0.616  0.691      5/6
+  anc_clay          2.371  2.968  0.993  0.610  0.701      3/6
+  anc_espn_clay     2.356  2.943  0.999  0.619  0.698      5/6
+  espn_wk1          2.444  3.076  1.011  0.593  0.708      2/6
+  clay              2.406  2.998  0.984  0.595  0.708      0/6
+
+=== ADP top-150 pool, 2015-25: SEASON TOTAL (0 if he never played), n=1591 ===
+  model                MAE    rho  top12  top24
+  total_anchor       50.54  0.469  0.504  0.634
+  total_pred         50.89  0.460  0.492  0.631
+  adp_total          49.69  0.501  0.545  0.659
+
+=== Ranges (walk-forward residual quantiles, 2017-25): PPG p10-p90 coverage 82.8% (target 80), below 9.6, above 7.6
+  QB: 78.1% (n 137)
+  RB: 84.4% (n 469)
+  WR: 82.1% (n 502)
+  TE: 84.6% (n 117)
+  season TOTAL p10-p90 coverage 84.7% (n 1270); below p10 9.2%
+
+  games model: mean predicted share 0.775 vs actual 0.768; corr 0.234
+
+done (99s)

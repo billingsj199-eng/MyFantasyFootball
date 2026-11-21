@@ -1,0 +1,24 @@
+=== Pick'em, 2013-2025 regular season ===
+  straight-up, pick the de-vigged moneyline favourite: 66.6% (season range 62.1-71.7%) | Brier 0.2106
+  straight-up, pick the closing spread (normal) favourite: 66.6% (season range 62.3-71.3%) | Brier 0.2110
+  straight-up, pick the Elo (no market) favourite: 64.7% (season range 60.8-69.3%) | Brier 0.2203
+  confidence pool ranked by ml: expected 71.1% of max points, actual 72.0% | per-week sd of actual 13.3 pts of %
+  confidence pool ranked by elo: expected 69.9% of max points, actual 69.2% | per-week sd of actual 12.8 pts of %
+  ML-ranked beats Elo-ranked in 62% of weeks, ties 3%; season totals ML ahead in 10/13
+  ATS: Elo side vs closing spread 50.5% (n 3322, break-even 52.4% at -110)
+    |Elo - close| >= 1.5: 51.1% (n 2123)
+    |Elo - close| >= 3: 52.0% (n 1147)
+    |Elo - close| >= 5: 53.1% (n 388)
+    by season: 2013:51 2014:54 2015:56 2016:52 2017:50 2018:52 2019:49 2020:51 2021:49 2022:50 2023:45 2024:50 2025:48
+  home team ATS 49.1%; favourite ATS 48.9%
+
+=== Survivor 2013-2025 (one team per week, each team once; weeks 1 to last-1) ===
+  greedy: weeks survived (actual results) mean 4.6, median 4, by season [9, 5, 1, 3, 5, 0, 4, 12, 8, 0, 9, 0, 4]
+          P(survive all weeks) from the closing lines: mean 2.46%; P(survive 10 weeks) see below
+  plan  : weeks survived (actual results) mean 3.7, median 3, by season [4, 3, 1, 0, 4, 2, 3, 16, 8, 0, 2, 1, 4]
+          P(survive all weeks) from the closing lines: mean 2.48%; P(survive 10 weeks) see below
+  greedy simulated (5000 x 13 seasons, outcomes drawn from the closing line): expected weeks 4.18, P(10+ weeks) 12.4%, P(all) 2.41%
+  plan   simulated (5000 x 13 seasons, outcomes drawn from the closing line): expected weeks 3.85, P(10+ weeks) 11.0%, P(all) 2.41%
+  plan beats greedy on expected weeks in 2/13 seasons (avg +-0.33 weeks)
+
+done (223s)

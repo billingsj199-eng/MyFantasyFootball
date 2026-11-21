@@ -1,0 +1,58 @@
+  win-total hold: mean 4.4%; de-vigged P(over) mean 0.500
+=== Part A: game layer vs the closing market, REG 2013-2025 ===
+  games 3407 | margin - closing spread: mean +0.04, sd 12.87, MAE 9.94 | total - closing total: mean +0.39, sd 13.24, MAE 10.50
+  closing-spread win prob (normal, walk-forward sd ~13.5): Brier 0.2114 | log loss 0.6125 | coin-flip-at-home-rate Brier 0.2469
+  calibration (pred -> actual): 0.15->0.16 (n49) | 0.27->0.23 (n200) | 0.36->0.32 (n409) | 0.43->0.43 (n538) | 0.57->0.54 (n639) | 0.65->0.66 (n693) | 0.74->0.77 (n444) | 0.85->0.91 (n179)
+  de-vigged moneyline (multiplicative) Brier 0.2106, log loss 0.6106, avg hold 3.0% (n 3406)
+  margin = 3: real 14.4% vs normal sim 5.5% | =7: real 8.5% vs 5.0% | ties/OT 5.6% games to OT
+  blowouts |margin| >= 21: real 16.8% vs sim 15.2% | upset of 7+ pt fav: real 19.8%
+  totals: shootouts (total >= line + 14) real 15.3% vs normal 14.6% | duds (<= line - 14) real 13.6% vs 14.4%
+  total residual skew +0.31 (normal 0); margin residual kurtosis +0.38
+  implied team total vs points scored: bias +0.19, MAE 7.31, sd 9.23, r 0.388
+    implied 0-18: n 717, actual/implied 1.017, sd 8.7
+    implied 18-21: n 1538, actual/implied 0.994, sd 9.0
+    implied 21-24: n 1983, actual/implied 1.007, sd 9.3
+    implied 24-27: n 1645, actual/implied 1.014, sd 9.5
+    implied 27-40: n 930, actual/implied 1.014, sd 9.7
+  pregame script: dropback rate = 0.611 -0.0052 x exp_margin +0.0061 x (implied - avg) | plays = 62.5 -0.021 x exp_margin +0.312 x (implied - avg)
+  realized script: dropback rate 0.611 -0.0020 x exp_margin -0.0043 x (final margin surprise) -> a 14-pt surprise moves pass rate -6.0 pts
+  team plays per game sd 8.5; dropback rate sd 0.104; corr(plays, opp plays) -0.432
+
+=== Part B: preseason NFL team season sims 2013-2025 (10k sims, real schedule, hot ratings) ===
+  2013: sd 14.05, hfa 2.5, market rating range -9.4..+7.1
+  2014: sd 13.38, hfa 2.5, market rating range -7.3..+7.4
+  2015: sd 13.75, hfa 2.5, market rating range -5.6..+6.3
+  2016: sd 13.54, hfa 2.5, market rating range -7.5..+6.0
+  2017: sd 13.21, hfa 2.5, market rating range -11.6..+9.5
+  2018: sd 13.19, hfa 2.0, market rating range -6.8..+5.2
+  2019: sd 13.19, hfa 2.0, market rating range -9.1..+6.2
+  2020: sd 13.18, hfa 2.0, market rating range -8.6..+7.8
+  2021: sd 13.13, hfa 2.0, market rating range -11.0..+8.3
+  2022: sd 13.19, hfa 2.0, market rating range -8.4..+9.5
+  2023: sd 13.04, hfa 2.0, market rating range -9.7..+7.8
+  2024: sd 13.04, hfa 2.0, market rating range -7.1..+5.6
+  2025: sd 13.00, hfa 2.0, market rating range -9.4..+7.2
+
+  model        winsMAE  RMSE  p10-p90cov  Brier(over)  Brier(playoffs) LL(playoffs) Brier(div)  sum P(po)/season
+  MARKET        2.160  2.642     70.4%   0.2454      0.2163        0.6326      0.1608     12.92
+  MARKET_hot    2.162  2.642     87.7%   0.2459      0.2063        0.5961      0.1567     12.92
+  ELO           2.328  2.820     83.9%   0.2686      0.2153        0.6205      0.1658     12.92
+  BLEND         2.183  2.660     87.3%   0.2487      0.2060        0.5962      0.1574     12.92
+  market's own de-vigged P(over) Brier 0.2460; coin flip .2500; actual over rate 0.474
+  no-information playoff Brier (league base rate) 0.2398; division 0.1875
+  MARKET_hot playoff calibration: 0.07->0.06 (n31) | 0.18->0.27 (n90) | 0.33->0.32 (n97) | 0.50->0.44 (n105) | 0.66->0.65 (n65) | 0.81->0.81 (n27) | 0.93->1.00 (n1)
+
+=== Part C: in-season update from week 4 / 8 / 12 (banked results + simulated rest), 2013-2025 ===
+  week  model           ROS-wins MAE   Brier(playoffs)  LL(playoffs)  Brier(div)
+     4  PRESEASON_MKT     1.863        0.1742          0.5142      0.1345
+     4  ELO_upd           1.899        0.1658          0.4967      0.1356
+     4  SPREADS_upd       1.829        0.1660          0.4942      0.1284
+     8  PRESEASON_MKT     1.519        0.1411          0.4253      0.1098
+     8  ELO_upd           1.456        0.1270          0.3921      0.1027
+     8  SPREADS_upd       1.476        0.1301          0.3955      0.1013
+    12  PRESEASON_MKT     1.054        0.1059          0.3196      0.0898
+    12  ELO_upd           0.970        0.0970          0.2952      0.0839
+    12  SPREADS_upd       1.007        0.0983          0.2972      0.0826
+  week 8 playoff Brier, market-spread ratings better than Elo in 7/13 seasons
+
+done (53s)

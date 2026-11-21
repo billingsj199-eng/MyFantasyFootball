@@ -1,0 +1,117 @@
+=== Games-played model (in-house), walk-forward 2015-25 ===
+  availability 2012: 619 roster players
+  availability 2013: 623 roster players
+  availability 2014: 611 roster players
+  availability 2015: 625 roster players
+  availability 2016: 945 roster players
+  availability 2017: 996 roster players
+  availability 2018: 1010 roster players
+  availability 2019: 987 roster players
+  availability 2020: 981 roster players
+  availability 2021: 928 roster players
+  availability 2022: 992 roster players
+  availability 2023: 973 roster players
+  availability 2024: 996 roster players
+  availability 2025: 969 roster players
+
+  missed games by cause, ADP top 150, 2015-25 (per player-season): injury / role (active, no stat) / off-roster
+    depth 1          n 1219: 1.92 / 0.25 / 0.31  (of 16.5 games; missed 4+ 34%)
+    depth 2          n  260: 1.62 / 0.63 / 0.48  (of 16.5 games; missed 4+ 39%)
+    depth 3+ / none  n  131: 3.38 / 0.89 / 1.72  (of 16.4 games; missed 4+ 70%)
+
+  ridge/dist mix picked on 2015-18 folds: w_ridge 0.75 (MAE 2.834); frozen for all years
+
+  ADP top-150 pool, 2015-25 (n 1591): model | games MAE | RMSE | corr | Spearman | mean pred vs actual
+    g_main            2.81  3.67  0.310  0.236   12.31 vs 12.64
+    g_ridge           2.81  3.70  0.308  0.234   12.36 vs 12.64
+    g_gbm             2.89  3.70  0.276  0.223   12.19 vs 12.64
+    g_dist            2.85  3.62  0.308  0.237   12.15 vs 12.64
+    noinj_main        2.82  3.64  0.308  0.245   12.26 vs 12.64
+    g_flat            3.96  4.47 -0.020  0.079   10.26 vs 12.64
+    g_last            3.55  4.82  0.159  0.135   13.45 vs 12.64
+    old_games         2.73  3.66  0.250  0.207   12.77 vs 12.64
+
+  same, 2019-25 (main mix frozen) (n 1038): model | games MAE | RMSE | corr | Spearman | mean pred vs actual
+    g_main            2.79  3.59  0.327  0.226   12.43 vs 12.82
+    g_ridge           2.79  3.62  0.324  0.223   12.48 vs 12.82
+    g_gbm             2.82  3.64  0.295  0.202   12.44 vs 12.82
+    g_dist            2.83  3.56  0.329  0.230   12.26 vs 12.82
+    noinj_main        2.81  3.58  0.323  0.231   12.39 vs 12.82
+    g_flat            3.99  4.52  0.004  0.101   10.32 vs 12.82
+    g_last            3.54  4.81  0.171  0.129   13.62 vs 12.82
+    old_games         2.67  3.57  0.275  0.207   12.96 vs 12.82
+
+  QB (n 200): model | games MAE | RMSE | corr | Spearman | mean pred vs actual
+    g_main            2.46  3.32  0.403  0.226   13.06 vs 13.38
+    g_flat            5.95  6.29 -0.045  0.102    8.20 vs 13.38
+    g_last            3.37  4.97  0.142  0.087   14.13 vs 13.38
+    old_games         2.40  3.44  0.331  0.166   13.48 vs 13.38
+
+  RB (n 599): model | games MAE | RMSE | corr | Spearman | mean pred vs actual
+    g_main            3.15  3.95  0.298  0.265   11.55 vs 12.08
+    g_flat            3.70  4.21  0.154  0.227   10.46 vs 12.08
+    g_last            3.79  5.04  0.158  0.154   12.96 vs 12.08
+    old_games         3.00  3.87  0.257  0.260   12.04 vs 12.08
+
+  WR (n 628): model | games MAE | RMSE | corr | Spearman | mean pred vs actual
+    g_main            2.64  3.55  0.252  0.135   12.74 vs 12.94
+    g_flat            3.58  4.01  0.051  0.106   10.87 vs 12.94
+    g_last            3.35  4.58  0.139  0.110   13.65 vs 12.94
+    old_games         2.57  3.54  0.159  0.094   13.21 vs 12.94
+
+  TE (n 164): model | games MAE | RMSE | corr | Spearman | mean pred vs actual
+    g_main            2.70  3.45  0.243  0.236   12.46 vs 12.66
+    g_flat            3.95  4.42  0.096  0.156    9.75 vs 12.66
+    g_last            3.66  4.73  0.133  0.042   13.61 vs 12.66
+    old_games         2.78  3.61  0.160  0.015   12.88 vs 12.66
+
+  role tier depth 1 (n 1200): model | games MAE | RMSE | corr | Spearman | mean pred vs actual
+    g_main            2.55  3.40  0.180  0.162   13.01 vs 12.99
+    g_flat            4.05  4.51 -0.035  0.048   10.19 vs 12.99
+    g_last            3.36  4.63  0.118  0.101   13.97 vs 12.99
+    old_games         2.58  3.50  0.098  0.116   13.21 vs 12.99
+
+  role tier depth 2 (n 260): model | games MAE | RMSE | corr | Spearman | mean pred vs actual
+    g_main            3.09  3.70  0.108  0.055   11.53 vs 12.66
+    g_flat            3.50  3.96  0.165  0.221   10.53 vs 12.66
+    g_last            3.58  4.64  0.142  0.105   12.09 vs 12.66
+    old_games         2.68  3.47  0.131  0.168   12.48 vs 12.66
+
+  role tier depth 3+/none (n 131): model | games MAE | RMSE | corr | Spearman | mean pred vs actual
+    g_main            4.70  5.50  0.279  0.333    7.36 vs  9.45
+    g_flat            4.02  5.01  0.128  0.121   10.40 vs  9.45
+    g_last            5.17  6.56  0.078  0.040   11.35 vs  9.45
+    old_games         4.27  5.17  0.198  0.246    9.28 vs  9.45
+
+  IN-HOUSE relevance pool (chart 1-2 / real role / top-64 rookie; no ADP) (n 4023): model | games MAE | RMSE | corr | Spearman | mean pred vs actual
+    g_main            3.14  3.97  0.626  0.583   10.30 vs 10.12
+    g_flat            4.27  4.99  0.187  0.162   10.10 vs 10.12
+    g_last            4.20  5.53  0.378  0.373   11.45 vs 10.12
+    old_games         3.12  3.98  0.628  0.577   10.18 vs 10.12
+
+  distribution shrink toward the base rate picked on 2015-18: a 0.8 (1 = raw)
+
+  calibration P(miss 4+ games), ADP top 150: 0.18->0.29 (n59) | 0.25->0.25 (n334) | 0.35->0.36 (n419) | 0.45->0.35 (n344) | 0.58->0.44 (n332) | 0.82->0.75 (n122)
+    Brier 0.2257 vs base-rate 0.2349
+  P(full season, 0-1 missed): pred 0.346 vs actual 0.377; Brier 0.2304 vs base 0.2349
+  P(long absence, 8+ missed): pred 0.216 vs actual 0.157; Brier 0.1336 vs base 0.1324
+
+  strongest standardized ridge coefficients (games share, pooled): dc1 +0.102, w1_off -0.085, gs1 +0.058, dcna -0.057, dc2 +0.054, w1_res -0.049, age -0.048, rookie -0.048, inj1 +0.031, inj_hist -0.030, role1 -0.022, tpg1x +0.019
+
+=== Season totals: in-house PPG (ridge_stats, no ADP) x games ===
+
+  ADP top 150, 2015-25 (n 1591): model | MAE | Spearman (pos-season) | top-12 | top-24
+    inhouse_newG      52.35  0.446  0.462  0.640
+    inhouse_oldG      52.33  0.424  0.443  0.612
+    inhouse_flatG     61.11  0.425  0.470  0.629
+    inhouse_lastG     58.54  0.393  0.413  0.604
+    adp_total         49.69  0.501  0.534  0.657
+    cmp_anchor_newG   50.04  0.501  0.515  0.650
+    cmp_anchor_oldG   50.54  0.469  0.504  0.634
+  ADP 1-30: total MAE in-house new 63.0 | old 63.5 | ADP 60.1 | pooled Spearman new 0.245 old 0.187 ADP 0.213
+  ADP 31-100: total MAE in-house new 50.4 | old 49.5 | ADP 47.8 | pooled Spearman new 0.451 old 0.446 ADP 0.455
+  ADP 101-150: total MAE in-house new 48.5 | old 49.5 | ADP 45.9 | pooled Spearman new 0.455 old 0.441 ADP 0.456
+
+  season-total p10-p90 coverage from the games distribution x PPG ratio draws (2017-25, ADP top 150): 83.7% (n 1303; target 80)
+
+done (160s)

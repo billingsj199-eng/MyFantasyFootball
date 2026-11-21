@@ -1,0 +1,173 @@
+=== In-house per-game model v1 (walk-forward 2015-25; dev 2015-22, final check 2023-25) ===
+
+=== STEP 1. Diagnosis: old in-house (ridge_stats) vs ADP curve, ADP top 150, games-weighted PPG MAE ===
+  group                          n   MAE old  MAE ADP   gap   gap x n (pts) | bias old (act/pred) | bias ADP
+  all                            1534   2.711    2.491  +0.221    +338.5       | 1.024 | 1.006
+  QB                              193   2.758    2.542  +0.216     +41.6       | 1.005 | 1.011
+  RB                              572   3.161    2.839  +0.322    +184.1       | 1.047 | 1.021
+  WR                              609   2.452    2.322  +0.129     +78.7       | 1.009 | 0.998
+  TE                              160   2.102    1.870  +0.233     +37.2       | 1.050 | 0.972
+  ADP 1-30                        313   2.918    2.760  +0.157     +49.3       | 1.079 | 1.014
+  31-100                          743   2.593    2.399  +0.194    +144.5       | 1.022 | 1.008
+  101-150                         478   2.758    2.452  +0.306    +146.3       | 0.973 | 0.994
+  rookie                          157   3.180    2.794  +0.386     +60.6       | 1.182 | 1.003
+  year 2                          215   2.905    2.702  +0.203     +43.6       | 1.040 | 1.039
+  years 3-5                       580   2.742    2.532  +0.210    +121.5       | 1.015 | 1.014
+  veteran                         582   2.484    2.290  +0.194    +113.2       | 0.998 | 0.988
+  changed team                    212   2.886    2.556  +0.330     +70.0       | 0.963 | 0.941
+  new QB1                         453   2.731    2.422  +0.309    +140.0       | 1.032 | 0.999
+  new head coach                  304   2.631    2.436  +0.195     +59.1       | 1.021 | 1.015
+  drafted competition (rd 1-2)    129   2.804    2.529  +0.276     +35.6       | 0.919 | 0.969
+  back from a short season         52   3.575    2.821  +0.754     +39.2       | 0.999 | 0.978
+  backup -> week-1 starter         71   3.584    3.232  +0.352     +25.0       | 1.082 | 1.055
+  RB rookies                       87   3.634    3.157  +0.477     +41.5       | 1.207 | 1.007
+  RB vets 28+                     106   3.225    2.823  +0.403     +42.7       | 0.959 | 0.984
+
+=== STEP 2. Structural model stages (volume x efficiency), out of sample ===
+  efficiency shrink strength k (median over folds; opportunities of prior-rate weight): QB-ctd_t:50 QB-cyd_t:50 QB-int_a:1280 QB-ptd_a:1280 QB-pyd_a:1280 QB-rec_t:50 QB-rtd_c:160 QB-ryd_c:20 RB-ctd_t:320 RB-cyd_t:320 RB-int_a:50 RB-ptd_a:50 RB-pyd_a:50 RB-rec_t:160 RB-rtd_c:640 RB-ryd_c:1280 TE-ctd_t:320 TE-cyd_t:160 TE-int_a:50 TE-ptd_a:50 TE-pyd_a:50 TE-rec_t:160 TE-rtd_c:50 TE-ryd_c:50 WR-ctd_t:640 WR-cyd_t:320 WR-int_a:50 WR-ptd_a:50 WR-pyd_a:50 WR-rec_t:80 WR-rtd_c:80 WR-ryd_c:160
+  best stage on dev = S7 lean (dev-picked); S6 = 0.75 x S7 lean (dev-picked) + 0.25 x old ridge (weight picked on 2015-22)
+  ADP-ANCHORED variant (comparison only, ADP is an input): 0.2 x in-house + 0.8 x ADP curve (picked on 2015-22)
+
+  --- dev 2015-22 ---
+
+  ADP top 150, dev 2015-22 (n 1093): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             2.747  0.439   0/8
+    S1 structure+basic      2.719  0.445   0/8
+    S2 +team context        2.727  0.449   0/8
+    S3 +roster changes      2.722  0.455   0/8
+    S4 +experience/JM       2.687  0.459   0/8
+    S5 +RB specifics        2.690  0.458   0/8
+    S7 lean (dev-picked)    2.673  0.477   0/8
+    S6 blend                2.658  0.481   0/8
+    ADP-anchored (comparison)  2.457  0.559   6/8
+    naive_f                 3.125  0.413   0/8
+    adp_curve_f             2.479  0.554   (benchmark)
+
+  --- FINAL CHECK 2023-25 (not used for any choice) ---
+
+  ADP top 150, final 2023-25 (n 441): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             2.629  0.429   1/3
+    S1 structure+basic      2.628  0.406   1/3
+    S2 +team context        2.634  0.412   1/3
+    S3 +roster changes      2.626  0.414   1/3
+    S4 +experience/JM       2.576  0.423   1/3
+    S5 +RB specifics        2.575  0.422   1/3
+    S7 lean (dev-picked)    2.573  0.440   1/3
+    S6 blend                2.554  0.446   1/3
+    ADP-anchored (comparison)  2.481  0.513   3/3
+    naive_f                 3.024  0.412   0/3
+    adp_curve_f             2.519  0.532   (benchmark)
+
+  --- all 11 seasons ---
+
+  ADP top 150, 2015-25 (n 1534): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             2.711  0.437   1/11
+    S6 blend                2.627  0.472   1/11
+    ADP-anchored (comparison)  2.464  0.546   9/11
+    naive_f                 3.095  0.413   0/11
+    adp_curve_f             2.491  0.548   (benchmark)
+    S7 lean (dev-picked)    2.643  0.467   1/11
+
+  QB (n 193): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             2.758  0.240   3/10
+    S6 blend                2.679  0.329   5/10
+    ADP-anchored (comparison)  2.525  0.437   7/10
+    naive_f                 3.249  0.233   0/10
+    adp_curve_f             2.542  0.454   (benchmark)
+
+  RB (n 572): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             3.161  0.511   1/11
+    S6 blend                3.058  0.553   2/11
+    ADP-anchored (comparison)  2.820  0.643   7/11
+    naive_f                 3.588  0.460   0/11
+    adp_curve_f             2.839  0.640   (benchmark)
+
+  WR (n 609): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             2.452  0.537   2/11
+    S6 blend                2.395  0.554   4/11
+    ADP-anchored (comparison)  2.291  0.608   8/11
+    naive_f                 2.820  0.486   0/11
+    adp_curve_f             2.322  0.601   (benchmark)
+
+  TE (n 160): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             2.102  0.440   3/6
+    S6 blend                1.973  0.438   4/6
+    ADP-anchored (comparison)  1.830  0.486   4/6
+    naive_f                 2.254  0.455   2/6
+    adp_curve_f             1.870  0.489   (benchmark)
+
+  ADP 1-30 (n 313): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             2.918  0.317   3/11
+    S6 blend                2.870  0.319   5/11
+    ADP-anchored (comparison)  2.725  0.346   7/11
+    naive_f                 3.513  0.187   0/11
+    adp_curve_f             2.760  0.303   (benchmark)
+
+  ADP 31-100 (n 743): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             2.593  0.225   2/11
+    S6 blend                2.492  0.264   4/11
+    ADP-anchored (comparison)  2.367  0.325   9/11
+    naive_f                 2.949  0.137   0/11
+    adp_curve_f             2.399  0.308   (benchmark)
+
+  ADP 101-150 (n 478): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             2.758  0.043   1/11
+    S6 blend                2.676  0.074   2/11
+    ADP-anchored (comparison)  2.441  0.132   5/11
+    naive_f                 3.039 -0.001   0/11
+    adp_curve_f             2.452  0.124   (benchmark)
+
+  rookies (n 157): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             3.180    nan   1/6
+    S6 blend                2.822    nan   3/6
+    ADP-anchored (comparison)  2.746    nan   5/6
+    naive_f                 3.180    nan   1/6
+    adp_curve_f             2.794    nan   (benchmark)
+
+  year-2 players (n 215): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             2.905  0.549   4/11
+    S6 blend                2.879  0.500   4/11
+    ADP-anchored (comparison)  2.699  0.577   5/11
+    naive_f                 3.453  0.604   0/11
+    adp_curve_f             2.702  0.673   (benchmark)
+
+  RB veterans (n 485): model | MAE | rho (pos-season) | seasons beating ADP on MAE
+    ridge_stats             3.081  0.544   1/11
+    S6 blend                3.019  0.559   2/11
+    ADP-anchored (comparison)  2.769  0.655   6/11
+    naive_f                 3.580  0.482   0/11
+    adp_curve_f             2.785  0.654   (benchmark)
+
+  season-by-season MAE (ADP top 150): season | old | S6 | ADP-anchored | ADP
+    2015: 3.102 | 2.911 | 2.791 | 2.807
+    2016: 2.603 | 2.540 | 2.312 | 2.363
+    2017: 2.682 | 2.533 | 2.384 | 2.440
+    2018: 2.917 | 2.946 | 2.641 | 2.619
+    2019: 2.755 | 2.512 | 2.425 | 2.450
+    2020: 2.849 | 2.865 | 2.421 | 2.396
+    2021: 2.603 | 2.469 | 2.356 | 2.400
+    2022: 2.526 | 2.537 | 2.375 | 2.401
+    2023: 2.536 | 2.466 | 2.492 | 2.544
+    2024: 2.789 | 2.762 | 2.684 | 2.705
+    2025: 2.564 | 2.437 | 2.269 | 2.308
+
+=== Volume vs efficiency: how much of the S5 miss each part explains (oracle swaps, ADP top 150) ===
+    model volume x model efficiency      MAE 2.651
+    ACTUAL volume x model efficiency     MAE 1.526
+    model volume x ACTUAL efficiency     MAE 2.004
+      QB: base 2.740 | fix volume -> 2.049 (-25%) | fix efficiency -> 1.734 (-37%)
+      RB: base 3.091 | fix volume -> 1.487 (-52%) | fix efficiency -> 2.319 (-25%)
+      WR: base 2.408 | fix volume -> 1.441 (-40%) | fix efficiency -> 1.854 (-23%)
+      TE: base 1.962 | fix volume -> 1.321 (-33%) | fix efficiency -> 1.841 (-6%)
+  TD share of the efficiency miss: fixing only TD rates (act TD rates, model yards / catch rates):
+    MAE 2.229
+
+=== End to end: season totals = per-game x games-played model (ADP top 150, 2015-25) ===
+  model | MAE | Spearman (pos-season) | top-24
+    old in-house PPG x new games                  52.35  0.446  0.640
+    NEW in-house PPG x new games                  51.39  0.467  0.648
+    ADP-anchored PPG x new games (comparison)     49.42  0.514  0.659
+    ADP (benchmark)                               49.69  0.501  0.655
+  season-total p10-p90 coverage (2017-25): 83.2% (n 1303; target 80)
+
+done (117s)

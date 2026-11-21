@@ -1,0 +1,10 @@
+variant | dev 2015-22 MAE / rho | final 2023-25 MAE / rho   (old in-house ridge dev 2.747/.439, final 2.629/.429; ADP dev 2.479/.554, final 2.519/.532)
+  S4 full                                              | 2.687 / 0.459 | 2.576 / 0.423
+  - team context                                       | 2.677 / 0.468 | 2.564 / 0.440
+  - roster changes                                     | 2.690 / 0.458 | 2.578 / 0.427
+  - JM                                                 | 2.682 / 0.461 | 2.583 / 0.422
+  - yr2/yr3 flags                                      | 2.685 / 0.464 | 2.570 / 0.435
+  - rookie efficiency prior                            | 2.688 / 0.457 | 2.574 / 0.433
+  basic + roster + experience (no team, no RB extras)  | 2.677 / 0.468 | 2.564 / 0.440
+
+done (114s)

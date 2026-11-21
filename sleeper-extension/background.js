@@ -7,7 +7,7 @@
 const ALLOWED_PREFIXES = [
   'https://api.sleeper.app/',
   'https://firestore.googleapis.com/v1/projects/jackb933-website/',
-  'https://myfantasyfootball.co/data/',       // live Vegas JSON (v0.10.4)
+  'https://myfantasyfootball.co/data/',       // live game-projection JSON (v0.10.4)
   'https://www.myfantasyfootball.co/data/',   // canonical www host (v0.10.5)
   'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard', // live game clocks (v0.29.24; CORS *)
 ];

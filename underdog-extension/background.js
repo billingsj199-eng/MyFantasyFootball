@@ -99,8 +99,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 console.log('[MFF/bg] background worker ready (v0.18.20)');
 
-// --- Live Vegas refresh (v0.10.52) -----------------------------------------
-// Plain fetch of the site's machine-readable betting lines JSON (written by
+// --- Live game-projection refresh (v0.10.52) -----------------------------------------
+// Plain fetch of the site's machine-readable game-projection data JSON (written by
 // pull_betting_lines.py, deployed on GitHub Pages). sidebar.js overlays the
 // gameTotals onto the bundled MFF_PLAYOFF_SOS so bringback/SOS numbers stay
 // current without re-exporting the extension. No auth, no cookies.

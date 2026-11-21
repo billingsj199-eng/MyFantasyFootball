@@ -11,8 +11,8 @@
 //     (persisted per league, so other pages keep working)
 //   - free agents: captured from the league's Players page as you browse it
 //     (rows with an owning-team link are skipped as taken)
-//   - everything else (Jack's live boards, KTC, Clay projections, Vegas
-//     lines + weekly props, Sleeper injuries/actuals/trending): same open
+//   - everything else (Jack's live boards, KTC, Clay projections, game-projection
+//     lines + weekly market projections, Sleeper injuries/actuals/trending): same open
 //     endpoints as the other helpers.
 (() => {
   'use strict';
@@ -54,21 +54,40 @@
     // Premium user whose site stamp lapsed (24h TTL) — a re-sync problem,
     // not a missing subscription; say so instead of 'Premium required'.
     const stale = !!(u && u.premium && !(u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS));
-    return '<div style="padding:26px 16px;text-align:center;font-size:12px;line-height:1.5;color:#e5e7eb">' +
+    // X-29 (wording/layout only): one heading + numbered next steps per state.
+    const em = signed ? String(u.email).replace(/[&<>"]/g, '') : '';
+    const head = stale ? 'Re-sync needed' : signed ? 'Premium needed' : 'Sign in to unlock';
+    const lead = stale
+      ? 'Signed in as ' + em + '. Your Premium is active, but the helper has not checked in with the site for over 24 hours.'
+      : signed
+      ? 'Signed in as ' + em + '. This account does not have Premium yet.'
+      : 'The MFF Yahoo Helper is part of MyFantasyFootball Premium.';
+    const steps = stale
+      ? ['Open myfantasyfootball.co in this Chrome profile and stay signed in.', 'Come back to this tab. It unlocks on its own.']
+      : signed
+      ? ['Open myfantasyfootball.co and get Premium.', 'Come back to this tab. It unlocks on its own.']
+      : ['Open myfantasyfootball.co in this same Chrome profile.', 'Sign in with your Premium account.', 'Come back to this tab. It unlocks on its own.'];
+    return '<div style="padding:22px 16px;text-align:center;font-size:12px;line-height:1.5;color:#e5e7eb">' +
       '<div style="font-size:26px">\ud83d\udd12</div>' +
-      '<div style="font-weight:800;font-size:13px;margin:6px 0">MFF YAHOO HELPER — Premium</div>' +
-      '<div style="color:#9aa0ab;margin-bottom:10px">' + (stale
-        ? 'Signed in as ' + String(u.email).replace(/[&<>"]/g, '') + ' — Premium is active, but the helper has not synced with the site in over 24 hours. Open myfantasyfootball.co in this Chrome while signed in and it unlocks on its own.'
-        : signed
-        ? 'Signed in as ' + String(u.email).replace(/[&<>"]/g, '') + ' — a Premium account is required.'
-        : 'Sign in at myfantasyfootball.co in this same Chrome profile with a Premium account to unlock.') + '</div>' +
-      '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#7d2eff;color:#fff;border-radius:6px;padding:7px 14px;font-weight:700;text-decoration:none;font-size:12px">' +
-      (stale ? 'Re-sync with MyFantasyFootball' : signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
+      '<div style="font-weight:800;font-size:14px;margin:6px 0 4px">' + head + '</div>' +
+      '<div style="color:#b4bac4;margin-bottom:8px">' + lead + '</div>' +
+      '<ol style="margin:0 0 12px;padding:0 0 0 20px;text-align:left;color:#e5e7eb">' +
+        steps.map((s) => '<li style="margin:2px 0">' + s + '</li>').join('') + '</ol>' +
+      '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#7d2eff;color:#fff;border-radius:6px;padding:8px 16px;font-weight:700;text-decoration:none;font-size:12px">' +
+      (stale ? 'Re-sync now' : signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
       // League sync is FREE (Jack 2026-10-06): yahoo-export.js's export button
       // has no gate — say so, or free users read this lock as "the whole helper is paid".
       '<div style="margin-top:12px;padding:8px 10px;border:1px solid #1d7a34;border-radius:6px;background:rgba(34,197,94,.08);color:#d1fae5;font-size:11px;text-align:left">' +
         '<b style="color:#22c55e">League sync is FREE.</b> Open your league on Yahoo and click the purple <b>Export league to MFF</b> button (bottom-right), then open My Teams on myfantasyfootball.co. Works for private leagues too.</div>' +
-      '<div style="color:#6b7280;font-size:10px;margin-top:10px">The draft and season helper unlocks automatically — open the site signed in, in this Chrome profile, and revisit (or keep a tab open) at least once a day.</div></div>';
+      '<div style="color:#9aa0ab;font-size:10px;margin-top:10px">The unlock lasts 24 hours. Visit myfantasyfootball.co signed in (in this Chrome profile) once a day, or keep a tab open, and it stays unlocked.</div></div>';
+  }
+  // X-30: short, plain reason for a failed request (shown in status lines instead of the raw error text)
+  function why(e) {
+    const m = String((e && e.message) || e || '');
+    if (/Failed to fetch|NetworkError|network|context invalidated|Extension context/i.test(m)) return 'no connection';
+    const h = m.match(/(?:HTTP|status)[ :]*([0-9]{3})/i);
+    if (h) return 'error ' + h[1];
+    return m && m.length <= 40 ? m : 'no response';
   }
   function gateInit(onChange) {
     try {
@@ -199,7 +218,7 @@
     return norm(p.n);
   }
   // This week's raw sim row [half, ppr, std, boom, bust] — [3]/[4] are the
-  // site's exported weekly odds (% of 1,000 draws ≥1.5× / ≤0.5× his median).
+  // site's exported weekly chances (% of 1,000 draws ≥1.5× / ≤0.5× his median).
   function simWeekRowFor(p) {
     const ix = simProjIdx();
     if (!ix) return null;
@@ -540,7 +559,7 @@
     });
   } catch (_) {}
 
-  // ---------- live Vegas overlay + schedule (GitHub Pages sends CORS *) ----------
+  // ---------- live game-projection overlay + schedule (GitHub Pages sends CORS *) ----------
   function applyLiveVegas(gameTotals) {
     const SOS = window.MFF_PLAYOFF_SOS;
     if (!SOS || !gameTotals) return 0;
@@ -1213,7 +1232,7 @@
   // fading OUT by game 4 (was 8 until 2026-10-05): weight = min(1, sqrt(g / 4)).
   // Rank 1 = softest; top third easy (green), bottom third hard (red), middle =
   // tooltip only. D/ST grades the opposing OFFENSE (D/ST points it gives up;
-  // Clay offRk in the fallback). K gets no grade, so wkOppInfo keeps its Vegas
+  // Clay offRk in the fallback). K gets no grade, so wkOppInfo keeps its game-projection
   // fallback there (and whenever the fetch fails).
   // Same math as app.js _wkSchedAdjust / _mtObservedFpa / _wkOppBlendTable — keep in sync.
   const OPP_FADE_GAMES = 4;   // fallback only: Clay prior gone once the opponent has this many final games
@@ -1390,7 +1409,7 @@
     let val = g.implied, good, bad;
     if (p.s === 'DST') val = (g.total != null && g.implied != null) ? Math.round((g.total - g.implied) * 10) / 10 : null;
     // Site-style matchup grade first (schedule-adjusted pts allowed + fading
-    // Clay prior, see oppGradeTable); Vegas implied-total thresholds only
+    // Clay prior, see oppGradeTable); projected team points thresholds only
     // when there's no grade (K, or the fpa_2026.json fetch hasn't landed).
     const m = oppGradeFor(g.opp, p.s);
     if (m) {
@@ -1457,7 +1476,7 @@
   ];
   function dstProjFor(p, g) {
     const O = g && g.total != null && g.implied != null ? g.total - g.implied : 22.5;
-    // 2026-11-21: the engine's backtested Vegas-only mean, league-scored (no defense-rank boost: own D/ST history
+    // 2026-11-21: the engine's backtested game-projection-only mean, league-scored (no defense-rank boost: own D/ST history
     // and quality add nothing over the line - sim_lab README DST TD regression / opponent sack-proneness).
     const _E = window.SimEngine;
     if (_E && _E.dstWeeklyMean) return _E.dstWeeklyMean(O, dstLeagueScoring() || _E.scoringFromLeague(null));
@@ -1508,7 +1527,7 @@
       }
       v = Math.max(1, v);
     } else {
-      // FALLBACK (no sim row): props/Clay blend.
+      // FALLBACK (no sim row): market projections/Clay blend.
       let base = p.pPg != null ? p.pPg : 0;
       if (act) base += (act.ppg - base) * shrink;
       v = base;
@@ -1641,7 +1660,7 @@
 
   // ---------- SIMS tab: Monte Carlo season sims (port of the ESPN helper's) ----------
   // Engine + data ride the same bundle (engine_sim.js + data/sim_pack.js);
-  // live Vegas lands in window.BETTING_2026 from the site fetch in main().
+  // live game-projection lands in window.BETTING_2026 from the site fetch in main().
   // League rosters: Yahoo's pub-api has no fantasy-ownership route, so every
   // team's roster is read the way the EXPORT feature reads them — one
   // same-origin HTML fetch per team page, parsed with the sidebar's own row
@@ -1817,7 +1836,7 @@
       state.seasonStatus = state.players.length + ' players · rosters read';
       if (state.seasonTab === 'sims') setTimeout(ensureSeasonSim, 0);
     } catch (e) {
-      state.seasonStatus = 'Roster read failed: ' + (e.message || e);
+      state.seasonStatus = 'Could not read the league rosters from Yahoo (' + why(e) + '). Reload the page to try again.';
     }
     _rostersLoading = false;
     render();
@@ -2016,6 +2035,7 @@
       <div id="mff-resize-s" class="mff-resize-edge"></div>
       <div id="mff-resize"></div>`;
     document.body.appendChild(root);
+    if (window.__mffGloss) window.__mffGloss.attach(root, 'yahoo'); // X-32: hover meanings + "?" legend
     root.querySelector('#mff-collapse').addEventListener('click', () => {
       root.classList.toggle('collapsed');
     });
@@ -2212,9 +2232,9 @@
   }
 
   // K/DST full-season weekly projection strip (mirrors the site card's strip):
-  // all 18 weeks scored with the league-scored Vegas models above against each
+  // all 18 weeks scored with the league-scored game-projection models above against each
   // week's line from the site schedule map. Colored by matchup delta vs the
-  // neutral-implied baseline; W15-17 carry the playoff border. Pure model —
+  // neutral-projected points baseline; W15-17 carry the playoff border. Pure model —
   // no injury/actuals decay (it's a planning strip, not a lineup verdict).
   function kdstWeekStripHTML(p) {
     if ((p.s !== 'K' && p.s !== 'DST') || !p.sTm) return '';
@@ -2504,7 +2524,8 @@
       ${mffDebugOn() ? `<div class="mff-section"><h3>API probe</h3>
         <div style="font-size:10px;color:#8a8d96">${state.probeCount} internal endpoints recorded this session (upgrade path off DOM scraping).</div>
         <button data-copyprobe="1" class="pos-filter" style="margin-top:3px">COPY PROBE LOG</button></div>` : ''}
-      <div style="font-size:10px;color:#8a8d96">Players: ${state.players.length} · data ${esc(state.exportedAt)}${ver ? ' · v' + ver : ''}</div>`;
+      <div style="font-size:10px;color:#8a8d96">Players: ${state.players.length} · data ${esc(state.exportedAt)}${ver ? ' · v' + ver : ''}</div>
+      <div class="mff-help-row"><button type="button" class="mff-help-link" data-mff-help="1">? What the tags and numbers mean</button></div>`;
   }
   function seasonHTML() {
     const tabs = [['lineup', 'LINEUP'], ['team', 'TEAM'], ['waivers', 'WAIVERS']]
@@ -2620,7 +2641,7 @@
 
   // ---------- on-page decoration ----------
   // Yahoo's own rows get inline pills next to the player name: verdict
-  // (▲ START / ▼ SIT / ≈ TOSS-UP) for YOUR roster, the colored Vegas matchup
+  // (▲ START / ▼ SIT / ≈ TOSS-UP) for YOUR roster, the colored game-projection matchup
   // pill, this week's projected ppg — and on the league Players page, the
   // "LINEUP +x.x" upgrade delta each free agent would add to your optimal
   // lineup. Runs on the same 2.5s scrape tick, signature-cached per row.
@@ -2635,8 +2656,8 @@
   // Yahoo already prints the opponent in every player cell — the
   // `.ysf-game-status` line ("Sun 4:25 pm @ Phi" / "… vs Bal") right under
   // "Was - QB" — so instead of a duplicate @/vs pill we tint that native
-  // text (green = plus Vegas matchup, red = tough, mid = tooltip only) and
-  // hang the O/U + implied tooltip on it. Tinted whole, never split (Yahoo
+  // text (green = plus game-projection matchup, red = tough, mid = tooltip only) and
+  // hang the projected game points + projected points tooltip on it. Tinted whole, never split (Yahoo
   // live-updates it to the score/clock during games). Mirrors ESPN 0.20.30 /
   // Sleeper's tintGameLine. Returns the tinted element, null when the cell
   // has no game line (then the caller keeps the pill).
@@ -2664,7 +2685,7 @@
     }
     return tgt;
   }
-  // Weekly odds pill — the site's exported boom/bust for this week's sim row.
+  // Weekly chances pill — the site's exported boom/bust for this week's sim row.
   function simOddsPillHTML(sr) {
     const tip = 'From the site sim: ' + sr[3] + '% boom (≥1.5× his median game) · ' +
       sr[4] + '% bust (≤0.5× his median game)';
@@ -2990,9 +3011,9 @@
   }
   // Live-aware side totals over scraped starter infos ({p, key, pos, team}):
   // each = wkLive (actual + remaining once his game starts); only the
-  // REMAINING part carries variance, so odds tighten toward 100/0 as the
+  // REMAINING part carries variance, so chances tighten toward 100/0 as the
   // week plays out. Unmatched starters still count their live Fan Pts.
-  // ---- LIVE WIN-ODDS variance (0.9.31) ----
+  // ---- LIVE WIN-CHANCE variance (0.9.31) ----
   // sd of a starter's remaining points from the site export's `liveVar` table
   // (sim_lab/backtest_live_variance.py, pbp 2019-25). The old sd = rem × sigma
   // shrinks with the remaining projection: 1.3-1.5× too tight pregame and 2-4×
@@ -3127,7 +3148,7 @@
   // Yahoo's matchup header ends with a "Chance to win N%" row + probability
   // bar (both inside one block above the roster table). Anchor = the lowest
   // common ancestor of the two "Chance to win" texts, then hop past the bar
-  // sibling so our strip sits right under Yahoo's odds. Null when the header
+  // sibling so our strip sits right under Yahoo's chances. Null when the header
   // isn't there (older layouts) → caller falls back to above-the-table.
   function chanceToWinAnchor() {
     const owners = [];
@@ -3150,7 +3171,7 @@
     let anchor = lca;
     let sib = lca.nextElementSibling;
     while (sib && sib.id === 'mff-matchup-strip') sib = sib.nextElementSibling;
-    // the probability bar: a text-free sibling right after the odds row
+    // the probability bar: a text-free sibling right after the chances row
     if (sib && !(sib.textContent || '').trim()) anchor = sib;
     return anchor;
   }
@@ -3398,7 +3419,7 @@
       // columns read): rest-of-season seasonPpg + per-week rows, refreshed on
       // the site daily + ~30 min before kickoffs, frozen at kickoff. THE
       // projection source wherever a row exists (Jack 2026-08-26); the
-      // Clay / props chain stays as the fallback.
+      // Clay / market projections chain stays as the fallback.
       fetchJson('https://www.myfantasyfootball.co/data/sim_proj_2026.json?t=' + Date.now())
         .then((d) => {
           if (!d || !d.weeks) return;

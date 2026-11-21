@@ -18,10 +18,10 @@
   if (window.__mffSidebarLoaded) return;
   window.__mffSidebarLoaded = true;
 
-  // --- Live Vegas overlay (v0.10.52) ---------------------------------------
+  // --- Live game-projection overlay (v0.10.52) ---------------------------------------
   // The bundled data/playoff_sos_2026.js is a static snapshot; its
-  // gameTotal/teamSpread/impliedTotal go stale as books move lines. On load,
-  // fetch the site's live betting JSON (via background — CORS-free) and
+  // gameTotal/teamSpread/impliedTotal go stale as the market moves. On load,
+  // fetch the site's live game-projection JSON (via background — CORS-free) and
   // overwrite those three fields in place. rank/label/color stay bundled
   // (they blend Clay unit grades etc. that only live in the site's app.js).
   // Fails silently: no network -> bundled numbers stand.
@@ -142,8 +142,9 @@
          site bridge reports a premium-flagged user. -->
     <div id="mff-lock" class="mff-section" style="display:none">
       <div class="lock-icon">🔒</div>
-      <h3 class="lock-title">MFF Draft Helper — Premium</h3>
-      <div class="lock-msg" id="mff-lock-msg">Sign in at myfantasyfootball.co to unlock the draft helper.</div>
+      <h3 class="lock-title" id="mff-lock-title">Sign in to unlock</h3>
+      <div class="lock-msg" id="mff-lock-msg">The MFF Underdog Helper is part of MyFantasyFootball Premium.</div>
+      <ol class="lock-steps" id="mff-lock-steps"></ol>
       <a class="start-btn" id="mff-lock-btn" href="https://myfantasyfootball.co" target="_blank" rel="noopener noreferrer">Open MyFantasyFootball</a>
       <div class="lock-status" id="mff-lock-status"></div>
       <!-- v0.18.24: portfolio sync is FREE (Jack 2026-10-06). applyPremiumGate
@@ -293,6 +294,7 @@
       <button id="mff-lbq-btn" class="start-btn" style="margin-bottom:4px">Pull my draft groups (~2 min)</button>
       <button id="mff-lb-btn" class="start-btn" style="margin-bottom:4px">Pull full leaderboard (~3 hrs)</button>
       <div id="mff-lb-status" style="font-size:10px;color:#8a8d96;line-height:1.4">Every team's roster + points for the Sim Lab overall-standings sim. One request at a time; leave this tab open. Press again to stop and save.</div>
+      <div class="mff-help-row"><button type="button" class="mff-help-link" data-mff-help="1">? What the tags and numbers mean</button></div>
     </div>
   </div>
 </div>`;
@@ -466,6 +468,7 @@
     const wrap = document.createElement("div");
     wrap.innerHTML = SIDEBAR_HTML;
     document.body.appendChild(wrap.firstElementChild);
+    try { if (window.__mffGloss) window.__mffGloss.attach(document.getElementById('mff-sidebar'), 'underdog'); } catch (_) {} // X-32: hover meanings + "?" legend
     // v0.18.7: show the running version so "did the reload take?" is answerable.
     try {
       const v = chrome.runtime.getManifest().version;
@@ -2909,7 +2912,7 @@
       }
     }
     // v0.10.0: removed the "Take next at pick #N" row — same data is now
-    // shown in the bottom odds panel + the new "Next Pick Advance Rate"
+    // shown in the bottom chances panel + the new "Next Pick Advance Rate"
     // panel beside the construction checklist. Tear down stale DOM.
     const _staleNext = document.getElementById('mff-bbm-next');
     if (_staleNext) _staleNext.remove();
@@ -2952,11 +2955,11 @@
       badge.innerHTML = '<span style="color:#94a3b8">BBM data: no reachable build</span>';
     }
 
-    // v0.10.0: "Take next at pick" cells removed \u2014 odds panel + new
+    // v0.10.0: "Take next at pick" cells removed \u2014 chances panel + new
     // "Next Pick Advance Rate" panel cover the same ground without the
     // duplicated row.
 
-    // v0.10.1: removed "First Pick At Position" odds panel \u2014 the
+    // v0.10.1: removed "First Pick At Position" chances panel \u2014 the
     // "Next Pick Advance Rate" panel beside the construction checklist
     // already covers the same data for the user's upcoming pick across
     // all 3 tournament levels (QF/SF/Fin), so the static first-pick grid
@@ -3684,7 +3687,7 @@
 
       // v0.10.28: BRINGBACK detection — fires when adding this player would
       // create a playoff-week (W15/16/17) bringback in a HIGH-total game
-      // (O/U ≥ 47). Per BBM II-VI research, +10% QF→SF advance lift and
+      // (projected game points ≥ 47). Per BBM II-VI research, +10% QF→SF advance lift and
       // +6% SF→Finals lift on high-total bringbacks vs baseline. Low/mid
       // bringbacks ignored — the conditional lift only fires above 47.
       //
@@ -3713,7 +3716,7 @@
             if (!myByTeam[t]) myByTeam[t] = [];
             myByTeam[t].push(rp);
           });
-          // BRINGBACK pass — opposing team + W15-17 + O/U ≥ 47.
+          // BRINGBACK pass — opposing team + W15-17 + projected game points ≥ 47.
           const bbHits = [];
           [15, 16, 17].forEach(w => {
             const m = _posRec[w];
@@ -3727,7 +3730,7 @@
           if (bbHits.length) bringback = { hits: bbHits };
 
           // WEEK 16/17 pass — same-team OR opposing-team pairing in SF/Finals
-          // weeks, gated to HIGH-total games (O/U ≥ 47). Per BBM research the
+          // weeks, gated to HIGH-total games (projected game points ≥ 47). Per BBM research the
           // playoff-pairing edge only materializes when the game projects to
           // score; low/mid totals are noise at best, negative at worst.
           const wpHits = [];
@@ -5677,10 +5680,10 @@
               'Click Sync again to retry the rest.';
           }
         } catch (_) {
-          if (status) status.textContent = 'Sync failed: ' + (err && err.message ? err.message : 'unknown');
+          if (status) status.textContent = 'Sync did not finish (' + (err && err.message && err.message.length <= 60 ? err.message : 'no response from Underdog') + '). Click Sync again to retry.';
         }
       } else if (status) {
-        status.textContent = 'Sync failed: ' + (err && err.message ? err.message : 'unknown');
+        status.textContent = 'Sync did not finish (' + (err && err.message && err.message.length <= 60 ? err.message : 'no response from Underdog') + '). Click Sync again to retry.';
       }
     }
   }
@@ -5905,10 +5908,10 @@
     if (!slatesRes.ok) {
       if (status) {
         status.innerHTML =
-          '<strong style="color:#ef4444">Sync failed</strong><br>' +
-          'Need /completed_slates in cache. ' +
+          '<strong style="color:#ef4444">Sync could not start</strong><br>' +
+          'The helper has not seen your finished drafts yet. ' +
           '<a href="' + APP + '/completed" target="_blank" style="color:#fbbf24">' +
-          'Open /completed</a> on Underdog, then click Sync again.';
+          'Open your Completed drafts page</a> on Underdog, then click Sync again.';
       }
       if (btn) btn.disabled = false;
       return;
@@ -6454,10 +6457,26 @@
       // Premium user whose site stamp lapsed (24h TTL) = re-sync, not a
       // missing subscription — say so (2026-09-07).
       const _em = (user && user.email) ? String(user.email) : '';
-      if (lockMsg) lockMsg.textContent = (user && user.premium && !cacheFresh)
-        ? 'Signed in as ' + _em + ' — Premium is active, but the helper has not synced with the site in over 24 hours. Open myfantasyfootball.co in this Chrome while signed in and it unlocks on its own.'
-        : _em ? 'Signed in as ' + _em + ' — a Premium account is required to unlock the draft helper.'
-        : 'Sign in at myfantasyfootball.co in this same Chrome profile to unlock the draft helper.';
+      // X-29 (wording/layout only; same text as the other three helpers): one
+      // heading + numbered next steps per state. The gate decision above is untouched.
+      const _stale = !!(user && user.premium && !cacheFresh);
+      const _lockTitle = document.getElementById('mff-lock-title');
+      const _lockSteps = document.getElementById('mff-lock-steps');
+      const _lockBtn = document.getElementById('mff-lock-btn');
+      if (_lockTitle) _lockTitle.textContent = _stale ? 'Re-sync needed' : _em ? 'Premium needed' : 'Sign in to unlock';
+      if (lockMsg) lockMsg.textContent = _stale
+        ? 'Signed in as ' + _em + '. Your Premium is active, but the helper has not checked in with the site for over 24 hours.'
+        : _em ? 'Signed in as ' + _em + '. This account does not have Premium yet.'
+        : 'The MFF Underdog Helper is part of MyFantasyFootball Premium.';
+      if (_lockSteps) {
+        const _steps = _stale
+          ? ['Open myfantasyfootball.co in this Chrome profile and stay signed in.', 'Come back to this tab. It unlocks on its own.']
+          : _em ? ['Open myfantasyfootball.co and get Premium.', 'Come back to this tab. It unlocks on its own.']
+          : ['Open myfantasyfootball.co in this same Chrome profile.', 'Sign in with your Premium account.', 'Come back to this tab. It unlocks on its own.'];
+        _lockSteps.textContent = '';
+        _steps.forEach(s => { const li = document.createElement('li'); li.textContent = s; _lockSteps.appendChild(li); });
+      }
+      if (_lockBtn) _lockBtn.textContent = _stale ? 'Re-sync now' : _em ? 'Get Premium' : 'Open MyFantasyFootball';
     } else {
       if (lockEl) lockEl.style.display = 'none';
       if (typeof enterDraftMode === 'function') enterDraftMode();

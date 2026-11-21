@@ -7,7 +7,8 @@
        route=draft|lobby   pushState to /draft/<uuid> (default) or /lobby before boot
        preload=1           load data/bbm_data.js as a script tag first (the pre-0.18.26 way)
        sb=<file>           sidebar script to run (default sidebar.js)
-       picks=<n>           players already drafted (ADP order) before my turn (default 28)  -->
+       picks=<n>           players already drafted (ADP order) before my turn (default 28)
+       user=none|free|stale  lock-screen states (default: fresh premium user)  -->
 <style>body{font:14px system-ui;background:#1b1d22;color:#ddd;margin:0;padding:20px}</style>
 <h1 style="font-size:16px">UD real-sidebar harness</h1>
 <pre id="log"></pre>
@@ -44,12 +45,16 @@
   const n = +(qs.get('picks') || 28);
   const mine = [byAdp[4], byAdp[19]];
   const drafted = byAdp.slice(0, n + 2).filter((x) => !mine.includes(x));
-  store.mff_user = { email: 'mock@example.com', premium: true, syncedAt: Date.now() };
+  // user=none|free|stale shows the lock screen states (default = fresh premium)
+  const um = qs.get('user');
+  if (um === 'free') store.mff_user = { email: 'mock@example.com', premium: false, syncedAt: Date.now() };
+  else if (um === 'stale') store.mff_user = { email: 'mock@example.com', premium: true, syncedAt: Date.now() - 30 * 3600 * 1000 };
+  else if (um !== 'none') store.mff_user = { email: 'mock@example.com', premium: true, syncedAt: Date.now() };
   store['mff_draft_' + DRAFT_ID] = { version: 1, savedAt: Date.now(), slot: 5, teamSize: 12, pickNum: n + 1, mode: 'manual',
     drafted, myRoster: mine, history: [], rankSrc: null, posFilter: 'ALL', sortBy: null, isSuperflex: false, isRedraft: false, superflexSource: null };
   history.pushState(null, '', route === 'draft' ? '/draft/' + DRAFT_ID : '/lobby');
   const files = ['data/bbm_pick_by_rank_round.js', 'data/bbm_path_optimal.js', 'data/bbm_stack_comp_multistage.js',
-    'data/bbm_structural_multistage.js', 'data/playoff_sos_2026.js', 'engine.js', qs.get('sb') || 'sidebar.js', 'live-watcher.js', 'draft-button-pad.js'];
+    'data/bbm_structural_multistage.js', 'data/playoff_sos_2026.js', 'engine.js', 'mff-gloss.js', qs.get('sb') || 'sidebar.js', 'live-watcher.js', 'draft-button-pad.js'];
   if (qs.get('preload') === '1') files.unshift('data/bbm_data.js');
   const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = BASE + 'sidebar.css'; document.head.appendChild(link);
   for (const f of files) {

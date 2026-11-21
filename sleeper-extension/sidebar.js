@@ -15,9 +15,9 @@
   }
   if (window.__mffSleeper) return;
 
-  // --- Live Vegas overlay (v0.10.4) ----------------------------------------
+  // --- Live game-projection overlay (v0.10.4) ----------------------------------------
   // data/playoff_sos_2026.js is a static snapshot; refresh its gameTotal/
-  // teamSpread/impliedTotal fields from the site's live betting JSON (via the
+  // teamSpread/impliedTotal fields from the site's live game-projection JSON (via the
   // background fetch proxy). rank/label/color stay bundled — the 5-signal
   // blend lives in the site's app.js. Fails silently offline.
   function _mffApplyLiveVegas(gameTotals) {
@@ -56,7 +56,7 @@
         window.BETTING_2026 = res.data; // season-sim engine (PICKS tab) reads gameTotals here
         const n = _mffApplyLiveVegas(res.data.gameTotals);
         buildSchedule(res.data.gameTotals); // full-season week→opponent map for season mode
-        state.wkPropsAll = res.data.weeklyProps || null; // site W1+ prop boards → weekly projections
+        state.wkPropsAll = res.data.weeklyProps || null; // site W1+ market projection board → weekly projections
         if (n) console.log('[MFF/Sleeper] playoff schedule refresh: ' + n + ' SOS records updated'
           + (res.data.generatedAt ? ' (site data from ' + res.data.generatedAt + ')' : ''));
       });
@@ -85,7 +85,7 @@
     // columns read): rest-of-season seasonPpg + per-week rows, refreshed on
     // the site daily + ~30 min before kickoffs, frozen at kickoff. THE
     // projection source wherever a row exists (Jack 2026-08-26); the Clay /
-    // engine / props chain below stays as the fallback. League-custom
+    // engine / market projections chain below stays as the fallback. League-custom
     // scoring is re-applied as an additive delta off the Clay components.
     chrome.runtime.sendMessage(
       { type: 'mffFetch',
@@ -125,21 +125,32 @@
     // Premium user whose site stamp lapsed (24h TTL) — a re-sync problem,
     // not a missing subscription; say so instead of 'Premium required'.
     const stale = !!(u && u.premium && !(u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS));
-    return '<div style="padding:26px 16px;text-align:center;font-size:12px;line-height:1.5;color:#e5e7eb">' +
+    // X-29 (wording/layout only): one heading + numbered next steps per state.
+    const em = signed ? String(u.email).replace(/[&<>"]/g, '') : '';
+    const head = stale ? 'Re-sync needed' : signed ? 'Premium needed' : 'Sign in to unlock';
+    const lead = stale
+      ? 'Signed in as ' + em + '. Your Premium is active, but the helper has not checked in with the site for over 24 hours.'
+      : signed
+      ? 'Signed in as ' + em + '. This account does not have Premium yet.'
+      : 'The MFF Sleeper Helper is part of MyFantasyFootball Premium.';
+    const steps = stale
+      ? ['Open myfantasyfootball.co in this Chrome profile and stay signed in.', 'Come back to this tab. It unlocks on its own.']
+      : signed
+      ? ['Open myfantasyfootball.co and get Premium.', 'Come back to this tab. It unlocks on its own.']
+      : ['Open myfantasyfootball.co in this same Chrome profile.', 'Sign in with your Premium account.', 'Come back to this tab. It unlocks on its own.'];
+    return '<div style="padding:22px 16px;text-align:center;font-size:12px;line-height:1.5;color:#e5e7eb">' +
       '<div style="font-size:26px">\ud83d\udd12</div>' +
-      '<div style="font-weight:800;font-size:13px;margin:6px 0">MFF SLEEPER HELPER — Premium</div>' +
-      '<div style="color:#9aa0ab;margin-bottom:10px">' + (stale
-        ? 'Signed in as ' + String(u.email).replace(/[&<>"]/g, '') + ' — Premium is active, but the helper has not synced with the site in over 24 hours. Open myfantasyfootball.co in this Chrome while signed in and it unlocks on its own.'
-        : signed
-        ? 'Signed in as ' + String(u.email).replace(/[&<>"]/g, '') + ' — a Premium account is required.'
-        : 'Sign in at myfantasyfootball.co in this same Chrome profile with a Premium account to unlock.') + '</div>' +
-      '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#00ceb8;color:#fff;border-radius:6px;padding:7px 14px;font-weight:700;text-decoration:none;font-size:12px">' +
-      (stale ? 'Re-sync with MyFantasyFootball' : signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
+      '<div style="font-weight:800;font-size:14px;margin:6px 0 4px">' + head + '</div>' +
+      '<div style="color:#b4bac4;margin-bottom:8px">' + lead + '</div>' +
+      '<ol style="margin:0 0 12px;padding:0 0 0 20px;text-align:left;color:#e5e7eb">' +
+        steps.map((s) => '<li style="margin:2px 0">' + s + '</li>').join('') + '</ol>' +
+      '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#00ceb8;color:#06201c;border-radius:6px;padding:8px 16px;font-weight:700;text-decoration:none;font-size:12px">' +
+      (stale ? 'Re-sync now' : signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
       // League sync is FREE (Jack 2026-10-06): the site's My Teams imports
       // Sleeper leagues by league ID or username, no extension or premium needed.
       '<div style="margin-top:12px;padding:8px 10px;border:1px solid #1d7a34;border-radius:6px;background:rgba(34,197,94,.08);color:#d1fae5;font-size:11px;text-align:left">' +
         '<b style="color:#22c55e">League sync is FREE.</b> On myfantasyfootball.co, open My Teams and paste your Sleeper league ID or username. Every league imports, private ones too.</div>' +
-      '<div style="color:#6b7280;font-size:10px;margin-top:10px">The draft and season helper unlocks automatically — open the site signed in, in this Chrome profile, and revisit (or keep a tab open) at least once a day.</div></div>';
+      '<div style="color:#9aa0ab;font-size:10px;margin-top:10px">The unlock lasts 24 hours. Visit myfantasyfootball.co signed in (in this Chrome profile) once a day, or keep a tab open, and it stays unlocked.</div></div>';
   }
   function gateInit(onChange) {
     try {
@@ -205,7 +216,7 @@
     byesActive: false,
     nflState: null,
     slMeta: {},              // sid -> {n, pos, tm, inj} from Sleeper /players/nfl
-    schedule: {},            // TEAM -> wk -> {opp, home, total, implied} from site Vegas lines
+    schedule: {},            // TEAM -> wk -> {opp, home, total, implied} from site game-projection data
     fpa: null,               // site fpa_2026.json: fantasy pts allowed per defense-week → opp matchup grade
     wkPropsAll: null,        // site weeklyProps: {"1": {name: {UD:{...}, PP:{...}}}}
     seasonStats: null,       // {upToWk, byId: {sid: {ppr, half, std, gp}}} — 2026 actuals
@@ -748,6 +759,14 @@
     }
   }
 
+  // X-30: short, plain reason for a failed request (shown in status lines instead of the raw error text)
+  function why(e) {
+    const m = String((e && e.message) || e || '');
+    if (/Failed to fetch|NetworkError|network|context invalidated|Extension context/i.test(m)) return 'no connection';
+    const h = m.match(/(?:HTTP|status)[ :]*([0-9]{3})/i);
+    if (h) return 'error ' + h[1];
+    return m && m.length <= 40 ? m : 'no response';
+  }
   // ---------- polling ----------
   // X-20261121-4 (v0.29.58): the picks poll only runs while it can matter.
   //  - DRAFT mode only (SEASON mode stops it; switching back resumes it).
@@ -772,6 +791,7 @@
     _lastPollAt = Date.now();
     try {
       const picks = await api('/draft/' + state.draftId + '/picks');
+      if (state.apiDown) { state.apiDown = false; state.statusMsg = state._statusBeforeDown || state.statusMsg; renderStatusOnly(); } // X-31: recovered
       if (Array.isArray(picks)) {
         const changed = picks.length !== state.picks.length;
         processPicks(picks);
@@ -779,7 +799,9 @@
         if (draftIsComplete()) { state._draftDone = true; stopPolling(); }
       }
     } catch (e) {
-      state.statusMsg = 'API error: ' + e.message;
+      // X-30/31: say it plainly, and show it on the DRAFT tab too (recs would otherwise go stale silently).
+      if (!state.apiDown) { state.apiDown = true; state._statusBeforeDown = state.statusMsg; }
+      state.statusMsg = 'Sleeper is not answering (' + why(e) + '). Picks may be behind. Retrying on its own.';
       renderStatusOnly();
     }
   }
@@ -1687,9 +1709,9 @@
       : (r && r.starters) || []);
     return arr.filter((x) => x && x !== '0').map(String);
   }
-  // Week→opponent map from the site's Vegas lines (betting_lines_2026.json
-  // gameTotals, keys W{wk}_{AWAY}_{HOME}). Also carries totals/spreads →
-  // implied team totals for matchup coloring.
+  // Week→opponent map from the site's game-projection data (betting_lines_2026.json
+  // gameTotals, keys W{wk}_{AWAY}_{HOME}). Also carries game totals and margins →
+  // projected team points for matchup coloring.
   function buildSchedule(gameTotals) {
     if (!gameTotals) return;
     const sched = {};
@@ -1721,11 +1743,11 @@
     const sch = p.sTm && state.schedule[p.sTm];
     return !!(sch && Object.keys(sch).length >= 8 && !sch[state.seasonWeek]);
   }
-  // This week's prop-board projection from the site's weeklyProps (UD + PP
+  // This week's market projection from the site's weeklyProps (UD + PP
   // blend, league-scored). Only trusted when a yardage line exists — a
-  // TD-odds-only board is far too thin to project from. Receptions have no
-  // book line, so estimate catches from receiving yards (RB ~7.5 ypr,
-  // WR/TE ~11.5). Anytime-TD American odds → expected TDs. Cached per
+  // TD-price-only board is far too thin to project from. Receptions have no
+  // market line, so estimate catches from receiving yards (RB ~7.5 ypr,
+  // WR/TE ~11.5). Anytime-TD market prices → expected TDs. Cached per
   // player per week+scoring.
   function propsProjFor(p) {
     const all = state.wkPropsAll;
@@ -1775,8 +1797,8 @@
     p._wkpVal = out;
     return out;
   }
-  // Matchup info for the current week, colored by Vegas implied total
-  // (for DST: the OPPONENT's implied — lower is better). Shared by the
+  // Matchup info for the current week, colored by projected team points
+  // (for DST: the OPPONENT's projected points — lower is better). Shared by the
   // sidebar pill and the on-page team decorator.
   // ---- Opponent matchup grade — mirrors the site's WEEKLY OPP color ----
   // Grades this week's opponent for the player's position on SCHEDULE-
@@ -1796,7 +1818,7 @@
   // fading OUT by game 4 (was 8 until 2026-10-05): weight = min(1, sqrt(g / 4)).
   // Rank 1 = softest; top third easy (green), bottom third hard (red), middle =
   // tooltip only. D/ST grades the opposing OFFENSE (D/ST points it gives up;
-  // Clay offRk in the fallback). K gets no grade, so wkOppInfo keeps its Vegas
+  // Clay offRk in the fallback). K gets no grade, so wkOppInfo keeps its game-projection
   // fallback there (and whenever the fetch fails).
   // Same math as app.js _wkSchedAdjust / _mtObservedFpa / _wkOppBlendTable — keep in sync.
   const OPP_FADE_GAMES = 4;   // fallback only: Clay prior gone once the opponent has this many final games
@@ -1973,7 +1995,7 @@
     let val = g.implied, good, bad;
     if (p.s === 'DST') val = (g.total != null && g.implied != null) ? Math.round((g.total - g.implied) * 10) / 10 : null;
     // Site-style matchup grade first (schedule-adjusted pts allowed + fading
-    // Clay prior, see oppGradeTable); Vegas implied-total thresholds only
+    // Clay prior, see oppGradeTable); projected team points thresholds only
     // when there's no grade (K, or the fpa_2026.json fetch hasn't landed).
     const m = oppGradeFor(g.opp, p.s);
     if (m) {
@@ -2024,9 +2046,9 @@
     }
     return { pool, opt, starterSet, moves, cls };
   }
-  // ---- modeled K/DST projections (league-scored, Vegas-driven) ----
+  // ---- modeled K/DST projections (league-scored, game-projection-driven) ----
   // Kicker: Clay's per-kicker FG/XP season volumes, scaled by the week's
-  // implied total (FG volume moves mildly with team scoring; XP volume
+  // projected team points (FG volume moves mildly with team scoring; XP volume
   // tracks TDs ~linearly), scored with the league's REAL kicker rules.
   // Distance mix per kicker from ESPN actuals (kD — Aubrey takes ~3x the
   // 50+ shots Moody does, which cashes in distance-bonus leagues);
@@ -2036,9 +2058,9 @@
   const FG_DEF_PTS = [3, 3, 3, 4, 5];
   function kickerProjFor(p, g) {
     const T = g && g.implied != null ? g.implied : 22.5;
-    if (p.kFga == null) return 5 + (T - 22.5) * 0.3; // backup K — flat, Vegas-nudged
+    if (p.kFga == null) return 5 + (T - 22.5) * 0.3; // backup K — flat, game-projection-nudged
     const gm = p.cGm || 17;
-    const fgScale = (0.036 * T + 0.74) / 1.55;            // ≈1.0 at a 22.5 implied
+    const fgScale = (0.036 * T + 0.74) / 1.55;            // ≈1.0 at a 22.5 projected points
     const xpScale = Math.max(0.2, (0.115 * T - 0.29) / 2.3);
     const fgm = (p.kFgm / gm) * fgScale;
     const fga = (p.kFga / gm) * fgScale;
@@ -2055,10 +2077,10 @@
     if (sc.xpmiss) pts += Math.max(0, xpa - xpm) * sc.xpmiss;
     return pts;
   }
-  // DST: expected stat line vs the OPPONENT's implied total (sacks and
+  // DST: expected stat line vs the OPPONENT's projected team points (sacks and
   // turnovers fall as it rises), quality-scaled by Clay's defense rank,
   // plus the league's points-allowed brackets integrated over a logistic
-  // distribution centered on the opponent implied. League-scored throughout.
+  // distribution centered on the opponent projected points. League-scored throughout.
   const PA_BUCKETS = [
     ['pts_allow_0', -0.5, 0.5, 10],
     ['pts_allow_1_6', 0.5, 6.5, 7],
@@ -2070,7 +2092,7 @@
   ];
   function dstProjFor(p, g) {
     const O = g && g.total != null && g.implied != null ? g.total - g.implied : 22.5;
-    // 2026-11-21: the engine's backtested Vegas-only mean, league-scored (no defense-rank boost: own D/ST history
+    // 2026-11-21: the engine's backtested game-projection-only mean, league-scored (no defense-rank boost: own D/ST history
     // and quality add nothing over the line - sim_lab README DST TD regression / opponent sack-proneness).
     const _E = window.SimEngine;
     if (_E && _E.dstWeeklyMean) return _E.dstWeeklyMean(O, dstLeagueScoring() || _E.scoringFromLeague(null));
@@ -2093,17 +2115,17 @@
   // This-week value (wkVal below): the site's Sim Lab weekly row + league
   // scoring delta wherever a row exists (all positions, no rank nudge — Jack
   // 2026-09-08). Fallback for row-less players: engine mean, then the site
-  // prop-board projection blended 80/20 with league-scored Clay PPG, zeroed
+  // market projection blended 80/20 with league-scored Clay PPG, zeroed
   // on bye / OUT, discounted for Doubtful/Questionable, nudged by Jack's
-  // redraft rank (±1.5 ppg); K/DST fallback = the league-rule Vegas models above.
+  // redraft rank (±1.5 ppg); K/DST fallback = the league-rule game-projection models above.
   // ---- engine-mean weekly projection (the sim engine's number, no RNG) ----
   // Same mean the PICKS-tab season sim draws around: Clay rescored to the
-  // league's real scoring × Vegas implied-total multiplier (backtested
+  // league's real scoring × projected team points multiplier (backtested
   // per-position elasticity) × defense adjustment, QB/injury windows + rookie
   // ramps applied. jsMean flavor: once the bundled pack carries 2026 actuals
   // it auto-shrinks Clay toward them (preseason it equals the plain mean).
   // Cached per week+scoring. K/DST excluded — the sidebar's own league-scored
-  // Vegas models below are sharper than the engine's flat DST formula.
+  // game-projection models below are sharper than the engine's flat DST formula.
   let _engWk = null;
   function engineWeekMap() {
     if (!simAvailable() || !state.seasonLeague || !state.seasonLeague.scoring_settings) return null;
@@ -2184,11 +2206,11 @@
     const r = engineRecFor(p);
     return r ? r.m : null;
   }
-  // Boom/bust odds, analytic. The engine's marginal weekly distribution is
+  // Boom/bust chances, analytic. The engine's marginal weekly distribution is
   // gamma(mean, sd = mean × sigmaPct) — the correlation structure preserves
   // marginals exactly — so P(boom)/P(bust) come from the regularized
   // incomplete gamma (series + continued fraction), no sampling needed.
-  // Evaluated at the DISPLAYED proj (post injury-discount/nudge) so the odds
+  // Evaluated at the DISPLAYED proj (post injury-discount/nudge) so the chances
   // always describe the number next to them.
   function lnGamma(z) {
     const g = [76.18009172947146, -86.50532032941677, 24.01409824083091,
@@ -2261,9 +2283,9 @@
   }
   // v0.29.24 LIVE: each starter contributes wkLive(p) (actual + remaining
   // once his game kicks off) and only the REMAINING part carries variance —
-  // odds tighten toward 100/0 as the week plays out. Unmatched starters still
+  // chances tighten toward 100/0 as the week plays out. Unmatched starters still
   // count their live actuals (Sleeper scores them even when we can't project).
-  // ---- LIVE WIN-ODDS variance (0.29.31) ----
+  // ---- LIVE WIN-CHANCE variance (0.29.31) ----
   // sd of a starter's remaining points from the site export's `liveVar` table
   // (sim_lab/backtest_live_variance.py, pbp 2019-25). The old sd = rem × sigma
   // shrinks with the remaining projection: 1.3-1.5× too tight pregame and 2-4×
@@ -2402,14 +2424,14 @@
       // Decay toward actuals as an additive correction so the matchup logic
       // survives: (actual season ppg − preseason expectation) × shrink.
       // Both sides of each diff share a scoring basis (K: flat Clay ppg;
-      // DST: the league-scored model at a neutral 22.5 implied).
+      // DST: the league-scored model at a neutral 22.5 projected points).
       if (act && p.s === 'K') { // D/ST: no decay (2026-11-21, engine mean uses no D/ST history)
         const prior = p.s === 'K' ? (p.pPg != null ? p.pPg : 7.5) : dstProjFor(p, null);
         v += (act.ppg - prior) * shrink;
       }
       v = Math.max(1, v);
     } else {
-      // FALLBACK (no sim row): the local engine port, then props/Clay blend.
+      // FALLBACK (no sim row): the local engine port, then market projections/Clay blend.
       const em = engineMeanFor(p);
       if (em != null) {
         v = em;
@@ -2910,7 +2932,7 @@
       state.myLeagues = Array.isArray(ls) ? ls : [];
       state.seasonStatus = state.myLeagues.length + ' league' + (state.myLeagues.length === 1 ? '' : 's') + ' found';
     } catch (e) {
-      state.seasonStatus = 'League lookup failed: ' + e.message;
+      state.seasonStatus = 'Could not look up your leagues on Sleeper (' + why(e) + '). Check the username and press FIND again.';
     }
     render();
   }
@@ -3040,7 +3062,7 @@
     return !!(lg && lg.settings && lg.settings.type >= 1);
   }
   function pkTabVisible() {
-    return simAvailable() && !!state.seasonLeague; // standings/odds for every league type; pick sections are dynasty/keeper only
+    return simAvailable() && !!state.seasonLeague; // standings/chances for every league type; pick sections are dynasty/keeper only
   }
   let _pkSchedule = null;
   function pkSchedule() {
@@ -3373,7 +3395,7 @@
       Object.assign(state.pickSim, { status: 'idle', placeCounts: null, results: null, inv: null, recHash: null, selTeam: null });
       if (state.seasonTab === 'sims' && pkTabVisible()) setTimeout(ensurePickSim, 0);
     } catch (e) {
-      state.seasonStatus = 'League load failed: ' + e.message;
+      state.seasonStatus = 'Could not load this league from Sleeper (' + why(e) + '). Press REFRESH LEAGUE DATA in SETTINGS to try again.';
     }
     render();
   }
@@ -3442,6 +3464,7 @@
       <div id="mff-resize-s" class="mff-resize-edge"></div>
       <div id="mff-resize"></div>`;
     document.body.appendChild(root);
+    if (window.__mffGloss) window.__mffGloss.attach(root, 'sleeper'); // X-32: hover meanings + "?" legend
     root.querySelector('#mff-collapse').addEventListener('click', () => {
       root.classList.toggle('collapsed');
     });
@@ -3565,7 +3588,15 @@
     if (!root) return;
     const el = root.querySelector('#mff-status-line');
     if (el) el.textContent = state.appMode === 'season' ? state.seasonStatus : state.statusMsg;
+    // X-31: the picks-poll warning sits under the pick line so it shows on every draft tab
+    const pl = root.querySelector('#mff-pick-line');
+    let w = root.querySelector('#mff-api-warn');
+    if (state.apiDown && state.appMode === 'draft' && pl) {
+      if (!w) { w = document.createElement('div'); w.id = 'mff-api-warn'; w.className = 'mff-ux-warn'; pl.insertAdjacentElement('afterend', w); }
+      w.textContent = API_WARN_TXT;
+    } else if (w) w.remove();
   }
+  const API_WARN_TXT = 'Sleeper is not answering. Picks may be behind. Retrying on its own.';
 
   function setupHTML() {
     const d = state.draft;
@@ -3592,7 +3623,7 @@
         </div>
         <label>…or pick your draft slot</label>
         <div class="slot-row">${slots}</div>
-        <button class="start-btn" id="mff-start" ${state.mySlot && state.draftId ? '' : 'disabled'}>Start Tracking</button>
+        <button class="start-btn" id="mff-start" ${state.mySlot && state.draftId ? '' : 'disabled title="' + (state.draftId ? 'Pick your draft slot above first' : 'Open a Sleeper draft room first') + '"'}>Start Tracking</button>
         <div style="font-size:10px;color:#8b94b3">${esc(state.statusMsg)}</div>
       </div>`;
   }
@@ -3615,7 +3646,7 @@
         <span class="pl-sep">·</span><span class="pl-round">#${nextNo}</span>
         <span class="pl-sep">·</span><span class="pl-mine">You: ${state.myRoster.length}</span>
         ${untilTxt ? '<span class="pl-sep">·</span>' + untilTxt : ''}`}
-      </div>`;
+      </div>${state.apiDown ? '<div id="mff-api-warn" class="mff-ux-warn">' + API_WARN_TXT + '</div>' : ''}`;
   }
 
   function tickerHTML() {
@@ -3862,7 +3893,8 @@
         Notify me when my pick is ≤1 away (works with the tab closed)
       </label>
       <button id="mff-start" class="start-btn" style="background:#00ceb8;border:none;color:#0b1220;padding:8px;border-radius:4px;cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:0.5px" ${state.mySlot ? '' : 'disabled'}>Apply + Resync</button>
-      <div style="font-size:10px;color:#8b94b3">Players: ${state.players.length} · data ${esc(state.exportedAt)}${ver ? ' · v' + ver : ''}</div>`;
+      <div style="font-size:10px;color:#8b94b3">Players: ${state.players.length} · data ${esc(state.exportedAt)}${ver ? ' · v' + ver : ''}</div>
+      <div class="mff-help-row"><button type="button" class="mff-help-link" data-mff-help="1">? What the tags and numbers mean</button></div>`;
   }
 
   // ---------- RULES tab: draft-rules checklist + platform value board ----------
@@ -4041,6 +4073,7 @@
       <div id="mff-mode-line" style="display:flex;gap:6px;font-size:10px;color:#8b94b3;align-items:center">
         <span class="badge live" style="background:#2a4030;color:#6dd06d;padding:2px 6px;border-radius:3px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600">LIVE API</span>
         <span id="mff-status-line" style="flex:1">${esc(state.statusMsg)}</span>
+        <button type="button" class="mff-help-q" data-mff-help="1" title="What the tags and numbers mean" aria-label="What the tags and numbers mean">?</button>
       </div>`;
   }
 
@@ -4312,7 +4345,8 @@
       <div class="mff-section"><h3>Format</h3>
         <select class="mff-select" id="mff-mode">${modeOptions()}</select></div>
       <button id="mff-sn-refresh" class="start-btn" style="background:#00ceb8;border:none;color:#0b1220;padding:8px;border-radius:4px;cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Refresh league data</button>
-      <div style="font-size:10px;color:#8b94b3">Players: ${state.players.length} · data ${esc(state.exportedAt)}${ver ? ' · v' + ver : ''}</div>`;
+      <div style="font-size:10px;color:#8b94b3">Players: ${state.players.length} · data ${esc(state.exportedAt)}${ver ? ' · v' + ver : ''}</div>
+      <div class="mff-help-row"><button type="button" class="mff-help-link" data-mff-help="1">? What the tags and numbers mean</button></div>`;
   }
   function seasonNoLeagueHTML() {
     const leagues = state.myLeagues.map((lg) => {
@@ -4531,6 +4565,7 @@
       <div id="mff-mode-line" style="display:flex;gap:6px;font-size:10px;color:#8b94b3;align-items:center">
         <span class="badge live" style="background:#2a4030;color:#6dd06d;padding:2px 6px;border-radius:3px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600">SEASON</span>
         <span id="mff-status-line" style="flex:1">${esc(state.seasonStatus)}</span>
+        <button type="button" class="mff-help-q" data-mff-help="1" title="What the tags and numbers mean" aria-label="What the tags and numbers mean">?</button>
       </div>`;
   }
 
@@ -4672,9 +4707,9 @@
   }
 
   // K/DST full-season weekly projection strip (mirrors the site card's strip):
-  // all 18 weeks scored with the league-scored Vegas models above against each
+  // all 18 weeks scored with the league-scored game-projection models above against each
   // week's line from the site schedule map. Colored by matchup delta vs the
-  // neutral-implied baseline; W15-17 carry the playoff border. Pure model —
+  // neutral-projected points baseline; W15-17 carry the playoff border. Pure model —
   // no injury/actuals decay (it's a planning strip, not a lineup verdict).
   function kdstWeekStripHTML(p) {
     if ((p.s !== 'K' && p.s !== 'DST') || !p.sTm) return '';
@@ -4990,7 +5025,7 @@
         state.statusMsg = 'User found — not in this draft order yet; pick a slot';
       }
     } catch (e) {
-      state.statusMsg = 'Lookup failed: ' + e.message;
+      state.statusMsg = 'Could not find that Sleeper username (' + why(e) + '). Check the spelling, or pick your draft slot below.';
     }
     render();
   }
@@ -5325,7 +5360,7 @@
       else if (verdict === 'close') pills.push(pillHTML('≈ TOSS-UP', '#fdf1dc', '#a06a00', 'Projections within ' + CLOSE_PPG + ' ppg — either is fine'));
       // Matchup: Sleeper's row already prints the game line ("Sun 1:00 PM
       // @ IND"), so instead of a duplicate opp pill we tint that line (green =
-      // plus matchup, red = tough) with the Vegas tooltip. Rows where the game
+      // plus matchup, red = tough) with the game-projection tooltip. Rows where the game
       // line can't be found keep the pill (light remap of wkOppInfo's colors).
       const g = wkOppInfo(p);
       if (g && !tintGameLine(row, nameRow, g)) {
@@ -5392,7 +5427,7 @@
   // beside Sleeper's: an MFF chip in each side's header bottom-row — the same
   // wkVal proj totals + normal-approx win chances as the LINEUP-tab card — and
   // teal proj + ▲boom ▼bust pills on every matched player row, with the
-  // native game line ("Sun 1:00 PM vs TB") tinted by Vegas matchup quality
+  // native game line ("Sun 1:00 PM vs TB") tinted by game-projection matchup quality
   // like the team page. Current week only: the page's week selector ("Wk. N")
   // is client-side, and our projections exist for THIS week — any other week
   // shown clears the decorations instead of printing wrong numbers.
@@ -5494,7 +5529,7 @@
         pills.push(livePillHTML(lv)); // in-game: scored + remaining (final = scored)
       } else if (v > 0 || p.pPg != null) {
         // Proj only — no boom/bust pill here per Jack (the mirrored half-width
-        // rows are cramped; odds still live on the team page + sidebar rows).
+        // rows are cramped; chances still live on the team page + sidebar rows).
         pills.push(pillHTML((Math.round(v * 10) / 10) + ' proj', '#f0f2f5', '#2a2c33',
           'Our projected points this week (' + state.scoringLabel + ' · site sim first, league-scored, injuries priced)'));
       }
@@ -5753,7 +5788,7 @@
       adjTotalOne: Math.round(one.totalValue + one.adjust), adjTotalTwo: Math.round(two.totalValue + two.adjust) };
   }
 
-  // Same-seed before/after season sims → per-side Δ avg wins + Δ title odds.
+  // Same-seed before/after season sims → per-side Δ avg wins + Δ title chances.
   // One "after" run covers every side at once; runs async off the decorate
   // tick, result keyed by the trade signature so the bars upgrade in place.
   let _tradeImpactBusy = false;
@@ -6319,7 +6354,7 @@
       if (!state.modeManual && state.modeDetected) applyMode(state.modeDetected, false);
       state.statusMsg = state.players.length + ' players · data ' + state.exportedAt;
     } catch (e) {
-      state.statusMsg = 'Draft load failed: ' + e.message;
+      state.statusMsg = 'Could not load this draft from Sleeper (' + why(e) + '). Reload the page to try again.';
     }
     render();
   }

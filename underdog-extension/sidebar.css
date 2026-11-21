@@ -184,11 +184,26 @@
 }
 #mff-lock #mff-lock-btn {
   display: inline-block;
-  padding: 8px 14px;
+  padding: 8px 16px;
   text-decoration: none;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.5px;
+  /* X-29: was an unstyled blue link on black (.start-btn is scoped to #mff-setup) */
+  background: var(--mff-accent, #ffd166);
+  color: #0e0f12;
+  border-radius: 6px;
 }
+#mff-lock #mff-lock-btn:hover { filter: brightness(1.08); }
+#mff-lock .lock-steps {
+  margin: 0 0 12px;
+  padding: 0 0 0 20px;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--mff-text, #e9e9ec);
+}
+#mff-lock .lock-steps li { margin: 2px 0; }
 #mff-lock .lock-status {
   margin-top: 10px;
   font-size: var(--mff-fs-10, 10px);
@@ -1138,3 +1153,60 @@ button.mff-proj-bl[disabled] {
 #mff-sidebar [style*="font-size:8px"], #mff-sidebar [style*="font-size: 8px"] { font-size: 9px !important; }
 #mff-sidebar [style*="font-size:9px"], #mff-sidebar [style*="font-size: 9px"] { font-size: 10px !important; }
 #mff-sidebar [style*="font-size:10px"], #mff-sidebar [style*="font-size: 10px"] { font-size: 11px !important; }
+
+/* ==== X-20261121-33: keyboard focus ring (there was none). Mouse clicks do not show it. ==== */
+#mff-sidebar button:focus-visible,
+#mff-sidebar a:focus-visible,
+#mff-sidebar select:focus-visible,
+#mff-sidebar input:focus-visible,
+#mff-sidebar [tabindex]:focus-visible {
+  outline: 2px solid var(--mff-accent, #ffd166);
+  outline-offset: 1px;
+}
+/* ==== X-20261121-31: one-line warning strip (platform not answering) ==== */
+#mff-sidebar .mff-ux-warn {
+  margin: 4px 0 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #ffd9b3;
+  background: rgba(234, 88, 12, 0.14);
+  border: 1px solid rgba(234, 88, 12, 0.5);
+}
+
+/* ==== X-20261121-32: "?" legend entry points: header button (Yahoo, Underdog) or footer button (Sleeper, ESPN),
+   plus a link at the bottom of SETTINGS in all four. ==== */
+/* footer "?" (Sleeper/ESPN, whose header is full): same 24px target, no extra row height */
+#mff-sidebar #mff-mode-line .mff-help-q {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin: -3px 0;
+  padding: 0;
+  background: var(--mff-card, #14171c);
+  border: 1px solid var(--mff-border, #2a2c33);
+  border-radius: 4px;
+  color: var(--mff-text, #e9e9ec);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+#mff-sidebar #mff-mode-line .mff-help-q:hover { border-color: var(--mff-accent, #ffd166); }
+@container (max-width: 300px) {
+  #mff-sidebar #mff-header #mff-help { display: none; } /* UD title carries the version: keep it readable at the narrowest width */
+}
+#mff-sidebar .mff-help-row { margin-top: 8px; }
+#mff-sidebar .mff-help-link {
+  background: none;
+  border: 1px solid var(--mff-border, #2a2c33);
+  border-radius: 4px;
+  color: var(--mff-accent, #ffd166);
+  font-size: 11px;
+  font-weight: 600;
+  min-height: 24px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+#mff-sidebar .mff-help-link:hover { border-color: var(--mff-accent, #ffd166); }

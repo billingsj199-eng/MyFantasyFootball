@@ -1108,7 +1108,7 @@
   // because a low total partly indicts the STACK's own offense — which is
   // already on the roster and not something taxing this candidate can fix.
   // W16/SF->Fin shows the same direction but on ~30x less sample, so it is
-  // not blended in. Uses MFF_PLAYOFF_SOS (live-refetched Vegas lines) and the
+  // not blended in. Uses MFF_PLAYOFF_SOS (live-refetched game-projection data) and the
   // sidebar's teamAbbr() from the shared content-script scope.
   function bbmBringbackMultFor(player, roster) {
     if (typeof window === "undefined" || !window.MFF_PLAYOFF_SOS) return null;

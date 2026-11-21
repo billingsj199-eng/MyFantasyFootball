@@ -56,21 +56,32 @@
     // Premium user whose site stamp lapsed (24h TTL) — a re-sync problem,
     // not a missing subscription; say so instead of 'Premium required'.
     const stale = !!(u && u.premium && !(u.syncedAt && (Date.now() - u.syncedAt) < GATE_TTL_MS));
-    return '<div style="padding:26px 16px;text-align:center;font-size:12px;line-height:1.5;color:#e5e7eb">' +
+    // X-29 (wording/layout only): one heading + numbered next steps per state.
+    const em = signed ? String(u.email).replace(/[&<>"]/g, '') : '';
+    const head = stale ? 'Re-sync needed' : signed ? 'Premium needed' : 'Sign in to unlock';
+    const lead = stale
+      ? 'Signed in as ' + em + '. Your Premium is active, but the helper has not checked in with the site for over 24 hours.'
+      : signed
+      ? 'Signed in as ' + em + '. This account does not have Premium yet.'
+      : 'The MFF Yahoo Helper is part of MyFantasyFootball Premium.';
+    const steps = stale
+      ? ['Open myfantasyfootball.co in this Chrome profile and stay signed in.', 'Come back to this tab. It unlocks on its own.']
+      : signed
+      ? ['Open myfantasyfootball.co and get Premium.', 'Come back to this tab. It unlocks on its own.']
+      : ['Open myfantasyfootball.co in this same Chrome profile.', 'Sign in with your Premium account.', 'Come back to this tab. It unlocks on its own.'];
+    return '<div style="padding:22px 16px;text-align:center;font-size:12px;line-height:1.5;color:#e5e7eb">' +
       '<div style="font-size:26px">\ud83d\udd12</div>' +
-      '<div style="font-weight:800;font-size:13px;margin:6px 0">MFF YAHOO HELPER — Premium</div>' +
-      '<div style="color:#9aa0ab;margin-bottom:10px">' + (stale
-        ? 'Signed in as ' + String(u.email).replace(/[&<>"]/g, '') + ' — Premium is active, but the helper has not synced with the site in over 24 hours. Open myfantasyfootball.co in this Chrome while signed in and it unlocks on its own.'
-        : signed
-        ? 'Signed in as ' + String(u.email).replace(/[&<>"]/g, '') + ' — a Premium account is required.'
-        : 'Sign in at myfantasyfootball.co in this same Chrome profile with a Premium account to unlock.') + '</div>' +
-      '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#7d2eff;color:#fff;border-radius:6px;padding:7px 14px;font-weight:700;text-decoration:none;font-size:12px">' +
-      (stale ? 'Re-sync with MyFantasyFootball' : signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
+      '<div style="font-weight:800;font-size:14px;margin:6px 0 4px">' + head + '</div>' +
+      '<div style="color:#b4bac4;margin-bottom:8px">' + lead + '</div>' +
+      '<ol style="margin:0 0 12px;padding:0 0 0 20px;text-align:left;color:#e5e7eb">' +
+        steps.map((s) => '<li style="margin:2px 0">' + s + '</li>').join('') + '</ol>' +
+      '<a href="https://www.myfantasyfootball.co" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#7d2eff;color:#fff;border-radius:6px;padding:8px 16px;font-weight:700;text-decoration:none;font-size:12px">' +
+      (stale ? 'Re-sync now' : signed ? 'Get Premium' : 'Open MyFantasyFootball') + '</a>' +
       // League sync is FREE (Jack 2026-10-06): yahoo-export.js's export button
       // has no gate — say so, or free users read this lock as "the whole helper is paid".
       '<div style="margin-top:12px;padding:8px 10px;border:1px solid #1d7a34;border-radius:6px;background:rgba(34,197,94,.08);color:#d1fae5;font-size:11px;text-align:left">' +
         '<b style="color:#22c55e">League sync is FREE.</b> Open your league on Yahoo and click the purple <b>Export league to MFF</b> button (bottom-right), then open My Teams on myfantasyfootball.co. Works for private leagues too.</div>' +
-      '<div style="color:#6b7280;font-size:10px;margin-top:10px">The draft and season helper unlocks automatically — open the site signed in, in this Chrome profile, and revisit (or keep a tab open) at least once a day.</div></div>';
+      '<div style="color:#9aa0ab;font-size:10px;margin-top:10px">The unlock lasts 24 hours. Visit myfantasyfootball.co signed in (in this Chrome profile) once a day, or keep a tab open, and it stays unlocked.</div></div>';
   }
   function gateInit(onChange) {
     try {
@@ -1254,7 +1265,8 @@
       '#mffYahooDraft *::-webkit-scrollbar{width:8px;height:8px}' +
       '#mffYahooDraft *::-webkit-scrollbar-track{background:#140e20}' +
       '#mffYahooDraft *::-webkit-scrollbar-thumb{background:#5b21b6;border-radius:4px}' +
-      '#mffYahooDraft *::-webkit-scrollbar-thumb:hover{background:#7d2eff}';
+      '#mffYahooDraft *::-webkit-scrollbar-thumb:hover{background:#7d2eff}' +
+      '#mffYahooDraft button:focus-visible,#mffYahooDraft select:focus-visible,#mffYahooDraft a:focus-visible{outline:2px solid #b388ff;outline-offset:1px}'; // X-33
     document.head.appendChild(sty);
   }
   function mount() {
@@ -1262,6 +1274,7 @@
     root = el('<div id="mffYahooDraft" style="' + CSS.panel + '"></div>');
     ensureScrollbarCss();
     document.body.appendChild(root);
+    if (window.__mffGloss) window.__mffGloss.attach(root, 'yahoo'); // X-32: hover meanings + "?" legend
     enableDragResize();
     syncPanels();
     setInterval(() => { if (document.visibilityState !== 'hidden') syncPanels(); }, 2000); // X-15
@@ -1563,7 +1576,8 @@
     }
     return '<div style="color:#8d81ad;font-size:10px;font-weight:700;letter-spacing:.6px;margin-bottom:3px">DRAFT RULES</div>' +
       '<div style="font-size:10px;color:#7a6f99;margin-bottom:3px">Checked live against your picks — hover a rule for the why</div>' +
-      ruleRows + valueHtml;
+      ruleRows + valueHtml +
+      '<div style="margin-top:8px"><button type="button" data-mff-help="1" style="background:none;border:1px solid #33245c;border-radius:4px;color:#b388ff;font-size:11px;font-weight:600;min-height:24px;padding:3px 8px;cursor:pointer">? What the tags and numbers mean</button></div>'; // X-32
   }
 
   function render() {
@@ -1581,9 +1595,12 @@
       '<span style="display:flex;flex-shrink:0;background:#0e0916;border:1px solid #2a2140;border-radius:4px;overflow:hidden;font-size:10px;font-weight:800;letter-spacing:.8px">' +
       '<span data-mode="draft" style="padding:3px 8px;min-height:24px;box-sizing:border-box;display:inline-flex;align-items:center;cursor:pointer;background:#7d2eff;color:#fff">DRAFT</span>' +
       '<span data-mode="season" style="padding:3px 8px;min-height:24px;box-sizing:border-box;display:inline-flex;align-items:center;cursor:pointer;background:transparent;color:#a89cc8">SEASON</span></span>' +
-      '<span style="color:#a89cc8;font-size:10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+      '<span style="color:#a89cc8;font-size:10px;flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
       esc(st.leagueName) + ' · ' + t + 'tm · ' + esc(st.scoringLabel) + '</span>' +
-      '<span id="mffYdClock" style="color:#fbbf24;font-weight:700;flex-shrink:0">' + fmtClock(st.clock) + '</span></div>';
+      '<span id="mffYdClock" style="color:#fbbf24;font-weight:700;flex-shrink:0">' + fmtClock(st.clock) + '</span>' +
+      // X-32: "?" opens the shared glossary legend (mff-gloss.js). Only when the panel is wide enough to keep the
+      // title whole; the RULES tab always has the text link.
+      (root.offsetWidth >= 338 ? '<button type="button" data-mff-help="1" title="What the tags and numbers mean" aria-label="What the tags and numbers mean" style="flex-shrink:0;margin-left:-6px;width:24px;height:24px;padding:0;background:#0e0916;border:1px solid #33245c;border-radius:4px;color:#cfc7e8;font-weight:800;font-size:12px;cursor:pointer">?</button>' : '') + '</div>';
     const started = st.currentPick > 0 && st.onClockTeam > 0;
     const done = st.order.length && nextNo > st.order.length;
     h += '<div style="padding:5px 12px;background:#140e20;border-bottom:1px solid #251a3e;font-size:11px;color:#cfc7e8">' +

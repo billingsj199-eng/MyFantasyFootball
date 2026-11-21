@@ -568,7 +568,7 @@
   // minutes), no leaderboard pages. Saves mff_bbm_mypods_<stamp>.json, kind
   // 'mff_ud_mypods': mine[] as above plus `podRosters` = all 12 rosters of
   // that draft. Sim Lab lays those real draft groups over a field file that
-  // has none, which makes the user's own advance / playoff odds exact without
+  // has none, which makes the user's own advance / playoff chances exact without
   // pulling 13,000 pages again.
   // ==========================================================================
   var LB_API = 'https://api.underdogfantasy.com';

@@ -53,7 +53,10 @@ if (-not (Enter-RepoTurn -Log { param($m) Write-Log $m } -Job 'betting-lines pul
 if (Test-RepoBlocked -Log { param($m) Write-Log $m } -Job 'betting-lines pull') { exit 0 }
 
 # Refuse to run on a dirty data file so a half-finished manual session isn't clobbered.
-$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/lines_history_2026.json', 'data/injury_updates.js', 'data/practice_2026.js', 'data/practice_days_2026.js', 'data/depth_charts_2026.js', 'data/weather_2026.js', 'index.html')
+# data/game_env_2026.json (2026-11-21) = the slim schedule + consensus file for the helper
+# extensions, written by pull_betting_lines.py in the same call as betting_lines_2026.json.
+# It is tracked (and whitelisted in .git/info/exclude), so `git add @Files` below takes it.
+$Files = @('data/betting_lines_2026.js', 'data/betting_lines_2026.json', 'data/game_env_2026.json', 'data/lines_history_2026.json', 'data/injury_updates.js', 'data/practice_2026.js', 'data/practice_days_2026.js', 'data/depth_charts_2026.js', 'data/weather_2026.js', 'index.html')
 $dirty = git status --porcelain -- @Files
 if ($dirty) {
     Write-Log "SKIP: uncommitted changes present:`n$dirty"
@@ -78,6 +81,13 @@ if ($LASTEXITCODE -ne 0) {
 # book posts a season receptions prop (PPR/Half/STD split from then on).
 $recPosted = $out -match '\*\*\* SEASON RECEPTIONS PROP POSTED'
 if ($recPosted) { Write-Log 'ALERT: season receptions prop posted - commit flagged for Jack' }
+
+# Helper game-env file (data/game_env_2026.json): the puller prints this marker when its slim
+# export failed. The lines pull itself still completed; the helpers keep the previous file.
+if ($out -match '\*\*\* GAME ENV EXPORT FAILED') {
+    Write-Log 'ALERT: game env export failed - helpers keep the previous game_env_2026.json'
+    Send-MffAlert -Key 'game-env-failed' -Message 'pull_betting_lines.py could not write data/game_env_2026.json (helper extensions keep the previous file). Lines pull itself completed; see scripts\betting_pull_log.txt.'
+}
 
 # Injury report (Sleeper statuses -> data/injury_updates.js). Bump its ?v=
 # (hour-stamped) when it changed - read the CURRENT html from disk, never

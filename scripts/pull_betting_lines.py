@@ -1881,6 +1881,145 @@ def emit_json_export(src):
     print(f'Wrote data/betting_lines_2026.json ({len(out["gameTotals"])} games, '
           f'{len(season)} season players, '
           f'{sum(len(v) for v in weekly.values())} weekly player-weeks)')
+    # The helpers' slim file must never take the lines pull down with it: a
+    # failure here is printed (daily_betting_pull.ps1 alerts on the marker)
+    # and the rest of the run carries on with the previous game_env file.
+    try:
+        emit_game_env(out)
+    except Exception as e:  # noqa: BLE001
+        print(f'*** GAME ENV EXPORT FAILED: {type(e).__name__}: {e}')
+
+
+# ---------------------------------------------------------------------------
+# Game-environment file for the helper extensions (2026-11-21):
+# data/game_env_2026.json. The helpers only need the schedule + game totals
+# and ONE consensus number per player / stat / week, so this file carries
+# just that. It is built from the export above on every run, in the same
+# call, so the two files can never drift. betting_lines_2026.json itself is
+# unchanged (the site and published helper versions read it).
+#
+# The numbers are the ones the readers compute themselves today, so results
+# are identical (sim_lab/_tmp/compare_game_env.js re-checks that):
+#   gameTotals[key] = {total, spread}      same keys, same nulls
+#   weeklyLines[wk][name]:
+#     asOf                 date the lines were last seen
+#     n                    sources showing a yardage / receptions line
+#                          (engine.js linesUp)
+#     py ry rcy rec ptd kpts fgm
+#                          consensus line per stat = engine.js propConsensus
+#                          (sorted values, element [len // 2])
+#     td                   anytime-TD chance implied by the consensus price,
+#                          before the engine's own de-vig (engine.js amToProb)
+#     pk {py ry rcy ptd int td}
+#                          mean of the two pick'em boards, the inputs of the
+#                          helpers' own propsProjFor weekly estimate; only on
+#                          the newest _ENV_PICK_WEEKS weeks (the helpers read
+#                          it for the current week alone)
+#   updated                changes only when gameTotals / weeklyLines change
+# Spec for the readers: site_agent/extensions/GAME_ENV_SPEC.md.
+# ---------------------------------------------------------------------------
+
+GAME_ENV_FILE = os.path.join(ROOT, 'data', 'game_env_2026.json')
+_ENV_SOURCES = ('UD', 'PP', 'DK', 'FD', 'MGM')     # engine.js propConsensus
+_ENV_STATS = ('py', 'ry', 'rcy', 'rec', 'ptd', 'kpts', 'fgm')
+_ENV_PICK_SOURCES = ('UD', 'PP')                   # helpers' propsProjFor
+_ENV_PICK_STATS = ('py', 'ry', 'rcy', 'ptd', 'int')
+_ENV_PICK_WEEKS = 3
+
+
+def _env_num(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _env_td_prob(price):
+    """American price -> implied chance (same arithmetic as engine.js amToProb)."""
+    return -price / (-price + 100) if price < 0 else 100 / (price + 100)
+
+
+def build_game_env(out):
+    """Slim helper payload from the full JSON export dict (pure function)."""
+    games = {key: {'total': g.get('total'), 'spread': g.get('spread')}
+             for key, g in out['gameTotals'].items()}
+    odd_td = 0
+    weekly = {}
+    wk_nums = sorted((int(w) for w in out['weeklyProps'] if str(w).isdigit()), reverse=True)
+    pick_weeks = {str(w) for w in wk_nums[:_ENV_PICK_WEEKS]}
+    for wk, players in out['weeklyProps'].items():
+        rows = weekly[wk] = {}
+        for name, entry in players.items():
+            srcs = {b: v for b, v in entry.items() if isinstance(v, dict)}
+            row = {}
+            if entry.get('asOf'):
+                row['asOf'] = entry['asOf']
+            n = sum(1 for v in srcs.values()
+                    if any(v.get(k) is not None for k in ('py', 'ry', 'rcy', 'rec')))
+            if n:
+                row['n'] = n
+
+            def consensus(k):
+                vals = sorted(srcs[b][k] for b in _ENV_SOURCES
+                              if b in srcs and _env_num(srcs[b].get(k)))
+                return vals[len(vals) // 2] if vals else None
+
+            for k in _ENV_STATS:
+                v = consensus(k)
+                if v is not None:
+                    row[k] = v
+            price = consensus('atd')
+            if price is not None:
+                row['td'] = _env_td_prob(price)
+                if price != int(price) or abs(price) < 100:
+                    odd_td += 1
+            picks = [srcs[b] for b in _ENV_PICK_SOURCES if b in srcs] if wk in pick_weeks else []
+
+            def mean(k):
+                vals = [b[k] for b in picks if _env_num(b.get(k))]
+                return sum(vals) / len(vals) if vals else None
+
+            pk = {}
+            for k in _ENV_PICK_STATS:
+                v = mean(k)
+                if v is not None:
+                    pk[k] = v
+            price = mean('atd')
+            if price is not None:
+                pk['td'] = _env_td_prob(price)
+            if pk:
+                row['pk'] = pk
+            rows[name] = row
+    if odd_td:
+        print(f'  !! game env: {odd_td} consensus TD prices are not whole American '
+              f'prices - readers that convert td back to a price lose exactness')
+    return {'v': 1, 'generatedAt': out.get('generatedAt'), 'updated': None,
+            'gameTotals': games, 'weeklyLines': weekly}
+
+
+def emit_game_env(out):
+    """Write data/game_env_2026.json when it is missing or its content differs."""
+    env = build_game_env(out)
+    prev, prev_raw = None, None
+    try:
+        with open(GAME_ENV_FILE, 'rb') as f:
+            prev_raw = f.read()
+        prev = json.loads(prev_raw.decode('utf-8'))
+    except (OSError, ValueError):
+        pass
+    same_lines = (isinstance(prev, dict) and prev.get('updated')
+                  and prev.get('v') == env['v']
+                  and prev.get('gameTotals') == env['gameTotals']
+                  and prev.get('weeklyLines') == env['weeklyLines'])
+    env['updated'] = prev['updated'] if same_lines else (
+        datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))
+    body = json.dumps(env, separators=(',', ':')).encode('utf-8')
+    if body == prev_raw:
+        print('  game env: data/game_env_2026.json already current')
+        return False
+    with open(GAME_ENV_FILE, 'wb') as f:
+        f.write(body)
+    print(f'Wrote data/game_env_2026.json ({len(env["gameTotals"])} games, '
+          f'{sum(len(v) for v in env["weeklyLines"].values())} player-weeks, '
+          f'{len(body) // 1024} KB)')
+    return True
 
 
 # ---------------------------------------------------------------------------

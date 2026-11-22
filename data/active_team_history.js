@@ -110,7 +110,7 @@ const ACTIVE_TEAM_HISTORY = {
     'Dan Villari': [{t:'Los Angeles Rams',y1:2026,y2:2099}],
     'Dane Key': [{t:'Denver Broncos',y1:2026,y2:2099}],
     'Daniel Bellinger': [{t:'New York Giants',y1:2022,y2:2025},{t:'Tennessee Titans',y1:2026,y2:2099}],
-    'Daniel Jones': [{t:'New York Giants',y1:2019,y2:2023},{t:'Minnesota Vikings',y1:2024,y2:2024},{t:'Indianapolis Colts',y1:2025,y2:2099}],
+    'Daniel Jones': [{t:'New York Giants',y1:2019,y2:2023},{t:'Minnesota Vikings',y1:2024,y2:2024},{t:'Indianapolis Colts',y1:2025,y2:2025}],
     'Dare Ogunbowale': [{t:'Houston Texans',y1:2026,y2:2099}],
     'Darius Cooper': [{t:'Philadelphia Eagles',y1:2025,y2:2099}],
     'Darius Slayton': [{t:'New York Giants',y1:2019,y2:2025}],

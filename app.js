@@ -939,7 +939,9 @@ const versionBoards = {
   // SIM VOR board: computed from the Sim Lab projection (_simsBoardEnsure) — read-only, never saved.
   sims: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
   // MFF VALUE board (dynasty only): computed from window._mffValueBoard (_mffvBoardEnsure) — read-only, never saved.
-  mffv: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() }
+  mffv: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() },
+  // 2027 SIMS board (admin only): computed from the private Sim Lab 2027 file (_s27BoardEnsure) — read-only, never saved.
+  sim27: { redraft: defaultBoard.slice(), bestball: bestBallDefaultBoard.slice(), superflex: superflexDefaultBoard.slice(), dynasty: dynastyDefaultBoard.slice(), dynastysf: sfDefaultBoard.slice(), weekly: defaultBoard.slice() }
 };
 // MAIN-world content scripts (page-bridge.js) can't reach top-level const via window.X — attach explicitly.
 window.versionBoards = versionBoards;
@@ -964,14 +966,16 @@ const versionTiers = {
   jacks: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
   mine: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
   sims: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
-  mffv: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() }
+  mffv: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() },
+  sim27: { redraft: _mkPosTiers(), bestball: _mkPosTiers(), superflex: _mkPosTiers(), dynasty: _mkPosTiers(), dynastysf: _mkPosTiers(), weekly: _mkPosTiers() }
 };
 const versionTierCounters = {
   consensus: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
   jacks: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
   mine: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
   sims: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
-  mffv: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
+  mffv: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() },
+  sim27: { redraft: _mkPosTierCtrs(), bestball: _mkPosTierCtrs(), superflex: _mkPosTierCtrs(), dynasty: _mkPosTierCtrs(), dynastysf: _mkPosTierCtrs(), weekly: _mkPosTierCtrs() }
 };
 // DEVY board tiers (2026-09-30): the devy list is one board shared by both
 // dynasty formats, so its tiers live in their own `devy` slot per version
@@ -980,7 +984,7 @@ const versionTierCounters = {
 // DEVY (whole board, overall devy rank) + one per class view, DEVY_2027 /
 // DEVY_2028 (class rank — like the position views; created on demand by
 // _devyTierKey). Saved as `<ver>.devy` (see _devySerialize).
-['consensus', 'jacks', 'mine', 'sims', 'mffv'].forEach(v => { versionTiers[v].devy = { DEVY: [] }; versionTierCounters[v].devy = { DEVY: 0 }; });
+['consensus', 'jacks', 'mine', 'sims', 'mffv', 'sim27'].forEach(v => { versionTiers[v].devy = { DEVY: [] }; versionTierCounters[v].devy = { DEVY: 0 }; });
 // MAIN-world content scripts read tier boundaries too (extension jacks-boards
 // bridge, board-gating Phase B) — attach like versionBoards above.
 window.versionTiers = versionTiers;
@@ -1324,6 +1328,7 @@ function syncMode() {
   if (document.body) document.body.classList.toggle('mffv-on', currentVersion === 'mffv' && (currentMode === 'dynasty' || currentMode === 'dynastysf'));
   if (currentVersion === 'sims') _simsBoardEnsure();   // computed board — keep it current
   if (currentVersion === 'mffv') _mffvBoardEnsure();
+  if (currentVersion === 'sim27') _s27BoardEnsure();
   board = versionBoards[currentVersion][currentMode];
   tiers = versionTiers[_tierVer()][_tierMode()][_tierPK()];
   tierCounter = versionTierCounters[_tierVer()][_tierMode()][_tierPK()];
@@ -1368,7 +1373,7 @@ function _isDevyPK(pk) { return typeof pk === 'string' && pk.indexOf('DEVY') ===
 function _devyTierKey() {
   const c = window._devyClass;
   const k = (c && c !== 'ALL') ? 'DEVY_' + c : 'DEVY';
-  ['consensus', 'jacks', 'mine', 'sims', 'mffv'].forEach(v => {
+  ['consensus', 'jacks', 'mine', 'sims', 'mffv', 'sim27'].forEach(v => {
     if (!versionTiers[v].devy[k]) { versionTiers[v].devy[k] = []; versionTierCounters[v].devy[k] = 0; }
   });
   return k;
@@ -1382,7 +1387,7 @@ function _tierVer(pk) { return (_isDevyPK(pk || _tierPK()) && typeof _devySrcVer
 // Check if current user can edit the active version
 function canEdit() {
   if (typeof window._authCurrentUser !== 'undefined' && !window._authCurrentUser) return false;
-  if (currentVersion === 'consensus' || currentVersion === 'sims' || currentVersion === 'mffv') return false;
+  if (currentVersion === 'consensus' || currentVersion === 'sims' || currentVersion === 'mffv' || currentVersion === 'sim27') return false;
   if (currentVersion === 'mine') return true;
   return typeof window.isAdmin === 'function' && window.isAdmin();
 }
@@ -1510,7 +1515,8 @@ function renumber() {
   // numbering (season formats only), so the visible table stays contiguous
   // and tier banners line up. They're parked after the visible board — still
   // holding a truthy myRank for Trade Calc / cards / search.
-  const _irHide = window._irHiddenHere(currentMode);
+  // 2027 SIMS: next season's board — this season's out-for-season flags don't apply.
+  const _irHide = window._irHiddenHere(currentMode) && currentVersion !== 'sim27';
   const _parked = [];
   let r = 0;
   const _num = (idx) => {
@@ -2033,7 +2039,7 @@ function _devyIsCustom(ver) {
 // Version whose devy board is DISPLAYED: "My Rankings" mirrors Jack's until
 // the user's first devy edit (same idea as the mine-follows-Jack's seeding).
 function _devySrcVer() {
-  if (currentVersion === 'sims' || currentVersion === 'mffv') return 'consensus';   // no sims for prospects — the devy pill shows the (free) consensus board
+  if (currentVersion === 'sims' || currentVersion === 'mffv' || currentVersion === 'sim27') return 'consensus';   // no sims for prospects — the devy pill shows the (free) consensus board
   return (currentVersion === 'mine' && !_devyIsCustom('mine')) ? 'jacks' : currentVersion;
 }
 // First edit on a mirrored "My Rankings" devy board: pin the order on screen
@@ -2968,7 +2974,7 @@ function _syncSeasonPpgHeader() {
   // so the '25 → '26 flip reaches the cards too.
   try { document.body.style.setProperty('--ssn-ppg-lbl', JSON.stringify(want)); } catch (_) {}
   const lab = document.querySelector('#ppg25Header [data-gloss]');
-  if (!lab || rnkStatMode !== 'fantasy') return;
+  if (!lab || rnkStatMode !== 'fantasy' || currentVersion === 'sim27') return;
   if (lab.textContent === want) return;
   lab.textContent = want;
   const fmtLabel = (typeof _scoringLabelsRnk !== 'undefined' && _scoringLabelsRnk[rankingScoringFmt]) || 'PPR';
@@ -3289,6 +3295,8 @@ function adjProjPpg(d) {
 
 // === STATS view helpers (rankings FANTASY / PROJECTIONS / BETTING LINES toggle) ===
 function _effStatMode() {
+  // 2027 SIMS board: one view — the stat cells carry the 2027 file's numbers.
+  if (typeof currentVersion !== 'undefined' && currentVersion === 'sim27') return 'fantasy';
   // DEVY board: college prospects have no sims / lines / ADP — always the base view.
   if (typeof filter !== 'undefined' && filter === 'DEVY') return 'fantasy';
   // DYN SIM only exists on the dynasty boards (and needs its data file).
@@ -7655,6 +7663,7 @@ function getFiltered(applyTopN) {
   // SIM VOR board is computed — rebuild it if the VOR table moved since the last paint.
   if (currentVersion === 'sims' && _simsBoardEnsure()) { syncMode(); renumber(); }
   if (currentVersion === 'mffv' && _mffvBoardEnsure()) { syncMode(); renumber(); }
+  if (currentVersion === 'sim27' && _s27BoardEnsure()) { syncMode(); renumber(); }
   let _boardSrc = board;
   window._rankBelowCut = null;
   if (typeof window._boardCutoffFor === 'function') {
@@ -7736,11 +7745,13 @@ function getFiltered(applyTopN) {
     const _mv = window._mffValueOf && window._mffValueOf[currentMode];
     if (_mv) f = f.filter(d => _mv.has(d.idx));
   }
+  // 2027 SIMS board lists only players in the Sim Lab 2027 file.
+  if (currentVersion === 'sim27') f = f.filter(d => _s27.byIdx.has(d.idx));
   // Out-for-season players: hidden from season formats (redraft / bestball /
   // superflex / weekly) but untouched in dynasty modes. A typed search still
   // surfaces them so their card (and the admin unflag toggle on it) stays
   // reachable from the rankings page.
-  if (window._irHiddenHere(currentMode) && (!query || window._rankBaseMode)) {
+  if (window._irHiddenHere(currentMode) && currentVersion !== 'sim27' && (!query || window._rankBaseMode)) {
     f = f.filter(d => !window._irIsOut(d.n));
   }
   // WEEKLY: players Jack assumed out this week ride the BYE / OUT row instead
@@ -7839,8 +7850,11 @@ function getFiltered(applyTopN) {
     const _smAdp = (d, src) => { const v = _adpBySource(d, src); return v == null ? 9999 : v; };
     // VOR view: PPG / VOR / games sort high-first, the weekly VOR rank low-first; no sim row sinks.
     const _vorSort = (d, k) => { const e = _vorFor(d); if (e && k !== 'v' && k !== 'g' && currentVersion !== 'sims' && _vorLocked(d, e)) return k === 'rk' ? 9999 : -Infinity; return e ? e[k] : (k === 'rk' ? 9999 : -Infinity); };
+    // 2027 SIMS board: the PPG / '26 PPG / SEASON / Age columns carry the 2027 file's numbers.
+    const _s27Key = currentVersion === 'sim27' && ({ pts: 'ppg', fpts25: 'prev', l4ppg: 'total', age: 'age' })[sortKey];
     f.sort((a, b) => {
       let av, bv;
+      if (_s27Key) { av = _s27SortVal(a, _s27Key); bv = _s27SortVal(b, _s27Key); return sortDir * (av - bv) || (a.myRank - b.myRank); }
       switch(sortKey) {
         case 'name': return sortDir * a.n.localeCompare(b.n);
         case 'pos': return sortDir * a.s.localeCompare(b.s);
@@ -11684,6 +11698,11 @@ function render() {
     tiers = _simsTiersFor(data);
     versionTiers.sims[_tierMode()][_tierPK()] = tiers;
   }
+  // 2027 SIMS board: tiers are natural breaks in the 2027 season totals (_s27TiersFor).
+  if (currentVersion === 'sim27' && filter !== 'DEVY') {
+    tiers = _s27TiersFor(data);
+    versionTiers.sim27[_tierMode()][_tierPK()] = tiers;
+  }
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
   const editable = canEdit();
@@ -11797,7 +11816,7 @@ function render() {
   document.body.classList.toggle('wk-xfp-col', _isWeekly && _statMode === 'fantasy');
   // REDRAFT / SUPERFLEX / DYNASTY xFP column (Jack 2026-10-09): same season xFP/G cell, right after PROJ PPG.
   const _ssnXfp = (currentMode === 'redraft' || currentMode === 'superflex' || currentMode === 'dynasty' || currentMode === 'dynastysf') && _statMode === 'fantasy'
-    && filter !== 'DEVY';   // devy rows have no xFP cell (college players) — the header shifted every column after PROJ
+    && filter !== 'DEVY' && currentVersion !== 'sim27';   // devy rows have no xFP cell (college players) — the header shifted every column after PROJ
   document.body.classList.toggle('ssn-xfp-col', _ssnXfp);
   // VOR stats view: the phone card's single stat cell shows VOR, not PPG.
   document.body.classList.toggle('rnk-vor', _statMode === 'vor');
@@ -11819,7 +11838,7 @@ function render() {
   document.body.classList.toggle('inj-view-fant', _injView && _statMode === 'fantasy');
   // REDRAFT (rest-of-season board): Team Total column = rest-of-season average
   // implied team total, FANTASY stats view only (CSS keys off this class).
-  const _rosTtCol = currentMode === 'redraft' && _statMode === 'fantasy'
+  const _rosTtCol = currentMode === 'redraft' && _statMode === 'fantasy' && currentVersion !== 'sim27'
     && typeof window._rosTeamTotalFor === 'function' && typeof window._weeklyScheduleWeek === 'function'
     && window._weeklyScheduleWeek() != null;
   document.body.classList.toggle('ros-tt-col', _rosTtCol);
@@ -12021,7 +12040,7 @@ function render() {
 
     const _cc = _consCellInfo(d);
     const _ccCmp = _consCmp(d);
-    const moved = d.myRank !== (board.indexOf(d.idx) + 1) || (!!_ccCmp && _ccCmp.mine != null && _ccCmp.ref !== _ccCmp.mine);
+    const moved = currentVersion !== 'sim27' && (d.myRank !== (board.indexOf(d.idx) + 1) || (!!_ccCmp && _ccCmp.mine != null && _ccCmp.ref !== _ccCmp.mine));
     const checked = compareSet.has(d.idx) ? 'checked' : '';
     // INJURIES view shows real ranks, so its free window is rank-based (a row-count
     // window would hand out ranks from deep in a premium board).
@@ -12040,7 +12059,23 @@ function render() {
     let _statYdsTail = null; // proj/lines views: the Yds line, shown in the tail (yrr) column
     let _statJmCell = null; // VOR season view: GMS rides the JM column
     let _statLandingCell = null; // dynasty TRENDS: AUG '27 expected market value rides the Landing column
-    if (_statMode === 'trend') {
+    const _s27r = currentVersion === 'sim27' ? _s27.byIdx.get(d.idx) : null;
+    if (currentVersion === 'sim27' && filter !== 'DEVY') {
+      // 2027 SIMS board: Proj PPG = 2027 sim PPG · '26 PPG slot = 2026 to date ·
+      // L4 slot = the 2027 season total. Range and bench risk ride the tooltips.
+      const c = _s27r ? _s27Cell(d, _s27r) : null;
+      if (!c) {
+        _statTd1 = '<td class="pts-cell ppg-proj-cell">—</td>';
+        _statTds = '<td class="pts-cell ppg25-cell">—</td><td class="pts-cell l4ppg-cell">—</td>';
+      } else {
+        const _pc = c.ppg != null ? _rowPpgColor(c.ppg, d.s) : null;
+        const _qc = c.prev != null ? _rowPpgColor(c.prev, d.s) : null;
+        _statTd1 = `<td class="pts-cell ppg-proj-cell" title="${c.tip}" style="cursor:help${_pc ? ';color:' + _pc + ';font-weight:700' : ''}">${c.ppg == null ? '—' : c.ppg.toFixed(1) + _s27PpgRkTag(d)}</td>`;
+        _statTds = `<td class="pts-cell ppg25-cell"${c.prevTip ? ' title="' + c.prevTip + '"' : ''}${_qc ? ' style="color:' + _qc + ';font-weight:700"' : ''}>${c.prev == null ? '—' : c.prev.toFixed(1)}</td>
+      <td class="pts-cell l4ppg-cell" title="${c.tip}" style="cursor:help;font-weight:700">${c.total == null ? '—' : Math.round(c.total)}</td>`;
+      }
+      _statYdsTail = '—';
+    } else if (_statMode === 'trend') {
       // TRENDS (Jack 2026-10-09): market rank now · 7D · 30D change ·
       // sparkline; dynasty adds SIM GAP (BUY / SELL) in the JM column.
       const t = _trendFor(d);
@@ -12367,7 +12402,7 @@ function render() {
       <td class="pts-cell yrr-cell${_statMode === 'adp' ? _adpCmpCellCls(d, 'cbs') : ''}" style="display:none">${_statMode === 'adp' ? _adpCmpCellHtml(d, 'cbs', 'CBS') : (_statYdsTail != null ? _statYdsTail : (showYrr ? _totYdsCellHtml(d, _isWeekly) : '—'))}</td>
       <td class="pts-cell jm-cell${_isAdpCmp ? _adpCmpCellCls(d, 'yahoo') : ''}" style="display:none">${_statJmCell != null ? _statJmCell : _isAdpCmp ? _adpCmpCellHtml(d, 'yahoo', 'Yahoo') : showJm ? (()=>{if(d._pmJm==null)return '—';const jm=Math.round(d._pmJm);const jc=(window._jmTierStyle?window._jmTierStyle(d._pmJm,d.s).color:'#94a3b8');return '<span style="color:'+jc+';font-weight:700">'+jm+'</span>';})() : '—'}</td>
       <td class="pts-cell landing-cell${_isAdpCmp ? _adpCmpAvgCellCls(d) : ''}" style="display:none">${_statLandingCell != null ? _statLandingCell : _isAdpCmp ? _adpCmpAvgCellHtml(d) : showLanding ? (()=>{if(d._pmLandingSpot==null)return '—';const ls=d._pmLandingSpot;const lc=ls>=75?'#22c55e':ls>=60?'#84cc16':ls>=45?'#fbbf24':ls>=30?'#f97316':'#ef4444';const tt=(d._pmLandingSpotParts||[]).map(x=>x.k+': '+(x.v>0?'+':'')+x.v+' ('+x.label+')').join(' | ');return '<span style="color:'+lc+';font-weight:700" title="Landing Spot '+ls+'/100&#10;'+tt.replace(/"/g,'&quot;')+'">'+ls+'</span>';})() : '—'}</td>
-      <td class="age-cell ${(()=>{if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
+      <td class="age-cell ${(()=>{if(_s27r)return '';if(d.s==='DST')return d.oppg!=null ? (d.oppg<=20?'age-green':d.oppg<=24?'age-yellow':d.oppg<=27?'age-orange':'age-red') : '';const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{num:d.age}:null);if(!_ad)return '';const a=_ad.num;return d.s==='RB'?(a>=30?'age-red':a>=28?'age-yellow':'age-green'):d.s==='QB'?(a>=35?'age-red':a>=32?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='WR'?(a>=32?'age-red':a>=29?'age-orange':a>=24?'age-green':'age-yellow'):d.s==='TE'?(a>=33?'age-red':a>=31?'age-orange':a>=25?'age-green':'age-yellow'):'';})()}">${_s27r ? (_s27r.age != null ? _s27r.age.toFixed(1) : '—') : d.s==='DST' ? (d.oppg!=null ? d.oppg : '—') : (()=>{const _ad=(typeof _ageDisplay==='function')?_ageDisplay(d):(d.age!=null?{str:String(d.age)}:null);return _ad ? _ad.str : '—';})()}</td>
       <td class="psos-cell">${(()=>{if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,typeof window._sosActiveWeeks==='function'?window._sosActiveWeeks():null);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
       <td class="ppsos-cell">${(()=>{if(typeof window._mtGetPlayoffSos!=='function')return '—';const ps=window._mtGetPlayoffSos(d.t,d.s,[15,16,17]);if(!ps)return '—';return '<span style="color:'+ps.color+';font-weight:700;cursor:help" title="'+ps.title.replace(/"/g,'&quot;')+'">'+ps.rank+'</span>';})()}</td>
       <td class="diff-cell">${diffHtml(d)}</td>
@@ -12593,7 +12628,7 @@ function updateStats(data) {
     return (_cb && _cb.yr === 2026) || !d.t || d.t === 'TBD';
   }).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL' : '🏈 REDRAFT';
-  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? (_vorPlayoffsOn() ? '📋 SIM VOR · PLAYOFFS' : _vorWin() && _vorTable() && _vorTable().win ? '📋 SIM VOR · ' + _vorWinTag(_vorTable()) : '📋 SIM VOR') : currentVersion === 'mffv' ? '📋 MFF VALUE' : '📋 MY RANKINGS';
+  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? (_vorPlayoffsOn() ? '📋 SIM VOR · PLAYOFFS' : _vorWin() && _vorTable() && _vorTable().win ? '📋 SIM VOR · ' + _vorWinTag(_vorTable()) : '📋 SIM VOR') : currentVersion === 'mffv' ? '📋 MFF VALUE' : currentVersion === 'sim27' ? '📋 2027 SIMS' : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
@@ -12606,7 +12641,7 @@ function updateStats(data) {
     <span class="stat-chip">WR <strong>${wrs}</strong></span>
     <span class="stat-chip">TE <strong>${tes}</strong></span>
     <span class="stat-chip">Rookies <strong>${rookies}</strong></span>
-    <span class="stat-chip">Moved: <strong class="ranked-count">${moved}</strong></span>
+    ${currentVersion === 'sim27' ? '' : `<span class="stat-chip">Moved: <strong class="ranked-count">${moved}</strong></span>`}
   `;
   // Collapsed view-options summary mirrors scoring/stats/ADP state — every
   // control click re-renders, so this stays current from here.
@@ -13611,72 +13646,277 @@ _whenFirebaseReady(function(){
 });
 window._refreshAdminViewToggle = _refreshAdminViewToggle;
 
-// 2027 SIMS tab (admin-only, 2026-11-21). A tab in the rankings Format row that shows the private
-// 2027 preseason sim rankings in the table's place. It is NOT a board mode (no data-mode), so the
-// .mode-tab[data-mode] handlers skip it and currentMode never changes.
+// 2027 SIMS (admin-only, 2026-11-21; on the real rankings table 2026-11-23). A tab in the rankings
+// Format row that puts the private 2027 preseason sim rankings on the normal board: same table,
+// player cards, filters, search, tiers and phone cards as REDRAFT / SUPERFLEX / DYNASTY.
+// It is a read-only computed VERSION, `sim27` (like 'sims' / 'mffv'): versionBoards.sim27[mode] is
+// the 2027 order mapped onto D by name (_s27BoardEnsure), canEdit() is false for it, and the save /
+// sync / mine-seeding paths only ever write 'jacks' / 'mine', so it is never saved. It is entered
+// from the 2027 SIMS Format tab only (never the Model row), and any Model or Format tab leaves it
+// and puts back the Model that was selected before (_sim2027Close).
 // Privacy: hiding the tab is cosmetic. The numbers are not in this repo or in any public file:
 // sim2027.js (loaded on first open) reads them from Firestore admin_sims/*, which firestore.rules
-// locks to isJack(). No iframe: the page CSP's frame-src does not allow framing our own origin.
+// locks to isJack(). sim2027.js owns the info / admin bar (UPDATE FILE / SAVE / DISCARD) and hands
+// the parsed rows here (_s27SetRows).
 function _sim2027IsAdmin() {
   if (typeof window.isAdmin === 'function' && window.isAdmin()) return true;
   const u = window._authCurrentUser;
   return !!(u && u.email && u.emailVerified === true && window._JSMODEL_ADMIN_EMAILS
     && window._JSMODEL_ADMIN_EMAILS.includes(u.email.toLowerCase()));
 }
-// 2026-11-23: inline like every other format (was a full-screen overlay). The sim board takes the
-// rankings table's place under the same Format / Position / search rows; the page's Position pills
-// and search box drive it (forwarded below). Any other Format tab puts the normal table back.
+const _s27 = {
+  rows: null,          // parsed file rows (sim2027.js toRows) or null = nothing loaded
+  byIdx: new Map(),    // D index -> row, for the players we could match by name
+  unmatched: 0, placeholders: 0,
+  perFmt: false,       // file has the PPR / STD columns (else half-PPR only)
+  sf: false,           // superflex order (sf12_rank) vs 1QB order
+  gen: 0, boardKey: null, tierCache: null,
+  prev: null           // what to put back on exit: { version, statMode, tierCards }
+};
+// Scoring the 2027 numbers are shown in: the PPR / HALF / STD toggle when the file carries
+// per-scoring columns, half-PPR otherwise (older files; no conversion is faked).
+function _s27FmtUsed() { return _s27.perFmt && (rankingScoringFmt === 'ppr' || rankingScoringFmt === 'std') ? rankingScoringFmt : 'half'; }
+function _s27F(r) { return (r && r.fmt && (r.fmt[_s27FmtUsed()] || r.fmt.half)) || {}; }
+// File rows -> D indices. Exact name first (nameToIdx also knows the suffix-stripped aliases),
+// then the punctuation / suffix-collapsed name at the same position. Unmatched rows (mostly
+// provisional rookie placeholders with no team yet) stay off the board and are counted.
+function _s27Match(rows) {
+  const ck = n => String(n || '').replace(_jrSuffixRe, '').toLowerCase().replace(/[.\-'\s]/g, '');
+  const coll = {};
+  D.forEach((d, i) => { if (!d || d._retired || d._isFuturePick) return; const k = ck(d.n); (coll[k] = coll[k] || []).push(i); });
+  const byIdx = new Map();
+  let unmatched = 0, placeholders = 0;
+  rows.forEach(r => {
+    let idx = nameToIdx[r.name];
+    if (idx != null && (!D[idx] || D[idx]._retired || (r.pos && D[idx].s !== r.pos))) idx = null;
+    if (idx == null) {
+      const c = coll[ck(r.name)] || [];
+      idx = c.find(i => D[i].s === r.pos);
+      if (idx == null && !r.pos && c.length === 1) idx = c[0];
+    }
+    if (idx == null || byIdx.has(idx)) { unmatched++; if (r.rookie) placeholders++; return; }
+    byIdx.set(idx, r);
+  });
+  return { byIdx, unmatched, placeholders };
+}
+// versionBoards.sim27: the file's order (per-scoring rank on 1QB, sf12_rank on SF) for every
+// format slot, then everyone else in D (hidden on this board by getFiltered). Returns true
+// when it rebuilt.
+function _s27BoardEnsure() {
+  if (!_s27.rows) return false;
+  const key = _s27.gen + ':' + (_s27.sf ? 'sf' : '1qb') + ':' + _s27FmtUsed();
+  if (_s27.boardKey === key) return false;
+  const rk = r => { const f = _s27F(r); return f.rank != null ? f.rank : 99999; };
+  // Superflex: the file has one SF rank (sf12_rank, half-PPR) and no per-scoring SF ranks,
+  // so the SF order stays half-PPR whatever the toggle says (the numbers still follow it).
+  const ord = _s27.sf ? (r => r.sfRank != null ? r.sfRank : 50000 + rk(r)) : rk;
+  const ent = [];
+  _s27.byIdx.forEach((r, idx) => ent.push([idx, r]));
+  ent.sort((a, b) => (ord(a[1]) - ord(b[1])) || (rk(a[1]) - rk(b[1])));
+  const order = ent.map(e => e[0]);
+  const used = new Set(order);
+  for (let i = 0; i < D.length; i++) if (!used.has(i) && !D[i]._retired) order.push(i);
+  Object.keys(versionBoards.sim27).forEach(m => { versionBoards.sim27[m] = order.slice(); });
+  // Position rank by 2027 PPG (the "(n)" tag next to Proj PPG on phone cards).
+  const byPos = {};
+  _s27.byIdx.forEach((r, idx) => { const v = _s27F(r).ppg; if (v != null) (byPos[D[idx].s] = byPos[D[idx].s] || []).push([idx, v]); });
+  _s27.ppgRk = new Map();
+  Object.keys(byPos).forEach(p => { const a = byPos[p].sort((x, y) => y[1] - x[1]); a.forEach((x, k) => _s27.ppgRk.set(x[0], { rank: k + 1, of: a.length })); });
+  _s27.boardKey = key;
+  _s27.tierCache = null;
+  return true;
+}
+// One row's 2027 cells (Proj PPG / '26 PPG / SEASON) + the tooltip with range and bench risk.
+function _s27Cell(d, r) {
+  const f = _s27F(r);
+  const fl = _s27FmtUsed() === 'half' ? 'Half PPR' : _scoringLabelsRnk[rankingScoringFmt];
+  const bits = ['2027 Sim Lab (' + fl + ')'];
+  if (f.ppg != null) bits.push(f.ppg.toFixed(1) + ' PPG');
+  if (r.games != null) bits.push(r.games.toFixed(1) + ' games');
+  if (f.total != null) bits.push('season ' + Math.round(f.total));
+  const range = (f.p10 != null && f.p90 != null) ? Math.round(f.p10) + '-' + Math.round(f.p90) : '';
+  if (range) bits.push('range ' + range + ' (10th-90th percentile)');
+  if (r.bench != null) bits.push(Math.round(r.bench * 100) + '% bench risk (loses the job / role)');
+  if (r.recPg != null && d.s !== 'QB') bits.push(r.recPg.toFixed(1) + ' rec/g');
+  if (f.posRank != null && r.pos) bits.push(r.pos + f.posRank + ' in the file');
+  // '26 PPG: the site's own 2026-to-date number in the board's scoring (what REDRAFT shows);
+  // the file's ppg26 (half-PPR) only when the site has none.
+  let prev = null, prevTip = '';
+  const sp = (typeof adjSeasonPpg === 'function') ? adjSeasonPpg(d) : null;
+  if (sp && sp.yr === 26 && sp.v != null && isFinite(Number(sp.v))) { prev = Number(sp.v); prevTip = '2026 to date' + (sp.gp ? ' · ' + sp.gp + ' gp' : ''); }
+  else if (r.prev != null) { prev = r.prev; prevTip = '2026 PPG from the Sim Lab file (half-PPR)'; }
+  return { ppg: f.ppg, total: f.total, range, prev, prevTip, tip: bits.join(' · ').replace(/"/g, '&quot;') };
+}
+function _s27PpgRkTag(d) {
+  const r = _s27.ppgRk && _s27.ppgRk.get(d.idx);
+  return r ? '<span class="mrk" title="#' + r.rank + ' of ' + r.of + ' ' + d.s + 's by 2027 PPG">(' + r.rank + ')</span>' : '';
+}
+function _s27SortVal(d, k) {
+  const r = _s27.byIdx.get(d.idx);
+  if (k === 'age') return (r && r.age != null) ? r.age : 99;
+  if (!r) return -Infinity;
+  const v = k === 'prev' ? _s27Cell(d, r).prev : _s27F(r)[k];
+  return v != null ? v : -Infinity;
+}
+// Tier banners: natural breaks (same Jenks fit as SIM VOR) in the 2027 season totals, over the
+// view's full list in board order — overall on ALL / FLEX / ROOKIES, per position on a position
+// pill. Membership is per player, so search / TEAMS / TOP N keep each player's real tier.
+function _s27TiersFor(data) {
+  if (!_s27.rows) return [];
+  const posView = ['QB', 'RB', 'WR', 'TE'].includes(filter);
+  const key = _s27.boardKey + ':' + currentMode + ':' + (posView ? filter : 'ALL');
+  if (!_s27.tierCache || _s27.tierCache.key !== key) {
+    const list = [];
+    (versionBoards.sim27[currentMode] || []).forEach(i => {
+      const r = _s27.byIdx.get(i);
+      if (!r || (posView && D[i].s !== filter)) return;
+      const t = _s27F(r).total;
+      if (t != null) list.push([i, t]);
+    });
+    const cap = posView ? ((filter === 'QB' || filter === 'TE') ? 36 : 72) : 150;
+    const top = list.slice(0, cap);
+    const cuts = top.length ? _vorJenks(top.map(x => x[1])) : [];
+    const tierOf = new Map();
+    cuts.forEach((c, j) => {
+      const end = j + 1 < cuts.length ? cuts[j + 1] : top.length;
+      const lab = TIER_LABELS[j] || ('T' + j);
+      const hi = Math.round(top[c][1]), lo = Math.round(top[end - 1][1]);
+      const obj = { label: lab, name: (j === 0 ? 'ELITE' : 'TIER ' + lab) + ' · ' + (end - 1 > c ? Math.max(hi, lo) + ' to ' + Math.min(hi, lo) : hi) + ' PTS' };
+      for (let k = c; k < end; k++) tierOf.set(top[k][0], obj);
+    });
+    if (list.length > top.length) {
+      const deep = { label: TIER_LABELS[cuts.length] || ('T' + cuts.length), name: 'DEEP BENCH' };
+      list.slice(top.length).forEach(x => tierOf.set(x[0], deep));
+    }
+    _s27.tierCache = { key, tierOf };
+  }
+  const tierOf = _s27.tierCache.tierOf;
+  const positional = _tierRankIsPositional();
+  const rows = data.slice().sort((a, b) => (a.myRank || 0) - (b.myRank || 0));
+  const out = [];
+  let prev = null;
+  rows.forEach((d, i) => {
+    const t = tierOf.get(d.idx);
+    if (!t || t === prev) return;
+    prev = t;
+    out.push({ id: 's27_' + out.length, label: t.label, name: t.name, afterRank: positional ? i + 1 : d.myRank });
+  });
+  return out;
+}
+// The info line in the 2027 bar: player count, placeholders left off, scoring note.
+function _s27BarNote() {
+  if (!window.MFFSim2027 || !window.MFFSim2027.setNote) return;
+  if (!_s27.rows) { window.MFFSim2027.setNote('', ''); return; }
+  const bits = [_s27.byIdx.size + ' players'];
+  if (_s27.unmatched) {
+    const other = _s27.unmatched - _s27.placeholders;
+    if (_s27.placeholders) bits.push(_s27.placeholders + ' rookie placeholder' + (_s27.placeholders === 1 ? ' isn\'t' : 's aren\'t') + ' on the board yet');
+    if (other > 0) bits.push(other + ' other name' + (other === 1 ? '' : 's') + ' in the file didn\'t match a player');
+  }
+  bits.push(_s27.sf ? 'Superflex order (sf12_rank, half-PPR)' : '1QB order');
+  const scoring = _s27.perFmt ? (_scoringLabelsRnk[rankingScoringFmt] || 'Half PPR') + ' numbers'
+    : 'Half-PPR only in this file' + (rankingScoringFmt !== 'half' ? ' (the PPR / STD toggle has no effect)' : '');
+  window.MFFSim2027.setNote(bits.join(' · '), scoring);
+}
+// sim2027.js hands over the rows of the saved file or a preview (null = nothing to show).
+function _s27SetRows(rows, info) {
+  if (!rows || !rows.length) {
+    _s27.rows = null; _s27.byIdx = new Map(); _s27.unmatched = _s27.placeholders = 0;
+  } else {
+    const m = _s27Match(rows);
+    _s27.rows = rows; _s27.byIdx = m.byIdx; _s27.unmatched = m.unmatched; _s27.placeholders = m.placeholders;
+    _s27.perFmt = !!(info && info.perFmt);
+  }
+  _s27.gen++; _s27.boardKey = null; _s27.tierCache = null;
+  if (!_sim2027IsOpen()) return;
+  document.body.classList.toggle('s27-nodata', !_s27.rows);
+  _s27BarNote();
+  if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+  syncMode(); renumber(); render();
+}
+function _s27SetSf(sf) {
+  if (_s27.sf === !!sf) return;
+  _s27.sf = !!sf;
+  _s27BarNote();
+  if (!_sim2027IsOpen()) return;
+  syncMode(); renumber(); render();
+}
 function _sim2027TableWrap() {
   const tc = document.getElementById('tierCardWrap');
   return tc ? tc.parentElement : document.querySelector('.table-wrap');
 }
-function _sim2027IsOpen() { return !!document.getElementById('sim2027Inline'); }
+function _sim2027IsOpen() { return currentVersion === 'sim27'; }
+function _s27StatBtns() {
+  document.querySelectorAll('.rnk-statmode-btn').forEach(b => b.classList.toggle('active', b.dataset.rnkstatmode === rnkStatMode));
+}
 function _sim2027Close() {
-  const host = document.getElementById('sim2027Inline');
-  if (!host) return;
+  if (!_sim2027IsOpen()) return;
+  const p = _s27.prev || { version: 'consensus', statMode: 'fantasy', tierCards: false };
+  _s27.prev = null;
   try { if (window.MFFSim2027) window.MFFSim2027.unmount(); } catch (_) {}
-  host.remove();
-  document.body.classList.remove('sim2027-on');
-  const tw = _sim2027TableWrap();
-  if (tw) tw.style.display = '';
+  const host = document.getElementById('sim2027Bar');
+  if (host) host.remove();
+  document.body.classList.remove('sim2027-on', 's27-nodata');
+  currentVersion = (p.version && p.version !== 'sim27' && versionBoards[p.version]) ? p.version : 'consensus';
+  rnkStatMode = p.statMode || 'fantasy';
+  _s27StatBtns();
+  document.querySelectorAll('.version-tab').forEach(b => b.classList.toggle('active', b.dataset.version === currentVersion));
   const tab = document.getElementById('sim2027Tab');
   if (tab) tab.classList.remove('active');
   document.querySelectorAll('.mode-tab[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === currentMode));
-  try { render(); } catch (_) {}
+  if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+  try { _vorBarRender(); } catch (_) {}
+  syncMode(); renumber();
+  compareSet.clear(); updateCompareBtn();
+  render();
+  if (p.tierCards) { const b = document.querySelector('.view-mode-btn[data-viewmode="tierCard"]'); if (b) b.click(); }
 }
 function _sim2027Open() {
   if (!_sim2027IsAdmin() || _sim2027IsOpen()) return;
   const tw = _sim2027TableWrap();
   if (!tw) return;
-  const host = document.createElement('div');
-  host.id = 'sim2027Inline';
-  host.innerHTML = '<div style="padding:2.5rem 1rem;text-align:center;color:var(--text2)">Loading the 2027 rankings…</div>';
-  tw.parentNode.insertBefore(host, tw.nextSibling);
-  tw.style.display = 'none';
-  const empty = document.getElementById('empty');
-  if (empty) empty.style.display = 'none';
-  document.body.classList.add('sim2027-on');
+  const fromMode = currentMode;
+  // WEEKLY has its own columns and week board; the 2027 board rides the season layout.
+  if (currentMode === 'weekly') { const r = document.querySelector('.mode-tab[data-mode="redraft"]'); if (r) r.click(); }
+  // TIER CARDS read this season's stats, so the 2027 board is table-only.
+  const tierCards = viewMode === 'tierCard';
+  if (tierCards) { const b = document.querySelector('.view-mode-btn[data-viewmode="all"]'); if (b) b.click(); }
+  _s27.prev = { version: currentVersion, statMode: rnkStatMode, tierCards };
+  _s27.sf = fromMode === 'superflex' || fromMode === 'dynastysf';
+  _s27.boardKey = null;
+  currentVersion = 'sim27';
+  rnkStatMode = 'fantasy';
+  _s27StatBtns();
+  document.querySelectorAll('.version-tab').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
   const tab = document.getElementById('sim2027Tab');
   if (tab) tab.classList.add('active');
+  const host = document.createElement('div');
+  host.id = 'sim2027Bar';
+  host.innerHTML = '<div style="padding:10px 2px;color:var(--text2);font-size:.8rem">Loading the 2027 rankings…</div>';
+  tw.parentNode.insertBefore(host, tw);
+  document.body.classList.add('sim2027-on');
+  document.body.classList.toggle('s27-nodata', !_s27.rows);
+  try { _vorBarRender(); } catch (_) {}
+  if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+  syncMode(); renumber();
+  compareSet.clear(); updateCompareBtn();
+  render();
   _sim2027Load(function (ok) {
-    if (document.getElementById('sim2027Inline') !== host) return; // closed while the script was loading
+    if (!_sim2027IsOpen() || document.getElementById('sim2027Bar') !== host) return; // left while the script was loading
     if (!ok || !window.MFFSim2027) {
-      host.innerHTML = '<div style="padding:2.5rem 1rem;text-align:center;color:var(--text2)">Couldn\'t load the 2027 rankings. Reload the site and try again.</div>';
+      host.innerHTML = '<div style="padding:10px 2px;color:var(--text2);font-size:.8rem">Couldn\'t load the 2027 rankings. Reload the site and try again.</div>';
       return;
     }
-    window.MFFSim2027.mount(host, {
-      pos: (typeof filter === 'string') ? filter : 'ALL',
-      q: (typeof query === 'string') ? query : '',
-      sf: currentMode === 'superflex' || currentMode === 'dynastysf'
-    });
+    window.MFFSim2027.mount(host, { sf: _s27.sf, onRows: _s27SetRows, onFmt: _s27SetSf });
+    _s27BarNote();
   });
 }
 // sim2027.js is fetched only when an admin opens the tab, so no other visitor downloads it.
 function _sim2027Load(cb) {
   if (window.MFFSim2027) { cb(true); return; }
   const s = document.createElement('script');
-  s.src = 'sim2027.js?v=2026-11-23';
+  s.src = 'sim2027.js?v=2026-11-23b';
   s.onload = function () { cb(true); };
   s.onerror = function () { s.remove(); cb(false); };
   document.head.appendChild(s);
@@ -13686,26 +13926,20 @@ function _sim2027Refresh() {
   if (!tab) return;
   const adm = _sim2027IsAdmin();
   tab.style.display = adm ? '' : 'none';
-  if (!adm) _sim2027Close();
+  if (!adm) {
+    _sim2027Close();
+    _s27.rows = null; _s27.byIdx = new Map(); _s27.gen++; _s27.boardKey = null;   // signed out: drop the private rows
+  }
 }
 (function () {
   const tab = document.getElementById('sim2027Tab');
   if (tab) tab.addEventListener('click', _sim2027Open);
-  // Any real Format tab leaves the sim board. Capture phase on the row so it runs before the
-  // tab's own handler, which returns early when that format is already currentMode.
-  const row = tab && tab.closest('.mode-tabs');
-  if (row) row.addEventListener('click', function (e) {
-    if (_sim2027IsOpen() && e.target.closest('.mode-tab[data-mode]')) _sim2027Close();
+  // Any Model or Format tab leaves the 2027 board. Capture phase on the document so it runs
+  // before the tab's own handler (which returns early when that tab is already current, so
+  // the close above has already restored and painted the previous board).
+  document.addEventListener('click', function (e) {
+    if (_sim2027IsOpen() && e.target && e.target.closest && e.target.closest('.version-tab[data-version], .mode-tab[data-mode]')) _sim2027Close();
   }, true);
-  // The page's Position pills + search box drive the sim board while it is showing
-  // (their own handlers have already set `filter` / `query` by the time these run).
-  document.querySelectorAll('.pos-btn[data-pos]').forEach(btn => btn.addEventListener('click', function () {
-    if (_sim2027IsOpen() && window.MFFSim2027) window.MFFSim2027.setFilter(filter);
-  }));
-  const search = document.getElementById('search');
-  if (search) search.addEventListener('input', function () {
-    if (_sim2027IsOpen() && window.MFFSim2027) window.MFFSim2027.setQuery(search.value);
-  });
   _sim2027Refresh();
   // Admin status arrives after Firebase auth resolves (and flips on sign-in / sign-out).
   _whenFirebaseReady(function () {
@@ -13737,6 +13971,7 @@ document.querySelectorAll('.rnk-scoring-btn').forEach(btn => {
     } else if (rnkStatMode === 'vor' || rnkStatMode === 'dyn') {
       window._updateRnkStatHeaders();   // sub-labels + glosses name the format
     }
+    if (currentVersion === 'sim27') { window._updateRnkStatHeaders(); _s27BarNote(); }
     render();
   });
 });
@@ -13755,6 +13990,14 @@ window._updateRnkStatHeaders = function() {
     th.innerHTML = '<span class="th-stack"' + (stackId ? ' id="' + stackId + '"' : '') + '><span data-gloss="' + gloss.replace(/"/g, '&quot;') + '">' + label + '</span>' + (sub ? '<span class="hide-on-mobile th-fmt">' + sub + '</span>' : '') + '</span><span class="arrow">' + arrowTxt + '</span>';
   };
   const fmtLabel = _scoringLabelsRnk[rankingScoringFmt] || 'Half PPR';
+  if (currentVersion === 'sim27') {
+    // 2027 SIMS board (admin): the three swap columns carry the private 2027 file.
+    const _f27 = _s27FmtUsed() === 'half' ? 'Half PPR' : fmtLabel;
+    _set(c1, null, 'Sim Lab 2027 projected fantasy points per game (' + _f27 + ' scoring) from the preseason 2027 model. Hover a value for games, the season range (10th-90th percentile) and the chance he loses the job.', 'Proj PPG', '2027 · ' + _f27);
+    _set(c2, 'ppg25Header', 'Actual 2026 fantasy points per game to date, for comparison with the 2027 projection.', "'26 PPG", '2026');
+    _set(c3, 'l4ppgHeader', 'Projected 2027 season total (' + _f27 + ' scoring) = 2027 PPG x projected games. Hover a value for the 10th-90th percentile range across the sims and the bench risk.', 'Season', '2027 · ' + _f27);
+    return;
+  }
   if (rnkStatMode === 'fantasy') {
     // WEEKLY is one game, so the column is just PROJ (Jack 2026-09-08) —
     // "PPG" only makes sense on the season boards.
@@ -16084,7 +16327,7 @@ document.querySelectorAll('thead th[data-sort]').forEach(th => {
   const _doSort = () => {
     const key = th.dataset.sort;
     if (sortKey === key) sortDir *= -1;
-    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); const _isVorRk = _effStatMode() === 'vor' && key === 'l4ppg' && currentMode === 'weekly'; sortDir = (_isAdpCmp || _isVorRk) ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || key === 'injSt' || (key === 'l4ppg' && _effStatMode() !== 'fantasy')) ? -1 : 1; }
+    else { sortKey = key; const _isAdpCmp = _effStatMode() === 'adp' && (key === 'pts' || key === 'fpts25' || key === 'l4ppg' || key === 'yrr'); const _isVorRk = _effStatMode() === 'vor' && key === 'l4ppg' && currentMode === 'weekly'; sortDir = (_isAdpCmp || _isVorRk) ? 1 : (key === 'pts' || key === 'diff' || key === 'p25' || key === 'p24' || key === 'p23' || key === 'fpts25' || key === 'yrr' || key === 'jm' || key === 'teamTotal' || key === 'oppPpg' || key === 'xfpG' || key === 'simBoom' || key === 'simBust' || key === 'injSt' || (key === 'l4ppg' && (_effStatMode() !== 'fantasy' || currentVersion === 'sim27'))) ? -1 : 1; }
     document.querySelectorAll('thead th[data-sort]').forEach(t => { t.classList.remove('sorted'); const a=t.querySelector('.arrow'); if(a) a.textContent=''; t.setAttribute('aria-sort','none'); });
     th.classList.add('sorted');
     th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
@@ -16129,7 +16372,7 @@ document.getElementById('btnExport').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : currentVersion === 'sim27' ? 'Sim2027' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   
   // Build CSV
@@ -16195,7 +16438,7 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' \u2014 upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : currentVersion === 'sim27' ? 'Sim2027' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const useFilteredRank = _tierRankIsPositional();
 
@@ -16269,7 +16512,7 @@ document.getElementById('btnExportTiers').addEventListener('click', () => {
   if (current.players.length) groups.push(current);
 
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : currentVersion === 'sim27' ? 'Sim2027' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   const payload = {
     source: 'myfantasyfootball.co',
@@ -16391,7 +16634,7 @@ document.getElementById('btnExportUnderdog').addEventListener('click', () => {
     toast('Exporting top ' + _cut + ' — upgrade to PRO for the full list');
   }
   const modeLabel = currentMode === 'dynastysf' ? 'DynastySF' : currentMode === 'dynasty' ? 'Dynasty' : currentMode === 'superflex' ? 'Superflex' : currentMode === 'bestball' ? 'BestBall' : 'Redraft';
-  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : 'My';
+  const verLabel = currentVersion === 'consensus' ? 'Consensus' : currentVersion === 'jacks' ? 'Jacks' : currentVersion === 'sims' ? 'SimVOR' : currentVersion === 'mffv' ? 'MFFValue' : currentVersion === 'sim27' ? 'Sim2027' : 'My';
   const posLabel = filter === 'ALL' ? 'All' : filter;
   // Underdog's current export quotes every populated field; mirror that exactly.
   const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';

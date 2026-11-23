@@ -36,7 +36,6 @@ const ACTIVE_TEAM_HISTORY = {
     'Bo Nix': [{t:'Denver Broncos',y1:2024,y2:2099}],
     'Brady Cook': [{t:'Miami Dolphins',y1:2026,y2:2099}],
     'Braelon Allen': [{t:'New York Jets',y1:2024,y2:2099}],
-    'Brandin Cooks': [{t:'San Francisco 49ers',y1:2026,y2:2099}],
     'Brandon Aiyuk': [{t:'San Francisco 49ers',y1:2020,y2:2099}],
     'Brashard Smith': [{t:'Kansas City Chiefs',y1:2025,y2:2099}],
     'Breece Hall': [{t:'New York Jets',y1:2022,y2:2099}],

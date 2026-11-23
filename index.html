@@ -94,7 +94,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-21-sim2027" as="script">
+<link rel="preload" href="app.js?v=2026-11-23-sim2027" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -1534,7 +1534,7 @@ CLEAR ALL
 <button class="mode-tab" data-mode="dynastysf">DYNASTY SF</button>
 <button class="mode-tab" data-mode="weekly" id="weeklyModeTab" style="display:none" title="Weekly rankings — live while a week is published">WEEKLY</button>
 <!-- 2027 SIMS: admin-only. Not a board mode (no data-mode): it opens the private 2027 sim
-     rankings (sim2027.js, loaded on first open) over the page. Un-hidden by _sim2027Refresh in
+     rankings (sim2027.js, loaded on first open) in the table's place. Un-hidden by _sim2027Refresh in
      app.js for admins only; the numbers themselves sit behind the admin_sims rule in firestore.rules. -->
 <button class="mode-tab" id="sim2027Tab" style="display:none" title="2027 season rankings from the Sim Lab preseason model. Admin only.">2027 SIMS</button>
 </div>
@@ -6884,7 +6884,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-21-sim2027"></script>
+<script defer src="app.js?v=2026-11-23-sim2027"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

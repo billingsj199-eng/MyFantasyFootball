@@ -23,9 +23,11 @@
  *
  * CSV columns read: name, pos, team, age, games, ppg26, p_bench, sf12_rank, provisional / rookie,
  * rec_pg; half-PPR ppg, total, tot_p10, tot_p90, rank, pos_rank; and when present the same six with
- * _ppr / _std suffixes (per-scoring numbers + order). Unknown columns are ignored.
+ * _ppr / _std suffixes (per-scoring numbers + order). For the provisional rookie class (Sim Lab
+ * a15_rookies.py, placed from JM score only until the draft): jm, school, class_status,
+ * implied_round, p_drafted. Unknown columns are ignored.
  *
- * API: window.MFFSim2027.mount(containerEl, {sf, onRows(rows|null, {perFmt}), onFmt(sf),
+ * API: window.MFFSim2027.mount(containerEl, {sf, onRows(rows|null, {perFmt, preview, pending}), onFmt(sf),
  *                                            onJacks({exists,data,updatedAt}|{local}|{error}), onSeed()})
  *      .unmount() / .setNote(infoText, scoringText) / .setView('sims'|'jacks', {sf, canSeed})
  *      .saveJacks(json) -> Promise<updatedAt | false>   (false = declined the newer-save warning)
@@ -59,6 +61,9 @@
     '.s27-empty{width:100%;padding:2.5rem 1rem;text-align:center;color:var(--text2);font-size:.85rem;line-height:1.5}',
     '.s27-empty b{display:block;color:var(--text);font-size:.95rem;margin-bottom:4px}',
     '.s27-bar [hidden]{display:none!important}',
+    /* Rookie class chip on the Proj PPG cell: JM = pre-draft, placed from JM score only; JM+ = final JM with the pick and landing spot. */
+    '.s27-stage{display:inline-block;margin-left:5px;padding:0 4px;border-radius:3px;font-family:"DM Sans",sans-serif;font-size:.5625rem;font-weight:700;letter-spacing:.04em;line-height:1.55;vertical-align:middle;color:var(--text2);border:1px solid var(--border-strong)}',
+    '.s27-stage.pre{color:var(--accent);border:1px dashed rgba(245,158,11,.6)}',
     /* While the 2027 board is on (body.sim2027-on, set by _sim2027Open in app.js): the columns with
        no 2027 meaning (SOS, P-SOS) and the STATS views other than FANTASY are hidden, and so is
        TABLE / TIER CARDS (tier cards read this season's stats). The reference column (Cons) stays:
@@ -146,7 +151,8 @@
   }
 
   // Turns the Sim Lab CSV into rows: { name, pos, team, age, games, prev (ppg26), bench, sfRank,
-  // rookie, recPg, fmt: { half, ppr|null, std|null } }. perFmt = the file has PPR and STD columns.
+  // rookie, recPg, fmt: { half, ppr|null, std|null } } plus, for the provisional rookie class,
+  // { jm, school, cls (class_status), rd (implied_round), pDraft }. perFmt = the file has PPR and STD columns.
   function toRows(csvText) {
     var t = parseCsv(csvText);
     if (t.length < 2) throw new Error('The file has no rows.');
@@ -175,7 +181,9 @@
         team: String(o.team || '').trim(),
         games: num(o.games), prev: num(o.ppg26), age: num(o.age),
         bench: num(o.p_bench), sfRank: num(o.sf12_rank), recPg: num(o.rec_pg),
-        rookie: prov, fmt: fmt
+        rookie: prov, fmt: fmt,
+        jm: num(o.jm), school: String(o.school || '').trim(), cls: String(o.class_status || '').trim(),
+        rd: String(o.implied_round || '').trim(), pDraft: num(o.p_drafted)
       });
     }
     if (!out.length) throw new Error('No players found in the file.');
@@ -211,14 +219,16 @@
     drawEmpty(); drawFmt(); drawInfo();
     if (opts.onRows) opts.onRows(parsed.rows, { perFmt: parsed.perFmt, preview: !!isPreview });
   }
-  function showEmpty(title, body) {
+  // flag: true = still reading the saved file (not an answer yet); 'error' = it could not be read.
+  // Either way app.js keeps Jack's board view-only: it needs the file to place the 2027-only players.
+  function showEmpty(title, body, flag) {
     if (!root) return;
     state.rows = [];
     state.empty = { title: title, body: body };
     drawEmpty(); drawFmt();
     $('scoring').textContent = '';
     drawInfo();
-    if (opts.onRows) opts.onRows(null, {});
+    if (opts.onRows) opts.onRows(null, { pending: flag === true, error: flag === 'error' });
   }
   // The big message replaces the table on the sim board only; Jack's board always has rows.
   function drawEmpty() {
@@ -238,21 +248,22 @@
   function loadSaved() {
     var my = mountId;
     if (!db) return;
-    db.collection(COLL).doc(DOC).get().then(function (snap) {
+    // From the server, not the offline cache: Jack's board is placed (and saved) against this file.
+    db.collection(COLL).doc(DOC).get({ source: 'server' }).then(function (snap) {
       if (my !== mountId || !root) return;
       if (!snap.exists) { state.saved = null; if (!state.pending) showEmpty(NO_SAVED[0], NO_SAVED[1]); return; }
       var d = snap.data();
       state.saved = d;
       if (state.pending) return; // a file preview is on screen; don't replace it
       try { showData(toRows(d.csv || ''), d, false); }
-      catch (e) { showEmpty('The saved file couldn\'t be read.', e.message); }
+      catch (e) { showEmpty('The saved file couldn\'t be read.', e.message, 'error'); }
     }).catch(function (e) {
       if (my !== mountId || !root || state.pending) return;
       if (e && e.code === 'permission-denied') {
         showEmpty('The 2027 rankings database is locked for this account.',
-          'Only the admin account can read it. If you are signed in as the admin, the admin_sims rule in firestore.rules hasn\'t been deployed yet. You can still preview a file with UPDATE SIM FILE.');
+          'Only the admin account can read it. If you are signed in as the admin, the admin_sims rule in firestore.rules hasn\'t been deployed yet. You can still preview a file with UPDATE SIM FILE.', 'error');
       } else {
-        showEmpty('Couldn\'t load the 2027 rankings.', (e && e.message) || 'Check your connection and try again.');
+        showEmpty('Couldn\'t load the 2027 rankings.', (e && e.message) || 'Check your connection and try again.', 'error');
       }
     });
   }
@@ -382,12 +393,12 @@
     var tellJacks = function (res) { if (opts.onJacks) opts.onJacks(res); };
     if (!admin && !LOCAL) { $('btnFile').hidden = true; showEmpty('This board isn\'t available for this account.', 'Sign in with the admin Google account, then open the tab again.'); tellJacks({ error: 'not the admin account' }); return; }
     if (!admin) { showEmpty('Local preview, not signed in as admin.', 'Press UPDATE SIM FILE to preview a file. Nothing is read from or saved to the database.'); tellJacks({ local: true }); return; }
-    showEmpty('Loading the 2027 sim file…', '');
+    showEmpty('Loading the 2027 sim file…', '', true);
     var my = mountId;
     var go = function () {
       if (my !== mountId || !root) return;
       try { db = firebase.firestore(); } catch (e) { db = null; }
-      if (!db) { showEmpty('The database isn\'t available right now.', 'Reload the site and open the tab again. You can still preview a file with UPDATE SIM FILE.'); tellJacks({ error: 'database not available' }); return; }
+      if (!db) { showEmpty('The database isn\'t available right now.', 'Reload the site and open the tab again. You can still preview a file with UPDATE SIM FILE.', 'error'); tellJacks({ error: 'database not available' }); return; }
       loadSaved();
       loadJacks();
     };

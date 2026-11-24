@@ -1397,7 +1397,7 @@ function canEdit() {
   if (currentVersion === 'mine') return true;
   // Jack's 2027 board: admin only, and only once the saved board has been read (an edit made
   // before that would be replaced when it arrives, or saved over it).
-  if (currentVersion === 'jacks27') return _sim2027IsAdmin() && _j27.ready;
+  if (currentVersion === 'jacks27') return _sim2027IsAdmin() && _j27.ready && _s27.loaded;
   return typeof window.isAdmin === 'function' && window.isAdmin();
 }
 
@@ -1538,8 +1538,11 @@ function renumber() {
       D[idx].myPosRank = p + posCounts[p];
     }
   };
+  const _is27Now = _is27();
   board.forEach(idx => {
     if (_irHide && D[idx] && window._irIsOut(D[idx].n)) { _parked.push(idx); return; }
+    // 2027-only row the file on screen doesn't list (hidden by getFiltered): no gap in the numbering.
+    if (_is27Now && D[idx] && D[idx]._s27Only && !_s27.byIdx.has(idx)) { _parked.push(idx); return; }
     _num(idx);
   });
   _parked.forEach(_num);
@@ -7751,8 +7754,8 @@ function getFiltered(applyTopN) {
     }
   }
   let f = _boardSrc.map(idx => D[idx]);
-  // Hide retired players from rankings
-  f = f.filter(d => !d._retired);
+  // Hide retired players from rankings (the 2027-only rows ride that flag: shown on the 2027 boards only)
+  f = f.filter(d => !d._retired || _s27Shown(d));
   if (!window._rankBaseMode) f = _rnkLgFilter(f);
   // SIM VOR board lists only players the sim projects; WAIVERS narrows it to
   // players nobody in the picked league rosters.
@@ -7806,7 +7809,12 @@ function getFiltered(applyTopN) {
   f = f.filter(d => {
     // Best Ball: K and D/ST aren't drafted on Underdog — always hide them.
     if (currentMode === 'bestball' && (d.s === 'K' || d.s === 'DST')) return false;
-    if (filter === 'ROOKIE') {
+    if (filter === 'ROOKIE' && _is27()) {
+      // 2027 boards: ROOKIES = the 2027 class in the sim file.
+      const _r27 = _s27.byIdx.get(d.idx);
+      if (!_r27 || !_r27.rookie) return false;
+      if (rookiePosFilter && rookiePosFilter !== 'ALL' && d.s !== rookiePosFilter) return false;
+    } else if (filter === 'ROOKIE') {
       // 2026 class = no NFL career stats yet, AND either still listed as TBD/FA
       // OR explicitly tagged as yr:2026 in COMBINE_DATA (post-draft, has a real
       // NFL team but is still a rookie until they accrue career stats).
@@ -12092,7 +12100,9 @@ function render() {
       } else {
         const _pc = c.ppg != null ? _rowPpgColor(c.ppg, d.s) : null;
         const _qc = c.prev != null ? _rowPpgColor(c.prev, d.s) : null;
-        _statTd1 = `<td class="pts-cell ppg-proj-cell" title="${c.tip}" style="cursor:help${_pc ? ';color:' + _pc + ';font-weight:700' : ''}">${c.ppg == null ? '—' : c.ppg.toFixed(1) + _s27PpgRkTag(d)}</td>`;
+        // Rookie class: a chip marks the number as the JM-only (pre-draft) placement.
+        const _stg = c.stage ? `<span class="s27-stage${c.stage === 'jm' ? ' pre' : ''}">${c.stage === 'jm' ? 'JM' : 'JM+'}</span>` : '';
+        _statTd1 = `<td class="pts-cell ppg-proj-cell" title="${c.tip}" style="cursor:help${_pc ? ';color:' + _pc + ';font-weight:700' : ''}">${c.ppg == null ? '—' : c.ppg.toFixed(1) + _s27PpgRkTag(d)}${_stg}</td>`;
         _statTds = `<td class="pts-cell ppg25-cell"${c.prevTip ? ' title="' + c.prevTip + '"' : ''}${_qc ? ' style="color:' + _qc + ';font-weight:700"' : ''}>${c.prev == null ? '—' : c.prev.toFixed(1)}</td>
       <td class="pts-cell l4ppg-cell" title="${c.tip}" style="cursor:help;font-weight:700">${c.total == null ? '—' : Math.round(c.total)}</td>`;
       }
@@ -12732,7 +12742,12 @@ function attachTierListeners() {
       if (dv) openPlayerCard(dv);
       return;
     }
-    if (nameLink) { e.stopPropagation(); openPlayerCard(D[+nameLink.dataset.cidx]); return; }
+    if (nameLink) {
+      e.stopPropagation();
+      const _cd = D[+nameLink.dataset.cidx];
+      openPlayerCard((_cd && _cd._s27Only) ? _s27CardEntry(_cd) : _cd);   // 2027-only row: synthetic card entry
+      return;
+    }
     // WEEKLY OPP / OPP PPG cell → that defense's 2026 games vs this position.
     const oppTd = currentMode === 'weekly' && e.target.closest('td.opp-cell, td.oppppg-cell');
     if (oppTd && typeof window._wkOppGamesShow === 'function') {
@@ -13701,6 +13716,9 @@ const _s27 = {
   byIdx: new Map(),    // D index -> row, for the players we could match by name
   unmatched: 0, placeholders: 0,
   perFmt: false,       // file has the PPR / STD columns (else half-PPR only)
+  loaded: false,       // the saved sim file has been read (or there is none): Jack's board needs it to place the 2027-only players
+  extra: new Map(),    // 'name|pos' -> D index of the runtime-only rows (_s27ExtraIdx)
+  rookies: 0, extraVets: 0, jmStale: null,
   gen: 0, boardKey: null, tierCache: null,
   prev: null           // what to put back on exit: { version, statMode, tierCards }
 };
@@ -13712,6 +13730,7 @@ const _j27 = {
   seedSrc: '',         // 'sims' | 'current'
   dirty: false,        // edited since the last save / load
   meta: null,          // { updatedAt } of the saved doc
+  saved: null,         // the saved doc's { redraft, superflex } as read (names), re-applied when the sim file arrives
   savedLen: 0,         // 1QB players in the saved doc (shrink check on save)
   err: ''              // why the saved board could not be read
 };
@@ -13719,15 +13738,65 @@ const _j27 = {
 // per-scoring columns, half-PPR otherwise (older files; no conversion is faked).
 function _s27FmtUsed() { return _s27.perFmt && (rankingScoringFmt === 'ppr' || rankingScoringFmt === 'std') ? rankingScoringFmt : 'half'; }
 function _s27F(r) { return (r && r.fmt && (r.fmt[_s27FmtUsed()] || r.fmt.half)) || {}; }
-// File rows -> D indices. Exact name first (nameToIdx also knows the suffix-stripped aliases),
-// then the punctuation / suffix-collapsed name at the same position. Unmatched rows (mostly
-// provisional rookie placeholders with no team yet) stay off the board and are counted.
+// Players in the sim file that are not in the site's player list (D): the 2027 rookie class
+// (college players, no team yet) and deep veterans. Each gets a runtime-only D entry so he can sit
+// on the 2027 boards like anyone else (rank, drag, tiers, card). The entry is flagged _retired, so
+// every other board, search and tool skips it exactly as it skips the legend pool, and _s27Only,
+// which the 2027 code lets through (_s27Shown). Created only in an admin session once the private
+// file has loaded; never written to a public file; kept out of nameToIdx. When a rookie is later
+// added to the real player list under the same name, the sim file matches that entry instead and
+// Jack's saved rank follows the name.
+function _s27ExtraIdx(r) {
+  const key = (r.name + '|' + r.pos).toLowerCase();
+  let idx = _s27.extra.get(key);
+  if (idx == null) {
+    idx = D.length;
+    D.push({ n: r.name, a: 999, p: 0, s: r.pos, r: r.pos + '\u2014', t: '', p25: null, p24: null, p23: null, age: null, cyr: null, out: null, sal: null, dr: null, exp: null, role: null, inj: null, s25: null, career: [], da: 999, sa: 999, sfa: 999, idx: idx, myRank: 0, round: 99, notes: '', _retired: true, _s27Only: true });
+    _s27.extra.set(key, idx);
+  }
+  const d = D[idx];
+  d._s27Rookie = !!r.rookie;
+  if (r.rookie) {
+    const cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[r.name] : null;
+    const school = r.school || (cb && cb.school) || '';
+    d.t = r.team ? (_ABBR_TO_FULL[r.team] || r.team) : (school || 'College');
+    d._college = school;
+    // Same headshot / logo sources as the DEVY board.
+    const hs = (typeof window.DEVY_HEADSHOTS !== 'undefined') ? window.DEVY_HEADSHOTS[r.name] : null;
+    const tid = (typeof window.COLLEGE_TEAM_IDS !== 'undefined') ? window.COLLEGE_TEAM_IDS[school] : null;
+    d._slImg = hs && hs.id ? 'https://a.espncdn.com/combiner/i?img=/i/headshots/college-football/players/full/' + hs.id + '.png&w=350&h=254' : null;
+    d._devyLogo = tid ? 'https://a.espncdn.com/i/teamlogos/ncaa/500/' + tid + '.png' : null;
+  } else {
+    d.t = _ABBR_TO_FULL[r.team] || r.team || 'FA';
+  }
+  d.age = r.age != null ? Math.round((r.age - 1) * 10) / 10 : null;   // the file's age is for September 2027
+  return idx;
+}
+// A 2027-only row is visible on the 2027 boards while the file on screen still lists him.
+function _s27Shown(d) { return !!d && d._s27Only === true && _is27() && _s27.byIdx.has(d.idx); }
+// Card for a 2027-only row: the same synthetic entry the DEVY board and off-roster NFL players use.
+function _s27CardEntry(d) {
+  let c = null;
+  try { c = (typeof window._prospectCardEntry === 'function') ? window._prospectCardEntry(d.n) : null; } catch (_) {}
+  return c || Object.assign({}, d, { _retired: false });
+}
+// File rows -> D indices, in three passes so a looser match never takes a player an exact match
+// wants: (1) exact name (nameToIdx also knows the suffix-stripped aliases), then the punctuation /
+// suffix-collapsed name at the same position; (2) nickname: same position and last name, first
+// names sharing their first three letters (Kenny / Kenneth, Mitch / Mitchell), on the same team
+// or with the site listing him as a free agent, and only when exactly one player fits; (3) a row
+// still unmatched gets a 2027-only row (_s27ExtraIdx).
 function _s27Match(rows) {
   const ck = n => String(n || '').replace(_jrSuffixRe, '').toLowerCase().replace(/[.\-'\s]/g, '');
-  const coll = {};
-  D.forEach((d, i) => { if (!d || d._retired || d._isFuturePick) return; const k = ck(d.n); (coll[k] = coll[k] || []).push(i); });
-  const byIdx = new Map();
-  let unmatched = 0, placeholders = 0;
+  const parts = n => { const w = String(n || '').replace(_jrSuffixRe, '').trim().split(/\s+/); return { first: ck(w[0]), last: ck(w.slice(1).join(' ')) }; };
+  const coll = {}, byLast = {};
+  D.forEach((d, i) => {
+    if (!d || d._retired || d._isFuturePick) return;
+    const k = ck(d.n); (coll[k] = coll[k] || []).push(i);
+    const pt = parts(d.n); if (pt.last) { const lk = d.s + '|' + pt.last; (byLast[lk] = byLast[lk] || []).push(i); }
+  });
+  const byIdx = new Map(), left = [];
+  let unmatched = 0, placeholders = 0, rookies = 0, extraVets = 0;
   rows.forEach(r => {
     let idx = nameToIdx[r.name];
     if (idx != null && (!D[idx] || D[idx]._retired || (r.pos && D[idx].s !== r.pos))) idx = null;
@@ -13736,9 +13805,26 @@ function _s27Match(rows) {
       idx = c.find(i => D[i].s === r.pos);
       if (idx == null && !r.pos && c.length === 1) idx = c[0];
     }
+    if (idx == null || byIdx.has(idx)) { left.push(r); return; }
+    byIdx.set(idx, r);
+  });
+  const noTeam = t => !t || t === 'FA' || t === 'TBD' || t === 'Retired';
+  left.forEach(r => {
+    let idx = null;
+    if (!r.rookie && r.pos) {
+      const pt = parts(r.name), full = _ABBR_TO_FULL[r.team] || r.team;
+      const c = (byLast[r.pos + '|' + pt.last] || []).filter(i => !byIdx.has(i) && parts(D[i].n).first.slice(0, 3) === pt.first.slice(0, 3)
+        && pt.first.length >= 3 && (D[i].t === full || noTeam(D[i].t)));
+      if (c.length === 1) idx = c[0];
+    }
+    if (idx == null && r.name && ['QB', 'RB', 'WR', 'TE'].includes(r.pos)) {
+      idx = _s27ExtraIdx(r);
+      if (!byIdx.has(idx)) { if (r.rookie) rookies++; else extraVets++; }
+    }
     if (idx == null || byIdx.has(idx)) { unmatched++; if (r.rookie) placeholders++; return; }
     byIdx.set(idx, r);
   });
+  _s27.rookies = rookies; _s27.extraVets = extraVets;
   return { byIdx, unmatched, placeholders };
 }
 // versionBoards.sim27: the file's order, then everyone else in D (hidden on the sim board by
@@ -13776,7 +13862,23 @@ function _s27BoardEnsure() {
 function _s27Cell(d, r) {
   const f = _s27F(r);
   const fl = _s27FmtUsed() === 'half' ? 'Half PPR' : _scoringLabelsRnk[rankingScoringFmt];
-  const bits = ['2027 Sim Lab (' + fl + ')'];
+  // Rookie class: placed from JM score only until the draft (Sim Lab a15_rookies.py: the average
+  // rookie season of the 20 past prospects at his position with the nearest JM). stage 'jm' = no
+  // team yet; 'land' = the file has his team, so the JM behind it already carries the real pick
+  // and landing spot. A drafted rookie in the real player list is an ordinary row (no stage).
+  const stage = r.rookie ? (r.team ? 'land' : 'jm') : '';
+  const bits = [];
+  if (stage) {
+    bits.push((stage === 'jm' ? 'PRE-DRAFT 2027 rookie, placed from JM score only' : '2027 rookie, placed from final JM (draft pick + landing spot in)')
+      + (r.jm != null ? ' (JM ' + r.jm.toFixed(1) + ')' : ''));
+    if (r.rd) bits.push('implied round ' + r.rd);
+    if (r.pDraft != null) bits.push(Math.round(r.pDraft * 100) + '% of his comps were drafted');
+    if (r.cls) bits.push(r.cls === 'senior' ? 'senior, in the class' : r.cls === 'likely' ? 'likely to declare' : 'may not declare');
+    if (stage === 'jm') bits.push('no team yet, so treat it as a wide range: it re-runs with the final JM and landing spot after the draft');
+    const now = _s27JmNow(d);
+    if (now != null && r.jm != null && Math.abs(now - r.jm) >= 1) bits.push('JM is now ' + now.toFixed(1) + ' on the site: re-run the Sim Lab rookie step to pick it up');
+  }
+  bits.push('2027 Sim Lab (' + fl + ')');
   if (f.ppg != null) bits.push(f.ppg.toFixed(1) + ' PPG');
   if (r.games != null) bits.push(r.games.toFixed(1) + ' games');
   if (f.total != null) bits.push('season ' + Math.round(f.total));
@@ -13791,7 +13893,34 @@ function _s27Cell(d, r) {
   const sp = (typeof adjSeasonPpg === 'function') ? adjSeasonPpg(d) : null;
   if (sp && sp.yr === 26 && sp.v != null && isFinite(Number(sp.v))) { prev = Number(sp.v); prevTip = '2026 to date' + (sp.gp ? ' · ' + sp.gp + ' gp' : ''); }
   else if (r.prev != null) { prev = r.prev; prevTip = '2026 PPG from the Sim Lab file (half-PPR)'; }
-  return { ppg: f.ppg, total: f.total, range, prev, prevTip, tip: bits.join(' · ').replace(/"/g, '&quot;') };
+  return { ppg: f.ppg, total: f.total, range, prev, prevTip, stage, tip: bits.join(' · ').replace(/"/g, '&quot;') };
+}
+// The site's live JM for a prospect (prospect model, when its chunk is loaded), to spot a sim
+// file built from an older JM. null = not available.
+function _s27JmNow(d) {
+  try {
+    if (typeof window._pmBuiltData !== 'function' || (window._chunkLoaded && !window._chunkLoaded('prospect'))) return null;
+    if (!_s27._pmMap || _s27._pmGen !== _s27.gen) {
+      const m = new Map();
+      (window._pmBuiltData() || []).forEach(p => { if (p && p.name && p.jm != null) m.set(p.name, p.jm); });
+      _s27._pmMap = m; _s27._pmGen = _s27.gen;
+    }
+    const v = _s27._pmMap.get(d.n);
+    return v != null && isFinite(v) ? Number(v) : null;
+  } catch (_) { return null; }
+}
+// Rookies whose live JM has moved 1+ point since the sim file was built (null = can't tell yet).
+function _s27JmStaleCount() {
+  if (!_s27.rows) return null;
+  let n = 0, seen = 0;
+  _s27.byIdx.forEach((r, idx) => {
+    if (!r.rookie || r.jm == null) return;
+    const now = _s27JmNow(D[idx]);
+    if (now == null) return;
+    seen++;
+    if (Math.abs(now - r.jm) >= 1) n++;
+  });
+  return seen ? n : null;
 }
 function _s27PpgRkTag(d) {
   const r = _s27.ppgRk && _s27.ppgRk.get(d.idx);
@@ -13856,7 +13985,7 @@ function _s27TiersFor(data) {
 // behind them so the board always holds every player. `keepRest` = the rest keep Jack's 2027
 // order (COPY SIM ORDER on a board he already worked on); otherwise they come in the order of
 // his current board for that format. With no sim file it is simply his current board.
-function _j27Seed(keepRest) {
+function _j27Seed(keepRest, keepState) {
   const haveSim = !!_s27.rows;
   if (haveSim) _s27BoardEnsure();
   ['redraft', 'superflex'].forEach(m => {
@@ -13874,25 +14003,81 @@ function _j27Seed(keepRest) {
     versionTierCounters.jacks27[m] = _mkPosTierCtrs();
     if (typeof window._setBoardCutoff === 'function') window._setBoardCutoff('jacks27', m, null);
   });
-  if (!keepRest) { _j27.state = 'seed'; _j27.seedSrc = haveSim ? 'sims' : 'current'; }
+  if (!keepRest && !keepState) { _j27.state = 'seed'; _j27.seedSrc = haveSim ? 'sims' : 'current'; }
 }
-// The saved doc -> versionBoards.jacks27 (same loader as every saved board: names -> D indices,
-// players added to D since the save are appended, tiers and cut line restored).
+// Saved names -> D indices for Jack's 2027 board: site players through nameToIdx, the 2027-only
+// rows by name, then any site player added since the save at the end (as on every saved board).
+function _j27NamesToBoard(names) {
+  const exByName = new Map();
+  _s27.extra.forEach(idx => { if (_s27.byIdx.has(idx)) exByName.set(D[idx].n, idx); });
+  const out = [], used = new Set();
+  (names || []).forEach(n => {
+    if (typeof n !== 'string') return;
+    let idx = nameToIdx[n];
+    if (idx === undefined || !D[idx] || D[idx]._retired) idx = exByName.get(n);
+    if (idx == null || used.has(idx)) return;
+    used.add(idx); out.push(idx);
+  });
+  D.forEach((d, i) => { if (d && !d._retired && !used.has(i)) { used.add(i); out.push(i); } });
+  return out;
+}
+// Keep Jack's 2027 boards in step with the 2027-only rows of the file on screen: a row the board
+// does not have yet goes in at his sim slot (just ahead of the first player the sims rank below
+// him); with `prune`, a row the file no longer lists comes off. Returns true when a board changed.
+function _j27PlaceNew(prune) {
+  if (!_s27.rows) return false;
+  _s27BoardEnsure();
+  let changed = false;
+  ['redraft', 'superflex'].forEach(m => {
+    let b = versionBoards.jacks27[m] || [];
+    if (prune) {
+      const kept = b.filter(i => D[i] && (!D[i]._s27Only || _s27.byIdx.has(i)));
+      if (kept.length !== b.length) { b = kept; changed = true; }
+    }
+    const on = new Set(b), simPos = new Map(), add = [];
+    versionBoards.sim27[m].forEach((i, k) => simPos.set(i, k));
+    _s27.byIdx.forEach((r, i) => { if (D[i] && D[i]._s27Only && !on.has(i)) add.push(i); });
+    add.sort((x, y) => simPos.get(x) - simPos.get(y));
+    add.forEach(i => {
+      const sp = simPos.get(i);
+      let at = b.findIndex(j => _s27.byIdx.has(j) && simPos.get(j) > sp);
+      if (at < 0) { at = 0; b.forEach((j, k) => { if (_s27.byIdx.has(j)) at = k + 1; }); }
+      b.splice(at, 0, i); changed = true;
+    });
+    versionBoards.jacks27[m] = b;
+  });
+  return changed;
+}
+// The saved doc -> versionBoards.jacks27 (tiers and cut line through the loader every saved board
+// uses). Kept as read in _j27.saved so it can be applied again once the sim file is in: the
+// 2027-only rows only exist from then on, and their saved names can't be placed before.
 function _j27Apply(res) {
   let obj = null;
   try { obj = JSON.parse(res.data || 'null'); } catch (_) {}
   const jk = obj && obj.jacks;
   const ok = m => !!(jk && jk[m] && Array.isArray(jk[m]._order) && jk[m]._order.length);
   if (!ok('redraft')) return false;
-  if (!ok('superflex')) _j27Seed(false);            // older save without a superflex order
-  loadModeData('redraft', jk.redraft, 'jacks27');
-  if (ok('superflex')) loadModeData('superflex', jk.superflex, 'jacks27');
+  _j27.saved = { redraft: jk.redraft, superflex: ok('superflex') ? jk.superflex : null };
   _j27.savedLen = jk.redraft._order.length;
+  _j27Rebuild();
   return true;
+}
+function _j27Rebuild() {
+  const sv = _j27.saved;
+  if (!sv) return;
+  if (!sv.superflex) _j27Seed(false, true);          // older save without a superflex order
+  ['redraft', 'superflex'].forEach(m => {
+    if (!sv[m]) return;
+    versionBoards.jacks27[m] = _j27NamesToBoard(sv[m]._order);
+    loadModeData(m, { _posTiers: sv[m]._posTiers || {}, _cut: sv[m]._cut }, 'jacks27');   // no _order: tiers + cut only
+  });
+  _j27PlaceNew(false);
 }
 function _j27Payload() {
   const serPT = obj => { const o = {}; POS_TIER_KEYS.forEach(pk => { if (obj[pk] && obj[pk].length) o[pk] = obj[pk].map(t => ({ label: t.label, name: t.name, afterRank: t.afterRank })); }); return o; };
-  const one = m => ({ _order: boardToNames(versionBoards.jacks27[m]), _posTiers: serPT(versionTiers.jacks27[m]),
+  // Like boardToNames, but the 2027-only rows keep their place in the saved order.
+  const names = b => (b || []).map(i => (D[i] && (!D[i]._retired || D[i]._s27Only)) ? D[i].n : null).filter(n => n !== null);
+  const one = m => ({ _order: names(versionBoards.jacks27[m]), _posTiers: serPT(versionTiers.jacks27[m]),
     _cut: (typeof window._boardCutoffFor === 'function') ? window._boardCutoffFor('jacks27', m) : null });
   // Same shape as rankings/jacks-official ({ jacks: { <mode>: { _order, _posTiers, _cut } } }), so
   // rolling this board over to REDRAFT / SUPERFLEX next season is a straight copy.
@@ -13908,7 +14093,7 @@ function _j27OnDoc(res) {
     _j27.local = !!(res && res.local);
     if (!_j27.dirty) {                                // unsaved edits from this visit stay on screen
       if (res && res.exists && _j27Apply(res)) { _j27.state = 'saved'; _j27.meta = { updatedAt: res.updatedAt || '' }; }
-      else if (!(_j27.local && _j27.state !== 'none')) { _j27.meta = null; _j27.savedLen = 0; _j27Seed(false); }   // local preview keeps what is in memory
+      else if (!(_j27.local && _j27.state !== 'none')) { _j27.meta = null; _j27.saved = null; _j27.savedLen = 0; _j27Seed(false); }   // local preview keeps what is in memory
     }
     _j27.ready = true;
   }
@@ -13934,9 +14119,11 @@ async function _j27Save() {
   }
   const payload = _j27Payload();
   const n = payload.jacks.redraft._order.length;
-  if (!n || (_j27.savedLen && n < _j27.savedLen * 0.5)) {
+  // 25+ players fewer than the last save: usually the 2027-only players (rookie class, deep
+  // veterans) missing because the sim file is not loaded, or a page that didn't fully load.
+  if (!n || (_j27.savedLen && n < _j27.savedLen - 25)) {
     const okay = await window.mffConfirm("SAFETY CHECK: this save would shrink Jack's 2027 board from " + _j27.savedLen + ' players to ' + n
-      + ".\n\nThat usually means the page didn't fully load. The safe move is CANCEL, then reload the page.\n\nOverwrite anyway?");
+      + ".\n\nThat usually means the sim file (which carries the rookie class) or the page didn't fully load. The safe move is CANCEL, then reload the page.\n\nOverwrite anyway?");
     if (!okay) { toast("Jack's 2027 board not saved"); return false; }
   }
   const json = JSON.stringify(payload);
@@ -13949,7 +14136,7 @@ async function _j27Save() {
   try {
     const at = await B.saveJacks(json);
     if (at === false) { toast("Jack's 2027 board not saved"); return false; }   // declined the newer-save warning
-    _j27.dirty = false; _j27.state = 'saved'; _j27.meta = { updatedAt: at }; _j27.savedLen = n;
+    _j27.dirty = false; _j27.state = 'saved'; _j27.meta = { updatedAt: at }; _j27.savedLen = n; _j27.saved = payload.jacks;
     _s27BarNote();
     toast("Jack's 2027 board saved (admin only)");
     return true;
@@ -13982,15 +14169,17 @@ function _s27BarNote() {
   const bits = [];
   if (jv) {
     if (_j27.err && !_j27.ready) bits.push("Jack's 2027 board couldn't be read (" + _j27.err + '), so it is view only. Reload and open the tab again.');
-    else if (!_j27.ready) bits.push("Loading Jack's 2027 board…");
+    else if (!_j27.ready || !_s27.loaded) bits.push("Loading Jack's 2027 board…");
     else if (_j27.state === 'saved') bits.push("Jack's 2027 board" + (_j27.meta && _j27.meta.updatedAt ? ' · saved ' + new Date(_j27.meta.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''));
     else bits.push("Jack's 2027 board · not saved yet, started from " + (_j27.seedSrc === 'sims' ? 'the sim order' : 'your current ' + (_s27Sf() ? 'superflex' : 'redraft') + ' ranks'));
     if (_j27.dirty) bits.push('unsaved changes, press SAVE');
     if (_j27.local) bits.push('local preview, nothing is saved');
-    bits.push(_s27.rows ? _s27.byIdx.size + ' of ' + (versionBoards.jacks27[currentMode] || []).length + ' players have a 2027 projection'
-      : 'no sim file saved yet, so the SIM column and the 2027 numbers are empty');
+    if (_s27.rows) bits.push(_s27.byIdx.size + ' of ' + (versionBoards.jacks27[currentMode] || []).length + ' players have a 2027 projection');
+    else if (_s27.loaded) bits.push('no sim file saved yet, so the SIM column, the 2027 numbers and the rookie class are missing');
+    if (_s27.rows) _s27RookieNote(bits);
   } else if (_s27.rows) {
     bits.push(_s27.byIdx.size + ' players');
+    _s27RookieNote(bits);
     if (_s27.unmatched) {
       const other = _s27.unmatched - _s27.placeholders;
       if (_s27.placeholders) bits.push(_s27.placeholders + ' rookie placeholder' + (_s27.placeholders === 1 ? ' isn\'t' : 's aren\'t') + ' on the board yet');
@@ -13999,6 +14188,15 @@ function _s27BarNote() {
     bits.push(_s27Sf() ? 'Superflex order (sf12_rank, half-PPR)' : '1QB order');
   }
   B.setNote(bits.join(' · '), scoring);
+}
+// Bar note for the rookie class: how many, what their numbers are, and whether the JM moved.
+function _s27RookieNote(bits) {
+  let rk = 0, pre = 0;
+  _s27.byIdx.forEach(r => { if (r.rookie) { rk++; if (!r.team) pre++; } });
+  if (!rk) return;
+  bits.push(rk + ' in the 2027 rookie class' + (pre ? ' (pre-draft: placed from JM only)' : ' (final JM + landing spot)'));
+  const st = _s27JmStaleCount();
+  if (st) bits.push('JM has moved for ' + st + ' of them since this file: re-run the Sim Lab rookie step');
 }
 // sim2027.js hands over the rows of the saved file or a preview (null = nothing to show).
 function _s27SetRows(rows, info) {
@@ -14009,9 +14207,16 @@ function _s27SetRows(rows, info) {
     _s27.rows = rows; _s27.byIdx = m.byIdx; _s27.unmatched = m.unmatched; _s27.placeholders = m.placeholders;
     _s27.perFmt = !!(info && info.perFmt);
   }
+  // Still reading the saved file, or it could not be read: Jack's board stays view-only, because
+  // the 2027-only players can't be placed without it (and a save would drop them).
+  _s27.loaded = !(info && (info.pending || info.error));
   _s27.gen++; _s27.boardKey = null; _s27.tierCache = null;
-  // A Jack's board that has never been saved or touched keeps following the sim order.
+  // A Jack's board that has never been saved or touched keeps following the sim order. A saved,
+  // untouched one is applied again so the 2027-only players take their saved places. An edited
+  // one just gets players new to the file (and, off a preview, loses the ones it dropped).
   if (_j27.state !== 'saved' && !_j27.dirty) _j27Seed(false);
+  else if (_j27.state === 'saved' && !_j27.dirty && _j27.saved && _s27.rows) _j27Rebuild();
+  else if (_s27.rows && _j27PlaceNew(!(info && info.preview)) && _j27.dirty) _j27MarkDirty();
   if (!_sim2027IsOpen()) return;
   _s27Chrome();
   if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
@@ -14134,7 +14339,7 @@ function _sim2027Open() {
 function _sim2027Load(cb) {
   if (window.MFFSim2027) { cb(true); return; }
   const s = document.createElement('script');
-  s.src = 'sim2027.js?v=2026-11-24a';
+  s.src = 'sim2027.js?v=2026-11-24b';
   s.onload = function () { cb(true); };
   s.onerror = function () { s.remove(); cb(false); };
   document.head.appendChild(s);
@@ -14147,13 +14352,13 @@ function _sim2027Refresh() {
   if (!adm) {
     _sim2027Close();
     // Signed out: drop the private rows and Jack's 2027 order from memory.
-    _s27.rows = null; _s27.byIdx = new Map(); _s27.gen++; _s27.boardKey = null;
+    _s27.rows = null; _s27.byIdx = new Map(); _s27.gen++; _s27.boardKey = null; _s27.loaded = false;
     if (_j27.state !== 'none') {
       ['redraft', 'superflex'].forEach(m => {
         versionBoards.jacks27[m] = (m === 'superflex' ? superflexDefaultBoard : defaultBoard).slice();
         versionTiers.jacks27[m] = _mkPosTiers(); versionTierCounters.jacks27[m] = _mkPosTierCtrs();
       });
-      Object.assign(_j27, { ready: false, local: false, state: 'none', seedSrc: '', dirty: false, meta: null, savedLen: 0, err: '' });
+      Object.assign(_j27, { ready: false, local: false, state: 'none', seedSrc: '', dirty: false, meta: null, saved: null, savedLen: 0, err: '' });
     }
   }
 }

@@ -94,7 +94,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-23-sim2027b" as="script">
+<link rel="preload" href="app.js?v=2026-11-24-board2027" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -1533,14 +1533,19 @@ CLEAR ALL
 <button class="mode-tab" data-mode="dynasty">DYNASTY 1QB</button>
 <button class="mode-tab" data-mode="dynastysf">DYNASTY SF</button>
 <button class="mode-tab" data-mode="weekly" id="weeklyModeTab" style="display:none" title="Weekly rankings — live while a week is published">WEEKLY</button>
-<!-- 2027 SIMS: admin-only. Not a board mode (no data-mode): it switches the table to the read-only
-     sim27 version (the private 2027 sim rankings; sim2027.js, loaded on first open, reads them). Un-hidden by _sim2027Refresh in
-     app.js for admins only; the numbers themselves sit behind the admin_sims rule in firestore.rules. -->
-<button class="mode-tab" id="sim2027Tab" style="display:none" title="2027 season rankings from the Sim Lab preseason model. Admin only.">2027 SIMS</button>
+<!-- 2027: admin-only. Not a board mode (no data-mode): it puts next season's board on the table, as the
+     sim27 (SIM MODEL, read-only) or jacks27 (JACK'S RANKS, editable) version; the Model row picks between them while
+     it is on. sim2027.js, loaded on first open, reads / writes the private data. Un-hidden by _sim2027Refresh in
+     app.js for admins only; the data itself sits behind the admin_sims rule in firestore.rules. -->
+<button class="mode-tab" id="sim2027Tab" style="display:none" title="Next season's board: the 2027 Sim Lab rankings and Jack's own 2027 ranks. Admin only.">2027</button>
 </div>
-<!-- 2027 SIMS with nothing loaded yet: the bar's message (sim2027.js) instead of an empty table.
+<!-- 2027 tab on (body.sim2027-on): the Model row offers the two 2027 models only (SIM MODEL / JACK'S RANKS),
+     and the sim board with no file shows the bar's message (sim2027.js) instead of an empty table.
      Here rather than in sim2027.js so it applies before that script has loaded. -->
-<style>body.sim2027-on.s27-nodata #pageRankings .table-wrap,body.sim2027-on.s27-nodata #pageRankings #empty{display:none!important}</style>
+<style>body.sim2027-on.s27-nodata #pageRankings .table-wrap,body.sim2027-on.s27-nodata #pageRankings #empty{display:none!important}
+body.sim2027-on #pageRankings .version-tab:not([data-version="sims"]):not([data-version="jacks"]),body.sim2027-on #pageRankings #mffModeBarRank{display:none!important}
+body[data-rnk-version="sim27"] .model-hint::before{content:"2027 Sim Lab model: next season's projected order."}
+body[data-rnk-version="jacks27"] .model-hint::before{content:"Jack's 2027 board. Drag to rank, then SAVE. Admin only."}</style>
 <!-- Admin-only week selector for WEEKLY format. Admin selects a week to edit;
      PUBLISH pushes it live to all users; REMOVE pulls it back to admin-only.
      Saved in Firestore at settings/active_week. -->
@@ -6887,7 +6892,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-23-sim2027b"></script>
+<script defer src="app.js?v=2026-11-24-board2027"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

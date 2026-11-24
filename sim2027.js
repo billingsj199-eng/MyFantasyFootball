@@ -1,32 +1,39 @@
-/* 2027 SIM RANKINGS — admin-only data + info bar (2026-11-21; on the real rankings table 2026-11-23).
+/* 2027 BOARD — admin-only data + info bar (2026-11-21; a real, editable board 2026-11-24).
  *
- * Loaded on demand by the "2027 SIMS" tab in the rankings Format row (_sim2027Open in app.js),
- * which only un-hides for admins. The board itself is the normal rankings table: app.js runs it as
- * the read-only computed version `sim27` (see "2027 SIMS" in app.js). This file only
- *   - reads the private file from Firestore (admin_sims/rankings_2027, field `csv`),
- *   - parses it into rows and hands them to app.js (opts.onRows),
+ * Loaded on demand by the "2027" tab in the rankings Format row (_sim2027Open in app.js), which
+ * only un-hides for admins. The board itself is the normal rankings table; app.js runs it as two
+ * versions (see "2027 BOARD" in app.js): `sim27` = the Sim Lab 2027 file (read-only, computed) and
+ * `jacks27` = Jack's own 2027 order (editable, saved with the normal SAVE button). This file only
+ *   - reads the private sim file from Firestore (admin_sims/rankings_2027, field `csv`), parses
+ *     it into rows and hands them to app.js (opts.onRows),
+ *   - reads / writes Jack's 2027 board (admin_sims/jacks_2027: `data` = the same JSON shape as
+ *     rankings/jacks-official, `prev` = the save before it) and hands it to app.js (opts.onJacks),
  *   - draws the slim bar above the table: "2027 · Preliminary", the info / scoring notes,
- *     1QB / SUPERFLEX, UPDATE FILE -> preview -> SAVE / DISCARD, and the empty / locked / loading
- *     messages (the table is hidden while there is nothing to show).
+ *     1QB / SUPERFLEX, COPY SIM ORDER, UPDATE FILE -> preview -> SAVE / DISCARD, and the empty /
+ *     locked / loading messages (on the sim board the table is hidden while there is no file).
  * This file is public like the rest of the static site, but it contains NO ranking data. The
- * numbers live in Firestore, and firestore.rules lets only Jack's verified Google account read or
- * write that collection (isJack()). Anyone else gets "permission denied" whatever they do in the
- * browser. Never commit the rankings CSV/JSON to this repo: it would be public.
+ * numbers and Jack's order live in Firestore, and firestore.rules lets only Jack's verified Google
+ * account read or write that collection (isJack()). Anyone else gets "permission denied" whatever
+ * they do in the browser. Never commit the rankings CSV/JSON to this repo: it would be public.
  *
- * Updating: on the tab, UPDATE FILE -> choose the CSV the Sim Lab refresh wrote
+ * Updating the sims: on the tab, UPDATE FILE -> choose the CSV the Sim Lab refresh wrote
  * (sim_lab\preseason2027\output\2027_inhouse_early.csv), check the preview board, then SAVE.
+ * Updating Jack's ranks: JACK'S RANKS on the Model row, drag / tier as on any board, then the
+ * page's SAVE button.
  *
  * CSV columns read: name, pos, team, age, games, ppg26, p_bench, sf12_rank, provisional / rookie,
  * rec_pg; half-PPR ppg, total, tot_p10, tot_p90, rank, pos_rank; and when present the same six with
  * _ppr / _std suffixes (per-scoring numbers + order). Unknown columns are ignored.
  *
- * API: window.MFFSim2027.mount(containerEl, {sf, onRows(rows|null, {perFmt}), onFmt(sf)})
- *      .unmount() / .setNote(infoText, scoringText)
+ * API: window.MFFSim2027.mount(containerEl, {sf, onRows(rows|null, {perFmt}), onFmt(sf),
+ *                                            onJacks({exists,data,updatedAt}|{local}|{error}), onSeed()})
+ *      .unmount() / .setNote(infoText, scoringText) / .setView('sims'|'jacks', {sf, canSeed})
+ *      .saveJacks(json) -> Promise<updatedAt | false>   (false = declined the newer-save warning)
  */
 (function () {
   'use strict';
   var ADMIN_EMAILS = ['billingsj199@gmail.com']; // shown-or-hidden only; the real lock is firestore.rules
-  var COLL = 'admin_sims', DOC = 'rankings_2027';
+  var COLL = 'admin_sims', DOC = 'rankings_2027', JACKS_DOC = 'jacks_2027';
   var MAX_CSV_BYTES = 900000; // a Firestore document tops out near 1 MB
   // Local testing only: lets the file preview run without an admin sign-in. Nothing is read from the database.
   var LOCAL = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
@@ -53,15 +60,14 @@
     '.s27-empty b{display:block;color:var(--text);font-size:.95rem;margin-bottom:4px}',
     '.s27-bar [hidden]{display:none!important}',
     /* While the 2027 board is on (body.sim2027-on, set by _sim2027Open in app.js): the columns with
-       no 2027 meaning (Cons, SOS, P-SOS, +/-) and the STATS views other than FANTASY are hidden,
-       and so is TABLE / TIER CARDS (tier cards read this season's stats). */
+       no 2027 meaning (SOS, P-SOS) and the STATS views other than FANTASY are hidden, and so is
+       TABLE / TIER CARDS (tier cards read this season's stats). The reference column (Cons) stays:
+       it carries the other 2027 model's rank (SIM on Jack's board, JACK'S on the sim board). */
     'body.sim2027-on #pageRankings #adminViewToggle,' +
     'body.sim2027-on #pageRankings .rnk-statmode-btn:not([data-rnkstatmode="fantasy"]),' +
-    'body.sim2027-on #pageRankings #adpHeader,body.sim2027-on #pageRankings td.cons-cell,' +
     'body.sim2027-on #pageRankings #psosHeader,body.sim2027-on #pageRankings td.psos-cell,' +
-    'body.sim2027-on #pageRankings #ppsosHeader,body.sim2027-on #pageRankings td.ppsos-cell,' +
-    'body.sim2027-on #pageRankings thead th[data-sort="diff"],body.sim2027-on #pageRankings td.diff-cell{display:none!important}',
-    /* Nothing loaded yet (no saved file / locked / loading): the bar's message instead of the table. */
+    'body.sim2027-on #pageRankings #ppsosHeader,body.sim2027-on #pageRankings td.ppsos-cell{display:none!important}',
+    /* Sim board with no file (not saved / locked / loading): the bar's message instead of the table. */
     'body.sim2027-on.s27-nodata #pageRankings .table-wrap,body.sim2027-on.s27-nodata #pageRankings #empty{display:none!important}',
     '@media (max-width:600px){.s27-bar{padding:8px 10px 10px}.s27-info{width:100%}}'
   ].join('\n');
@@ -77,9 +83,10 @@
         '<button type="button" class="mff-mode-chip" data-fmt="1QB">1QB</button>' +
         '<button type="button" class="mff-mode-chip" data-fmt="SF">SUPERFLEX</button>' +
       '</span>' +
+      '<button type="button" class="s27-btn no" data-s="btnSeed" hidden title="Put the current sim order back on Jack\'s 2027 board (1QB and Superflex): players in the sim file first, in sim order, everyone else behind them in your order. Asks first; nothing is saved until you press SAVE.">Copy sim order</button>' +
       '<input type="file" data-s="file" accept=".csv,text/csv" hidden aria-label="Sim Lab rankings file">' +
-      '<button type="button" class="s27-btn" data-s="btnFile" title="Load the file the Sim Lab refresh wrote: sim_lab\\preseason2027\\output\\2027_inhouse_early.csv. It shows as a preview first; nothing is saved until you press SAVE. The file is stored in the private database, never on the public site.">Update file</button>' +
-      '<button type="button" class="s27-btn go" data-s="btnSave" hidden>Save</button>' +
+      '<button type="button" class="s27-btn" data-s="btnFile" title="Update the SIM MODEL numbers: load the file the Sim Lab refresh wrote, sim_lab\\preseason2027\\output\\2027_inhouse_early.csv. It shows as a preview first; nothing is saved until you press SAVE. The file is stored in the private database, never on the public site.">Update sim file</button>' +
+      '<button type="button" class="s27-btn go" data-s="btnSave" hidden>Save sim file</button>' +
       '<button type="button" class="s27-btn no" data-s="btnDiscard" hidden>Discard</button>' +
       '<div class="s27-msg" data-s="msg"></div>' +
       '<div class="s27-empty" data-s="empty" hidden><b data-s="emptyTitle"></b><span data-s="emptyBody"></span></div>' +
@@ -87,7 +94,10 @@
 
   var root = null, db = null, mountId = 0, opts = {};
   var state = null;
-  function fresh() { return { rows: [], saved: null, pending: null, sf: false, meta: null, note: '' }; }
+  // view: which 2027 model is on screen ('sims' | 'jacks'); empty: the sim board's message.
+  function fresh() { return { rows: [], saved: null, pending: null, sf: false, meta: null, note: '', view: 'sims', canSeed: false, empty: null }; }
+  // Jack's 2027 doc as this tab last read or wrote it (newer-save check on the next save).
+  var jacksBase = { updatedAt: '' };
   function $(k) { return root ? root.querySelector('[data-s="' + k + '"]') : null; }
 
   function currentUser() { try { return (window.firebase && firebase.auth) ? firebase.auth().currentUser : null; } catch (e) { return null; } }
@@ -177,7 +187,7 @@
   function drawFmt() {
     var hasSf = state.rows.some(function (p) { return p.sfRank != null; });
     var wrap = $('fmt');
-    wrap.hidden = !hasSf;
+    wrap.hidden = !(hasSf || state.view === 'jacks');   // Jack's board always has both formats
     Array.prototype.forEach.call(wrap.querySelectorAll('button'), function (b) {
       b.classList.toggle('active', b.getAttribute('data-fmt') === (state.sf ? 'SF' : '1QB'));
     });
@@ -185,9 +195,9 @@
   function drawInfo() {
     if (!root) return;
     var bits = [];
-    if (state.rows.length && state.note) bits.push(state.note);
+    if (state.note && (state.rows.length || state.view === 'jacks')) bits.push(state.note);
     var meta = state.meta;
-    if (state.rows.length && meta && meta.savedAt) bits.push('saved ' + new Date(meta.savedAt).toLocaleDateString());
+    if (state.rows.length && meta && meta.savedAt) bits.push('sim file saved ' + new Date(meta.savedAt).toLocaleDateString());
     else if (state.rows.length && meta && meta.fileName) bits.push(meta.fileName);
     $('info').textContent = bits.join(' · ');
     $('info').title = (meta && meta.fileName ? 'File: ' + meta.fileName + '.' : '') +
@@ -197,22 +207,29 @@
     if (!root) return;
     state.rows = parsed.rows; state.meta = meta;
     $('previewTag').hidden = !isPreview;
-    $('empty').hidden = true;
-    drawFmt(); drawInfo();
+    state.empty = null;
+    drawEmpty(); drawFmt(); drawInfo();
     if (opts.onRows) opts.onRows(parsed.rows, { perFmt: parsed.perFmt, preview: !!isPreview });
   }
   function showEmpty(title, body) {
     if (!root) return;
     state.rows = [];
-    $('empty').hidden = false;
-    $('emptyTitle').textContent = title; $('emptyBody').textContent = body;
-    $('fmt').hidden = true;
+    state.empty = { title: title, body: body };
+    drawEmpty(); drawFmt();
     $('scoring').textContent = '';
     drawInfo();
     if (opts.onRows) opts.onRows(null, {});
   }
+  // The big message replaces the table on the sim board only; Jack's board always has rows.
+  function drawEmpty() {
+    if (!root) return;
+    var on = !!state.empty && state.view === 'sims';
+    $('empty').hidden = !on;
+    $('emptyTitle').textContent = on ? state.empty.title : '';
+    $('emptyBody').textContent = on ? state.empty.body : '';
+  }
   function setMsg(text, kind) { var m = $('msg'); if (!m) return; m.textContent = text || ''; m.className = 's27-msg' + (kind ? ' ' + kind : ''); }
-  var NO_SAVED = ['No 2027 rankings saved yet.', 'Press UPDATE FILE above and choose sim_lab\\preseason2027\\output\\2027_inhouse_early.csv.'];
+  var NO_SAVED = ['No 2027 sim file saved yet.', 'Press UPDATE SIM FILE above and choose sim_lab\\preseason2027\\output\\2027_inhouse_early.csv. Jack\'s 2027 board is on the JACK\'S RANKS tab.'];
   function setPreviewButtons(on) {
     $('btnSave').hidden = !on; $('btnDiscard').hidden = !on; $('btnFile').hidden = on;
   }
@@ -233,10 +250,55 @@
       if (my !== mountId || !root || state.pending) return;
       if (e && e.code === 'permission-denied') {
         showEmpty('The 2027 rankings database is locked for this account.',
-          'Only the admin account can read it. If you are signed in as the admin, the admin_sims rule in firestore.rules hasn\'t been deployed yet. You can still preview a file with UPDATE FILE.');
+          'Only the admin account can read it. If you are signed in as the admin, the admin_sims rule in firestore.rules hasn\'t been deployed yet. You can still preview a file with UPDATE SIM FILE.');
       } else {
         showEmpty('Couldn\'t load the 2027 rankings.', (e && e.message) || 'Check your connection and try again.');
       }
+    });
+  }
+
+  // Jack's 2027 board. Read from the server, never the offline cache: app.js lets him edit and
+  // save only after this answers, so a stale or empty cache can't be saved over the real board.
+  function jacksRef() { return db.collection(COLL).doc(JACKS_DOC); }
+  function loadJacks() {
+    var my = mountId;
+    if (!db || !opts.onJacks) return;
+    jacksRef().get({ source: 'server' }).then(function (snap) {
+      if (my !== mountId || !root) return;
+      var d = snap.exists ? snap.data() : null;
+      jacksBase = { updatedAt: (d && d.updatedAt) || '' };
+      opts.onJacks(d && d.data ? { exists: true, data: d.data, updatedAt: d.updatedAt || '' } : { exists: false });
+    }).catch(function (e) {
+      if (my !== mountId || !root) return;
+      opts.onJacks({ error: e && e.code === 'permission-denied' ? 'locked for this account' : e && e.code === 'unavailable' ? 'offline' : ((e && e.message) || 'unknown error') });
+    });
+  }
+  // Writes Jack's 2027 board and reads it back from the server. Resolves the new updatedAt, or
+  // false when a newer save from another tab / device was found and he chose not to replace it.
+  function saveJacks(json) {
+    var u = currentUser();
+    if (!db || !isAdminUser(u)) return Promise.reject(new Error('The admin sign-in is needed to save.'));
+    if (new Blob([json]).size > 450000) return Promise.reject(new Error('The board is too large to save.'));
+    var ref = jacksRef(), at = new Date().toISOString();
+    return ref.get({ source: 'server' }).then(function (snap) {
+      var cur = snap.exists ? snap.data() : null;
+      var cloudAt = (cur && cur.updatedAt) || '';
+      if (cloudAt && cloudAt !== jacksBase.updatedAt) {
+        var ask = "SAFETY CHECK: Jack's 2027 board was saved from another tab or device at " + new Date(cloudAt).toLocaleString() +
+          '.\n\nSaving now REPLACES that newer save with what is on screen here. Overwrite it?';
+        var yes = (typeof window.mffConfirm === 'function') ? window.mffConfirm(ask) : Promise.resolve(window.confirm(ask));
+        return Promise.resolve(yes).then(function (okay) { return okay ? cur : false; });
+      }
+      return cur;
+    }).then(function (cur) {
+      if (cur === false) return false;
+      var doc = { data: json, season: 2027, updatedAt: at, updatedBy: u.email,
+        prev: (cur && cur.data) || null, prevAt: (cur && cur.updatedAt) || null };   // one step of undo, kept in the doc
+      return ref.set(doc).then(function () { return ref.get({ source: 'server' }); }).then(function (ver) {
+        if (!ver.exists || ver.data().updatedAt !== at) throw new Error('the save was not confirmed by the server, check the connection and save again');
+        jacksBase = { updatedAt: at };
+        return at;
+      });
     });
   }
 
@@ -271,7 +333,7 @@
     $('previewTag').hidden = true;
     if (state.saved) { try { showData(toRows(state.saved.csv || ''), state.saved, false); } catch (e) { showEmpty('The saved file couldn\'t be read.', e.message); } }
     else if (db) loadSaved();
-    else showEmpty(NO_SAVED[0], LOCAL && !isAdminUser(currentUser()) ? 'Local preview: press UPDATE FILE to preview a file.' : NO_SAVED[1]);
+    else showEmpty(NO_SAVED[0], LOCAL && !isAdminUser(currentUser()) ? 'Local preview: press UPDATE SIM FILE to preview a file.' : NO_SAVED[1]);
   }
   function onSave() {
     var p = state.pending, btn = $('btnSave'), u = currentUser(), my = mountId;
@@ -308,6 +370,7 @@
     $('btnFile').addEventListener('click', function () { $('file').click(); });
     $('btnDiscard').addEventListener('click', onDiscard);
     $('btnSave').addEventListener('click', onSave);
+    $('btnSeed').addEventListener('click', function () { if (opts.onSeed) opts.onSeed(); });
     $('fmt').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-fmt]'); if (!b) return;
       state.sf = b.getAttribute('data-fmt') === 'SF';
@@ -316,15 +379,17 @@
     });
 
     var admin = isAdminUser(currentUser());
-    if (!admin && !LOCAL) { $('btnFile').hidden = true; showEmpty('This board isn\'t available for this account.', 'Sign in with the admin Google account, then open the tab again.'); return; }
-    if (!admin) { showEmpty('Local preview, not signed in as admin.', 'Press UPDATE FILE to preview a file. Nothing is read from or saved to the database.'); return; }
-    showEmpty('Loading the 2027 rankings…', '');
+    var tellJacks = function (res) { if (opts.onJacks) opts.onJacks(res); };
+    if (!admin && !LOCAL) { $('btnFile').hidden = true; showEmpty('This board isn\'t available for this account.', 'Sign in with the admin Google account, then open the tab again.'); tellJacks({ error: 'not the admin account' }); return; }
+    if (!admin) { showEmpty('Local preview, not signed in as admin.', 'Press UPDATE SIM FILE to preview a file. Nothing is read from or saved to the database.'); tellJacks({ local: true }); return; }
+    showEmpty('Loading the 2027 sim file…', '');
     var my = mountId;
     var go = function () {
       if (my !== mountId || !root) return;
       try { db = firebase.firestore(); } catch (e) { db = null; }
-      if (!db) { showEmpty('The database isn\'t available right now.', 'Reload the site and open the tab again. You can still preview a file with UPDATE FILE.'); return; }
+      if (!db) { showEmpty('The database isn\'t available right now.', 'Reload the site and open the tab again. You can still preview a file with UPDATE SIM FILE.'); tellJacks({ error: 'database not available' }); return; }
       loadSaved();
+      loadJacks();
     };
     if (typeof window._whenFirebaseReady === 'function') window._whenFirebaseReady(go); else go();
   }
@@ -341,5 +406,16 @@
     drawInfo();
   }
 
-  window.MFFSim2027 = { mount: mount, unmount: unmount, setNote: setNote };
+  // app.js: which 2027 model is on screen, the format, and whether COPY SIM ORDER applies.
+  function setView(view, o) {
+    if (!root || !state) return;
+    o = o || {};
+    state.view = view === 'jacks' ? 'jacks' : 'sims';
+    state.sf = !!o.sf;
+    state.canSeed = !!o.canSeed;
+    $('btnSeed').hidden = !(state.view === 'jacks' && state.canSeed);
+    drawEmpty(); drawFmt(); drawInfo();
+  }
+
+  window.MFFSim2027 = { mount: mount, unmount: unmount, setNote: setNote, setView: setView, saveJacks: saveJacks };
 })();

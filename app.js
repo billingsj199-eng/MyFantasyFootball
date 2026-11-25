@@ -11086,15 +11086,12 @@ function _renderTierCardView(data, container) {
   const _tcvCutGroups = (typeof window._posCutGroupsFor === 'function') ? window._posCutGroupsFor(currentMode) : [];
   // BYE ROW (weekly): this week's good bye players come back as the bottom row
   let _tcvBye = _tcvByeRowPlayers(data, _tcvBelowCut);
-  // Free viewers (Jack 2026-11-25: "hide the BYE row in TIER CARDS for free visitors too"):
-  // the row showed every bye / out player unlocked, season rank and all — 7 assumed-out WRs
-  // under a top-12 free view. Same line the table draws (a bye row is blurred when its season
-  // rank is past the free window): only the free ones stay, and with none the row is gone.
-  const _tcvByePol = _tcvBye ? _rankBlurPolicy() : null;
-  if (_tcvByePol && _tcvByePol.blur) {
-    const _free = _tcvBye.players.filter(p => p.seasonRank <= _tcvByePol.cutoff);
-    _tcvBye = _free.length ? Object.assign({}, _tcvBye, { players: _free, names: new Set(_free.map(p => p.d.n)) }) : null;
-  }
+  // Free viewers (Jack 2026-11-25: "hide the BYE row in TIER CARDS for free visitors too", then
+  // "hide the row fully for free visitors"): the row showed every bye / out player unlocked,
+  // season rank and all — 7 assumed-out WRs under a top-12 free view. A non-premium viewer gets
+  // no BYE row at all in TIER CARDS; premium / admin keep the full row. (The table still shows
+  // a free bye player's row under its BYE banner.)
+  if (_tcvBye && _rankBlurPolicy().blur) _tcvBye = null;
   data.forEach((d, i) => {
     const _isCut = !!(_tcvBelowCut && _tcvBelowCut.has(d.n));
     if (_isCut && _tcvBye && _tcvBye.names.has(d.n)) return;   // moves to the BYE row

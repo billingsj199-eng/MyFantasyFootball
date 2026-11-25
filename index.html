@@ -279,9 +279,19 @@ document.addEventListener('DOMContentLoaded', function(){ if (window._fbBootAuth
   // one rAF + timeout lets that paint land. This is the same order a slow network already
   // produces today (SDK arriving after DCL): _fbBootAuth/_fbBoot no-op until it lands and
   // parse-time auth listeners register through _whenFirebaseReady. Desktop unchanged.
+  // The timer is the fallback (2026-11-24): a page that is not on screen gets no animation
+  // frames (opened in a background tab, restored behind another app, an embedded / hidden
+  // view), so rAF alone never fired there and Firebase never started — the visitor stayed
+  // "signed out" until the page was shown and painted. Whichever comes first wins; on a
+  // visible phone that is still the frame right after the first paint.
   var phone = window.matchMedia && matchMedia('(max-width:600px)').matches;
   var gate = !phone ? Promise.resolve() : new Promise(function(res){
-    function afterPaint(){ requestAnimationFrame(function(){ setTimeout(res, 0); }); }
+    function afterPaint(){
+      var done = false;
+      function go(){ if (done) return; done = true; res(); }
+      requestAnimationFrame(function(){ setTimeout(go, 0); });
+      setTimeout(go, 1500);
+    }
     if (document.readyState !== 'loading') afterPaint();
     else document.addEventListener('DOMContentLoaded', afterPaint);
   });

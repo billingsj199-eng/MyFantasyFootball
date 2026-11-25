@@ -38,9 +38,19 @@ PRESEASON_INPUTS = {"data/win_totals_2012_2025.csv", "data/position_overrides.cs
 # from them (logs, rating / forecast tables, the edge file) is ours and stays in the backup.
 KTC_LISTS_DIR = "_dyn_cache/ktc_wb"
 KTC_LISTS = ("wb_*.json", "live.json", "cdx_month.json")
+# 2026-11-24 later (Jack "Yes, scrub it"): ALL raw KTC pulls are off this public branch, history included (the branch was
+# rewritten and force-pushed, 620a85d2 -> 08232a92). They live in private local snapshots instead:
+# E:\MyFantasyFootball\_backups\ktc_raw_<stamp>.zip (+ simlab-backup_pre_scrub_20261124.bundle = the old branch).
+KTC_RAW_DIRS = ("_dyn_cache/ktc_picks", "_dyn_cache/ktc_probe")
+KTC_RAW_FILES = {"_dyn_cache": ("ktc_alltime.json",), "_dyn_cache/mff_tracker": ("ktc_votes_*.json",)}
 
 def keep(rel, name):
     if rel.replace("\\", "/") == KTC_LISTS_DIR and any(fnmatch.fnmatch(name, g) for g in KTC_LISTS):
+        return False
+    _r = rel.replace("\\", "/")
+    if _r in KTC_RAW_DIRS or any(_r.startswith(d + "/") for d in KTC_RAW_DIRS):
+        return False
+    if any(fnmatch.fnmatch(name, g) for g in KTC_RAW_FILES.get(_r, ())):
         return False
     if any(fnmatch.fnmatch(name, g) for g in EXCL_GLOBS):
         return False

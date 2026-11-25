@@ -86,11 +86,34 @@ def main():
 
 
 def refresh_today():
-    """Today's list (latest stored KTC list re-priced from the site's KTC maps) + panel rebuild."""
-    src, hit, n = make_live()
-    subprocess.run([sys.executable, '-I', os.path.join(HERE, 'ktc_lasting_panel.py'), '--live'], check=True,
-                   stdout=subprocess.DEVNULL)
-    return src, hit, n
+    """Today's list + panel rebuild. While our KTC copy is frozen and games are being played, today's
+    prices are the frozen values rolled forward in-house (ktc_roll.py); otherwise the frozen / current
+    site KTC values as they are. Writes today_state.json (+ rolled_<fmt>.parquet) for the builders."""
+    import datetime as dt
+    import ktc_roll as KR
+    panel = [sys.executable, '-I', os.path.join(HERE, 'ktc_lasting_panel.py')]
+    fz, last = KR.freeze_date()
+    today = dt.date.today()
+    st = {'freeze': str(fz), 'asof': str(today), 'lag': (today - fz).days, 'share': 0.0, 'games': None, 'rolled': False}
+    _, made = KR.ensure_frozen_list(fz)
+    st['frozen_list_saved'] = bool(made)
+    if st['lag'] >= KR.MIN_DAYS:
+        lj = os.path.join(WB, 'live.json')
+        if os.path.exists(lj):
+            os.remove(lj)
+        subprocess.run(panel, check=True, stdout=subprocess.DEVNULL)
+        rolled = {fmt: KR.roll(fmt, fz, today) for fmt in ('1qb', 'sf')}
+        st['share'], st['games'] = rolled['1qb'].attrs['share'], rolled['1qb'].attrs['games']
+        if st['share'] > 0:
+            st['n'] = KR.write_live(rolled)
+            for fmt, r in rolled.items():
+                r.to_parquet(os.path.join(WB, 'rolled_%s.parquet' % fmt), index=False)
+            st['rolled'] = True
+    if not st['rolled']:
+        st['src'], st['hit'], st['n'] = make_live()
+    subprocess.run(panel + ['--live'], check=True, stdout=subprocess.DEVNULL)
+    json.dump(st, open(os.path.join(WB, 'today_state.json'), 'w'))
+    return st
 
 
 def compute(a, verbose=False):
@@ -107,8 +130,8 @@ def compute(a, verbose=False):
 
 def _compute(a):
     if not a.no_rebuild:
-        src, hit, n = refresh_today()
-        print('today = %s re-priced from the site KTC pull (%d of %d matched)' % (src, hit, n))
+        st = refresh_today()
+        print('today: KTC last changed %s (%d days ago); prices %s' % (st['freeze'], st['lag'], ('ROLLED in-house, %.0f%% of the predicted move' % (100 * st['share'])) if st['rolled'] else 'as tracked'))
     R.LOG = open(os.devnull, 'w')
     P = R.load(a.fmt, a.top)
     now = P[P.date == P.date.max()].copy()

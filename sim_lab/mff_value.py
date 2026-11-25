@@ -125,6 +125,19 @@ def fair_table(sim_rows, ktc_map, mkt, rbrec=None, qbtt=None, lasting=None, fmt=
             pool.append(dict(r, kv=k[0], ko=k[1]))
     if len(pool) < 50:
         return []
+    # in-house roll (app.js _fairRollApply): while the KTC copy is frozen in season, the market input is the
+    # rolled order; each player gets the pool's KTC value at his rolled spot
+    RR, rc = (lasting or {}).get('r'), (lasting or {}).get('rc') or {}
+    if RR and rc.get('asof') and (dt.date.today() - dt.date.fromisoformat(rc['asof'])).days <= 10:
+        ri = 1 if fmt == 'sf' else 0
+        vs = sorted((r['kv'] for r in pool), reverse=True)
+        for r in pool:
+            e = RR.get(site_norm(r['n']) + '|' + r['pos'])
+            r['ko0'] = r['ko']
+            if e and e[ri] > 0:
+                r['ko'] = e[ri]
+        for i, r in enumerate(sorted(pool, key=lambda r: (r['ko'], r['ko0']))):
+            r['kv'] = vs[i]
     for i, r in enumerate(sorted(pool, key=lambda r: -r['val'])):
         r['sp'] = i + 1
     kr = sorted(pool, key=lambda r: r['ko'])

@@ -1,0 +1,71 @@
+format 1qb
+roll-forward test | 27250 rows | 43 freeze dates | players 659 | windows: 1 month 21, 2 months 26, 3 months 25, 6 months 37
+
+=== FORWARD IN TIME (trained only on windows that ended before the test year; tests 2023-26) ===
+
+  IN SEASON (games were played in the window) - KTC top 150 at the freeze
+    age         pairs | rank corr with real KTC            | typical miss (median)              | players within 10% of real        
+                      |   frozen   drift    roll           |   frozen   drift    roll           |   frozen   drift    roll          
+    1 month        10 |   0.962    0.957    0.966          |    3.6%     4.5%     4.6%          |     86%      85%      83%         
+    2 months       12 |   0.901    0.899    0.943          |    7.4%     7.9%     6.1%          |     64%      63%      72%         
+    3 months       13 |   0.887    0.882    0.940          |    9.2%     9.0%     7.0%          |     55%      56%      66%         
+    6 months       26 |   0.849    0.848    0.923          |   12.2%    11.2%     8.7%          |     45%      46%      57%         
+
+  OFF SEASON (no games in the window)
+    age         pairs | rank corr with real KTC            | typical miss (median)              | players within 10% of real        
+                      |   frozen   drift    roll           |   frozen   drift    roll           |   frozen   drift    roll          
+    1 month        12 |   0.983    0.976    0.980          |    2.3%     2.9%     2.6%          |     95%      92%      93%         
+    2 months       11 |   0.970    0.965    0.968          |    3.3%     3.6%     3.2%          |     89%      89%      90%         
+    3 months        9 |   0.959    0.948    0.949          |    4.8%     4.5%     4.4%          |     78%      79%      81%         
+    6 months       10 |     nan      nan      nan          |   20.1%    26.3%    24.7%          |     53%      47%      53%         
+
+  does ROLL call the big moves? (in-season windows, KTC top 150 at the start, forward-tested)
+    1 month   move corr 0.533 | ROLL said up 10%+:   95 rows, real move  +8.7% | said down 10%+:  156 rows, real move  -5.2% | of real 15%+ risers ROLL had the direction right 92%, fallers 97%
+    2 months  move corr 0.648 | ROLL said up 10%+:  203 rows, real move +14.8% | said down 10%+:  321 rows, real move -11.7% | of real 15%+ risers ROLL had the direction right 89%, fallers 94%
+    3 months  move corr 0.631 | ROLL said up 10%+:  244 rows, real move +14.9% | said down 10%+:  487 rows, real move -14.0% | of real 15%+ risers ROLL had the direction right 92%, fallers 96%
+
+  what carries the in-season roll (2-month windows, 2025-26 held out; move corr 0.625):
+    points vs "every game at his old rate"       0.129
+    points over starter line since               0.124
+    PPR/game since                               0.041
+    trailing PPR/game                            0.031
+    price at the freeze                          0.031
+    age                                          0.028
+    share of team games played                   0.016
+    exp                                          0.014
+    KTC move before the freeze                   0.009
+
+=== LEAVE ONE YEAR OUT (all years tested) ===
+
+  IN SEASON (games were played in the window) - KTC top 150 at the freeze
+    age         pairs | rank corr with real KTC            | typical miss (median)              | players within 10% of real        
+                      |   frozen   drift    roll           |   frozen   drift    roll           |   frozen   drift    roll          
+    1 month        11 |   0.959    0.956    0.972          |    4.0%     4.5%     3.9%          |     84%      83%      88%         
+    2 months       16 |   0.898    0.899    0.947          |    7.6%     7.6%     5.6%          |     63%      63%      73%         
+    3 months       16 |   0.887    0.888    0.945          |    9.2%     8.9%     6.6%          |     55%      57%      69%         
+    6 months       32 |   0.843    0.848    0.929          |   12.6%    11.6%     8.4%          |     44%      46%      58%         
+
+  OFF SEASON (no games in the window)
+    age         pairs | rank corr with real KTC            | typical miss (median)              | players within 10% of real        
+                      |   frozen   drift    roll           |   frozen   drift    roll           |   frozen   drift    roll          
+    1 month        13 |   0.983    0.978    0.982          |    2.3%     2.7%     2.5%          |     95%      93%      95%         
+    2 months       12 |   0.970    0.967    0.971          |    3.3%     3.4%     3.1%          |     89%      90%      90%         
+    3 months       10 |   0.960    0.959    0.964          |    4.7%     4.1%     3.7%          |     79%      83%      84%         
+    6 months       12 |     nan      nan      nan          |   18.2%    20.5%    18.9%          |     53%      56%      55%         
+
+=== ROOKIES: price a drafted rookie with no KTC value (first full list after each draft) ===
+  classes: 2021 n=61, 2022 n=52, 2024 n=66, 2025 n=66, 2026 n=54 | JM matched 291 of 299
+  slot + position        rank corr 0.812 | typical miss 21% | within 20% of real: 49% | by class: 2021 0.82  2022 0.83  2024 0.84  2025 0.85  2026 0.72
+  slot + position + JM   rank corr 0.851 | typical miss 20% | within 20% of real: 51% | by class: 2021 0.83  2022 0.85  2024 0.92  2025 0.89  2026 0.76
+
+=== DOWNSTREAM: MFF VALUE accuracy when the KTC price is 6-7 months old (crosses the draft) ===
+    same total-return grading as the re-tune; price = fresh / frozen / rolled in-house (veterans rolled, rookies from draft slot)
+    list 2021: frozen at 2021-01-17 (188 days old), 99% of the board priced after the roll
+    list 2022: frozen at 2022-01-22 (204 days old), 97% of the board priced after the roll
+    list 2023: frozen at 2023-03-08 (207 days old), 80% of the board priced after the roll
+    list 2025: frozen at 2025-02-02 (204 days old), 99% of the board priced after the roll
+                            fresh     frozen     rolled
+    order vs real KTC       1.000      0.653      0.846
+    KTC price alone         0.717      0.427      0.577
+    new mix                 0.741      0.584      0.653
+    old mix                 0.721      0.612      0.659

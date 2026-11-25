@@ -1,7 +1,7 @@
-# Sim Lab notes — Week 12 (half) — generated 2026-11-25 00:20Z
-# 562 players · 272 Vegas games · avg implied 22.5 · data 2026-11-24 19:19 · wk 12 injury layer: 101 out/docked · in/out list: 20 assumed out, 16 questionable played in
+# Sim Lab notes — Week 12 (half) — generated 2026-11-25 00:21Z
+# 562 players · 272 Vegas games · avg implied 22.5 · data 2026-11-24 19:20 · wk 12 injury layer: 101 out/docked · in/out list: 20 assumed out, 16 questionable played in
 
-SIM LAB NOTES — Week 12 (half) — 2026-11-25 00:20
+SIM LAB NOTES — Week 12 (half) — 2026-11-25 00:21
 
 TD LUCK (top 5 each way):
   QB DUE UP: Kyle McCord (0 TD on 2.4 xTD, +0.0); Jacoby Brissett (11 TD on 21.5 xTD, +0.0); Tyson Bagent (0 TD on 2.5 xTD, +0.0); Case Keenum (2 TD on 3.6 xTD, +0.0); Baker Mayfield (5 TD on 8.9 xTD, +0.0)

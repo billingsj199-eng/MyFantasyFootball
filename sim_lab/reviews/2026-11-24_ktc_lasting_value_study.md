@@ -334,3 +334,161 @@ robots.txt disallows that path (and `/dynasty-rankings/histories`, which our his
 9am run logged "KTC unchanged/skipped", "KTC players list not found" and "vote capture FAILED". KTC values on the
 site are frozen at Nov 23. I did not pull the disallowed path. Every KTC-based number on the site (MFF VALUE, trade
 calculator source, KTC columns, this rating) goes stale until there is a decision on the source.
+
+---
+
+## Addendum 4: rolling tracked values forward, the yearly cycle, and predicting moves (Jack 11-24)
+
+Jack: "can we use the ktc values we tracked" -> "Yes, test it" -> "the goal is to create more accurate ktc values ...
+dynasty values move up and down cyclically ... a big leg up for players that are sell highs or buy lows".
+**Nothing live changed, nothing on the branch changed.** Scripts: `backtest_ktc_rollforward.py`, `research_ktc_cycles.py`,
+`backtest_ktc_forecast.py`, `_tmp/ktc_stale.py`, `_tmp/forecast_today.py`. Logs in `_dyn_cache/ktc_wb/`
+(`rollforward.log`, `cycles_1qb.log`, `forecast.log`).
+
+### 1. Frozen values go stale
+
+| Age of frozen values (in season) | Order still matches | Typical move | Moved 10%+ |
+|---|---|---|---|
+| 7 days | .987 | 1.8% | 2% |
+| 30 days | .925 | 5.3% | 24% |
+| 60 days | .859 | 8.4% | 43% |
+| 90 days | .818 | 10.3% | 51% |
+
+### 2. Rolling them forward with our own data (tracking, not predicting)
+
+Freeze a past list, then update each player from games played, points vs his old rate, games missed and (across a
+draft) the draft capital his team spent at his position. Tested forward in time, KTC top 150:
+
+| In season, age of the freeze | Order match: frozen -> rolled | Typical miss: frozen -> rolled | Within 10% of real: frozen -> rolled |
+|---|---|---|---|
+| 1 month | .962 -> .966 | 3.6% -> 4.6% | 86% -> 83% |
+| 2 months | .901 -> .943 | 7.4% -> 6.1% | 64% -> 72% |
+| 3 months | .887 -> .940 | 9.2% -> 7.0% | 55% -> 66% |
+| 6 months | .849 -> .923 | 12.2% -> 8.7% | 45% -> 57% |
+
+- When the roll said "up 10%+" the real move was +15% (2-3 months); "down 10%+" was -12 to -14%. It had the direction
+  right on about 9 of 10 real 15%+ movers.
+- **Off season it adds nothing** (3 months: .959 frozen vs .949 rolled). Off-season moves come from news we do not model.
+- Across a whole offseason with a draft (price 6-7 months old): order match .653 frozen -> .846 rolled. MFF VALUE (new
+  mix) .584 frozen -> .653 rolled vs .741 with fresh prices. It recovers under half of the loss.
+- Rookies priced from draft slot + position: order .81 vs real, typical miss 21%. Adding our prospect score: .85, 20%.
+
+### 3. The yearly cycle (average move, year by year; * = same direction every year)
+
+| Window | What repeats |
+|---|---|
+| Jan -> May (free agency + draft) | Every veteran group drops as the rookie class enters: RBs -11 to -13% *, WRs -8 to -10% *, older TEs -15% *, QBs only -2 to -4%. |
+| May -> Aug (camp) | Nothing. All groups within about 2%. |
+| Aug -> Nov (first half) | Older WRs -11% *, prime-age QBs -8% *. 2nd- and 3rd-round rookie picks +7 to +11% *. Rookie RBs +5% on average but not every year. |
+| Nov -> Jan (second half) | Older RBs -5% *, older WRs -4% *, older TEs -4% *. Rookie WRs +3% *. |
+
+Held-out test (rank groups by their move in the other years, buy the top third, sell the bottom third): spread +3.8
+points Jan->May (4 of 4 years), +0.5 May->Aug, +5.3 Aug->Nov (5 of 5), +5.5 Nov->Jan (4 of 4).
+
+### 4. Predicting where a price goes next (the part that could beat KTC)
+
+Uses only what is known on the list date: price, position, age, time of year, recent production and missed games, and
+KTC's own recent move. Frozen KTC predicts "no change", so it scores zero on all of these. Forward in time, KTC top 150:
+
+| Horizon | In season: liked most 20% / liked least 20% | Gap | Off season gap |
+|---|---|---|---|
+| 1 month | +0.5% / -2.3% | 2.8 pts | none |
+| 2 months | -0.3% / -3.8% | 3.5 pts | 1.6 pts |
+| 3 months | -1.6% / -6.9% | 5.3 pts | 2.8 pts |
+| 6 months | -4.7% / -12.4% | 7.7 pts | 6.6 pts |
+
+- Positive in every test year: 3 months +4.8 (2023), +5.0 (2024), +5.1 (2025), +1.7 (2026) points; 6 months +8.5, +7.8,
+  +9.4, +3.0.
+- **It finds sells far better than buys.** The liked-least group falls hard; the liked-most group roughly holds.
+- In season the drivers are KTC's move over the last month (fallers keep falling), production over a starter, age, and
+  the last 60 days. Off season almost nothing short-term is predictable.
+
+### 5. Today's board (1QB), forecast applied
+
+Typical top-150 player: -3% in 3 months, -9% in 6 months (the rookie class arriving). Full list:
+`_dyn_cache/ktc_wb/forecast_today_1qb.csv`.
+
+- **Sell high (3 / 6 month forecast):** Diggs -18 / -28%, Metcalf -17 / -21%, Darnold -11 / -23%, Ollie Gordon -13 / -19%,
+  Evans -11 / -20%, Barkley -11 / -19%, D. Adams -11 / -19%, Jaylen Warren -10 / -15%, A.J. Brown -10 / -14%,
+  Jonathan Taylor -9 / -13%, Waddle -10 / -15%, D.J. Moore -7 / -17%.
+- **Holds best:** Omar Cooper, Stroud, Maye, Nabers, Tate, Smith-Njigba, McMillan, Pickens, Bowers, Loveland, Fannin.
+
+### Limits
+
+- The forecast needs a current price to start from. In season our roll can supply that for a few months; across an
+  offseason it cannot.
+- One "today" input (last month's KTC move) came from our own daily history because the archive has no list 30 days back.
+- 2026 was the weakest test year at every horizon.
+- Values are on the rank scale, so "everyone drops in spring" is the rookie class arriving, not each veteran getting worse.
+
+---
+
+## Addendum 5: value forecast built on the review branch (Jack 11-24 "Yes, build it") - NOT live
+
+- **Branch:** `feat/mff-value-lasting-edge`, second commit 5bbb49df. Not pushed, not merged. Queued as P-20261124-2.
+- **On the player card (DYNASTY tab):** a VALUE FORECAST line for every player with a forecast ("-18% in 3 months, -28% in
+  6 months (typical top-150 player -3% / -9%)") and a SELL WINDOW or BUY WINDOW tag for the bottom and top fifth of the
+  KTC top 150. It sits behind the same gate as the other value tags.
+- **Two guards:** the forecast hides itself when its starting price is more than 21 days old, and a window that
+  contradicts the BUY LOW / SELL HIGH call is not tagged (one case each way today).
+- **Superflex was tested before shipping it:** in season the liked-least fifth lost 7.0% in 3 months and 11.4% in 6, the
+  liked-most fifth 2.6% and 4.9%. Weaker than 1QB year by year (3-month gap +0.4, +2.1, +4.4, +1.4 points for 2023-26) and
+  nothing at 1 month.
+- **Checked in a local browser:** Diggs shows SELL HIGH + SELL WINDOW (-18% / -28%), Nabers BUY WINDOW, Bijan's real card
+  shows the forecast line, superflex numbers load, 30 sell and 30 buy windows per format.
+- **Not checked:** the logged-in premium view of a player outside the top 30 (tested by calling the card's tag code directly).
+
+---
+
+## Addendum 6: in-house roll wired into the weekly build (Jack 11-24 "Yes, wire it") - NOT live
+
+- **Branch:** third commit c331de9e on `feat/mff-value-lasting-edge`. Not pushed, not merged. Queued as P-20261124-3.
+- **What the weekly build (`build_lasting_edge.py`) now does by itself:**
+  1. Finds the last day our KTC copy actually changed (today: Nov 23) and saves that day's list as a tracked list.
+  2. If the copy is under 3 weeks old, or no games are being played, it changes nothing.
+  3. Otherwise it rolls the top 250 forward from games played, points vs each player's old rate, games missed and
+     share changes: half of the predicted move at 3-6 weeks, three-quarters after that.
+  4. The rolled prices become "today" for the age/health edge and the forecast, and the rolled order is written
+     to the data file for the site.
+- **Site:** MFF VALUE uses the rolled order for its market input only when that section exists and is at most 10
+  days old. KTC columns keep showing the real KTC copy. Not applied with a TE premium.
+- **Why those cut-offs (forward-tested, in season, order match with real KTC, frozen -> rolled):**
+
+  | Age of the freeze | Frozen | Best share of the move | Rolled |
+  |---|---|---|---|
+  | 3.5-6 weeks | .961 | 50% | .972 |
+  | 6-10 weeks | .901 | 75% | .941 |
+  | 10-14 weeks | .887 | 75% | .939 |
+  | over 14 weeks | .849 | 75% | .921 |
+
+  With only 1-2 team games since the freeze, rolling made the typical miss worse (5.7% -> 7.8%), so it waits.
+- **Superflex tested too:** 2 months .911 -> .951, 3 months .895 -> .945.
+- **Dry run on this season (model never saw 2026):** the Aug 16 list rolled to Nov 24 matched the real order .929
+  vs .797 frozen (superflex .935 vs .806); typical miss 8.1% vs 12.9%.
+- **End-to-end check:** ran the whole build with a pretend freeze on Sept 13. The file got rolled ranks for 416
+  players; on the site, MFF VALUE's market ranks matched the Python copy for 198 of 200 players and the calls were
+  23 buys / 22 sells vs 23 / 23; the off switch and the stale guard worked. Then re-ran the real build: copy is 1 day
+  old, so nothing is rolled and the forecast's start date is Nov 23.
+- **Timeline if KTC stays blocked:** the first rolled build would be on or after Dec 14. When the season ends the roll
+  stops and the forecast hides itself 21 days later. The offseason is still unsolved.
+- **Not done:** merge and push, the app.js cache-bust bump, adding the build to the Tuesday job, the sim_lab backup.
+
+---
+
+## Addendum 7: LIVE (Jack 11-24 "Go live")
+
+- **Merged and deployed.** The branch was rebased on the latest main (7 commits had landed), re-checked in a local
+  browser, the app.js cache-bust was bumped, and it was pushed to main (last commit 7b20354e). The Pages deploy
+  succeeded after its built-in retry.
+- **Verified on the live site:** new app.js and data file are served (306 players, 209 forecasts, forecast start
+  Nov 23, nothing rolled yet). In the signed-in premium view, Stefon Diggs' card (outside the top 30) shows SELL
+  WINDOW and "VALUE FORECAST -19% in 3 months, -29% in 6 months".
+- **Tuesday job:** `lasting_edge_refresh.ps1` runs after the Dynasty SIM step. It builds for about 5 minutes without
+  holding the site lock, then takes the lock only to publish. Dry run passed (266 seconds). First scheduled run: Dec 1.
+- **Not done on purpose:** the sim_lab backup. That backup goes to a branch of a public repo, and it would publish the
+  archived KTC lists, the rating and forecast files and this report.
+- **Side effects to expect:** the daily tracker switches to the new weights once the main checkout pulls the new data
+  file, so the "our value" history line on player cards can step that day. BUY / SELL calls changed for premium users
+  (1QB 18 / 15 -> 21 / 18).
+- **Still open:** a KTC source for the offseason, and everything else that reads the KTC copy (KTC columns, trade
+  calculator KTC source) stays frozen at Nov 23.

@@ -1,0 +1,113 @@
+KTC yearly cycle | 1qb | windows with data:
+   WINTER Jan->May  2022: Jan 22 -> May 16  2024: Jan 10 -> Jun 22  2025: Jan 05 -> May 10  2026: Jan 15 -> May 19
+   SUMMER May->Aug  2022: May 16 -> Aug 14  2024: Jun 22 -> Aug 13  2025: May 10 -> Aug 25  2026: May 19 -> Aug 16
+   FALL   Aug->Nov  2021: Jul 24 -> Dec 01  2022: Aug 14 -> Dec 06  2024: Aug 13 -> Nov 16  2025: Aug 25 -> Nov 14  2026: Aug 16 -> Nov 08
+   LATE   Nov->Jan  2021: Dec 01 -> Jan 22  2023: Nov 28 -> Jan 10  2024: Nov 16 -> Jan 05  2025: Nov 14 -> Jan 15
+
+=== A. AVERAGE MOVE BY GROUP AND WINDOW (%% change in value; each year, then all years) ===
+    * = same direction in every year with data (3+ years)
+
+  WINTER Jan->May
+    group                          2022    2024    2025    2026   average
+    QB older (30+)                  -0%     -7%       -       -     -3.8%
+    QB prime (27-30)                  -     -2%     -1%     -2%     -1.7% *
+    QB young (<27)                  -2%    -13%     +3%     -3%     -3.7%
+    RB older (25.5+)               -14%    -16%    -12%     -4%    -11.3% *
+    RB prime (24-25.5)             -15%    -14%    -13%    -10%    -12.8% *
+    RB young (<24)                 -12%    -15%    -14%    -10%    -12.8% *
+    TE older (27.5+)               -11%    -32%     -8%     -8%    -14.8% *
+    TE young (<25.5)                -9%    -10%     -5%     -6%     -7.7% *
+    WR older (26.5+)               -11%    -10%    -12%     -6%     -9.7% *
+    WR prime (24.5-26.5)            -7%    -10%    -11%     -4%     -8.0% *
+    WR young (<24.5)                -9%    -13%    -11%     -8%    -10.0% *
+    PICK draft after 1st            +6%     -1%     +1%     -1%     +1.0%
+    PICK draft after 2nd            -0%     -5%     +2%     -4%     -2.0%
+    PICK draft after 3rd            -7%    -10%     -8%     -8%     -8.4% *
+
+  SUMMER May->Aug
+    group                          2022    2024    2025    2026   average
+    QB prime (27-30)                  -     +1%     -4%     +0%     -0.9%
+    QB young (<27)                  -2%     -0%     -2%     -0%     -1.1%
+    RB older (25.5+)                +2%     +2%     -1%     +1%     +1.1%
+    RB prime (24-25.5)              +1%     +2%     -0%     +3%     +1.4%
+    RB young (<24)                  -2%     -0%     +0%     -4%     -1.5%
+    TE older (27.5+)                -2%     +1%     -3%       -     -1.5%
+    TE prime (25.5-27.5)            -1%       -       -     -0%     -0.7%
+    TE young (<25.5)                -2%     -0%     -3%     -2%     -1.8%
+    WR older (26.5+)                -2%     +1%     -1%     -1%     -0.9%
+    WR prime (24.5-26.5)            +0%     +0%     -2%     -1%     -0.6%
+    WR young (<24.5)                +1%     -1%     +0%     -4%     -0.8%
+    rookie RB                       +1%     -1%     -1%       -     -0.7%
+    rookie WR                       -3%     -3%     +2%     -3%     -1.5%
+    PICK draft after 1st            +1%     +1%     +4%     +0%     +1.6%
+    PICK draft after 2nd            -2%     -0%     +3%     +1%     +0.4%
+    PICK draft after 3rd            +5%     -1%     +3%     +2%     +2.3%
+    PICK next draft 1st             -2%     +1%     +2%     +3%     +0.8%
+    PICK next draft 2nd             -3%     -1%     +0%     +0%     -0.9%
+    PICK next draft 3rd             +1%     +2%     -2%     +6%     +1.6%
+
+  FALL   Aug->Nov
+    group                          2021    2022    2024    2025    2026   average
+    QB older (30+)                  -9%    -21%       -       -     -1%    -10.4%
+    QB prime (27-30)                  -       -     -9%     -4%    -12%     -8.3% *
+    QB young (<27)                 -10%     +5%    -16%     -9%     +2%     -5.5%
+    RB older (25.5+)               -12%    -10%     -1%    -10%     +1%     -6.2%
+    RB prime (24-25.5)              -6%     -6%     -1%     +2%     -8%     -3.6%
+    RB young (<24)                  -4%    -13%     +2%     -7%     -2%     -4.8%
+    TE older (27.5+)                  -     -6%     -9%    -13%     +2%     -6.5%
+    TE prime (25.5-27.5)           -16%       -       -       -     +2%     -7.0%
+    TE young (<25.5)                -1%    -14%     -4%     -3%     -7%     -5.6%
+    WR older (26.5+)               -10%    -14%    -11%    -11%     -9%    -11.1% *
+    WR prime (24.5-26.5)            +1%     +1%     -5%     -2%     -2%     -1.3%
+    WR young (<24.5)               -11%     -2%     -0%     +2%     -3%     -2.9%
+    rookie RB                      +12%     -0%    +10%     +0%     +2%     +4.8%
+    rookie WR                       +1%     +6%     -3%     -5%     +7%     +1.3%
+    PICK draft after 1st            +5%    +10%     +7%     +1%     +6%     +5.8%
+    PICK draft after 2nd            +8%    +15%     +7%     +6%     +8%     +8.8% *
+    PICK draft after 3rd            +7%    +20%    +11%     +5%    +13%    +11.4% *
+    PICK next draft 1st             +3%     +1%     +5%     +1%     +1%     +2.3%
+    PICK next draft 2nd             +5%    +10%     +9%     +6%     +4%     +6.8% *
+    PICK next draft 3rd             +6%     +9%     +8%     +7%     +5%     +7.0% *
+
+  LATE   Nov->Jan
+    group                          2021    2023    2024    2025   average
+    QB older (30+)                  -1%     +2%       -       -     +0.5%
+    QB prime (27-30)                  -     -8%     +1%     -2%     -2.9%
+    QB young (<27)                  -2%     -1%     +4%     -2%     -0.2%
+    RB older (25.5+)                -6%     -4%     -7%     -4%     -5.3% *
+    RB prime (24-25.5)              -4%     -0%     +1%     +4%     +0.3%
+    RB young (<24)                  +1%     +1%     +3%     -0%     +1.3%
+    TE older (27.5+)                -2%     -5%     -3%     -6%     -3.9% *
+    TE prime (25.5-27.5)            -7%       -       -     -3%     -4.8%
+    TE young (<25.5)                +4%     +4%     -2%     +5%     +2.8%
+    WR older (26.5+)                -6%     -4%     -3%     -3%     -4.0% *
+    WR prime (24.5-26.5)            +0%     +0%     +0%     -1%     +0.0%
+    WR young (<24.5)                +0%     +0%     +1%     -1%     +0.2%
+    rookie RB                       -0%     +3%     -0%     +2%     +1.3%
+    rookie WR                       +3%     +4%     +1%     +3%     +2.5% *
+    PICK draft after 1st            +7%     +1%     +2%     +1%     +2.7%
+    PICK draft after 2nd            -0%     +2%     +1%     +1%     +1.0%
+    PICK draft after 3rd            +6%     +1%     +2%     +2%     +2.9% *
+    PICK next draft 1st             +1%     -0%     +3%     +1%     +1.0%
+    PICK next draft 2nd             -2%     +0%     +2%     +2%     +0.7%
+    PICK next draft 3rd             +3%     +1%     +2%     +1%     +1.8% *
+
+=== B. THE REPEATING PART: groups that moved the same way every year ===
+  WINTER Jan->May
+     rises:  -
+     falls:  TE older (27.5+) -15%, RB prime (24-25.5) -13%, RB young (<24) -13%, RB older (25.5+) -11%, WR young (<24.5) -10%, WR older (26.5+) -10%, PICK draft after 3rd -8%, WR prime (24.5-26.5) -8%, TE young (<25.5) -8%, QB prime (27-30) -2%
+  SUMMER May->Aug
+     rises:  -
+     falls:  -
+  FALL   Aug->Nov
+     rises:  PICK draft after 3rd +11%, PICK draft after 2nd +9%, PICK next draft 3rd +7%, PICK next draft 2nd +7%
+     falls:  WR older (26.5+) -11%, QB prime (27-30) -8%
+  LATE   Nov->Jan
+     rises:  PICK draft after 3rd +3%, rookie WR +3%, PICK next draft 3rd +2%
+     falls:  RB older (25.5+) -5%, WR older (26.5+) -4%, TE older (27.5+) -4%
+
+=== C. IS THE CYCLE TRADEABLE? held-out year: buy the third of players whose GROUP rose most in the other years, sell the bottom third ===
+  WINTER Jan->May  2022: buy -7% / sell -13%  2024: buy -12% / sell -14%  2025: buy -6% / sell -12%  2026: buy -5% / sell -8%   | average spread +3.8 pts, right way in 4 of 4 years
+  SUMMER May->Aug  2022: buy -0% / sell -2%  2024: buy +1% / sell +0%  2025: buy -1% / sell -0%  2026: buy -1% / sell -2%   | average spread +0.5 pts, right way in 3 of 4 years
+  FALL   Aug->Nov  2021: buy -6% / sell -8%  2022: buy +1% / sell -9%  2024: buy -2% / sell -5%  2025: buy -0% / sell -8%  2026: buy -1% / sell -4%   | average spread +5.3 pts, right way in 5 of 5 years
+  LATE   Nov->Jan  2021: buy +1% / sell -6%  2023: buy +2% / sell -4%  2024: buy +1% / sell -4%  2025: buy +1% / sell -4%   | average spread +5.5 pts, right way in 4 of 4 years

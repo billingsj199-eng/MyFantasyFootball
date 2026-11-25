@@ -1,0 +1,54 @@
+format sf
+roll-forward test | 27250 rows | 43 freeze dates | players 673 | windows: 1 month 21, 2 months 26, 3 months 25, 6 months 37
+
+=== FORWARD IN TIME (trained only on windows that ended before the test year; tests 2023-26) ===
+
+  IN SEASON (games were played in the window) - KTC top 150 at the freeze
+    age         pairs | rank corr with real KTC            | typical miss (median)              | players within 10% of real        
+                      |   frozen   drift    roll           |   frozen   drift    roll           |   frozen   drift    roll          
+    1 month        10 |   0.958    0.957    0.969          |    4.6%     5.5%     5.0%          |     81%      80%      79%         
+    2 months       12 |   0.911    0.906    0.951          |    8.6%     8.9%     6.7%          |     60%      57%      68%         
+    3 months       13 |   0.895    0.890    0.945          |   10.9%    10.7%     8.0%          |     49%      51%      61%         
+    6 months       26 |   0.858    0.857    0.929          |   13.8%    12.7%     9.5%          |     41%      42%      53%         
+
+  OFF SEASON (no games in the window)
+    age         pairs | rank corr with real KTC            | typical miss (median)              | players within 10% of real        
+                      |   frozen   drift    roll           |   frozen   drift    roll           |   frozen   drift    roll          
+    1 month        12 |   0.983    0.977    0.982          |    2.6%     3.1%     2.7%          |     92%      91%      91%         
+    2 months       11 |   0.970    0.963    0.971          |    3.9%     3.7%     3.6%          |     86%      86%      86%         
+    3 months        9 |   0.959    0.945    0.955          |    5.5%     4.9%     4.6%          |     75%      78%      79%         
+    6 months       10 |     nan      nan      nan          |   21.7%    25.0%    24.0%          |     48%      47%      50%         
+
+  does ROLL call the big moves? (in-season windows, KTC top 150 at the start, forward-tested)
+    1 month   move corr 0.555 | ROLL said up 10%+:  127 rows, real move +10.8% | said down 10%+:  180 rows, real move  -7.2% | of real 15%+ risers ROLL had the direction right 92%, fallers 93%
+    2 months  move corr 0.654 | ROLL said up 10%+:  244 rows, real move +17.5% | said down 10%+:  386 rows, real move -13.2% | of real 15%+ risers ROLL had the direction right 90%, fallers 97%
+    3 months  move corr 0.630 | ROLL said up 10%+:  290 rows, real move +17.5% | said down 10%+:  552 rows, real move -14.8% | of real 15%+ risers ROLL had the direction right 90%, fallers 93%
+
+  what carries the in-season roll (2-month windows, 2025-26 held out; move corr 0.656):
+    points vs "every game at his old rate"       0.125
+    points over starter line since               0.092
+    PPR/game since                               0.058
+    price at the freeze                          0.041
+    trailing PPR/game                            0.041
+    PPR/game since vs trailing                   0.034
+    age                                          0.020
+    share of team games played                   0.016
+    gw                                           0.009
+
+=== LEAVE ONE YEAR OUT (all years tested) ===
+
+  IN SEASON (games were played in the window) - KTC top 150 at the freeze
+    age         pairs | rank corr with real KTC            | typical miss (median)              | players within 10% of real        
+                      |   frozen   drift    roll           |   frozen   drift    roll           |   frozen   drift    roll          
+    1 month        11 |   0.957    0.956    0.972          |    4.9%     5.1%     4.7%          |     78%      77%      83%         
+    2 months       16 |   0.906    0.905    0.954          |    8.7%     8.8%     6.5%          |     58%      57%      69%         
+    3 months       16 |   0.895    0.893    0.949          |   10.7%    10.4%     7.5%          |     49%      53%      63%         
+    6 months       32 |   0.852    0.855    0.930          |   14.2%    12.9%     9.3%          |     39%      42%      53%         
+
+  OFF SEASON (no games in the window)
+    age         pairs | rank corr with real KTC            | typical miss (median)              | players within 10% of real        
+                      |   frozen   drift    roll           |   frozen   drift    roll           |   frozen   drift    roll          
+    1 month        13 |   0.983    0.979    0.983          |    2.6%     3.1%     2.7%          |     92%      91%      92%         
+    2 months       12 |   0.971    0.970    0.972          |    3.9%     3.8%     3.6%          |     86%      86%      87%         
+    3 months       10 |   0.960    0.962    0.966          |    5.4%     4.4%     4.3%          |     76%      81%      82%         
+    6 months       12 |     nan      nan      nan          |   19.7%    18.5%    18.6%          |     49%      55%      57%         

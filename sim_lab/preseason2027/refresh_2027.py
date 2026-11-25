@@ -16,7 +16,7 @@ Each run:
      (output/changelog/<stamp>.md): every player whose position rank moved 3+ or total moved 10+ pts / 5%, with the driver
   6. writes output/2027_refresh_status.md (stage, input dates, what is still missing, stale inputs) and puts it at the
      top of output/2027_inhouse_early.md
-Recommended cadence (nothing is scheduled; Jack decides): weekly on Tuesday through week 18 (after the Monday game and the
+Cadence: scheduled weekly, Tuesday 10:00 (Task 'MFF 2027 List Refresh', sim_lab/list_2027_refresh.ps1, Jack 2026-11-24) through week 18 (after the Monday game and the
 Tuesday stats pulls), then once after each milestone: playoffs end, bowls + Jan 15 declaration deadline, combine, start of
 free agency, the draft, early-June depth charts, August depth charts + 2027 win totals.
 """
@@ -41,7 +41,7 @@ INPUTS = [
     ("win totals 2012-2025 (+2026 from frozen lines)", os.path.join(HERE, "data", "win_totals_2012_2025.csv"), "NOTHING (built once in preseason2027); 2027 totals not on disk", "manual"),
     ("2026 frozen preseason lines", os.path.join(SIMD, "preseason_lines_2026_frozen.js"), "frozen 2026-08-26 (by design)", "never"),
     ("JM scores (2027 class)", os.path.join(SITE, "data", "jm_scores.json"),
-     "Task 'MFF 2027 Rookies Refresh' (sim_lab/rookies_2027_refresh.ps1 -> scripts/pull_jm_scores.py, then a15_rookies.py insert); the Tuesday Dynasty SIM refresh runs the same export", "weekly (Tue)"),
+     "Task 'MFF 2027 List Refresh' (sim_lab/list_2027_refresh.ps1 -> scripts/pull_jm_scores.py, then this script); the Tuesday Dynasty SIM refresh runs the same export", "weekly (Tue)"),
     ("college stats (devy)", os.path.join(SITE, "data", "college_stats_devy.js"), "Task 'MFF Devy Weekly Refresh' (weekly_devy_refresh.ps1 -> refresh_devy_stats.py)", "weekly (Mon)"),
     ("combine / prospect data", os.path.join(SITE, "data", "combine_data.js"), "Task 'MFF Devy Weekly Refresh'", "weekly (Mon)"),
     ("consensus mock (inside JM)", os.path.join(SITE, "data", "draft_proj.js"), "Task 'MFF Devy Weekly Refresh' (pull_draft_boards.py; its mock CSVs are saved by hand in Chrome and dropped after 10 days)", "weekly, needs hand-saved CSVs"),

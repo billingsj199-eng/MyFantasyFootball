@@ -32,7 +32,16 @@ PRESEASON = "preseason2027"
 PRESEASON_SRC_EXT = (".py", ".ps1", ".js", ".cmd", ".bat")
 PRESEASON_INPUTS = {"data/win_totals_2012_2025.csv", "data/position_overrides.csv"}
 
+# Archived KTC lists (Jack 2026-11-24: "back up ... with the archived KTC lists left out"): the Wayback pulls of
+# KTC's rankings page are KTC's data, and this branch is public. They can be re-pulled with pull_ktc_wayback.py
+# (the 2026-11-23 frozen list is rebuilt from the site KTC maps by ktc_roll.ensure_frozen_list). Everything derived
+# from them (logs, rating / forecast tables, the edge file) is ours and stays in the backup.
+KTC_LISTS_DIR = "_dyn_cache/ktc_wb"
+KTC_LISTS = ("wb_*.json", "live.json", "cdx_month.json")
+
 def keep(rel, name):
+    if rel.replace("\\", "/") == KTC_LISTS_DIR and any(fnmatch.fnmatch(name, g) for g in KTC_LISTS):
+        return False
     if any(fnmatch.fnmatch(name, g) for g in EXCL_GLOBS):
         return False
     r = rel.replace("\\", "/")

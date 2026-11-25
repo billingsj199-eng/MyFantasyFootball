@@ -111,6 +111,13 @@ if (-not $changedStats) {
 if ($LASTEXITCODE -ne 0) { Write-Log "DYNASTY SIM REFRESH FAILED (exit $LASTEXITCODE) - continuing" }
 Exit-RepoTurn
 
+# MFF VALUE edge + value forecast + in-house KTC roll (added 2026-11-24, Jack "Go live", proposals
+# P-20261124-1..3): rebuild data\mff_lasting_edge.js from this week's stats and the tracked KTC values.
+# Runs AFTER the chain's repo turn is handed back: it computes for 10-15 min on its own, then takes
+# the turn only to publish. Gated on the re-tune being in app.js. Non-fatal.
+& powershell -NoProfile -ExecutionPolicy Bypass -File 'E:\MyFantasyFootball\sim_lab\lasting_edge_refresh.ps1' -Log $Log
+if ($LASTEXITCODE -ne 0) { Write-Log "MFF VALUE EDGE REFRESH FAILED (exit $LASTEXITCODE) - continuing" }
+
 # Volume x share model inputs for the JS model (shares/team volumes update
 # as the season's weekly stats land). Non-fatal — local-only site.
 $out = & python 'E:\MyFantasyFootball\js_model_site\scripts\build_vs_model.py' 2>&1 | Out-String

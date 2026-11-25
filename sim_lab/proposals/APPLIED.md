@@ -138,3 +138,77 @@ proposed; a 22-pt game for the same QB is -0.6% today, -6.9% proposed; a 22-pt g
   NOT yet: site export, extension sync, simlab-backup, Sim Lab redeploy (after Jack's OK).
 
 - P-20261023-1 DEPLOY 2026-10-23 13:01: Jack OK'd the spot-check; kickers EXCLUDED from the split (p.pos === 'K' -> league-relative form; K rows byte-identical to the pre-change engine, 369 rows; non-K rows identical to the split build, 5791 rows). Exported + pushed b8bd2b51 (sim_proj_2026.js/.json); extensions synced (engine_sim.js x3, manifests Sleeper 0.29.49 / ESPN 0.20.60 / Yahoo 0.9.50); Sim Lab redeploy + simlab-backup snapshot run the same hour.
+
+## P-20261124-1 - MFF VALUE re-tune on total return: half the sim weight + age/health edge - APPROVED 2026-11-24 ("Approve, build it"), BUILT ON A BRANCH, NOT LIVE
+
+> **LIVE 2026-11-24** (Jack "Go live"): rebased on origin/main and pushed as 2a451f48 + 8fc1c60e + 80097927 + 7b20354e (app.js ?v=2026-11-24-mfflasting);
+> Pages deploy succeeded (first attempt hit a GitHub artifact error, the workflow's retry went through). Verified on https://www.myfantasyfootball.co:
+> new app.js, data/mff_lasting_edge.js (306 players, 209 forecasts, forecast start 2026-11-23, not rolled), and in Jack's signed-in premium Chrome the
+> Stefon Diggs card (outside the top 30) shows SELL WINDOW + "VALUE FORECAST -19% in 3 months, -29% in 6 months".
+> Weekly rebuild: `lasting_edge_refresh.ps1` called from `tuesday_stats.ps1` after the chain's repo turn (backup `tuesday_stats.ps1.bak_pre_lastingedge_20261124`);
+> dry run built in 266 s. First scheduled run: Tuesday 2026-12-01. NOT run: `backup_to_branch.py` (simlab-backup is in a PUBLIC repo and the new
+> `_dyn_cache/ktc_wb` KTC lists + the review report would be published - Jack's call). Main checkout not touched; it gets the merge on its next pull.
+
+- **What changes:** MFF VALUE (FAIR) order z = 0.5 M3 + 0.3 log sim rank + 0.5 log KTC rank  ->
+  **0.25 M3 + 0.15 log sim rank + 0.75 log KTC rank - 1.0 x EDGE**. EDGE = lasting-value rating's age / health gap
+  (rating total vs same-price par, share of price; `ktc_lasting_rating.py`). RB YAC tilt and QB team-total term unchanged (not re-tested).
+- **Files / knobs if approved:** app.js `_FAIR_W` + an edge term in `_trendGapFor` / `_mffValueBoard`; a per-player `edge` field
+  built weekly (rating script -> dynasty_sim_2026.js or a small new data file); `mff_value.py` port + tracker; rebuild job for the
+  KTC panel (monthly archive pull or the site's own daily KTC commits).
+- **Evidence** (`backtest_fair_retune_tr.py`, `_tmp/retune_candidates.py`, `_tmp/retune_final.py`; report
+  `reviews/2026-11-24_ktc_lasting_value_study.md` addendum 2): target = KTC value at end of hold + 12 x points over the starter
+  line, 5 preseason KTC lists 2021-25, score = mean of whole-pool and top-100 rank corr over the 1-3 yr holds.
+  - vs shipped, per list-year: 1QB +.016 (5 of 5), SF +.019 (5 of 5); with the edge trained forward only: 1QB +.013 (3 of 3),
+    SF +.014 (2 of 3; 2025 -.004). Rebuild and contender grading: same sign.
+  - BUY minus SELL payoff of the calls (top / bottom 10% gap vs KTC, 1 / 2 / 3 yr): 1QB shipped +9.7 / +16.7 / +16.0 pts ->
+    +5.0 / +28.1 / +24.3; SF shipped +1.3 / +9.0 / -1.2 -> +3.9 / +24.1 / +18.8.
+  - Grid winner on whole-board accuracy alone was KTC price + edge 0.5 with NO sim (1QB +.022, SF +.027, forward 3 of 3), but it
+    makes almost no calls (today 3 BUY / 1 SELL in 1QB) and its 1QB BUYs paid +0.9% at 2 yr vs +9.8% here. Not proposed.
+- **Size today:** 1QB calls 18 BUY / 15 SELL -> 21 / 18, 58 of 200 players move 10+ spots; SF 21 / 23 -> 25 / 26, 63 move 10+.
+- **Confidence:** medium. Five list-years, three with 2-3 yr results. Weights were chosen by eye from 12 candidates after seeing
+  the results (not a blind pick). 1-year call payoff in 1QB is lower than shipped.
+- **Expiry:** none (structural). Re-check after the 2026 season closes.
+- **Build (2026-11-24):** site worktree `MyFantasyFootball Files/.claude/worktrees/mff-value-lasting-edge`, branch
+  `feat/mff-value-lasting-edge`, commit 02ec519a on origin/main aa3ed794 (NOT pushed, NOT merged): app.js `_fairW` / `_fairEdge` /
+  loader in `_dynSimEnsure`, index.html `<meta name="mff-lasting-edge-v">`, new `data/mff_lasting_edge.js` (306 players, weights + k ride in it;
+  no file = old weights). sim_lab: `build_lasting_edge.py --site <root>`, `mff_value.py` (`load_lasting_edge`, `fair_table(..., lasting, fmt)`),
+  `mff_tracker.py` snapshot passes it (both identical to before until the file exists in the main checkout; backups `.bak_pre_lastingedge_20261124`).
+- **Verified:** local preview of the branch - site order vs Python port, 1QB 21 BUY / 18 SELL both sides, 43 of 200 one-spot neighbour swaps
+  (the port already differed from the site by 76 spots, up to 6, on the old weights); removing the file returns the old weights.
+- **Left for go-live (Jack's words needed):** merge + push (bump app.js ?v= at merge); hook `build_lasting_edge.py` + the meta bump into the
+  Tuesday chain (scheduled command change); `backup_to_branch.py`.
+- **BLOCKER FOUND:** KTC changed its page on 2026-11-24 - the player list moved to `/dynasty-rankings/player-pool`, which KTC's robots.txt
+  disallows. The 9am KTC pull, KTC history and vote capture all failed today; site KTC values are frozen at 2026-11-23. The edge's "today" list
+  is the 2026-11-08 archived list re-priced from those frozen values. Not fixed (needs Jack's decision on the source).
+
+## P-20261124-2 - Value forecast on the player card (3- / 6-month expected move, SELL / BUY windows) - APPROVED 2026-11-24 ("Yes, build it"), BUILT ON THE SAME BRANCH, NOT LIVE
+
+- **What:** per player, expected change in KTC value over 3 and 6 months (cycle for his position / age + recent production / missed games +
+  KTC's recent move); bottom / top fifth of the KTC top 150 tagged SELL WINDOW / BUY WINDOW on the DYNASTY card, plus a VALUE FORECAST line.
+- **Where:** branch `feat/mff-value-lasting-edge` commit 5bbb49df (after 02ec519a; not pushed / merged). app.js `_fairForecast`, `_cdForecastNoteHtml`,
+  tags in `_cdTagsHtml` (premium value-tag path); data in `data/mff_lasting_edge.js` (`f`, `fc`), built by `build_lasting_edge.py` via
+  `ktc_value_forecast.py`; rows from `backtest_ktc_forecast.py --fmt <1qb|sf> --rebuild --today-only`.
+- **Evidence (forward in time, KTC top 150, liked-most 20% / liked-least 20% real move):** 1QB in season 1 mo +0.5 / -2.3, 3 mo -1.6 / -6.9,
+  6 mo -4.7 / -12.4; off season 3 mo -1.1 / -3.9, 6 mo -3.2 / -9.8. SF in season 3 mo -2.6 / -7.0, 6 mo -4.9 / -11.4. 3-month gap by test year
+  1QB +4.8 / +5.0 / +5.1 / +1.7 (2023-26), SF +0.4 / +2.1 / +4.4 / +1.4. Finds sells, not buys.
+- **Guards:** hidden when the starting price is more than 21 days old; a window that contradicts the BUY LOW / SELL HIGH call is not tagged
+  (1 each way today in 1QB).
+- **Verified:** local preview - Diggs SELL HIGH + SELL WINDOW (-18% / -28%), Nabers BUY WINDOW, Bijan forecast line on the real card, SF values, 30 / 30 windows per format.
+- **Depends on:** a current KTC price (see the blocker under P-20261124-1). Same go-live steps as P-20261124-1.
+
+## P-20261124-3 - In-house roll of frozen KTC prices inside the weekly build - APPROVED 2026-11-24 ("Yes, wire it"), BUILT ON THE SAME BRANCH, NOT LIVE
+
+- **What:** `ktc_roll.py` (called by `ktc_lasting_rating.refresh_today()` -> `build_lasting_edge.py`): detects the freeze date from the site's
+  data/ktc_history.js (last day values changed), saves that day's list as a tracked list (`wb_<date>000000.json`), and once the copy is 21+ days
+  old with 3+ team games played rolls the top 250 forward (games, points vs old rate, games missed, share changes): 50% of the predicted move
+  at 3-6 weeks, 75% after. Rolled prices become "today" for the edge and the forecast; the file gets `r` (rolled rank 1QB / SF) + `rc`.
+- **Site:** branch `feat/mff-value-lasting-edge` commit c331de9e - app.js `_fairRollOn` / `_fairRollApply` in `_trendGapFor` and `_mffValueBoard`
+  (rc.asof <= 10 days, no TE premium, `window.MFF_ROLL_OFF`), `mff_value.fair_table` mirrors it.
+- **Evidence (forward in time, KTC top 150, in season, order match with real KTC frozen -> rolled):** 1QB 2 mo .901 -> .943, 3 mo .887 -> .940,
+  6 mo .849 -> .923; SF .911 -> .951, .895 -> .945, .858 -> .929. By share of the move (1QB): 26-40 d best at 50% (.961 -> .972), 41-100 d best
+  at 75% (.901 -> .941, .887 -> .939). 1-2 team games: no gain. Off season: no gain (.959 vs .949) -> never rolled off season.
+  2026 dry run (model never saw 2026): Aug 16 list rolled to Nov 24: .797 -> .929 (1QB), .806 -> .935 (SF); typical miss 12.9% -> 8.1%.
+- **Verified:** full build with a pretend freeze (KTC_ROLL_FREEZE=2026-09-13): r for 416 players, site market ranks = Python port for 198 of 200,
+  calls 23 / 22 vs 23 / 23, off switch + stale guard work. Real build after: copy 1 day old -> no `r`, `fc.date` 2026-11-23.
+- **Timeline if nothing changes:** first rolled build on or after 2026-12-14. Off season the roll stops and the forecast hides 21 days later.
+- **Not done (go-live):** merge + push, app.js ?v= bump, hooking `build_lasting_edge.py` into the Tuesday chain, backup_to_branch.

@@ -1,0 +1,46 @@
+format sf
+KTC move forecast | 21396 rows | 43 list dates 2021-01-17..2026-09-13 | players 546
+
+=== FORWARD IN TIME (trained only on moves finished before the test year) ===   real move of the players the model liked most / least; frozen KTC = 0 on every column
+
+  KTC top 150 on the list date
+    horizon   season      lists | cycle only                         | + form / health                    | + KTC momentum (full)             
+                                | corr   BUY20  SELL20  BUY10  SELL10 | corr   BUY20  SELL20  BUY10  SELL10 | corr   BUY20  SELL20  BUY10  SELL10
+    1 month   in season       9 | +0.065  -0.9%  -1.8%  +0.1%  -1.8%   | +0.094  -0.7%  -2.2%  -0.5%  -2.0%   | +0.076  -0.3%  -2.1%  +0.3%  -2.0%  
+    1 month   off season     10 | -0.024  -0.7%  -0.8%  -0.8%  -1.1%   | +0.006  -0.7%  -0.8%  -0.7%  -0.6%   | -0.011  -0.8%  -0.5%  -1.3%  -0.8%  
+    2 months  in season      11 | +0.070  -2.9%  -3.7%  -2.4%  -2.0%   | +0.081  -3.5%  -4.6%  -3.1%  -2.9%   | +0.064  -3.4%  -4.3%  -3.1%  -3.0%  
+    2 months  off season     12 | +0.043  -0.1%  -2.7%  +0.4%  -3.2%   | +0.069  -0.4%  -3.0%  +0.6%  -2.2%   | +0.051  -0.0%  -2.0%  +0.1%  -2.8%  
+    3 months  in season      11 | +0.155  -2.6%  -7.0%  -1.9%  -6.0%   | +0.128  -4.0%  -6.9%  -3.4%  -5.6%   | +0.108  -3.8%  -6.7%  -2.6%  -6.5%  
+    3 months  off season     11 | +0.040  -0.7%  -4.1%  -0.2%  -4.3%   | +0.091  -0.8%  -5.2%  +0.8%  -4.7%   | +0.071  -1.5%  -3.7%  -1.6%  -5.0%  
+    6 months  in season      15 | +0.169  -4.9% -11.4%  -4.5% -13.1%   | +0.178  -5.5% -10.9%  -4.7% -10.5%   | +0.168  -5.1% -11.4%  -4.1% -10.9%  
+    6 months  off season     15 | +0.092  -2.1% -10.0%  +0.6%  -9.8%   | +0.110  -2.3%  -9.1%  +0.2%  -9.2%   | +0.094  -2.1%  -8.0%  +1.0%  -9.9%  
+
+  full model, BUY 20%% minus SELL 20%% real move, by test year (KTC top 150):
+    1 month   2023  +5.0 pts (1 lists)   2024  +0.9 pts (4 lists)   2025  +0.9 pts (11 lists)   2026  -1.8 pts (3 lists)
+    2 months  2023  -0.7 pts (1 lists)   2024  +1.9 pts (4 lists)   2025  +2.3 pts (11 lists)   2026  +2.7 pts (5 lists)
+    3 months  2023  +0.4 pts (2 lists)   2024  +2.1 pts (5 lists)   2025  +4.4 pts (10 lists)   2026  +1.4 pts (4 lists)
+    6 months  2023  +2.2 pts (4 lists)   2024  +7.5 pts (9 lists)   2025  +8.5 pts (12 lists)   2026  +2.3 pts (4 lists)
+
+  what carries the 3-month forecast, IN SEASON (2025-26 held out, move corr 0.089): age 0.065, time of year 0.024, time of year (2) 0.017, PPR/game over the starter line 0.013, KTC move, last 6 months 0.010, games, last 60 days 0.008, points over starter line, last 60 days 0.005
+
+  what carries the 3-month forecast, OFF SEASON (2025-26 held out, move corr 0.030): age 0.034, target share 0.028, PPR/game over the starter line 0.026, KTC move, last month 0.011, is_rb 0.008, time of year 0.007, time of year (2) 0.003
+
+=== LEAVE ONE YEAR OUT ===   real move of the players the model liked most / least; frozen KTC = 0 on every column
+
+  KTC top 150 on the list date
+    horizon   season      lists | cycle only                         | + form / health                    | + KTC momentum (full)             
+                                | corr   BUY20  SELL20  BUY10  SELL10 | corr   BUY20  SELL20  BUY10  SELL10 | corr   BUY20  SELL20  BUY10  SELL10
+    1 month   in season      10 | +0.102  -0.0%  -2.5%  +0.5%  -2.3%   | +0.129  +0.2%  -3.0%  +0.4%  -2.9%   | +0.150  +0.4%  -3.3%  +1.0%  -3.7%  
+    1 month   off season     11 | +0.009  -0.8%  -0.8%  -0.7%  -1.0%   | +0.029  -0.9%  -0.7%  -1.1%  -0.9%   | +0.020  -0.7%  -0.4%  -1.1%  -0.4%  
+    2 months  in season      14 | +0.118  -1.3%  -5.1%  -0.2%  -6.9%   | +0.161  -0.3%  -6.1%  -1.5%  -6.0%   | +0.165  -0.5%  -6.5%  -0.4%  -6.2%  
+    2 months  off season     14 | +0.059  -0.1%  -2.8%  +1.1%  -3.7%   | +0.099  -0.4%  -2.9%  +0.1%  -2.5%   | +0.067  -0.3%  -2.4%  -0.8%  -3.5%  
+    3 months  in season      13 | +0.235  -1.4%  -8.0%  -0.1%  -8.7%   | +0.225  -0.5%  -8.2%  -0.7%  -6.5%   | +0.241  -0.1%  -8.3%  -0.2%  -8.1%  
+    3 months  off season     13 | +0.082  -0.4%  -4.8%  +1.8%  -5.7%   | +0.091  -1.5%  -5.4%  +0.1%  -3.9%   | +0.078  -1.3%  -4.3%  +0.2%  -4.7%  
+    6 months  in season      20 | +0.233  -3.0% -12.4%  -2.0% -12.5%   | +0.236  -3.6% -12.1%  -3.1% -13.0%   | +0.244  -3.8% -13.0%  -2.5% -13.6%  
+    6 months  off season     18 | +0.150  -2.4% -11.5%  +2.3% -12.4%   | +0.164  -1.3% -12.2%  +2.2% -12.4%   | +0.160  -0.4% -10.7%  +2.9% -11.0%  
+
+  full model, BUY 20%% minus SELL 20%% real move, by test year (KTC top 150):
+    1 month   2021  +6.0 pts (1 lists)   2022  -3.6 pts (1 lists)   2023  +2.3 pts (1 lists)   2024  +1.5 pts (4 lists)   2025  +2.3 pts (11 lists)   2026  -0.7 pts (3 lists)
+    2 months  2021  +6.8 pts (3 lists)   2022  +4.9 pts (2 lists)   2023 +11.0 pts (1 lists)   2024  +2.1 pts (4 lists)   2025  +4.6 pts (11 lists)   2026  +1.8 pts (5 lists)
+    3 months  2021 +12.1 pts (2 lists)   2022  +1.1 pts (2 lists)   2023 +11.6 pts (2 lists)   2024  +5.8 pts (5 lists)   2025  +6.3 pts (10 lists)   2026  +2.9 pts (4 lists)
+    6 months  2021 +12.6 pts (4 lists)   2022 +16.6 pts (4 lists)   2023  +7.0 pts (4 lists)   2024 +11.3 pts (9 lists)   2025 +10.5 pts (12 lists)   2026  +4.2 pts (4 lists)

@@ -1127,6 +1127,82 @@ exports.exportLeagueTrades = onRequest(
   }
 );
 
+// === importSim2027 (2026-11-24): the PC's 2027 list -> admin_sims/rankings_2027 ===
+// Jack: "make it so I dont have to load a file and its just on the site". The
+// weekly "MFF 2027 List Refresh" task rebuilds the Sim Lab's 2027 list and
+// POSTs the CSV here (sim_lab/upload_2027_list.py); the admin-only 2027 tab
+// (sim2027.js) reads this doc, so the board shows with no file step. Same
+// EXPORT_FEED_KEY gate as the other PC endpoints: no Google credential on disk.
+// The doc keeps the shape the tab's own SAVE SIM FILE writes ({csv, fileName,
+// fileDate, rowCount, savedAt, savedBy}) plus sha1. admin_sims stays readable by
+// Jack only (firestore.rules); this endpoint never returns the list itself.
+//   GET  -> { exists, rowCount, sha1, savedAt, savedBy, fileName, bytes }
+//   POST { csv, fileName?, fileDate?, force? } -> same + { ok, unchanged }
+// Refuses a file that is not the list (columns, size, row count) and one that
+// lost 20%+ of its rows (409) unless force. The replaced doc is kept one step
+// back in admin_sims/rankings_2027_prev.
+exports.importSim2027 = onRequest(
+  { secrets: [EXPORT_FEED_KEY], memory: "256MiB", timeoutSeconds: 60 },
+  async (req, res) => {
+    try {
+      const supplied = req.get("x-export-key") || "";
+      if (!supplied || supplied !== EXPORT_FEED_KEY.value()) {
+        res.status(403).json({ error: "forbidden" });
+        return;
+      }
+      const coll = getFirestore().collection("admin_sims");
+      const ref = coll.doc("rankings_2027");
+      const meta = (d) => (d
+        ? { exists: true, rowCount: d.rowCount || 0, sha1: d.sha1 || "", savedAt: d.savedAt || "", savedBy: d.savedBy || "", fileName: d.fileName || "", bytes: (d.csv || "").length }
+        : { exists: false });
+      if (req.method === "GET") {
+        const s = await ref.get();
+        res.json(meta(s.exists ? s.data() : null));
+        return;
+      }
+      if (req.method !== "POST") { res.status(405).json({ error: "GET or POST" }); return; }
+      const bad = (msg) => { res.status(400).json({ error: msg }); };
+      const csv = req.body && req.body.csv;
+      if (typeof csv !== "string") return bad("csv required");
+      if (csv.length < 20000 || csv.length > 900000) return bad("csv size out of range");
+      const lines = csv.split(/\r?\n/).filter((l) => l.trim());
+      const head = (lines[0] || "").split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+      for (const k of ["name", "pos", "team", "total", "rank", "pos_rank"]) {
+        if (!head.includes(k)) return bad("not the 2027 list: no '" + k + "' column");
+      }
+      const rowCount = lines.length - 1;
+      if (rowCount < 300 || rowCount > 3000) return bad("row count out of range: " + rowCount);
+      const sha1 = require("crypto").createHash("sha1").update(csv, "utf8").digest("hex");
+      const cur = await ref.get();
+      const old = cur.exists ? (cur.data() || {}) : null;
+      if (old && old.sha1 === sha1) {
+        res.json(Object.assign({ ok: true, unchanged: true }, meta(old)));
+        return;
+      }
+      if (old && old.rowCount && rowCount < 0.8 * old.rowCount && !(req.body.force === true)) {
+        res.status(409).json({ error: "row count fell", was: old.rowCount, now: rowCount });
+        return;
+      }
+      if (old && old.csv) await coll.doc("rankings_2027_prev").set(old);
+      const fileDate = Number(req.body.fileDate);
+      const doc = {
+        csv,
+        fileName: String(req.body.fileName || "2027_inhouse_early.csv").slice(0, 120),
+        fileDate: isFinite(fileDate) && fileDate > 0 ? fileDate : null,
+        rowCount,
+        sha1,
+        savedAt: new Date().toISOString(),
+        savedBy: "auto (MFF 2027 List Refresh)",
+      };
+      await ref.set(doc);
+      res.json(Object.assign({ ok: true, unchanged: false }, meta(doc)));
+    } catch (err) {
+      console.error("importSim2027 error:", err);
+      res.status(500).json({ error: "internal" });
+    }
+  }
+);
+
 // === adminReport (2026-11-06): data feed for the admin-only /report/ page ===
 // Revenue (Stripe), accounts (Auth), premium + Ask Jack (Firestore), traffic
 // (GA4 Data API). Jack's verified email only. Logic lives in admin_report.js.

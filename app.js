@@ -3765,7 +3765,13 @@ function _cdTagsHtml(d, fmt, mode, sim, ktc) {
   const offR = window._offRisk ? window._offRisk(d) : null;
   if (fairDiff != null && fairDiff >= 0.10 && !offR) T('BUY LOW', '#22c55e', 'Fair value is ' + Math.round(fairDiff * 100) + '% above his KTC price — the model expects the market to move toward him.');
   if (fairDiff != null && fairDiff <= -0.10) T('SELL HIGH', '#ef4444', 'Fair value is ' + Math.round(-fairDiff * 100) + '% below his KTC price — the market likes him more than his production and age support.');
-  const slideNote = _cdOffNoteHtml(offR, fairDiff) + ((offR && fairDiff > 0) ? '' : _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr))
+  // Value forecast windows. A window that contradicts the fair-value call above is not tagged (the
+  // forecast line below still shows the numbers): BUY LOW + SELL WINDOW / SELL HIGH + BUY WINDOW.
+  const fc = _fairForecast(d, mode);
+  const _fcTip = fc ? 'Value forecast: ' + _fcPct(fc.f3) + ' in 3 months, ' + _fcPct(fc.f6) + ' in 6 months. A typical top-150 player: ' + _fcPct(fc.m3) + ' / ' + _fcPct(fc.m6) + '. ' : '';
+  if (fc && fc.win < 0 && !(fairDiff != null && fairDiff >= 0.10)) T('SELL WINDOW', '#ef4444', _fcTip + 'He is in the bottom fifth of the forecast. In backtests on 2021-26 KTC history that group lost about 7% in 3 months and 12% in 6 during the season.');
+  if (fc && fc.win > 0 && !offR && !(fairDiff != null && fairDiff <= -0.10)) T('BUY WINDOW', '#22c55e', _fcTip + 'He is in the top fifth of the forecast. In backtests that group roughly held its value while the rest of the board slipped.');
+  const slideNote = _cdForecastNoteHtml(fc) + _cdOffNoteHtml(offR, fairDiff) + ((offR && fairDiff > 0) ? '' : _cdWhyHtml(d, e, key, fairDiff, sim, ktc, age, yr))
     + _cdSlideNoteHtml(slide, d) + _cdQbNoteHtml(d, yr) + _cdBounceNoteHtml(d, yr) + _cdFilmNoteHtml(d) + _cdFadeNoteHtml(d) + _cdManNoteHtml(d);
   if (!tags.length) return '<div style="font-size:.6875rem;color:var(--text2);margin:-2px 0 10px">No value tag — production now (' + (_noNow ? 'none — not playing' : '#' + now) + ') and future (#' + fut + ') are in line with his price' + (mkt ? ' (KTC #' + mkt + ')' : '') + '.</div>' + slideNote;
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px">' + tags.join('')
@@ -4288,6 +4294,34 @@ function _fairEdge(r, mode) {
   return v ? -L.k * v : 0;
 }
 function _fairEdgeSig() { const L = window.MFF_LASTING_EDGE; return L && L.p ? 'le' + (L.updated || 1) : ''; }
+// VALUE FORECAST (Jack 2026-11-24 "Yes, build it"; sim_lab/backtest_ktc_forecast.py + ktc_value_forecast.py):
+// expected change in a player's KTC value over the next 3 and 6 months, from the yearly cycle for his
+// position / age, his recent production and missed games, and KTC's own recent move. Forward-tested on the
+// tracked KTC lists 2021-26 (KTC top 150, in season): the fifth it liked least lost about 7% in 3 months and
+// 12% in 6, the fifth it liked most about 2% and 5% - positive in every test year, and much better at
+// finding sells than buys. Stored in data/mff_lasting_edge.js: f[name|pos] = [3 mo %, 6 mo %, window] for
+// 1QB then SF (window -1 = bottom fifth of the top 150 = SELL WINDOW, +1 = top fifth = BUY WINDOW);
+// fc = {date of the price it starts from, med: typical top-150 move per format}. The forecast needs a
+// current price, so it is hidden once fc.date is more than _FC_MAX_AGE days old.
+const _FC_MAX_AGE = 21;
+function _fairForecast(d, mode) {
+  const L = window.MFF_LASTING_EDGE;
+  if (!d || !L || !L.f || !L.fc || !L.fc.date) return null;
+  const age = (Date.now() - new Date(L.fc.date + 'T12:00:00').getTime()) / 864e5;
+  if (!(age <= _FC_MAX_AGE)) return null;
+  const e = L.f[_dynSimNorm(d.n) + '|' + d.s];
+  const sf = mode === 'dynastysf', o = sf ? 3 : 0, med = (L.fc.med || {})[sf ? 'sf' : '1qb'];
+  if (!e || e[o] == null || e[o + 1] == null || !med) return null;
+  return { f3: +e[o], f6: +e[o + 1], win: +e[o + 2] || 0, m3: +med[0], m6: +med[1] };
+}
+function _fcPct(x) { const r = Math.round(x); return (r > 0 ? '+' : r < 0 ? '−' : '') + Math.abs(r) + '%'; }
+function _cdForecastNoteHtml(fc) {
+  if (!fc) return '';
+  const col = fc.win < 0 ? '#fca5a5' : fc.win > 0 ? '#86efac' : 'var(--text2)';
+  return '<div style="font-size:.6875rem;line-height:1.45;color:var(--text2);margin:-4px 0 10px">'
+    + '<b style="color:' + col + ';letter-spacing:.04em">VALUE FORECAST</b> ' + _fcPct(fc.f3) + ' in 3 months · ' + _fcPct(fc.f6) + ' in 6 months'
+    + ' <span style="opacity:.8">(typical top-150 player ' + _fcPct(fc.m3) + ' / ' + _fcPct(fc.m6) + ')</span></div>';
+}
 // RB RECEIVING TILT (Jack 2026-10-09; sim_lab/research_efficiency_value.py +
 // backtest_fair_eff_terms.py): RBs' prior-season PFF receiving YPRR (75+ carries)
 // beat FAIR out of sample — RB-only 3yr +.022, 4/4 folds, stable k -.24..-.31 per

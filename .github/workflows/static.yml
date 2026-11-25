@@ -56,6 +56,11 @@ jobs:
           npm i --no-save --no-audit --no-fund --prefix .build-tools acorn@8.12.1 acorn-walk@8.3.4
           node scripts/split_app.js --build
           for n in $(node -e "const m=/window\._MFF_CHUNKS = (\[.*?\]);/.exec(require('fs').readFileSync('app.js','utf8'));console.log(m?JSON.parse(m[1]).join(' '):'')"); do test -s "app-chunk-$n.js"; done
+          # Site audit 2026-11-23 #9 (data diet): weekly player props older than the 3 newest
+          # weeks move out of data/betting_lines_2026.js into data/betting_props_hist_2026.js,
+          # loaded after first paint via index.html _LATE_DATA_FILES. The script checks that
+          # both halves merge back to the original weeks and fails the deploy if not.
+          node scripts/split_props.js
           rm -rf .build-tools
       - name: Minify app.js
         run: |

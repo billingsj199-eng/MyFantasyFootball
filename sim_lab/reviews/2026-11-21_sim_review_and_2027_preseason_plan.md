@@ -1749,3 +1749,926 @@ Season-total p10-p90 coverage is 83.2% (target 80; still slightly wide).
 **Next weakest piece:** projected volume share for RBs and year-2 players, with team-level consistency (shares summing to team volume). After that, calibration of the games distribution (coverage 83%).
 
 **Data for Jack's approval:** historical August depth charts (source and terms not yet checked, nothing read). No other new source is needed.
+
+
+### A8. ADP decision recorded and parked; first in-house rankings delivered (2026-11-21)
+
+**Decisions (2026-11-21):**
+- Jack approved ADP as an input to the 2027 preseason sims ("Yes, use ADP.").
+- Right after, he said: "but lets see what it looks like without adp for now". The ADP-anchored build is **parked**, and the in-house-only model (no ADP input) is the working version.
+- Recorded in PENDING P-20261121-7.
+
+**What was delivered:** in-house rankings with ADP as a comparison column only. They come from the final per-game model (A7) multiplied by the games-played model (A2). Scoring is half-PPR (the prototype's native scoring); the overall order is value over replacement for a 12-team 1QB league. Files in `sim_lab/preseason2027/output/`; code in `output_rankings.py`; log in `output/output_rankings.log`.
+
+**A. `2026_inhouse_check.md` / `.csv`: what the model would have said before week 1 of 2026**
+- Inputs, all as known before the season:
+  - trained on 2012-25
+  - 2026 expected wins derived from the frozen preseason game lines (2026-08-26)
+  - the ESPN depth chart from the repo's git history (commit c9e33926, 2026-09-11 15:07 ET; earlier pulls had no WR lists, and only the Thursday opener had been played)
+  - 2026 rookies and their draft capital
+- Comparison ADP: Underdog best ball, 2026-09-03.
+- Actuals: weeks 1-10.
+- **Biggest-disagreement tally: ADP closer 14, model 12, too few games 4** (a coin flip on a small sample).
+- **What it gets right:** the top 8 match the market's top 8. It had McBride as TE1 and Allen as QB1, and it was right on Fannin, Tre Tucker, Freiermuth and Henry.
+- **What it gets wrong:**
+  - rookie RBs (Love RB9, now RB44)
+  - aging RBs (Saquon RB5, now RB38)
+  - backup RBs ranked far below ADP, where ADP was mostly right (partly best-ball format)
+  - mid-tier TEs and depth WRs (Pitts TE3, now TE20; Jeudy)
+  - QB ordering (Lamar and Hurts at QB2/3, Dart and Baker in the top 8)
+  - Burrow at only QB16, because one short season drags down his games projection
+  - Travis Hunter missing (listed as CB in nflverse)
+  - ranges too wide (long absences overstated)
+
+**B. `2027_inhouse_early.md` / `.csv`: PRELIMINARY first look at next season**
+- Built from 2026 weeks 1-10, scaled to a 17-game rate, plus today's ESPN depth chart, with age +1.
+- Not included: 2027 rookies, free agency, coaching changes, 2027 win totals.
+- The top five are Gibbs, Smith-Njigba, Bijan, Chase and Lamb. Projected games run high because a partial season shows fewer misses.
+
+**New fixes this surfaced** (not done; added to next steps):
+1. The games model over-penalises one injured season for established starters (Burrow).
+2. RB age 28+ with heavy workloads, and backup-RB value, need another look. Best-ball ADP is not the right comparison for depth RBs.
+3. Map players whose nflverse position is wrong (e.g. Hunter).
+4. Calibrate the games distribution so ranges tighten.
+
+Guard added in `preseason_model.walk_forward` so a test year with no ADP rows runs (2026/27). Backup: `preseason2027/preseason_model.py.bak_pre_guard_20261121`.
+
+
+### A9. The four fixes the lists exposed (2026-11-21): two kept, one used for ranges only, one "no fix found"
+
+Jack asked "Have it fix the four problems these lists exposed?" and said "Yes, fix them". This pass covers only the in-house prototype, with no ADP input. ADP is approved but parked.
+
+**Rules for this pass**
+- Every fix had to hold up on the 2015-25 walk-forward. Choices were made on 2015-22.
+- The 2023-25 holdout has now been looked at several times, so it is no longer fully clean. It is reported separately.
+
+**Files** (all in `preseason2027`)
+- Code:
+  - `fixes_a9.py` (log `fixes_a9.log`)
+  - `fix4b_a9.py` and `fix4c_a9.py` (logs `fix4b_a9.log`, `fix4c_a9.log`)
+  - `data/position_overrides.csv`
+  - `output_rankings.py` v2, with v1 kept as `output_rankings.py.bak_v1_20261121`
+  - `movers_a9.py` (log `output/movers_a9.log`)
+- Backups:
+  - `build_player_weeks.py`, `preseason_model.py` and `games_model.py`: `.bak_pre_posfix_20261121`
+  - `data/player_weeks_v1_pre_posfix.parquet`
+- engine.js changed today (the 14:25 batched-runs work by another session). Nothing in `preseason2027` reads engine.js, so these results are unaffected. engine.js was not touched.
+
+**Fix 1. Games model: established starters coming off one short season.** Kept (small).
+- Definition. Established = a clear starter in both of the two seasons before last (12+ games, plus QB 20+ attempts/g, RB 10+ carries/g, or WR/TE 4.5+ targets/g). Short = under 10 games last season.
+- Measured (ADP top 150, n 73): the model predicted 11.2 games vs 11.8 actual.
+
+| Group | Predicted | Actual |
+|---|---|---|
+| Short season was injury (n 63) | 11.4 | 12.4 (1 game low) |
+| Short season was role / benching / off-roster (n 10) | 9.7 | 8.1 (too HIGH) |
+| QBs (n 10) | 10.8 | 13.8 (3 games low) |
+
+- Repairs tested (games MAE on the group / on the whole dev pool):
+
+| Repair | Group MAE | Dev pool MAE |
+|---|---|---|
+| Baseline | 3.06 | 2.78 |
+| Multi-season games share | 3.03 | 2.78 |
+| **Shrink last season toward his own longer-run rate (40/60), established starters only** | **2.92** | **2.78** |
+| Floor at .6 | 3.01 | 2.78 |
+| Established × short flag | 3.07 | 2.78 |
+
+- The other direction is not broken. Old RBs (28+) off a short season: MAE 5.02 → 4.85, still predicted below their actual. QBs short for role: 5.90 → 5.85, though still predicted too high (9.5 vs 6.8). Benched QBs are still under-penalised; that is not fixed.
+- Worth: season totals are flat (all seasons: Spearman .469 → .468; holdout .513 → .514; holdout top-12 hit .486 → .500).
+- **Burrow did not move** (overall 109 → 120, QB16 → QB17). His 2023 was also short, so he does not meet the "established" definition. The model's caution about two short seasons in three years is evidence-based, not a bug.
+- It did not help QB ordering (QB totals MAE 65.8 → 65.6; per-game unchanged).
+
+**Fix 2. RBs.** No fix found for the projected average. The take-over chance is kept as an information column.
+- **Age × workload:**
+  - Tested an age × carries interaction in volume (per-game) and in games played.
+  - Per-game RB 28+ got worse: 3.135 → 3.150. Games played for RB 28+ were unchanged.
+  - No form held up. The wider-spread idea is answered by fix 4: RB 28+ ranges are already as wide as the data supports.
+- **Backups vs the comparison ADP:**
+  - Against REDRAFT ADP (the FFC mock drafts used for history), depth-2 RBs (n 163): the model reads them 4.5% low (actual / pred 1.045), while ADP reads them 3.5% high (.965). MAE: model 2.745 vs ADP 2.626.
+  - So part of the gap is real error. It is smaller than the 2026 best-ball comparison made it look.
+  - No redraft ADP exists on disk for 2026 (Underdog best ball only).
+- **Take-over history** (week-1 depth-2 RB becomes the lead back, i.e. 50%+ of team carries in 3+ games; 2015-25, n 373):
+  - Overall: **28.4%**.
+  - By draft round: round 1-2 **55.9%**, round 3-4 27.0%, later/UDFA 17.8%. Rookie backups: 35.4%.
+  - By starter: age 28+ 25.3% vs under 28 28.9%; starter missed time last year 25.7%; committee 28.2% vs clear lead 28.9%. The starter's age, health and committee status carry no signal.
+  - Depth 3+: 9.7%.
+  - A walk-forward logistic is calibrated (.17 → .16, .25 → .24, .37 → .43; Brier .1972 vs base-rate .2034).
+- **As an input:** adding P(take over) to RB volume made per-game error slightly worse (3.051 → 3.056; backups 2.745 → 2.760). It does not improve the mean.
+- **Upper range:** backup-specific spread vs pooled RB spread: 79.6% vs 80.3% coverage, above-p90 rate 11.7 vs 10.9. No improvement, so not adopted.
+- Kept as an information column (`p_take`) for depth-2 RBs in the 2026 CSV. Top of 2026: TreVeyon Henderson .53, Woody Marks .44, Kamara .39, Najee Harris .35, RJ Harvey .34.
+
+**Fix 3. Position overrides.** Kept.
+- `data/position_overrides.csv` (gsis id, season range, position, reason, date). Applied in `build_player_weeks.py`, `preseason_model.build` and `games_model.availability`.
+- Scan of 2012-26 for offensive production at a non-offensive listed position: only **Travis Hunter** (CB, 45 targets in 2025) and **Jordan Thomas** (LB, 27 targets as a TE in 2018).
+- Season-specific career changes (nflverse `players.csv` carries one position per career):
+  - Terrelle Pryor: QB in 2013-15, then WR.
+  - Cordarrelle Patterson: WR 2013-20, then RB. This one is a judgement call; platforms dual-listed him in 2019-20.
+- Flagged, not changed:
+  - Taysom Hill (TE/QB; TE on most platforms)
+  - Ty Montgomery (WR listed; RB on platforms 2016-19)
+  - WR/RB hybrids: Deebo Samuel, Curtis Samuel, Tavon Austin, Percy Harvin, McCluster
+  - Platform disagreement on these is a known limit.
+- Worth: per-game 2.627/.472 → 2.621/.477 (A7 data vs rebuilt data). Hunter now appears at WR43 (overall 101).
+
+**Fix 4. Ranges too wide.** Kept, but the cause was not what A2 said.
+- **First try failed:** walk-forward isotonic on P(miss 2+/4+/8+), fit on the in-house relevance pool. On the ADP pool, P(8+) only moved .216 → .211 (actual .157), and coverage went 83.3 → 82.8%. The draftable players are healthier than the relevance pool, a selection the in-house model can't see.
+- **Second try:** isotonic fit on the model's **own top 150** (by its projected total; no ADP), plus a per-game spread taken from those same draftable rows.
+
+| Version | Pool | p10-p90 | Below / above | p25-p75 |
+|---|---|---|---|---|
+| Before | ADP top 150 | 83.7% | 4.9 / 11.4 | 52.0% |
+| Before | model top 150 | 86.1% | 5.9 / 8.0 | 54.5% |
+| After | ADP top 150 | 78.7% | 7.1 / 14.2 | 48.1% |
+| After | **model top 150** | **80.2%** | **8.6 / 11.2** | **48.5%** |
+
+- The remaining skew on the ADP pool (more misses above) is the model's level being too low on players the market likes. That is an average problem, not a width problem.
+- Examples: Allen's season-total p10 went 59 → 138, Chase 64 → 79, Burrow 42 → 92.
+
+**Before / after (ADP top 150).** Per-game is games-weighted MAE / rank rho. Totals are MAE / Spearman / top-12 hit / top-24 hit.
+
+| Cut | Per-game before (A7) | Per-game after | ADP | Totals before | Totals after (fix 1) | ADP totals |
+|---|---|---|---|---|---|---|
+| All 2015-25 | 2.627 / .472 (1/11 seasons) | 2.621 / .477 (1/11) | 2.491 / .548 | 51.3 / .469 / .447 / .653 | 51.3 / .468 / .451 / .653 | 49.7 / .501 / .538 / .659 |
+| Dev 2015-22 | 2.658 / .481 | 2.649 / .488 | 2.479 / .554 | 50.8 / .452 | 50.8 / .451 | 49.1 / .496 |
+| Holdout 2023-25 | 2.554 / .446 | 2.554 / .448 | 2.519 / .532 | 52.5 / .513 / t12 .486 | 52.5 / .514 / t12 .500 | 51.2 / .515 / t12 .542 |
+| QB | 2.679 / .329 | 2.664 / .346 | 2.542 / .454 | 65.8 | 65.6 | 63.9 |
+| RB | 3.058 / .553 | 3.051 / .556 | 2.839 / .640 | 56.1 / .460 | 55.9 / .462 | 54.4 / .506 |
+| WR | 2.395 / .554 | 2.390 / .556 | 2.322 / .601 | 45.8 / .478 | 45.9 / .480 | 44.6 / .497 |
+| TE | 1.973 / .438 | 1.972 / .438 | 1.870 / .489 | 37.0 | 37.3 | 34.8 |
+| Rookies | 2.822 | 2.800 | 2.794 | 52.8 | 53.0 | 49.4 |
+| Range coverage p10-p90 (model top 150) | 86.1% | **80.2%** | | | | |
+
+**Contribution of each fix:**
+1. Fix 1: totals about 0; it fixes the group it targets (group games MAE −0.14).
+2. Fix 2: none.
+3. Fix 3: per-game −0.006 MAE, +.005 rho, and adds Hunter.
+4. Fix 4: ranges fixed (86 → 80%), with no effect on the means.
+
+**Lists regenerated.** `output/2026_inhouse_check.md`/`.csv` and `2027_inhouse_early.md`/`.csv` are the v2 files. The v1 files are kept with a `_v1` suffix. Movers are in `output/2026_movers_v1_to_v2.csv` and at the end of the 2026 markdown file.
+- Only 5 players moved 10+ overall spots or 3+ position spots: Jayden Reed 142 → 125, Burrow 109 → 120, Kittle 77 → 67, Mike Evans 73 → 63, and Hunter (new at 101).
+- Saquon, Jeremiyah Love and the backup RBs (Corum, Allgeier, Keaton Mitchell, Jordan Mason) did not move, because no fix earned the right to move them on history.
+- Biggest-disagreements tally (v2): **ADP 16, model 11, too few games 3** (v1: 14 / 12 / 4). Hunter entered the high list, and ADP was closer on him so far.
+
+**What's next:**
+1. QB ordering (the worst area; fix 1 didn't help): QB volume, rushing share and benching risk for QBs short for role.
+2. RB volume with team-level consistency (A7's next weakest piece).
+3. The in-house level is too low on market-favoured players. Only market data fixes that cleanly; that is the ADP decision, parked.
+4. A redraft ADP for 2026 comparisons. None is on disk; a data pull would need approval.
+
+
+### A10. QB ordering (2026-11-21): no in-house fix found; the gap is smaller than it looked; superflex view added
+
+Jack: "Fix QB order first". ADP is still approved but parked; nothing here uses it as an input.
+
+**Code and logs** (all in `preseason2027`):
+- `qb_a10.py` → `qb_a10.log` (diagnosis + round 1)
+- `qb_a10b.py` → `qb_a10b.log` (round 2)
+- `sf_view_a10.py` → `output/sf_view_a10.log`
+- `output_rankings.py` v3; v2 is kept as `output_rankings.py.bak_v2_20261121`
+
+**Method.** Choices were made on 2015-22. 2023-25 is reported separately and has been viewed before.
+
+**QB pool (new).** Every week-1 chart QB1, plus every QB with 4+ games of 15+ attempts, 2015-25. That is 463 QB-seasons (343 week-1 starters), against 219 in the old ADP-top-150 QB table.
+
+**The ".346 vs .454" gap was mostly the narrow pool.** On the ADP-top-150 QBs (about 18 per season, all of them good), the in-house rank correlation is only .074, because the spread is so narrow.
+
+| QB set | Model | MAE | Rank rho | Top-12 hit | Top-24 hit | QB1-6 who finish top 12 |
+|---|---|---|---|---|---|---|
+| Full pool | In-house | 2.727 | .627 | .558 | .783 | .633 |
+| Full pool | Naive last-season PPG | 3.497 | .537 | .553 | .777 | .591 |
+| QBs with ADP | In-house | 2.635 | .406 | .593 | .940 | **.683** |
+| QBs with ADP | ADP | **2.506** | **.486** | **.694** | .944 | .667 |
+
+- On QBs with ADP, in-house beats ADP on rank in 2 of 11 seasons.
+
+**Which component costs the most.** Each row swaps in the actual value of one piece of the structural QB number. Before any swap: MAE 2.720, rank .608.
+
+| Swapped component | MAE | Rank |
+|---|---|---|
+| **Passing TD rate** | **2.024** | **.784** |
+| Pass attempts | 2.288 | .698 |
+| Yards per attempt | 2.389 | .719 |
+| Rush attempts | 2.579 | .637 |
+| Rushing TD | 2.641 | .624 |
+| INT | 2.686 | .618 |
+| Rush yards per carry | 2.691 | .619 |
+
+- TD rate is the biggest miss on both error and order, then attempts and yards per attempt. Rushing is small.
+- On season totals, **games played dominates**: rank .621 with predicted games, .912 with actual games.
+
+**QB types (MAE, act/pred):**
+
+| Type | MAE | Act/pred |
+|---|---|---|
+| Rookies | 3.119 | 1.033 |
+| Second year | 3.187 | .985 |
+| **Backups who took over** | 3.087 | **1.126** (model low) |
+| Back from a short season | 3.038 | 1.024 |
+| **Job threat** (team drafted a round-1 QB) | 3.042 | **.844** (model high, n 17) |
+| New team | 2.923 | .957 |
+| Established, same team and coach (best) | 2.424 | 1.039 |
+
+**The four 2026 patterns, tested on history:**
+1. *Does the model over-rate rushing QBs?* No; it is the other way round. On history the model **under**-rates them: act/pred 1.099, rushing part 1.075. Lamar and Hurts in 2026 are not a pattern.
+2. *Does it over-trust one big season?* No. QBs after a +3 PPG jump came in **above** the projection (1.112). Dart and Baker are not a pattern either.
+3. *Does it under-rate proven passers off a short year?* Yes, but the sample is tiny (n 16): per-game 1.177, games 10.6 predicted vs 12.2 actual.
+4. *QBs who lost time to role last year:* games 7.0 predicted vs 8.9 actual. With this definition the model is too **low**, not too high.
+
+**Candidates, all dropped.** The bar was +.005 rank on dev with MAE no worse. Figures are dev MAE / rank (base 2.740 / .641), then holdout rank (base .592).
+
+| Candidate | Dev MAE / rank | Holdout rank | Result |
+|---|---|---|---|
+| Team context for QB volume (win totals, team pass/rush volume, new HC, new QB) | 2.785 / .628 | .563 | Worse |
+| Rushing age decline | 2.739 / .631 | .592 | Fails |
+| One-season-jump flag | 2.734 / .642 | — | Rank +.001, fails the bar |
+| More weight on the multi-season ridge (QBs only) | 2.783 / .631 | — | Fails |
+| Lighter TD-rate shrink (k 640 / 320 / 160 vs fitted 1,280) | 2.757 / .631 down to 2.779 / .621 | .608 / .615 / .621 | **Dev and holdout disagree; not kept** |
+| TD rate scaled by team strength (+.05 per expected win, stable 2016-25) | 2.746 / .634 | .596 | Fails |
+| QB level calibration | 3.04+ | — | Much worse; the bias isn't uniform |
+| QB-specific games terms (est. × short year, job threat, low prior PPG) | Games MAE 2.78 → 2.76 dev; 3.28 holdout unchanged; est.-off-short group worse (3.56 → 3.69) | — | Not kept |
+
+- The lighter TD-rate shrink is the one to re-check with 2026 added: it is better on the holdout but worse on dev.
+
+**How much of the gap is closable.** On QBs with ADP the gap is .08 in rank and .13 in MAE. In-house is already level with ADP on the top of the order (QB1-6 finishing top 12, top-24 hit). What is left is mostly:
+- TD rate, which is largely noise year to year
+- games and job outcomes: who wins the job in August, benchings, and rookies starting
+
+That information sits with the market. Closable in-house with data on disk: perhaps a little through contracts (`pbp_cache/otc/historical_contracts.parquet` is on disk and wasn't tested) and through a job-security term once there are more seasons.
+
+**Other positions and the overall list.** Unchanged. Overall top-150 totals MAE 51.31 / rank .468 before and after. QBs keep the same value-over-replacement placement.
+
+**v3 lists.** v1 and v2 are kept.
+- **2026 check:** QB order is identical to v2; no QB moved 3+ spots. The QBs that looked wrong (Lamar, Hurts, Dart and Baker high; Burrow at QB17) did not move. History says the model's general tendency is to *under*-rate rushing QBs and one-big-season QBs, so moving them down would have gone against the evidence.
+- **2027 look:** data-handling fix. The current ESPN chart lists injured starters behind their backups (Lamar and Hurts were second on 2026-11-21). For 2027 only, each player's chart rank is now the better of his current rank and his 2026 usage rank, and QB1 is the team's 2026 starts leader. Result: Hurts QB35 → QB19, Lamar QB42 → QB30, Winston 33 → 22; other QBs shift 3-4 spots as a result. Matthew Golden enters the overall top 24 (#18) for the same reason.
+
+**Superflex view (new section in both lists).**
+- Replacement levels: QB20 / QB24 / QB28 at 10 / 12 / 14 teams. Overall superflex rank for 12 teams, with RB31 / WR41 / TE12.
+- **2026 check, superflex QB value (12 teams):** Allen 97 (SF #7 overall), Lamar 71 (#20), Hurts 68 (#23), Maye 64 (#24), Goff 63, Mahomes 53, Dart 51, Baker 50, Herbert 48, Lawrence 47, Caleb 41, Love 38.
+- **2027 look:** Allen 102 (SF #7), Maye 70 (#21), Burrow 65 (#22), Goff 62 (#24), Mahomes 60, Lawrence 56, Stafford 50, Love 45, Stroud 40, Nix 39, Daniels 36, Rodgers 34.
+
+**Data for approval:** none new is required. On disk and untested: OTC contracts, for a job-security term. Still listed from before: historical August depth charts, which is where the "who won the job" information lives.
+
+**Next:**
+1. Job security from on-disk contracts plus draft capital, fed into QB games.
+2. Re-test the lighter TD-rate shrink with the full 2026 season added.
+3. RB volume with team-level consistency.
+4. The ADP version is still parked.
+
+
+### A11. QB job security from contracts + draft capital (2026-11-21): KEPT - the first QB fix that holds up
+
+Jack said: "Try job security". ADP stays parked.
+
+**Where it lives:**
+- Code: `preseason2027/qb_a11.py`; log: `qb_a11.log`.
+- The lists are now v4. Backups: `output_rankings.py` and `sf_view_a10.py` as `.bak_v3_20261121`, and the `*_v3.*` lists are kept.
+
+**Is the contract data usable point-in-time? Yes, with restrictions.**
+
+| Category | Fields |
+|---|---|
+| Safe (known at signing) | `year_signed`, `years`, `value`, `apy`, `guaranteed`, `apy_cap_pct`, draft year / round / overall, date of birth, `gsis_id`, and `contract_type` from `contract_history` (matched to the deal by year + total) |
+| Leaks (never used) | `is_active`; `inflated_*` (restated to today's cap); `season_history` (cash paid, cap number, base / guaranteed salary by year; restructures and cuts rewrite these); `contract_history` status, amount earned, percent earned and effective APY (all outcomes) |
+
+- **Contract in force for season Y:** the latest deal signed in Y-1 or earlier, or one signed in Y if it is an offseason type (Drafted, UFA, RFA, ERFA, Franchise, Transition, SFA, UDFA).
+- Extensions dated Y are skipped, because some are signed during the season.
+- **Can't be rebuilt point-in-time:** guaranteed money still owed (the yearly schedule lives in `season_history`) and fifth-year option decisions. Only total guarantee share, years left and cap share are usable.
+- **Coverage:** 460 of 463 QB-seasons in the A10 pool (99.4%). Missing: Jimmy Clausen 2015, Dwayne Haskins 2019-20.
+
+**Outcome: losing the job while healthy.**
+- Definition: a week-1 QB1 sits for 2+ team games where another QB started (most attempts, 15+), while he was not listed Out or Doubtful and not on a reserve list. Being traded or cut counts.
+- The injury split is fairly clean: a QB who was hurt and then lost the job counts only for the weeks he was healthy.
+- Base rate: **23.1% of 398** week-1 starters, 2013-25. By season it runs 11-29%, and 28-29% in 2022-25.
+- Cost: benched QBs played 8.8 games vs 13.9 for the rest, and lost 6.0 healthy weeks on average.
+
+**Mirror: backups who took over.**
+- 20.9% of week-1 backups (chart 2-3 or rookies, n 561) made 4+ starts.
+- Rookies: 18.4%. **Round-1 rookies not starting in week 1: 70.8% (n 24).**
+- First start: median week 5. 46% by week 4, 33% in weeks 5-9, 15% in week 10 or later.
+
+**The probability model.**
+- Logistic regression (C .3), walk-forward, on three inputs:
+  - Money: the cap share of the deal in force
+  - A QB drafted in rounds 1-2 this year or last behind him
+  - Team outlook: de-vigged expected wins
+- Benched rates by input:
+
+| Group | Benched while healthy |
+|---|---|
+| Money, bottom third | 38.5% |
+| Money, top third | 9.6% |
+| High pick behind him (n 28) | **82.1%** |
+| No high pick behind | 18.6% |
+| Expected wins ≤ 6.5 | 46.4% |
+| Expected wins ≥ 9.5 | 6.7% |
+
+- Standardized coefficients: money -.62, high pick behind +.67, expected wins -.50.
+- Brier score vs base rate:
+
+| Version | Dev Brier | Holdout Brier |
+|---|---|---|
+| Base rate | .1733 | .2083 |
+| **3 inputs** | **.1225** | **.1752** |
+| + prior production | .1210 | .1748 |
+| + rookie deal / bridge / years left | .1224 | .1711 |
+| + new HC / age | .1237 | .1752 |
+
+  The extra inputs don't clearly earn their place, so the model stays at 3 inputs.
+- Calibration: .03→.05, .07→.06, .15→.21, .24→.31, .36→.43, .76→.84. It runs slightly low in the middle bins, because recent seasons bench more.
+
+**Feeding it into QB games played.** Week-1 QB1s only: games share minus (P - base rate) × average games lost when benched / G, all walk-forward.
+
+| Group | MAE before | MAE after | Note |
+|---|---|---|---|
+| Dev pool | 2.78 (corr .595) | **2.72 (corr .616)** | |
+| Holdout | 3.28 | **3.14** | |
+| Back from a short season | 3.95 | 3.90 | Not made worse, unlike A10's terms |
+| Round-1 job threat | 4.62 | 4.68 | Slightly worse: now overshoots, 4.6 vs 7.7 actual |
+| High pick behind | 3.77 | 3.93 | Slightly worse: overshoots, 6.5 vs 8.5 actual |
+
+Used as a games-model feature instead, it was worse (dev 2.88) and was dropped.
+
+**QB season totals** (MAE / rank rho, plus top-12 / top-24 hit rates where shown):
+
+| Pool | Before | After | ADP |
+|---|---|---|---|
+| Dev | 62.0 / .646 / .560 / .810 | **61.0 / .659 / .560 / .815** | — |
+| Holdout | 69.7 / .562 / .500 / .750 | 67.8 / .567 / .444 / .764 | — |
+| Dev, QBs with ADP | 63.2 / .359 | 62.4 / .359 | 58.9 / .458 |
+| Holdout, QBs with ADP | 75.3 / .200 | **72.6** / .233 | 73.1 / .247 |
+| **Superflex band, QB13-28** | 66.3 / .282 | **64.0 / .313** | — |
+
+- On the holdout, in-house error now beats ADP for QBs with ADP (72.6 vs 73.1).
+- This clears the A10 bar on 2015-22: rank +.013, error -1.0. **KEPT.**
+- Other positions are untouched.
+
+**v4 lists.**
+- **2026 check, QB top-24 movers:**
+  - Herbert 9→7, Lawrence 10→8, Love 12→10, **Prescott 16→11**, **Burrow 17→15**, Purdy 19→16 (secure starters gain about 1 game).
+  - **Dart 7→13** (P .25), **Nix 13→19** (.31), Daniels 21→24 (.32), Stafford 26→27 (.56).
+  - Josh Allen enters the overall top 24 at #21.
+  - Against 2026 so far, this mostly moved the right way: Prescott is QB4, Burrow QB1, Purdy QB3, Love QB5, Dart QB38.
+  - The ugly one: Stafford at P .56 (high pick behind him) is QB11 and still starting.
+- **2027 look:** Maye 2→6 (P .24), Stafford 7→18 (.54), Nix 10→15, Stroud 9→12, Daniels 11→16. Purdy 13→8, Herbert 15→9, Prescott 16→10, Hurts 19→14.
+- P(lose the job) is a column in both CSVs and in the superflex QB tables.
+
+**Other positions:** the same at-signing fields could support RB/WR job security (veterans on expiring deals, high picks behind them). Not built or tested.
+
+**Next:**
+1. A rookie / backup start-date probability (71% for round-1 rookies not starting in week 1, median week 5), fed into their games.
+2. A recheck of the calibration drift.
+3. RB volume consistency.
+4. ADP stays parked.
+
+### A12. Start-date odds for rookie and backup QBs, as one team QB-room model (2026-11-21, Jack "Yes, add them"): NOT KEPT as an input; lists stay v4
+
+The test: for every QB who is not the week-1 starter, the chance he becomes the starter (4+ starts) and when. The room's
+expected starts are built to sum to the team's games, using A11's games for the starter and splitting what is left across the
+backups by P(take over). The code is in `preseason2027/qb_a12.py` with log `qb_a12.log`, and the examples are in
+`qb_a12_examples.py` with log `qb_a12_examples.log`. Choices were made on 2015-22; 2023-25 is shown but was already viewed.
+In-house inputs only, and contracts are point-in-time.
+
+**Base rates.** Week-1 non-starters, 2013-25, who got 4+ starts (90% Wilson range):
+
+| type | n | 4+ starts | range | first start (median wk) | share of remaining games he started |
+|---|---|---|---|---|---|
+| rookie, round 1 | 24 | 70.8% | 54-83 | 4 | .88 |
+| rookie, round 2 | 7 | 42.9% | 19-71 | 8 | 1.07 |
+| rookie, later | 175 | 10.3% | 7-15 | 6 | .79 |
+| veteran backup (cap >= 2%) | 128 | 30.5% | 24-38 | 3 | .67 |
+| journeyman backup | 432 | 14.4% | 12-17 | 5 | .68 |
+| former starter on reserve wk 1 | 9 | 44.4% | 22-70 | 6 | .79 |
+| all | 775 | 18.5% | 16-21 | 5 | .73 |
+
+- Why it happened: in teams where the week-1 starter missed 4+ starts, the cause was a healthy benching, cut or trade in 76
+  and an injury in 56.
+- Production: backups who took over scored 1.13x their own per-game projection (n 104).
+
+**P(take over).** A small walk-forward logistic on draft pick, rookie, prior starts, cap share and age.
+- Brier .1420 vs .1458 for the base rate, a small gain.
+- Overconfident at the top: predicted .46 came true .28 of the time, and predicted .73 came true .40.
+- Round-1 rookies come out too low (5.25 expected starts vs 7.14 actual). 2025 example: Dart had P .24 and made 10 starts.
+
+**Room model vs before:**
+
+| check | before (A11) | room model |
+|---|---|---|
+| room add-up, mean abs gap vs team games | 3.9 | **0.10** |
+| backups' starts MAE, dev / holdout | 3.05 / 2.88 | **1.98 / 2.07** |
+| backups' starts rho, dev / holdout | .287 / .277 | .297 / .323 |
+| backups' totals MAE, dev | 37.5 | 27.8 |
+| backups' totals rho, dev / holdout | .282 / .302 | **.254** / .343 |
+| all QBs, totals rho, dev / holdout | .751 / .732 | **.742** / .751 |
+| all QBs, totals MAE, dev / holdout | 46.0 / 48.4 | 39.7 / 44.0 |
+| A10 pool MAE, dev / holdout | 62.6 / 69.1 | **65.1 / 73.7** |
+| superflex QB13-28 rho, dev / holdout | .375 / .307 | .357 / **.116** |
+| superflex QB25-40 rho, dev / holdout | .434 / .617 | **.354** / .617 |
+| week-1 starters, games MAE (benching timing by "high pick behind") | 2.81 | 2.82 |
+
+**Decision.**
+- The room model is a real calibration gain for backups' starts, and the rooms now add up. But it makes the season-total
+  order worse on dev: all-QB rho falls .009, and superflex QB25-40 falls .08. On the holdout, superflex QB13-28 collapses.
+- That fails the bar, so it is **not fed into the totals**, and the lists stay v4 (no v5).
+- Timing the benching by "high pick behind" adds nothing, so it was dropped.
+- Jack's call: P(becomes starter) and expected starts could go on the lists as information columns. They would not change
+  totals or ranks. I would fix the overconfidence above .35 first.
+
+**Found along the way.** Rookies who start week 1 (n 18) get an A11 P(bench) of .33, but only .06 were actually benched.
+Their cap share on a rookie deal reads as "cheap", so their games are under-projected (11.8 vs 13.8 actual). This is the next
+thing to test: treat rookie deals separately in the A11 money term.
+
+**2026 examples.** These come from the preseason chart with P fit on 2013-25; "what happened" covers 2026 weeks 1-10.
+
+| QB | team | P(4+ starts) | 2026 starts (first) |
+|---|---|---|---|
+| Fernando Mendoza (rookie, #1) | LV | .42 | 1 (wk 10) |
+| Marcus Mariota | WAS | .38 | 1 (wk 3) |
+| Michael Penix Jr. | ATL | .37 | 8 (wk 3) |
+| Joe Flacco | CIN | .34 | 0 |
+| Mac Jones | SF | .33 | 0 |
+| J.J. McCarthy | MIN | .33 | 3 (wk 7) |
+| Carson Wentz | MIN | .33 | 3 (wk 1) |
+| Justin Fields | KC | .31 | 0 |
+| Jameis Winston | NYG | .30 | 5 (wk 2) |
+| Ty Simpson (rookie) | LAR | .28 | 0 |
+
+- 2026 so far: mean P .177 vs 4+ starts .048 through week 10. Part of the gap is the unfinished season. The rest matches the
+  overconfidence seen in history.
+
+**2027 note.**
+- No 2027 rookies exist yet, so the main use comes after the April draft. A round-1 rookie backup is the 71% case.
+- For current backups, the current-chart look is noisy. It lists Daniel Jones (IND, 10 starts), Cousins (MIN, 10) and
+  Brissett (BAL, 8) as backups. Any 2027 room column needs the A10 usage-rank fix applied to backups too.
+
+**RB backups (not built).** A9 already showed that backup-RB take-over odds don't improve the mean as an input. The same
+room idea would have to split carries rather than starts, so I would not expect a different answer.
+
+### A13. Rookie-deal starters in A11's job security (2026-11-21, Jack "Yes, test it"): KEPT the single "investment" input; lists are v5
+
+**The question.** A11 reads cap share as a QB's hold on the job. Every QB on his rookie deal has a small cap share (median
+3.0%, vs 14.4% for veterans), whatever his draft capital. So I widened the check from week-1 rookies to every week-1 starter on
+a rookie deal: a drafted QB in deal years 1-4 whose contract in force is his Drafted/UDFA deal. That is 143 of 398 week-1
+QB1s, 2013-25. Contract fields are at-signing only, as in A11, with no fifth-year options and no money owed. The code is in
+`preseason2027/qb_a13.py`, with log `qb_a13.log` and rows in `data/qb_a13_rows.parquet`.
+
+**Measured bench rates (benched while healthy, 2+ games).** "Actual" uses 2013-25 with 90% ranges. "A11 mean P" uses the
+2015-25 walk-forward rows.
+
+| group | n | actual | range | A11 mean P | actual, same rows |
+|---|---|---|---|---|---|
+| rookie deal, all | 143 | 25.9% | 20-32 | 26.5% | 26.4% |
+| rd 1, deal yr 1-2 | 54 | 16.7% | 10-27 | **26.7%** | 15.6% |
+| rd 1, deal yr 3-4 | 51 | 27.5% | 19-39 | 19.8% | 22.5% |
+| rd 2 | 17 | 23.5% | 11-43 | 26.2% | 33.3% |
+| rd 3-7 + UDFA | 21 | 47.6% | 31-65 | 42.4% | 62.5% |
+| deal yr 1 | 21 | 4.8% | 1-19 | **33.3%** | 6.2% |
+| deal yr 2 | 51 | 33.3% | 24-45 | 28.7% | 33.3% |
+| deal yr 3 | 38 | 23.7% | 14-37 | 22.5% | 18.5% |
+| deal yr 4 | 33 | 30.3% | 19-45 | **22.6%** | 36.0% |
+| veteran deal, all | 255 | 21.6% | 18-26 | 16.8% | 22.9% |
+| vet, cap < 5% | 41 | 61.0% | 48-72 | 45.4% | 61.8% |
+| vet, cap 5-10% | 24 | 41.7% | 27-58 | 35.5% | 57.1% |
+| vet, cap >= 10% | 191 | 11.0% | 8-15 | 9.0% | 12.0% |
+
+**What the table shows.**
+- The error is not a blanket rookie-deal error: on the group as a whole, A11 is right on average (26.5% vs 26.4%).
+- It is two opposite errors. A11 over-benches first-round picks in years 1-2 (the year-1 case most of all: 33% predicted vs
+  6% actual). It under-benches year-4 QBs and mid/late-round picks.
+- Veterans on cheap deals are far more benchable (61%) than the same cap share on a rookie deal, so mixing the two blunted
+  the money signal for veterans too.
+- Rookie-deal rows are 34% of A11's dev rows but carry 45% of its squared error.
+
+**Candidates.** All constants were fixed before seeing results. The other two A11 inputs stay in every version.
+
+| candidate | Brier dev (all / rookie deal / vets) | Brier holdout (all / rookie deal / vets) |
+|---|---|---|
+| base rate | .1736 | .2075 |
+| A11 (cap share) | .1225 / .1611 / .1026 | .1752 / .2042 / .1583 |
+| F1 rookie-deal flag (cap share for vets only) | .1219 / .1643 / .1000 | .1760 / .2185 / .1512 |
+| F2 flag + draft capital | .1209 / .1604 / .1004 | .1706 / .2056 / .1503 |
+| **F3 one investment input** | **.1138 / .1407 / .0999** | **.1636 / .1884 / .1491** |
+
+F3: investment = max(min(1, cap share / .15), draft score x fade).
+- Draft score = 1 - log(pick)/log(262), and 0 for UDFA.
+- Fade = 1, .8, .6, .4, .2 for years 1-5 (max(0, 1 - exp/5)).
+- It replaces cap share for everyone.
+
+**Calibration by sub-group, 2015-25 walk-forward (mean P vs actual):**
+
+| group | A11 | F3 | actual |
+|---|---|---|---|
+| rd 1, yr 1-2 | 26.7% | 17.6% | 15.6% |
+| rd 1, yr 3-4 | 19.8% | 20.4% | 22.5% |
+| rd 3-7 + UDFA | 42.4% | 48.9% | 62.5% |
+| deal yr 1 | 33.3% | 20.1% | 6.2% |
+| deal yr 4 | 22.6% | 26.8% | 36.0% |
+| veterans | 16.8% | 18.2% | 22.9% |
+| vet, cap < 5% | 45.4% | 53.1% | 61.8% |
+
+- Every sub-group moves toward the truth. The year-1 case is still too high (n 16).
+- The "slightly low" calibration elsewhere is smaller but not gone. Veterans are still under-predicted, and the mid bin goes
+  from .15 -> .21 to .14 -> .17.
+- About 80% of the dev Brier gain comes from the rookie-deal rows.
+
+**Games and totals (A11 form).**
+
+| check | no job security | A11 | F3 |
+|---|---|---|---|
+| dev pool games MAE | 2.78 | 2.72 | 2.72 |
+| holdout pool games MAE | 3.28 | 3.14 | 3.13 |
+| rookie-deal starters games MAE | 2.35 | 2.46 | 2.39 |
+| rd 1 yr 1-2 games MAE | 2.49 | 2.70 | 2.49 |
+| rd 2+ / UDFA games MAE (n 28) | 2.73 | 2.88 | **2.98** |
+| veteran starters games MAE | 2.83 | 2.59 | **2.63** |
+| team drafted a rd-1 QB / high pick behind / back from short season | 4.62 / 3.77 / 3.95 | 4.68 / 3.93 / 3.90 | 4.80 / 4.01 / 3.94 |
+| dev totals MAE / rho | 62.0 / .646 | 61.0 / .659 | 61.0 / .661 |
+| holdout totals MAE / rho | 69.7 / .562 | 67.8 / .567 | 68.2 / .573 |
+| dev, QBs with ADP: MAE / rho (ADP 58.9 / .458) | 63.2 / .359 | 62.4 / .359 | 62.3 / .356 |
+| holdout, QBs with ADP: MAE / rho (ADP 73.1 / .247) | 75.3 / .200 | 72.6 / .233 | 72.9 / **.251** |
+| veteran starters totals MAE, dev / holdout | 62.3 / 74.0 | 60.2 / 70.5 | **60.5 / 71.0** |
+| superflex QB13-28 rho, dev / holdout | .367 / .044 | .355 / .210 | .354 / **.183** |
+
+**Decision: KEPT F3.**
+- It clears the bar: a clear calibration gain for the group (Brier -.020 dev, -.016 holdout), a better overall Brier on both
+  splits, and dev season-total rho not worse (.661 vs .659).
+- Costs to flag for Jack:
+  - Veteran starters' games and totals are a hair worse than A11 (games MAE +.04; totals MAE +.3 dev, +.5 holdout), even
+    though their Brier is better. A11's gain over no job security is mostly kept (2.83 -> 2.63 vs 2.59).
+  - Holdout superflex QB13-28 rho drops .210 -> .183.
+  - Mid/late-round rookie-deal starters' games get worse (n 28).
+- F2 had the best dev rho (.668), but it left the round-1 year-1-2 over-benching in place. F1 made the rookie-deal Brier worse.
+
+**v5 lists.** v4 is kept as `output/*_v4.*`, and the scripts are backed up as `.bak_v4_20261121`. The movers are in
+`output/movers_a13.log`. Non-QB totals are unchanged (overall ranks move by at most 2 as QBs shift).
+
+2026 check, the young starters (P(bench) v4 -> v5, QB rank v4 -> v5; 2026 weeks 1-10 as examples, not proof):
+
+| QB | P(bench) | QB rank | 2026 so far |
+|---|---|---|---|
+| Maye | .13 -> .11 | 5 | QB7 |
+| Caleb Williams | .15 -> .10 | 12 -> 11 | 6 g |
+| Dart | .25 -> .26 | 13 -> 12 | 2 g, Winston started 5 |
+| Stroud (yr 4) | .21 -> .24 | 17 -> 18 | QB8 |
+| Nix | .31 -> .32 | 19 | — |
+| Cam Ward (#1 pick, yr 2) | .30 -> .16 | 20; games 13.5 -> 14.2 | 9 g |
+| Bryce Young (yr 4) | .32 -> .35 | 23 -> 24 | QB14, 9 g |
+| Daniels | .32 -> .28 | 24 -> 21 | — |
+
+- The round-1 years 1-2 history (16.7% benched) supports Ward and Caleb dropping. The year-4 history (30% benched) supports
+  Young and Stroud rising.
+- Cheap veterans rise:
+
+| QB | P(bench) | 2026 so far |
+|---|---|---|
+| Geno | .38 -> .53 | started 10 |
+| Tua | .37 -> .54 | 1 g, 0.4 ppg |
+| Kyler | .27 -> .41 | 6 g |
+| Brissett | .45 -> .54 | — |
+| Cousins | .34 -> .44 | QB6 |
+| Stafford | .56 -> .47 | QB11 |
+
+- On 31 QBs, the 2026-so-far QB rank correlation is .132 in v4 and .114 in v5: one partial season, noise either way.
+
+2027 early look:
+- Mendoza (#1 pick, yr 2): .22 -> .12, QB27 -> 23.
+- Ward: .23 -> .17.
+- Year-4 QBs rise: Stroud .24 -> .32, Bryce Young .23 -> .31, Nix .27 -> .34, Maye .24 -> .29 (the 2027 fade is one year further on).
+- Cheap veterans rise: Kyler .30 -> .45, Geno .28 -> .42, Winston .26 -> .38.
+- The 2027 rookie class isn't in it yet. When it is, a round-1 rookie starter would get the full draft score, the case A11
+  got most wrong.
+
+**Next.**
+- Veterans are still under-predicted on benching (18% vs 23%, worst at cap 5-10%).
+- The year-1 rookie starter is still too high (20% vs 6%, n 16). With this little data I would not add a separate term.
+
+### A14. RB volume (2026-11-21, Jack "Yes, RB volume"): KEPT share inputs + a half-way team rescale, and RB ranges by backfield tier; lists are v6
+
+In-house inputs only: no ADP as an input, no outside projections. Choices were made on 2015-22; 2023-25 is the
+already-viewed holdout. The redraft ADP curve from A9 is the benchmark.
+
+Code, all in `preseason2027/`:
+- `rb_a14_common.py`: goal-line carries from the on-disk pbp, team RB tables, shares, RB investment.
+- `rb_a14_diag.py`: diagnosis, log `rb_a14_diag.log`.
+- `rb_a14_build.py`: candidates, log `rb_a14_build.log`.
+- `rb_a14_judge.py`: judging, log `rb_a14_judge.log`.
+- `rb_movers_a14.py`: list comparison, log `output/rb_movers_a14.log`.
+
+**Step 1, diagnosis.** RB per-game error with one piece swapped for the actual. The pool is every RB at chart spots 1-3,
+dev 2015-22.
+
+| swap | pool MAE | pool rho | ADP-150 MAE | ADP-150 rho |
+|---|---|---|---|---|
+| v5 as is | 2.851 | .630 | 3.030 | .533 |
+| actual carries/g | 1.992 | .857 | 2.156 | .811 |
+| actual targets/g | 2.428 | .757 | 2.639 | .667 |
+| carries: actual TEAM total only | 2.825 | .644 | 3.068 | .545 |
+| carries: actual SHARE only | **2.200** | **.822** | 2.417 | .732 |
+| targets: actual TEAM total only | 2.797 | .637 | 2.981 | .548 |
+| targets: actual SHARE only | 2.557 | .737 | 2.774 | .632 |
+| goal-line carries actual (league TD rates inside / outside the 10) | 2.592 | .706 | 2.745 | .626 |
+| ADP (redraft) | | | 2.793 | .647 |
+
+- **Share, not team total.** The miss is the player's share of his team's RB work. Getting the team total exactly right is
+  worth almost nothing (-.03 MAE on carries, -.05 on targets). Getting the share right is worth -.65 on carries and -.29 on
+  targets. Rushing share matters most, then receiving.
+- **Goal-line work is a real third piece.** Knowing actual goal-line carries is worth -.26 MAE, about 40% of everything rushing
+  TDs could be worth.
+- **Does it add up today? Yes, on average.**
+  - Projected carries per team game for the listed backs sum to 1.00x the team's RB carries (targets 1.07x).
+  - Team by team the 10-90% range is .77-1.35, so there is no 120% problem on average.
+  - The shares are too FLAT: spot 1 gets .433 of team carries vs .468 actual, spot 2 .233 vs .241, spot 3 .140 vs .113.
+  - Summed per game played (no games share), the listed backs come to 2.19x a team's RB carries, because backups' per-game
+    roles overlap with the starter's.
+- **Situations: where the error sits** (pool 2015-25; carries/g bias, and share of all RB error):
+  - lead back returning to the same team: -.07, 21% of the error (his ppg MAE of 3.19 is the highest)
+  - team lost its lead back: +.19, 23%
+  - new play-caller (OC/HC change, 2019+): +.36, 31% of rows, average error
+  - committee: +.25, 16%
+  - late-round rookie: +.80, 15%
+  - rushing-QB team: +.38, 12%
+  - vet facing a new rd 1-3 back: +.27, 11%
+  - lead back who changed teams: +.71, 7%, with the worst per-row error (3.52)
+  - Overall the model over-projects carries per game played by +.35.
+- **Stickiness (r with last season):**
+  - team RB carries per game .33, team RB targets .52, RB target share .47, team goal-line carries .26, QB rush share .69
+  - a returning lead back's carry share .42 (slope .62), his RB-target share .62, his goal-line share .37
+  - Last year's goal-line share adds a little beyond carry share (partial r .18).
+  - So the team totals should be regressed hard (about two-thirds toward the league). Shares persist better, and receiving
+    share is the stickiest.
+
+**Step 2, candidates.**
+
+Team-total model (walk-forward team ridge on last 2 seasons, expected wins, pass rate, pace, QB rush share, new play-caller):
+
+| team total | ridge | last season | league mean | ridge r |
+|---|---|---|---|---|
+| RB carries per team game, MAE dev | 2.06 | 2.39 | 2.17 | .28 |
+| RB targets per team game, MAE dev | 1.16 | 1.32 | 1.30 | .48 |
+
+Per-game MAE / rho:
+
+| candidate | pool dev | pool holdout | ADP-150 dev | ADP-150 holdout |
+|---|---|---|---|---|
+| v5 | 2.851 / .630 | 2.808 / .719 | 3.030 / .533 | 3.104 / .619 |
+| C1 team rescale, half-way | 2.898 / .637 | 2.859 / .722 | 3.222 / .541 | 3.307 / .614 |
+| C1 team rescale, full add-up | 3.104 / .637 | 3.096 / .722 | 3.578 / .539 | 3.700 / .602 |
+| C2 share inputs in the RB volume ridge | 2.869 / .628 | 2.793 / .718 | 3.051 / .532 | 3.105 / .613 |
+| C3 share inputs + full add-up | 2.857 / .640 | 2.901 / .719 | 3.089 / .545 | 3.287 / .578 |
+| **C3 share inputs + half-way rescale (kept)** | **2.825 / .643** | 2.814 / .725 | **3.014 / .550** | 3.141 / .611 |
+| C4 goal-line TD rate (EB goal-line carries per carry) | 2.859 / .628 | 2.803 / .719 | 3.039 / .528 | 3.096 / .615 |
+| C2 + C4 | 2.877 / .625 | 2.790 / .720 | 3.061 / .524 | 3.101 / .616 |
+| ADP (redraft) | 2.785 / .647 | 2.708 / .739 | 2.793 / .647 | 2.956 / .622 |
+| naive last season | 3.329 / .554 | 3.111 / .664 | 3.583 / .458 | 3.585 / .465 |
+
+The C2 share inputs are last-season shares of the team's RB carries, RB targets and goal-line carries, RB investment (the
+A13 form on an RB cap scale), a rd 1-3 back added, rushing-QB share, new play-caller, and team RB volume last season.
+
+- **The A12 question.** Forcing the shares to add up exactly hurts, as it did for QBs. Full add-up: holdout pool MAE 2.901,
+  ADP-150 holdout rho .578.
+  - Forcing an exact sum pushes the games model's errors into per-game volume. Crowded charts get deflated and thin ones
+    inflated.
+  - The team total it is forced to is itself weak (r .28).
+  - Moving half-way to the team total is about the weight a team r of ~.3 deserves, and it is the version that helps.
+- **Share inputs need the rescale.** On their own they do nothing (2.869 / .628). With the half-way rescale they give the
+  dev gain.
+- **Goal-line TD rate: dropped.** Goal-line volume matters (step 1), but goal-line history does not predict it better than the
+  plain shrunk TD rate already does. The shrink picked k 320-640, i.e. mostly league average.
+
+**Judging the kept candidate (C3, half-way).**
+
+| check | v5 | C3 | ADP | naive |
+|---|---|---|---|---|
+| pool dev per-game MAE / rho | 2.851 / .630 | 2.825 / .643 | 2.803 / .650 | 3.329 / .554 |
+| pool dev season totals MAE / rho | 44.7 / .620 | 43.9 / .637 | 49.4 / .547 | 48.8 / .554 |
+| pool dev top 12 / 24 / 36 hits | .448 / .615 / .663 | .438 / .615 / .681 | .615 / .641 / .774 | .406 / .552 / .639 |
+| pool holdout per-game MAE / rho | 2.808 / .719 | 2.814 / .725 | 2.913 / .630 | 3.111 / .664 |
+| pool holdout top 12 / 24 / 36 | .556 / .722 / .750 | **.444** / .708 / .759 | .611 / .694 / .759 | .500 / .611 / .722 |
+| ADP-150 dev per-game MAE / rho | 3.030 / .533 | 3.014 / .550 | 2.793 / .647 | 3.583 / .458 |
+| ADP-150 holdout per-game MAE / rho | 3.104 / .619 | **3.141 / .611** | 2.956 / .622 | 3.585 / .465 |
+
+By tier, pool dev (per-game MAE, then rho):
+
+| tier | per-game MAE v5 -> C3 | rho v5 -> C3 | holdout |
+|---|---|---|---|
+| lead backs | 3.212 -> 3.199 | .570 -> .576 | rho .535 -> .472 |
+| committee | 2.687 -> 2.652 | .598 -> .624 | MAE 2.466 -> 2.609 |
+| backups | 2.598 -> 2.541 | .302 -> .321 | flat |
+| rookies | 2.998 -> 3.026 | .469 -> .484 | MAE 3.024 -> 2.948 |
+
+- **Seasons that beat v5 on pool MAE:** dev 5/8, holdout 2/3.
+- **Verdict: KEPT on the stated bar, but weak.** On 2015-22 it gives +.013 rho with lower error (pool) and +.017 on ADP-150.
+  The 2023-25 holdout does not confirm it: the pool is flat to slightly better, ADP-150 is slightly worse, and the top-12
+  hits drop. It also came out best of six candidates on dev, so part of the dev gain may be selection. v5 is kept as the
+  fallback.
+
+**Range by backfield tier: KEPT (does not change the averages).**
+- Per-game p10-p90 coverage with one pooled RB spread: lead backs 88-90%, committee 87-90%, backups 79-80%, rookies 74-75%.
+- With a spread by tier: 79%, 81%, 83-86% and 79-80%, all near the 80% target.
+- By tier, lead backs and committees get about 0.8x the pooled width, and backups and rookies 1.1x. A committee back's per-game
+  spread is not wider than a lead back's. What is wider is his season-total range, which comes through games and volume.
+- The A9 take-over base rates live in this backup/rookie spread. They still do not help as an average.
+
+**Other positions.**
+- WR/TE/QB projections are unchanged: non-RB totals are identical in v6, and overall ranks move by at most 6 in the top 150
+  as RBs shift.
+- RB targets are rescaled toward the team model's RB target total. The WR/TE targets come from their own ridge and were not
+  touched, so a team's projected targets are not forced to sum to its pass attempts. That would be a separate test.
+
+**v6 lists, 2026 check** (`output/rb_movers_a14.log` has the RB top 36 before/after, all 36 movers and the team backfield
+table):
+- **Up:** Chuba Hubbard 29 -> 19 (2026 so far RB5), Kyren Williams 17 -> 9 (RB11), Chase Brown 20 -> 12 (RB18), Henry
+  14 -> 10 (RB8), Josh Jacobs 32 -> 22 (3 g).
+- **Down:** Jeremiyah Love 9 -> 17 (RB44), Etienne 18 -> 25 (RB61), Hampton 11 -> 16 (RB27), Judkins 10 -> 14 (RB21),
+  Saquon 6 -> 8 (RB38), Kenneth Walker 15 -> 18 (RB3, the wrong way).
+- **Why.** Mostly the half-way team rescale. Crowded charts get everyone scaled down: ARI's listed backs summed to 24.2
+  carries per team game vs a team model of 20.5, NO 25.3 vs 20.4. Thin charts get scaled up: GB 17.4 vs 22.4, CAR 18.0 vs 22.2.
+  This is the same mechanism that held up on history, not a 2026 tweak.
+- **The backs that looked wrong in the first list:**
+  - Saquon 5 -> 8 (actual RB38).
+  - Love 9 -> 17 (actual RB44), moved toward the truth by the ARI crowd rescale.
+  - Achane 8 -> 6 (3 games played, injured).
+  - Corum 43 -> 37 (actual RB17, ADP 31), the right way.
+  - Allgeier 53 -> 62 (actual RB26) and Keaton Mitchell 73 -> 80 (actual RB48), the wrong way: crowded ARI / LAC charts.
+  - Jordan Mason 55 -> 51 (actual RB57).
+- **2026 so far (examples, not proof):** on the top 48 RBs, rank correlation with the 2026 RB rank goes .523 -> .593. Per game
+  for backs with 6+ games, .591 -> .668, vs ADP .670 on the same rows.
+- **Disagreement tally:** ADP 14, model 12, too few games 4 (v5: ADP 15, model 12, too few games 3).
+
+**2027 early look.**
+- **Movers:** Chase Brown 17 -> 10, Corum 46 -> 38, Montgomery 32 -> 26, Henry 18 -> 14, Saquon 14 -> 21, Breece Hall 8 -> 12,
+  Hubbard 13 -> 18, Judkins 12 -> 16.
+- **Stability:** the top 36 is the same 36 backs in a different order.
+- **Not in it yet:** 2027 rookies, free agency, 2027 coaching changes (the new play-caller input is blank) and the rest of
+  2026.
+
+**Missing data that would help:**
+- Historical August depth charts (still not approved): the week-1 chart is the only role signal for new arrivals.
+- Play-caller history: OC is only a proxy, and coaches.json starts in 2018, so dev rows before 2019 have no play-caller input.
+- RB routes and snaps from the on-disk pbp_participation files (2016+): this needs no pull, so it is the next thing to test as
+  a share input.
+
+**Next.**
+1. Shares are still too flat by chart spot (spot 1 under, spot 3 over). Test a share model that sharpens spot 1 directly.
+2. RB route share from the participation files.
+3. Team target totals across RB + WR + TE.
+
+**A14 decision (Jack, 2026-11-21: "Yes, ranges only").**
+- The RB volume change is dropped from the working version and is to be re-tested after the full 2026 season. It stays in
+  the code behind `RB_VOLUME_V6 = False` in `output_rankings.py`.
+- The tier-based RB ranges are kept (`RB_TIER_RANGES = True`).
+- The lists are **v7 = v5 averages for every position + the A14 RB ranges by tier.** v6 is kept as `output/*_v6.*`, and its
+  backfield table as `output/rb_movers_a14_v6_DROPPED.log`. `output/rb_movers_a14.log` is now rebuilt from v7 (v5 RB volumes).
+
+**v7 checks** (`output/check_v7.log`):
+- Every row's PPG, games and total matches v5 exactly (0 differing rows, all positions).
+- Overall ranks differ only inside the tie at VOR 0 (ranks 97-100: the replacement-level QB/RB/WR/TE all have VOR exactly 0).
+  That order was arbitrary and now breaks by total, then name.
+- Range columns differ: RBs by design (tier spread), non-RBs by Monte Carlo re-draw (median 0.4-0.9 pts).
+  - The ranges in v1-v6 were not reproducible run to run: one shared random stream, drawn in a row order that changes
+    between runs. WR/TE ranges moved by up to 10-13 pts from v3 to v4 to v5 with no model change.
+  - v7 fixes this with one seeded stream per player and sorted ratio arrays. Two v7 runs now match exactly (0 differing range
+    or rank cells).
+  - The A9 RB take-over info column (p_take) still moves by up to .03 between runs.
+
+**RB p10-p90 coverage by tier on v5 numbers** (`rb_ranges_a14.log`; target 80%):
+
+| tier | per game, pooled | per game, by tier | totals, pooled | totals, by tier |
+|---|---|---|---|---|
+| lead back, dev / holdout | 90 / 91% | 77 / 81% | 87 / 86% | 85 / 85% |
+| committee, dev / holdout | 91 / 89% | 83 / 78% | 89 / 89% | 83 / 76% |
+| backup, dev / holdout | 79 / 80% | 87 / 83% | 81 / 78% | 84 / 83% |
+| rookie, dev / holdout | 78 / 66% | 81 / 72% | 82 / 70% | 83 / 79% |
+
+- Totals coverage here uses the games model before the A9 isotonic fix, so it is approximate.
+- Rookie widths fitted on v5 numbers come out at x1.07.
+
+### A15. Provisional 2027 rookie class from JM, plus a re-runnable 2027 refresh (2026-11-21, Jack "Yes, add rookies" / "have it update based on new information"): STOPPED at step 1. The JM data is not in usable in-house form. Jack's call needed
+
+Nothing was built or changed: no list, no script, and v7 stays the working version. Everything read was on disk and
+read-only: the site's data files, scripts and app.js, its git log, and the Task Scheduler listing.
+
+**What exists.**
+- `data/jm_scores.json` (exported 2026-11-17 by `scripts/pull_jm_scores.py`) has a JM score for 137 players with expected
+  draft year 2027: 27 QB, 35 RB, 20 TE, 55 WR.
+- `combine_data.js` (2026-11-16) gives school and `eligYr`, so class membership = eligYr 2027.
+- There is no senior / underclass / declared flag. It would have to be derived from years in college.
+- The college stats (`college_stats_devy.js`, 2026-11-16) are mid-season: the 2026 college season, bowls and the January
+  declaration deadline are all still ahead.
+
+**Why it is not usable as an in-house, pre-draft score.**
+1. **About a quarter of JM is draft capital.** The JM weights (`jm_weights.js`, v4 and later) put roughly 24-30% on "dc".
+   For undrafted classes the site fills dc from `data/draft_proj.js`.
+   - That file is generated by `scripts/pull_draft_boards.py` from the NFL Mock Draft Database: a consensus mock pick, then a
+     consensus big-board rank.
+   - app.js (line ~54376) says it directly: draft age is age at the PROJECTED draft, and DC is the consensus draftProj.
+   - So every 2027 JM score already contains an outside consensus mock draft. That is a market input of the same kind as
+     ADP. The projected 40 times in combine_data are also an outside projection ("NFL Draft Buzz projection").
+2. **Past classes' JM includes their ACTUAL draft pick.** A "pre-draft JM" for past classes therefore cannot be rebuilt from
+   what is on disk.
+   - jm_scores.json has no git history.
+   - draft_proj.js history starts 2026-09-30.
+   - So the requested test (pre-draft JM vs post-draft prior vs flat average) would grade a score that already knows the
+     pick, and the "price of going before the draft" would come out far too small.
+3. **A JM without draft capital is not on disk.** JM is computed in the browser (app.js); `pull_jm_scores.py` loads the
+   live site in headless Chrome. Re-creating it without dc in preseason2027 would mean re-implementing Jack's model, which
+   is the improvised score the brief rules out.
+
+**Options for Jack.**
+- **A. Allow the consensus mock as an input.** It is already on disk and already inside JM. Then the 2027 JM can be used
+  as is, and the honest test is on the 2026 class only: its JM from the Sept-Nov 2026 draft_proj era is not on disk either,
+  so even that test would need a pre-draft snapshot that doesn't exist. The test would therefore be weak. Same family as the
+  parked ADP decision.
+- **B. A no-draft-capital JM (prospect profile only).** This needs the site's JM engine to export the score with the dc
+  term off (or its component scores) for past and current classes. That is a change to the site, and it is the cleanest
+  in-house pre-draft score that could also be backtested.
+- **C. Wait for the draft.** After late April the real post-draft rookie prior (pick plus landing spot), which the model
+  already has, replaces any placeholder. The 2027 early list stays rookie-free until then.
+
+**Refresh command.** Not built: the brief said to build it after the rookie class works. What was found for the
+stale-input report:
+
+| input | last updated | refreshed by |
+|---|---|---|
+| play_by_play_2026, sim_depth.js | 2026-11-21 | "MFF Sim Proj Export" scheduled task, daily / weekly (refresh_data.py) |
+| college stats, combine_data, draft_proj | 2026-11-16 | "MFF Devy Weekly Refresh", weekly; its mock CSVs are pulled by hand in Chrome and dropped after 10 days |
+| contracts | 2026-11-21 | "MFF Player Contracts", daily. Its target vs pbp_cache/historical_contracts.parquet (2026-07-30) still needs checking |
+| **jm_scores.json** | 2026-11-17 | **nothing scheduled** (pull_jm_scores.py by hand, headless Chrome on the live site) |
+| **pbp_cache draft_picks.parquet** | 2026-07-30 | **no scheduled refresh found** |
+| **coaches.json** | 2026-09-15 | **no scheduled refresh found** |
+| **depth_charts_2025.parquet** | 2026-09-16 | **no scheduled refresh found** |
+| **win totals** | 2026 frozen preseason lines | **no 2027 source on disk yet** |
+
+The ones without a refresh are the gaps that would stop a 2027 refresh from really updating.
+
+**A15 resumed (Jack 2026-11-23, "Yes, use JM": option A).** The JM scores are used as they are, for undrafted 2027 rookies
+only. Veterans stay in-house with no ADP.
+
+The 2026-10-09 memory "2027 read NEUTRAL until 2027-01-12" is about the dynasty rookie-PICK class multiplier (W_CLASS in
+build_dynasty_sim.py). It is not about placing 2027 prospects, so there is no conflict. Its caveat carries over: the
+mid-season JM runs low for slots 3-16.
+
+**Honest test** (`a15_rookies.py backtest`, log `a15_backtest.log`). There is no pre-draft test: no pre-draft JM or
+draft_proj snapshot of any past class is on disk. The stand-in below uses past JM, which includes the REAL pick, so read it
+as an UPPER BOUND on pre-draft placement.
+
+Method: K=20 nearest past prospects by JM at the same position, classes 2015-25, leave-one-class-out.
+
+| pos | per-game MAE / rank corr: (a) JM, upper bound | (b) post-draft prior | (c) flat average |
+|---|---|---|---|
+| QB | 3.85 / .25 | 3.59 / .50 | 3.65 |
+| RB | 2.86 / .44 | 2.98 / .37 | 3.22 |
+| WR | 2.50 / .52 | 2.48 / .56 | 2.82 |
+| TE | 1.77 / .48 | 1.59 / .48 | 1.77 |
+
+| pos | top-6 / top-12 rookie hits: (a) | (b) |
+|---|---|---|
+| QB | .61 / .78 | .76 / .78 |
+| RB | .56 / .64 | .65 / .69 |
+| WR | .57 / .64 | .59 / .66 |
+| TE | .57 / .74 | .61 / .83 |
+
+- Even with the real pick inside JM, the method trails the post-draft prior for QBs and TEs and ties it for WRs. It beats
+  the prior for RBs on per-game, but RB rank hits still trail.
+- Pre-draft it will be worse by an amount we cannot measure.
+
+**Ranges.** Season-total p10-p90 come from the 40 nearest prospects (twice the projection window); non-players count as 0.
+Coverage on past classes is 83-87% by position (85-89% on 2020-25), deliberately above 80% because pre-draft JM is noisier
+than this upper bound. Median widths: QB 112, RB 82, WR 64, TE 48 pts.
+
+**v8 list** (`output/2027_inhouse_early.csv` / `.md`).
+- 137 PROVISIONAL rookies: 27 QB, 35 RB, 55 WR, 20 TE.
+- Columns: provisional = 1, jm, school, class_status, implied_round, p_drafted; team is blank.
+- class_status comes from years in college: 4+ = senior, 3 with JM 60+ = likely to declare, else uncertain. A 4th-year
+  redshirt junior counts as "senior" but can still return to school.
+- Veterans' ppg, games, totals and ranges are identical to v7. Their ranks move only because rookies slot above them.
+- Kept beside it: v7 and `2027_inhouse_early_norookies.csv`.
+- Rookies placed: 4 in the overall top 150, 10 in the top 200.
+  - Jeremiah Smith: WR31, #69.
+  - Jadan Baugh: RB35, #104.
+  - Trey'Dez Green: TE26, #138.
+  - KJ Duff and Nick Marsh: WR56-57.
+  - Arch Manning: QB41.
+
+**Refresh command: `refresh_2027.py`.**
+- It fetches nothing and re-tunes nothing.
+- It checks inputs and aborts (keeping the last good list) if one is missing or malformed.
+- It detects the stage: latest completed 2026 week (pbp game counts vs the schedule), post-draft, win totals, August charts.
+- It runs output_rankings.py (`PRE27_LAST_WK`), then sf_view_a10.py, then a15_rookies.py insert, restoring the outputs if a
+  step fails.
+- Each run writes:
+  - sanity checks
+  - a dated snapshot in `output/snapshots/`
+  - a change log in `output/changelog/` with the driver of each move
+  - `output/2027_refresh_status.md`, plus a header on the 2027 md
+- Shown working:
+  - As of week 9, then week 10: 327 change-log lines (e.g. Anthony Gould WR205 -> WR177, "new 2026 game data").
+  - Two reruns with no new data: "no changes: the list matches the previous snapshot exactly".
+  - Outputs are rounded to 4 decimals to remove 1e-12 float noise.
+- **Gaps:** no scheduled refresh for jm_scores.json (manual: `python scripts\pull_jm_scores.py` from the site repo),
+  schedules_games.csv, historical_contracts.parquet, draft_picks.parquet, coaches.json, depth_charts parquet, and win
+  totals.
+- **Finding:** schedules_games.csv (2026-10-20) has 2026 final scores only through week 6, so the work data has no 2026
+  team-game rows for weeks 7+. Re-pulling it, or deriving scores from pbp, is a proposal.
+- **Post-draft replacement of the placeholders is not wired yet:** the stage is detected and flagged.
+- **Recommended cadence:** weekly on Tuesdays through week 18, then after each milestone. Nothing is scheduled.

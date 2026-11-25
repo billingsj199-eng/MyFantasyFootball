@@ -23,7 +23,7 @@ import math
 import os
 import re
 
-FAIR_W = {'m3': 0.5, 'sim': 0.3, 'mkt': 0.5}
+FAIR_W = {'m3': 0.5, 'sim': 0.3, 'mkt': 0.5}   # 10-09 weights = the fallback when the site has no edge file
 QB_TT = {'k': 0.4, 'sd': 3.0}
 WEEK1_TUE = dt.date(2026, 9, 8)   # schedule week rolls on Tuesday (site _weeklyScheduleWeek)
 
@@ -33,6 +33,24 @@ def _js_var(path, var):
     s = open(path, encoding='utf-8').read()
     m = re.search(r'^window\.' + var + r'\s*=\s*\{', s, re.M)   # line start: header comments repeat it
     return json.JSONDecoder().raw_decode(s, m.end() - 1)[0]
+
+
+def site_norm(n):
+    """app.js _dynSimNorm (the key of data/mff_lasting_edge.js)."""
+    s = str(n or '').lower()
+    s = re.sub(r'\s+(jr\.?|sr\.?|iii|ii|iv|v)$', '', s)
+    s = re.sub(r"[.\-']", '', s)
+    return re.sub(r'\s+', ' ', s).strip()
+
+
+def load_lasting_edge(site_data):
+    """data/mff_lasting_edge.js (P-20261124-1 re-tune; sim_lab/build_lasting_edge.py) -> {w, k, p} or None.
+    The site reads the same file (app.js _fairW / _fairEdge): no file there = the 10-09 weights, no edge."""
+    try:
+        L = _js_var(os.path.join(site_data, 'mff_lasting_edge.js'), 'MFF_LASTING_EDGE')
+    except (OSError, ValueError, AttributeError):
+        return None
+    return L if L.get('p') and (L.get('w') or {}).get('mkt', 0) > 0 else None
 
 
 def qb_age_w(age):
@@ -93,9 +111,10 @@ def load_ktc_map(path, var):
     return json.loads(m.group(1))
 
 
-def fair_table(sim_rows, ktc_map, mkt, rbrec=None, qbtt=None):
+def fair_table(sim_rows, ktc_map, mkt, rbrec=None, qbtt=None, lasting=None, fmt='1qb'):
     """sim_rows: [{n, pos, val, age, rookie}] (non-pick); ktc_map: {name: value};
-    mkt: meta.mktNext; qbtt: qb_team_totals() or None (no QB term).
+    mkt: meta.mktNext; qbtt: qb_team_totals() or None (no QB term);
+    lasting: load_lasting_edge() or None (None = 10-09 weights, no age / health edge); fmt '1qb' | 'sf'.
     -> [{n, pos, kv, ko (KTC overall), kp, sp, fair, fd, call, gap, gcall}]"""
     kt = sorted(((k, v) for k, v in ktc_map.items() if v and not re.match(r'^\d{4} ', k)), key=lambda kv: -kv[1])
     kidx = {norm(k): (v, i + 1) for i, (k, v) in enumerate(kt)}
@@ -115,13 +134,19 @@ def fair_table(sim_rows, ktc_map, mkt, rbrec=None, qbtt=None):
     b, ac = mkt['coef'], mkt.get('ageCenter', 25)
     qs = [qbtt[norm(r['n'])] for r in pool if qbtt and r['pos'] == 'QB' and norm(r['n']) in qbtt]
     qmu = sum(qs) / len(qs) if len(qs) >= 8 else None
+    W = (lasting or {}).get('w') or FAIR_W
+    LP, LK, LI = (lasting or {}).get('p') or {}, (lasting or {}).get('k') or 0, 1 if fmt == 'sf' else 0
     for r in pool:
         a = (r['age'] if r.get('age') is not None else ac) - ac
         P = r['pos']
         z = b[0] + b[1] * math.log(r['kp']) + b[2] * math.log(r['sp']) + b[3] * (1 if r.get('rookie') else 0) \
             + (b[4] if P == 'RB' else 0) + (b[5] if P == 'WR' else 0) + (b[6] if P == 'TE' else 0) \
             + a * (b[7] if P == 'QB' else b[8] if P == 'RB' else b[9] if P == 'WR' else b[10])
-        r['fz'] = FAIR_W['m3'] * z + FAIR_W['sim'] * math.log(r['sp']) + FAIR_W['mkt'] * math.log(r['kp'])
+        r['fz'] = W['m3'] * z + W['sim'] * math.log(r['sp']) + W['mkt'] * math.log(r['kp'])
+        if LK:                                     # age / health edge (app.js _fairEdge)
+            e = LP.get(site_norm(r['n']) + '|' + P)
+            if e:
+                r['fz'] -= LK * (e[LI] or 0)
         if rbrec and P == 'RB' and r.get('rbr'):   # RB receiving tilt (app.js _fairRbRec)
             r['fz'] += rbrec.get('k', 0) * r['rbr']
         if qmu is not None and P == 'QB' and norm(r['n']) in qbtt:   # QB team total (app.js _fairQbTt)

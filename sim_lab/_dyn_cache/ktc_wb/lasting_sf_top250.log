@@ -1,0 +1,396 @@
+KTC lasting-value study | format sf | pool top 250 | rows 11000 | players 679 | dates 2021-01-17..2026-11-08
+
+=== A. BASE RATES: what a KTC price is worth later (rank-scaled value kept; off the list = 0) ===
+price rank +1y kept / hold80 / lose50 (n)+2y kept / hold80 / lose50 (n)+3y kept / hold80 / lose50 (n)
+1-12           92% /  78% /   1% ( 144)        85% /  60% /   6% ( 108)        78% /  43% /  13% (  84)   
+13-24          90% /  70% /   1% ( 144)        80% /  45% /   9% ( 108)        67% /  29% /  31% (  84)   
+25-50          90% /  65% /   3% ( 312)        78% /  44% /  21% ( 234)        60% /  24% /  40% ( 182)   
+51-100         87% /  55% /   7% ( 600)        70% /  36% /  26% ( 450)        56% /  27% /  45% ( 350)   
+101-175        84% /  52% /  10% ( 900)        64% /  33% /  41% ( 675)        47% /  21% /  61% ( 525)   
+176-250        76% /  41% /  23% ( 900)        54% /  25% /  52% ( 675)        34% /  13% /  72% ( 525)   
+
+  long horizon (all anchors with a later list): mean value kept
+  1-12      +1y  92% (144)  +2y  85% (108)  +3y  78% (84)  +4y  70% (60)  +5y  63% (36)
+  13-24     +1y  90% (144)  +2y  80% (108)  +3y  67% (84)  +4y  59% (60)  +5y  44% (36)
+  25-50     +1y  90% (312)  +2y  78% (234)  +3y  60% (182)  +4y  48% (130)  +5y  38% (78)
+  51-100    +1y  87% (600)  +2y  70% (450)  +3y  56% (350)  +4y  43% (250)  +5y  31% (150)
+
+=== B. WHO HOLDS VALUE vs the average player at the SAME price ===
+    (+ = worth more later than the price implied; * = interval excludes 0)
+
+--- position ---   (excess vs same-price average, % of price; [90% interval]; players)
+  QB                                  +1y   -2% [  -5,  +2]  88  +2y   -1% [  -8,  +6]  78  +3y   +5% [  -4, +16]  69
+  RB                                  +1y   -2% [  -5,  +1] 194  +2y   -5%*[  -9,  -1] 169  +3y   -8%*[ -13,  -2] 148
+  WR                                  +1y   -1% [  -3,  +1] 242  +2y   -1% [  -5,  +2] 219  +3y   -2% [  -7,  +3] 186
+  TE                                  +1y   +5%*[  +2,  +8]  85  +2y  +10%*[  +5, +17]  75  +3y  +12%*[  +4, +22]  67
+
+--- position x age ---   (excess vs same-price average, % of price; [90% interval]; players)
+  QB age <-24                         +1y   +3% [  -5, +11]  38  +2y   +3% [ -12, +20]  33  +3y  +10% [ -12, +33]  28
+  QB age 24-27                        +1y   -2% [  -6,  +2]  47  +2y   +1% [  -7,  +9]  40  +3y  +16%*[  +4, +29]  30
+  QB age 27-30                        +1y   +1% [  -7, +10]  30  +2y   +3% [ -14, +18]  25  +3y   +7% [ -13, +29]  18
+  QB age 30-33                        +1y   -5% [ -15,  +2]  17  +2y   +1% [ -15, +22]  14  +3y   -4% [ -19, +14]  12
+  QB age 33-+                         +1y  -17%*[ -30,  -6]  16  +2y  -21%*[ -36,  -8]  15  +3y  -23%*[ -38,  -8]  12
+  RB age <-22.5                       +1y   +2% [  -3,  +7]  60  +2y   +7% [  -6, +19]  45  +3y   +4% [ -12, +21]  38
+  RB age 22.5-24                      +1y   +1% [  -3,  +5]  99  +2y   +5% [  -1, +13]  83  +3y   +5% [  -5, +16]  71
+  RB age 24-25.5                      +1y   +2% [  -4,  +8]  92  +2y   +0% [  -8,  +8]  76  +3y   -6% [ -15,  +2]  59
+  RB age 25.5-27                      +1y   -3% [  -9,  +1]  73  +2y  -14%*[ -21,  -7]  61  +3y  -18%*[ -25,  -9]  44
+  RB age 27-+                         +1y  -17%*[ -23, -11]  50  +2y  -24%*[ -34, -17]  44  +3y  -24%*[ -34, -15]  39
+  WR age <-22.5                       +1y   +3% [  -1,  +9]  71  +2y  +11%*[  +3, +19]  65  +3y  +19%*[  +8, +29]  54
+  WR age 22.5-24.5                    +1y   +5%*[  +2,  +8] 148  +2y  +13%*[  +6, +19] 121  +3y  +10%*[  +1, +21]  91
+  WR age 24.5-26.5                    +1y   +4%*[  +0,  +8] 101  +2y   +1% [  -4,  +6]  87  +3y   -1% [  -8,  +5]  63
+  WR age 26.5-28.5                    +1y   -9%*[ -13,  -5]  82  +2y  -15%*[ -21,  -8]  71  +3y  -16%*[ -22, -10]  60
+  WR age 28.5-+                       +1y  -18%*[ -23, -14]  49  +2y  -28%*[ -34, -22]  46  +3y  -27%*[ -32, -22]  40
+  TE age <-23.5                       +1y  +12%*[  +6, +18]  35  +2y  +23%*[ +11, +38]  26  +3y  +32%*[ +13, +55]  22
+  TE age 23.5-25.5                    +1y  +11%*[  +5, +17]  44  +2y  +18%*[  +9, +28]  42  +3y  +19%*[  +5, +36]  31
+  TE age 25.5-27.5                    +1y   +1% [  -4,  +6]  37  +2y   +6% [  -2, +16]  34  +3y  +13%*[  +2, +25]  26
+  TE age 27.5-30                      +1y   -3% [  -8,  +2]  23  +2y   +1% [ -10, +11]  23  +3y   -3% [ -18, +10]  17
+  TE age 30-+                         +1y   -9%*[ -18,  -0]  15  +2y                   -  +3y                   -
+
+--- position x age, price rank 1-100 only ---   (excess vs same-price average, % of price; [90% interval]; players)
+  QB age <-24                         +1y   +5% [  -6, +15]  20  +2y   +1% [ -17, +20]  20  +3y   +2% [ -18, +23]  16
+  QB age 24-27                        +1y   -3% [  -8,  +2]  25  +2y   +1% [  -7,  +8]  22  +3y   +6% [  -3, +15]  17
+  QB age 27-30                        +1y   -1% [ -10,  +6]  17  +2y   -3% [ -19, +11]  10  +3y                   -
+  QB age 30-33                        +1y   +2% [  -6,  +7]  10  +2y   +2% [ -10, +12]   8  +3y                   -
+  RB age <-22.5                       +1y   +4% [  -5, +11]  21  +2y   +9% [  -6, +23]  15  +3y   +2% [ -10, +14]  14
+  RB age 22.5-24                      +1y   -0% [  -5,  +4]  42  +2y   -1% [  -9,  +8]  35  +3y   -3% [ -14, +10]  31
+  RB age 24-25.5                      +1y   -2% [  -7,  +3]  39  +2y   +3% [  -6, +11]  35  +3y   +2% [ -10, +12]  29
+  RB age 25.5-27                      +1y   -2% [  -9,  +4]  29  +2y   -8%*[ -17,  -1]  25  +3y  -17%*[ -27,  -6]  18
+  RB age 27-+                         +1y   -8%*[ -15,  -4]  15  +2y  -15%*[ -32,  -3]  13  +3y  -12% [ -36,  +5]  11
+  WR age <-22.5                       +1y   +6%*[  +0, +14]  35  +2y  +13%*[  +4, +22]  32  +3y  +22%*[ +11, +32]  25
+  WR age 22.5-24.5                    +1y   +4% [  -0,  +9]  57  +2y  +12%*[  +6, +19]  46  +3y  +12%*[  +2, +23]  36
+  WR age 24.5-26.5                    +1y   +2% [  -2,  +5]  41  +2y   -1% [  -6,  +5]  31  +3y   +2% [  -5,  +8]  25
+  WR age 26.5-28.5                    +1y   -5%*[  -9,  -1]  36  +2y   -8%*[ -15,  -2]  31  +3y   -9%*[ -18,  -1]  24
+  WR age 28.5-+                       +1y  -13%*[ -18,  -9]  19  +2y  -18%*[ -27, -10]  19  +3y  -18%*[ -29,  -9]  16
+  TE age <-23.5                       +1y   +8% [  -2, +19]  11  +2y                   -  +3y                   -
+  TE age 23.5-25.5                    +1y   +4% [  -5, +12]  14  +2y  +12%*[  +1, +23]  13  +3y                   -
+  TE age 25.5-27.5                    +1y   +2% [  -7, +10]  10  +2y                   -  +3y                   -
+
+--- draft capital (all) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  round 1 pick 1-16                   +1y   +1% [  -3,  +4]  75  +2y   +1% [  -5,  +7]  69  +3y   +0% [  -8,  +9]  59
+  round 1 pick 17-32                  +1y   -1% [  -6,  +2]  49  +2y   +2% [  -6,  +9]  45  +3y   +6% [  -6, +20]  40
+  round 2                             +1y   -0% [  -3,  +2] 105  +2y   -2% [  -7,  +3]  94  +3y   -2% [  -8,  +4]  87
+  round 3                             +1y   -3%*[  -7,  -0] 102  +2y   -5% [ -11,  +1]  90  +3y   -3% [ -11,  +5]  79
+  day 3 / undrafted                   +1y   -0% [  -3,  +2] 276  +2y   +1% [  -4,  +5] 241  +3y   -0% [  -6,  +5] 203
+
+--- experience ---   (excess vs same-price average, % of price; [90% interval]; players)
+  rookie season (exp 0)               +1y  +10%*[  +7, +13] 277  +2y  +13%*[  +8, +18] 212  +3y  +20%*[ +13, +29] 152
+  year 2                              +1y   +1% [  -2,  +4] 270  +2y   +9%*[  +4, +14] 218  +3y  +11%*[  +4, +18] 163
+  year 3                              +1y   +3% [  -0,  +6] 217  +2y   +7%*[  +1, +12] 169  +3y   +3% [  -3,  +9] 125
+  years 4-6                           +1y   -0% [  -2,  +2] 261  +2y   -5%*[  -8,  -1] 222  +3y   -4% [  -8,  +2] 193
+  year 7+                             +1y  -12%*[ -15, -10] 164  +2y  -17%*[ -22, -13] 142  +3y  -18%*[ -22, -13] 123
+
+--- draft capital x young (exp <= 2) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  round 1 pick 1-16, exp<=2           +1y   +4% [  -1,  +9]  43  +2y   +9%*[  +1, +16]  37  +3y   +7% [  -0, +15]  27
+  round 1 pick 17-32, exp<=2          +1y   +5% [  -1, +13]  29  +2y  +12% [  -2, +30]  25  +3y  +14% [  -7, +42]  21
+  round 2, exp<=2                     +1y   +4% [  -0,  +7]  71  +2y   +9%*[  +1, +17]  60  +3y  +10%*[  +0, +21]  53
+  round 3, exp<=2                     +1y   +5% [  -1,  +9]  73  +2y   +7% [  -3, +16]  61  +3y   +7% [  -7, +27]  50
+  day 3 / undrafted, exp<=2           +1y   +5%*[  +1,  +8] 188  +2y  +12%*[  +5, +18] 153  +3y  +15%*[  +6, +25] 118
+
+--- draft capital x veteran (exp >= 3) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  round 1 pick 1-16, exp>=3           +1y   -2% [  -7,  +2]  52  +2y   -5% [ -14,  +3]  46  +3y   -4% [ -17,  +7]  39
+  round 1 pick 17-32, exp>=3          +1y   -6%*[ -11,  -2]  31  +2y   -5% [ -13,  +3]  31  +3y   +1% [ -13, +14]  27
+  round 2, exp>=3                     +1y   -3% [  -7,  +1]  70  +2y  -10%*[ -16,  -4]  60  +3y  -12%*[ -19,  -6]  55
+  round 3, exp>=3                     +1y  -12%*[ -16,  -9]  48  +2y  -14%*[ -21,  -8]  44  +3y  -11%*[ -19,  -4]  40
+  day 3 / undrafted, exp>=3           +1y   -6%*[  -9,  -3] 138  +2y  -12%*[ -17,  -7] 117  +3y  -12%*[ -18,  -8] 107
+
+--- track record (veterans, exp >= 2) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  0 top-24 seasons                    +1y   -0% [  -4,  +3] 220  +2y   -3% [  -9,  +3] 184  +3y   -7% [ -12,  +0] 152
+  1 top-24 season                     +1y   -0% [  -5,  +3] 106  +2y   -6%*[ -12,  -1]  93  +3y  -10%*[ -15,  -4]  73
+  2 top-24 seasons                    +1y   -2% [  -6,  +1] 101  +2y   -6%*[ -11,  -1]  78  +3y   -3% [ -10,  +5]  68
+  3+ top-24 seasons                   +1y   -8%*[ -10,  -5] 122  +2y   -9%*[ -13,  -4] 113  +3y   -7%*[ -12,  -1] 102
+  0 top-12 seasons                    +1y   -1% [  -4,  +1] 288  +2y   -3% [  -8,  +1] 249  +3y   -6%*[ -11,  -1] 207
+  1 top-12 season                     +1y   -3%*[  -7,  -0]  96  +2y   -5% [ -11,  +1]  83  +3y   -1% [ -10,  +8]  69
+  2+ top-12 seasons                   +1y   -7%*[ -10,  -4]  91  +2y  -11%*[ -15,  -7]  83  +3y  -11%*[ -17,  -6]  79
+
+--- price vs production (played 6+ games last 12 mo) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  production WAY above price          +1y   -7%*[  -9,  -4] 141  +2y  -13%*[ -17,  -8] 123  +3y  -15%*[ -20, -10] 107
+  production above price              +1y   -5%*[  -8,  -3] 311  +2y   -9%*[ -14,  -5] 267  +3y   -6%*[ -11,  -1] 212
+  in line                             +1y   +2% [  -1,  +4] 350  +2y   +3% [  -1,  +8] 301  +3y   -1% [  -5,  +5] 231
+  price above production              +1y   +1% [  -2,  +4] 196  +2y   +7%*[  +3, +12] 159  +3y   +6% [  -1, +13] 125
+  price WAY above production (hype)   +1y   +1% [  -2,  +3]  98  +2y   +1% [  -4,  +6]  82  +3y   +7%*[  +2, +13]  74
+
+--- price vs production, by position ---   (excess vs same-price average, % of price; [90% interval]; players)
+  QB price way above production       +1y   -0% [  -3,  +3]  31  +2y   -2% [  -8,  +3]  26  +3y   +6% [  -3, +14]  22
+  RB price way above production       +1y   +6% [  -1, +12]  24  +2y   +1% [ -10, +11]  23  +3y   +5% [  -6, +15]  23
+  WR price way above production       +1y   +2% [  -3,  +6]  40  +2y  +11%*[  +1, +22]  31  +3y  +14%*[  +2, +25]  27
+  QB production above price           +1y   -7% [ -20,  +4]  39  +2y  -10% [ -24,  +4]  33  +3y   +5% [ -13, +25]  25
+  RB production above price           +1y   -9%*[ -13,  -5] 103  +2y  -19%*[ -24, -13]  91  +3y  -19%*[ -26, -12]  71
+  WR production above price           +1y   -7%*[ -10,  -4] 142  +2y  -12%*[ -17,  -7] 118  +3y  -13%*[ -19,  -6] 100
+  TE production above price           +1y   +1% [  -3,  +5]  53  +2y   +5% [  -1, +10]  50  +3y   +7% [  -3, +16]  41
+
+--- KTC move over the last 12 months ---   (excess vs same-price average, % of price; [90% interval]; players)
+  fell 40%+                           +1y   -4% [ -11,  +3]  64  +2y   -7% [ -17,  +3]  52  +3y   -9% [ -21,  +5]  34
+  fell 15-40%                         +1y   -4%*[  -7,  -2] 277  +2y   -7%*[ -12,  -3] 242  +3y   -8%*[ -13,  -2] 165
+  flat                                +1y   -0% [  -2,  +2] 311  +2y   -3% [  -6,  +0] 268  +3y   -3% [  -7,  +2] 202
+  rose 15-50%                         +1y   -4%*[  -8,  -0] 177  +2y   -4% [ -10,  +1] 156  +3y   -6% [ -13,  +1] 101
+  rose 50%+                           +1y   -5%*[  -7,  -3] 359  +2y   -4%*[  -7,  -0] 354  +3y   -5%*[  -9,  -2] 291
+
+--- distance from his KTC peak ---   (excess vs same-price average, % of price; [90% interval]; players)
+  at peak (>= 95%)                    +1y   +3%*[  +1,  +5] 528  +2y   +5%*[  +2,  +8] 457  +3y   +5%*[  +1, +10] 400
+  80-95% of peak                      +1y   -0% [  -3,  +2] 393  +2y   +0% [  -3,  +4] 322  +3y   -2% [  -6,  +3] 257
+  60-80% of peak                      +1y   -2%*[  -4,  -0] 337  +2y   -4%*[  -8,  -0] 281  +3y   -7%*[ -12,  -2] 211
+  under 60% of peak                   +1y   -5%*[  -8,  -2] 203  +2y   -6%*[ -11,  -1] 172  +3y   -3% [ -10,  +5] 116
+
+--- availability last 12 months (veterans) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  0-5 games                           +1y  -10%*[ -15,  -5]  71  +2y   -8% [ -18,  +2]  61  +3y  -11%*[ -20,  -3]  53
+  6-11 games                          +1y   -7%*[ -12,  -3] 194  +2y   -8%*[ -14,  -2] 147  +3y  -10%*[ -15,  -3] 123
+  12-15 games                         +1y   -4%*[  -6,  -2] 293  +2y   -7%*[ -11,  -3] 255  +3y   -4% [ -10,  +2] 204
+  16+ games                           +1y   -1% [  -3,  +1] 255  +2y   -4%*[  -7,  -1] 221  +3y   -7%*[ -10,  -3] 175
+
+--- TD reliance (share of PPR points from TDs, 8+ games) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  low (< 18%)                         +1y   +2% [  -0,  +4] 305  +2y   +2% [  -2,  +6] 261  +3y   +1% [  -4,  +7] 193
+  middle                              +1y   -3%*[  -6,  -1] 296  +2y   -5%*[  -8,  -1] 269  +3y   -5%*[  -9,  -2] 211
+  high (28%+)                         +1y   -5%*[  -7,  -2] 218  +2y   -5%*[  -9,  -1] 183  +3y   -4% [ -10,  +3] 137
+
+--- contract (veteran deals, size at signing as cap %) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  under 2% of cap                     +1y  -12%*[ -17,  -7] 155  +2y  -15%*[ -22, -10] 135  +3y  -14%*[ -19,  -8] 114
+  2-6%                                +1y   -7%*[ -10,  -4] 123  +2y  -10%*[ -16,  -5] 108  +3y  -16%*[ -22, -10]  90
+  6-10%                               +1y   -5%*[  -8,  -2]  60  +2y   -8%*[ -14,  -2]  55  +3y   -7% [ -15,  +2]  50
+  10%+                                +1y   -6%*[  -9,  -2]  56  +2y  -10%*[ -15,  -3]  51  +3y  -11% [ -19,  +1]  41
+  last year of deal                   +1y  -10%*[ -14,  -7] 228  +2y  -13%*[ -17,  -7] 202  +3y  -11%*[ -17,  -6] 171
+  2+ years left                       +1y   -4%*[  -7,  -2] 144  +2y   -7%*[ -11,  -3] 129  +3y   -9%*[ -14,  -4] 100
+
+--- size ---   (excess vs same-price average, % of price; [90% interval]; players)
+  RB under 205 lb                     +1y   -2% [  -9,  +5]  43  +2y   +6% [  -9, +21]  36  +3y   +7% [ -15, +32]  30
+  RB 205-219                          +1y   -2% [  -6,  +2]  98  +2y   -8%*[ -14,  -2]  85  +3y  -12%*[ -18,  -6]  74
+  RB 220+                             +1y   -5%*[  -9,  -1]  65  +2y   -7%*[ -14,  -2]  59  +3y   -8%*[ -17,  -1]  49
+  WR under 6-0                        +1y   -4% [  -8,  +0]  78  +2y   -7%*[ -13,  -1]  71  +3y  -10%*[ -15,  -4]  59
+  WR 6-0 to 6-2                       +1y   -2% [  -4,  +1] 113  +2y   +0% [  -5,  +5] 100  +3y   +1% [  -5,  +9]  88
+  WR 6-3+                             +1y   +1% [  -4,  +6]  66  +2y   +1% [  -9, +10]  60  +3y   -0% [ -11, +13]  47
+
+--- QB rushing share of points (8+ games) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  under 12%                           +1y   -4% [ -12,  +2]  37  +2y   -6% [ -19,  +6]  33  +3y   +3% [ -14, +22]  25
+  12-25%                              +1y   -5% [ -10,  +1]  38  +2y   -5% [ -16,  +5]  34  +3y   -1% [ -13, +12]  26
+  25%+                                +1y   +1% [  -6,  +7]  25  +2y   +3% [ -10, +14]  20  +3y  +16% [  -1, +30]  15
+
+--- RB receiving role (target share, 8+ games) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  under 7%                            +1y   -5%*[ -10,  -1]  99  +2y   -8% [ -16,  +0]  82  +3y   -9% [ -17,  +2]  63
+  7-12%                               +1y   -3% [  -7,  +1]  90  +2y  -10%*[ -16,  -3]  78  +3y  -12%*[ -19,  -5]  60
+  12%+                                +1y   -2% [  -8,  +5]  39  +2y   -5% [ -14,  +5]  35  +3y  -14%*[ -25,  -5]  25
+
+--- KTC crowd "keep" share ---   (excess vs same-price average, % of price; [90% interval]; players)
+  low third                           +1y   -8%*[ -10,  -5] 266  +2y  -11%*[ -14,  -7] 243  +3y   -8%*[ -12,  -4] 220
+  middle third                        +1y   +2%*[  +0,  +4] 336  +2y   +2% [  -1,  +6] 290  +3y   +0% [  -4,  +5] 249
+  high third                          +1y   +3%*[  +1,  +5] 377  +2y   +8%*[  +4, +12] 320  +3y  +10%*[  +4, +17] 251
+
+=== E. TOTAL RETURN: points scored while held + resale value ===
+    Older producers lose price but pay you in points. Exchange rate (KTC value per point over the starter line)
+    is read from the market itself: cell means (position x age band x price tier), price = a x points + b x resale.
+  +1y: 1 point over the starter line = 0.3 KTC value, resale counts 1.13  (cells 53, fit R2 0.95)
+  +2y: 1 point over the starter line = 0.7 KTC value, resale counts 1.28  (cells 48, fit R2 0.78)
+  +3y: 1 point over the starter line = 5.7 KTC value, resale counts 1.31  (cells 45, fit R2 0.44)
+
+  hold 2 years - per position x age: resale kept | points/yr over starter line | TOTAL RETURN vs price paid
+                         resale    points/yr        total if points worth 30%% less / more      n
+    QB age <-24             75%           11         -4%           -4% / -4%         33
+    QB age 24-27            74%           21         -5%           -5% / -4%         40
+    QB age 27-30            73%           21         -7%           -7% / -6%         25
+    QB age 30-33            68%            7        -13%          -13% / -13%         14
+    QB age 33-+             46%            5        -41%*         -41% / -41%         15
+    RB age <-22.5           75%           31         -4%           -4% / -4%         45
+    RB age 22.5-24          72%           20         -7%           -7% / -7%         83
+    RB age 24-25.5          67%           26        -14%*         -14% / -14%         76
+    RB age 25.5-27          51%           29        -33%*         -34% / -33%         61
+    RB age 27-+             41%           30        -47%*         -47% / -47%         44
+    WR age <-22.5           80%           20         +3%           +3% / +3%         65
+    WR age 22.5-24.5        79%           26         +2%           +1% / +2%        121
+    WR age 24.5-26.5        69%           24        -12%*         -12% / -12%         87
+    WR age 26.5-28.5        51%           23        -34%*         -34% / -33%         71
+    WR age 28.5-+           37%           25        -51%*         -52% / -51%         46
+    TE age <-23.5           88%           14        +13%          +13% / +13%         26
+    TE age 23.5-25.5        82%           19         +5%           +5% / +6%         42
+    TE age 25.5-27.5        69%           15        -11%*         -11% / -11%         34
+    TE age 27.5-30          64%           25        -17%*         -18% / -17%         23
+    by price tier (total return):  1-24 +6%  25-50 +2%  51-100 -8%  101-175 -17%  176-250 -30%
+    by position (total return):    QB -10%  RB -21%  WR -16%  TE -5%
+
+  hold 3 years - per position x age: resale kept | points/yr over starter line | TOTAL RETURN vs price paid
+                         resale    points/yr        total if points worth 30%% less / more      n
+    QB age <-24             65%           11        -12%          -13% / -11%         28
+    QB age 24-27            78%           27         +7%           +6% / +9%         30
+    QB age 27-30            57%           12        -21%          -22% / -20%         18
+    QB age 30-33            45%            4        -40%*         -40% / -39%         12
+    QB age 33-+             28%            5        -60%*         -61% / -60%         12
+    RB age <-22.5           55%           23        -20%          -22% / -18%         38
+    RB age 22.5-24          54%           18        -22%*         -24% / -20%         71
+    RB age 24-25.5          44%           25        -34%*         -37% / -32%         59
+    RB age 25.5-27          31%           29        -49%*         -52% / -46%         44
+    RB age 27-+             21%           22        -64%*         -66% / -61%         39
+    WR age <-22.5           71%           23         +0%           -2% / +2%         54
+    WR age 22.5-24.5        61%           26        -13%          -15% / -10%         91
+    WR age 24.5-26.5        47%           17        -32%*         -34% / -30%         63
+    WR age 26.5-28.5        31%           22        -52%*         -54% / -49%         60
+    WR age 28.5-+           21%           24        -65%*         -67% / -62%         40
+    TE age <-23.5           78%           12         +8%           +6% / +10%         22
+    TE age 23.5-25.5        63%           17         -9%          -12% / -6%         31
+    TE age 25.5-27.5        57%           17        -16%          -19% / -13%         26
+    TE age 27.5-30          42%           25        -34%*         -37% / -30%         17
+    by price tier (total return):  1-24 +9%  25-50 -6%  51-100 -18%  101-175 -32%  176-250 -52%
+    by position (total return):    QB -18%  RB -38%  WR -31%  TE -16%
+
+=== B2. TRAITS WITH AGE HELD EQUAL: excess vs same price + same position + same age ===
+
+--- draft capital, young (exp <= 2) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  round 1 pick 1-16                   +1y   -1% [  -6,  +4]  43  +2y   +0% [  -8,  +9]  37  +3y   -4% [ -12,  +4]  27
+  round 1 pick 17-32                  +1y   -1% [  -8,  +7]  29  +2y   +2% [ -13, +21]  25  +3y   +3% [ -20, +31]  21
+  round 2                             +1y   -3% [  -7,  +2]  71  +2y   -2% [ -10,  +6]  60  +3y   -2% [ -13, +10]  53
+  round 3                             +1y   -2% [  -7,  +3]  73  +2y   -6% [ -16,  +4]  61  +3y   -8% [ -23, +10]  50
+  day 3 / undrafted                   +1y   -0% [  -4,  +3] 187  +2y   +1% [  -6,  +8] 153  +3y   +4% [  -4, +14] 117
+
+--- draft capital, veteran (exp >= 3) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  round 1 pick 1-16                   +1y   +3% [  -1,  +8]  52  +2y   +4% [  -4, +13]  46  +3y   +3% [ -10, +16]  39
+  round 1 pick 17-32                  +1y   -1% [  -5,  +3]  31  +2y   +2% [  -4,  +9]  31  +3y   +8% [  -4, +19]  27
+  round 2                             +1y   +2% [  -1,  +6]  70  +2y   -2% [  -7,  +3]  60  +3y   -6% [ -13,  +1]  55
+  round 3                             +1y   -5%*[  -9,  -1]  48  +2y   -3% [ -10,  +4]  44  +3y   -1% [  -8,  +7]  40
+  day 3 / undrafted                   +1y   -0% [  -4,  +3] 138  +2y   -0% [  -6,  +5] 117  +3y   -2% [  -8,  +3] 107
+
+--- track record (veterans) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  0 top-24 seasons                    +1y   -2% [  -6,  +1] 220  +2y   -1% [  -7,  +4] 184  +3y   -2% [  -8,  +4] 152
+  1 top-24 season                     +1y   +0% [  -3,  +4] 106  +2y   -5% [ -10,  +0]  93  +3y  -11%*[ -17,  -5]  73
+  2 top-24 seasons                    +1y   -1% [  -4,  +3] 101  +2y   -3% [  -7,  +2]  78  +3y   -2% [  -8,  +6]  68
+  3+ top-24 seasons                   +1y   +2% [  -1,  +4] 122  +2y   +4% [  -0,  +8] 113  +3y   +4% [  -2,  +9] 102
+  2+ top-12 seasons                   +1y   +2% [  -1,  +5]  91  +2y   +2% [  -3,  +6]  83  +3y   -0% [  -5,  +7]  79
+
+--- price vs production (6+ games last 12 mo) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  production WAY above price          +1y   +3%*[  +1,  +6] 141  +2y   +0% [  -4,  +5] 123  +3y   -2% [  -7,  +4] 107
+  production above price              +1y   -2% [  -4,  +1] 311  +2y   -1% [  -5,  +2] 267  +3y   +2% [  -3,  +7] 212
+  in line                             +1y   -0% [  -2,  +2] 350  +2y   +1% [  -3,  +5] 301  +3y   -3% [  -8,  +2] 231
+  price above production              +1y   -1% [  -4,  +2] 196  +2y   +2% [  -3,  +7] 159  +3y   -2% [  -9,  +5] 125
+  price WAY above production (hype)   +1y   +1% [  -3,  +4]  98  +2y   -2% [  -7,  +3]  82  +3y   +2% [  -4,  +8]  74
+
+--- price vs production by position ---   (excess vs same-price average, % of price; [90% interval]; players)
+  QB production above price           +1y   +3% [ -10, +16]  39  +2y   -2% [ -17, +11]  33  +3y   +8% [  -9, +27]  25
+  RB production above price           +1y   -3% [  -7,  +0] 103  +2y   -6%*[ -12,  -0]  91  +3y   -5% [ -12,  +3]  71
+  WR production above price           +1y   +1% [  -2,  +4] 142  +2y   +2% [  -3,  +7] 118  +3y   +2% [  -4,  +8] 100
+  TE production above price           +1y   +3% [  -2,  +7]  53  +2y   +3% [  -4,  +8]  50  +3y   +2% [  -9, +11]  41
+  QB price above production           +1y   +1% [  -3,  +5]  45  +2y   +1% [  -6,  +7]  40  +3y   +4% [  -4, +14]  36
+  RB price above production           +1y   +0% [  -5,  +5]  60  +2y   -1% [ -10,  +8]  51  +3y   +1% [  -9, +12]  42
+  WR price above production           +1y   -1% [  -6,  +3]  93  +2y   +0% [  -6,  +7]  77  +3y   -4% [ -13,  +3]  63
+  TE price above production           +1y   -7% [ -15,  +3]  23  +2y   -5% [ -16, +12]  17  +3y   +1% [ -13, +21]  14
+
+--- KTC move over the last 12 months ---   (excess vs same-price average, % of price; [90% interval]; players)
+  fell 40%+                           +1y   +1% [  -7,  +9]  64  +2y   +2% [  -8, +11]  52  +3y   +1% [ -11, +14]  34
+  fell 15-40%                         +1y   -1% [  -4,  +2] 277  +2y   -2% [  -6,  +2] 242  +3y   -2% [  -7,  +4] 165
+  flat                                +1y   +2% [  -0,  +4] 311  +2y   +1% [  -3,  +4] 268  +3y   -1% [  -6,  +3] 202
+  rose 15-50%                         +1y   -4% [  -7,  +0] 177  +2y   -4% [  -9,  +2] 156  +3y   -5% [ -12,  +0] 101
+  rose 50%+                           +1y   -2%*[  -4,  -0] 359  +2y   +2% [  -1,  +5] 354  +3y   -0% [  -4,  +3] 291
+
+--- KTC move over the last 6 months ---   (excess vs same-price average, % of price; [90% interval]; players)
+  fell 25%+                           +1y   -3% [  -7,  +1] 140  +2y   -6% [ -12,  +1] 109  +3y   +2% [  -6, +14]  78
+  fell 10-25%                         +1y   +1% [  -2,  +4] 346  +2y   +1% [  -3,  +5] 296  +3y   -1% [  -6,  +4] 234
+  flat                                +1y   -0% [  -2,  +2] 380  +2y   +0% [  -3,  +3] 327  +3y   -1% [  -5,  +3] 265
+  rose 10-35%                         +1y   +1% [  -1,  +4] 287  +2y   +0% [  -5,  +6] 234  +3y   -2% [  -8,  +4] 161
+  rose 35%+                           +1y   -3%*[  -5,  -1] 474  +2y   -3%*[  -5,  -0] 425  +3y   -3% [  -7,  +0] 346
+
+--- distance from his KTC peak ---   (excess vs same-price average, % of price; [90% interval]; players)
+  at peak (>= 95%)                    +1y   -1% [  -3,  +1] 522  +2y   -1% [  -4,  +3] 456  +3y   -0% [  -4,  +4] 398
+  80-95% of peak                      +1y   -1% [  -3,  +0] 391  +2y   -1% [  -5,  +2] 322  +3y   -2% [  -7,  +2] 257
+  60-80% of peak                      +1y   -1% [  -4,  +1] 336  +2y   -2% [  -6,  +2] 281  +3y   -4% [ -10,  +1] 211
+  under 60% of peak                   +1y   +2% [  -1,  +5] 203  +2y   +3% [  -2,  +8] 172  +3y   +5% [  -2, +13] 116
+
+--- availability last 12 months (veterans) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  0-5 games                           +1y   -7%*[ -11,  -1]  71  +2y   -3% [ -14,  +7]  61  +3y  -11%*[ -18,  -3]  53
+  6-11 games                          +1y   -4% [  -8,  +1] 194  +2y   -3% [  -9,  +3] 147  +3y   -5% [ -12,  +1] 123
+  12-15 games                         +1y   -1% [  -3,  +2] 293  +2y   -1% [  -5,  +3] 255  +3y   +1% [  -4,  +6] 204
+  16+ games                           +1y   +3%*[  +0,  +5] 255  +2y   +2% [  -1,  +5] 221  +3y   -0% [  -4,  +4] 175
+
+--- contract (veteran deals) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  under 2% of cap                     +1y   -6%*[ -10,  -2] 155  +2y   -5% [ -10,  +1] 135  +3y   -5% [ -11,  +2] 114
+  2-6%                                +1y   +2% [  -2,  +5] 123  +2y   +3% [  -3,  +8] 108  +3y   -4% [ -11,  +1]  90
+  6-10%                               +1y   +4%*[  +0,  +7]  60  +2y   +3% [  -3,  +8]  55  +3y   +5% [  -3, +12]  50
+  10%+                                +1y   +1% [  -2,  +5]  56  +2y   +3% [  -4,  +9]  51  +3y   -1% [ -12, +10]  41
+  last year of deal                   +1y   -2% [  -5,  +2] 228  +2y   -1% [  -6,  +4] 202  +3y   -1% [  -7,  +4] 171
+  2+ years left                       +1y   +1% [  -2,  +3] 144  +2y   +2% [  -2,  +7] 129  +3y   -1% [  -6,  +5] 100
+
+--- size ---   (excess vs same-price average, % of price; [90% interval]; players)
+  RB under 205 lb                     +1y   -1% [  -7,  +5]  43  +2y   +6% [  -7, +18]  36  +3y  +11% [ -10, +30]  30
+  RB 205-219                          +1y   -1% [  -5,  +3]  98  +2y   -4% [ -11,  +2]  85  +3y   -6%*[ -12,  -0]  74
+  RB 220+                             +1y   -2% [  -6,  +1]  65  +2y   -2% [ -10,  +4]  59  +3y   -0% [  -8,  +9]  49
+  WR under 6-0                        +1y   -4%*[  -7,  -0]  78  +2y   -7%*[ -13,  -1]  71  +3y   -7%*[ -13,  -0]  59
+  WR 6-0 to 6-2                       +1y   -0% [  -3,  +3] 113  +2y   +2% [  -3,  +6] 100  +3y   +1% [  -4,  +8]  88
+  WR 6-3+                             +1y   +2% [  -3,  +6]  66  +2y   +2% [  -6, +11]  60  +3y   +1% [  -9, +14]  47
+  WR under 190 lb                     +1y   -3% [  -6,  +0]  65  +2y   -5%*[ -11,  -0]  59  +3y   -4% [  -9,  +2]  49
+  WR 210+ lb                          +1y   +1% [  -3,  +5]  80  +2y   +1% [  -5,  +7]  71  +3y   -0% [  -9, +10]  60
+
+--- QB rushing share of points ---   (excess vs same-price average, % of price; [90% interval]; players)
+  under 12%                           +1y   +3% [  -6, +10]  37  +2y   +4% [ -10, +18]  33  +3y  +10% [ -10, +30]  25
+  12-25%                              +1y   -3% [  -8,  +2]  38  +2y   -2% [  -9,  +6]  34  +3y   -3% [ -13,  +8]  26
+  25%+                                +1y   +3% [  -4, +10]  25  +2y   +4% [ -10, +15]  20  +3y  +13% [  -5, +29]  15
+
+--- RB role (8+ games) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  target share under 7%               +1y   -4% [  -8,  +0]  99  +2y   -4% [ -11,  +5]  82  +3y   -2% [ -11,  +7]  63
+  target share 7-12%                  +1y   -0% [  -4,  +4]  90  +2y   -5% [ -13,  +1]  78  +3y   -3% [ -11,  +5]  60
+  target share 12%+                   +1y   +2% [  -3,  +7]  39  +2y   +5% [  -3, +12]  35  +3y   -1% [ -10,  +9]  25
+  carry share under 35%               +1y   -1% [  -6,  +4] 104  +2y   +1% [  -7,  +8]  85  +3y   +1% [  -8, +10]  61
+  carry share 35-55%                  +1y   -2% [  -7,  +3]  79  +2y   -5% [ -12,  +1]  73  +3y   -5% [ -13,  +4]  53
+  carry share 55%+                    +1y   -1% [  -5,  +4]  46  +2y   -1% [ -11,  +7]  39  +3y   -3% [ -16,  +9]  30
+
+--- WR / TE target share (8+ games) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  WR under 15%                        +1y   -0% [  -5,  +5] 124  +2y   -0% [  -7,  +7] 109  +3y   -3% [ -11,  +7]  74
+  WR 15-22%                           +1y   -2% [  -6,  +1] 121  +2y   -2% [  -8,  +4] 105  +3y   -6% [ -13,  +0]  81
+  WR 22%+                             +1y   +3%*[  +0,  +5]  65  +2y   +2% [  -3,  +6]  56  +3y   +5% [  -1, +11]  45
+  TE under 12%                        +1y   -1% [  -7,  +6]  48  +2y   +4% [  -8, +15]  42  +3y   -0% [ -17, +18]  33
+  TE 12-18%                           +1y   +3% [  -2,  +8]  49  +2y   +3% [  -6, +13]  45  +3y   +0% [ -11, +10]  36
+  TE 18%+                             +1y   +2% [  -3,  +7]  29  +2y   +3% [  -4,  +9]  24  +3y   +4% [  -7, +14]  18
+
+--- TD reliance ---   (excess vs same-price average, % of price; [90% interval]; players)
+  low (< 18%)                         +1y   +2%*[  +0,  +5] 305  +2y   +1% [  -2,  +6] 261  +3y   +1% [  -3,  +7] 193
+  middle                              +1y   -1% [  -3,  +1] 296  +2y   -1% [  -4,  +2] 269  +3y   -1% [  -5,  +3] 211
+  high (28%+)                         +1y   -1% [  -4,  +2] 218  +2y   -0% [  -5,  +4] 183  +3y   -1% [  -7,  +6] 137
+
+--- KTC crowd "keep" share ---   (excess vs same-price average, % of price; [90% interval]; players)
+  low third                           +1y   +0% [  -2,  +2] 255  +2y   +0% [  -3,  +4] 238  +3y   +1% [  -4,  +5] 220
+  middle third                        +1y   +0% [  -2,  +3] 333  +2y   -1% [  -5,  +3] 288  +3y   -4% [  -8,  +1] 249
+  high third                          +1y   -2% [  -4,  +1] 373  +2y   -1% [  -6,  +3] 320  +3y   +1% [  -6,  +8] 250
+
+--- experience (age already held equal) ---   (excess vs same-price average, % of price; [90% interval]; players)
+  rookie season                       +1y   +2% [  -1,  +5] 276  +2y   +0% [  -5,  +5] 212  +3y   +5% [  -3, +13] 151
+  year 2                              +1y   -4%*[  -6,  -1] 270  +2y   -2% [  -8,  +3] 218  +3y   -2% [ -10,  +5] 163
+  year 3                              +1y   -1% [  -5,  +2] 217  +2y   -0% [  -5,  +6] 169  +3y   -4% [ -11,  +2] 125
+  years 4-6                           +1y   -0% [  -2,  +2] 261  +2y   -1% [  -4,  +2] 222  +3y   +0% [  -5,  +5] 193
+  year 7+                             +1y   +1% [  -2,  +4] 164  +2y   +1% [  -3,  +5] 142  +3y   -2% [  -7,  +3] 123
+
+=== C. CAN TRAITS BEAT THE PRICE? (held-out tests) ===
+    par = average future value at that price; model adds traits to predict the gap. "beyond-price corr" > 0 = real edge.
+
+ horizon +1 year  (8250 rows, 622 players, 33 anchor dates)
+  new players: pos+age only  dates 33 | rank corr with future value: price 0.807 -> price+traits 0.811 | beyond-price corr +0.136 | model AVOID third   -8%, middle   +3%, BUY third   +5% of price | MAE 820 -> 824
+  new players: all traits    dates 33 | rank corr with future value: price 0.807 -> price+traits 0.806 | beyond-price corr +0.153 | model AVOID third   -7%, middle   +2%, BUY third   +6% of price | MAE 820 -> 823
+  forward in time (2023/2024/2025) dates 25 | rank corr with future value: price 0.811 -> price+traits 0.792 | beyond-price corr +0.082 | model AVOID third   +1%, middle   +2%, BUY third   +8% of price | MAE 811 -> 854
+      forward, QB only: beyond-price corr -0.029 (n 1020)
+      forward, RB only: beyond-price corr +0.007 (n 1805)
+      forward, WR only: beyond-price corr +0.137 (n 2508)
+      forward, TE only: beyond-price corr +0.193 (n 917)
+
+ horizon +2 years  (5750 rows, 555 players, 23 anchor dates)
+  new players: pos+age only  dates 23 | rank corr with future value: price 0.696 -> price+traits 0.720 | beyond-price corr +0.243 | model AVOID third  -16%, middle   +7%, BUY third  +10% of price | MAE 1100 -> 1076
+  new players: all traits    dates 23 | rank corr with future value: price 0.696 -> price+traits 0.719 | beyond-price corr +0.271 | model AVOID third  -15%, middle   +3%, BUY third  +12% of price | MAE 1100 -> 1085
+  forward in time (2024)     dates  9 | rank corr with future value: price 0.712 -> price+traits 0.682 | beyond-price corr +0.080 | model AVOID third   +3%, middle   +8%, BUY third  +13% of price | MAE 1096 -> 1175
+      forward, QB only: beyond-price corr -0.009 (n 375)
+      forward, RB only: beyond-price corr -0.035 (n 636)
+      forward, WR only: beyond-price corr +0.178 (n 921)
+      forward, TE only: beyond-price corr +0.280 (n 318)
+
+ horizon +3 years  (3500 rows, 489 players, 14 anchor dates)
+  new players: pos+age only  dates 14 | rank corr with future value: price 0.623 -> price+traits 0.651 | beyond-price corr +0.261 | model AVOID third  -15%, middle   +4%, BUY third  +12% of price | MAE 1165 -> 1123
+  new players: all traits    dates 14 | rank corr with future value: price 0.623 -> price+traits 0.646 | beyond-price corr +0.244 | model AVOID third  -14%, middle   +3%, BUY third  +12% of price | MAE 1165 -> 1153
+  forward in time: not enough history yet for this horizon
+
+=== D. WHAT CARRIES THE MODEL (held-out-by-player permutation importance, +2 years) ===
+  beyond-price corr with everything: 0.283
+    age                                loses 0.198 when scrambled
+    carry share                        loses 0.031 when scrambled
+    weight                             loses 0.024 when scrambled
+    draft capital                      loses 0.021 when scrambled
+    TD reliance                        loses 0.016 when scrambled
+    best season PPR/game               loses 0.012 when scrambled
+    height                             loses 0.008 when scrambled
+    KTC move last 6 mo                 loses 0.008 when scrambled
+    target share                       loses 0.007 when scrambled
+    career games                       loses 0.007 when scrambled
+    value over replacement last 12 mo  loses 0.007 when scrambled
+    games last 12 mo                   loses 0.007 when scrambled
+    PPR/game last 12 mo                loses 0.004 when scrambled
+    is_te                              loses 0.003 when scrambled
+    rushing share of points            loses 0.003 when scrambled
+    experience                         loses 0.003 when scrambled

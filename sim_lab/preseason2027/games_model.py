@@ -62,7 +62,7 @@ def availability():
         tg = TG[(TG.season == Y) & (TG.week < fw)]
         team_weeks = tg.groupby("team").week.apply(set).to_dict()
         r = pd.read_parquet(os.path.join(CACHE, f"roster_weekly_{Y}.parquet"), columns=["team", "gsis_id", "week", "game_type", "status", "position"])
-        r = r[(r.game_type == "REG") & r.gsis_id.notna() & r.position.isin(POS4 + ("FB",)) & (r.week < fw)]
+        r = r[(r.game_type == "REG") & r.gsis_id.notna() & (r.position.isin(POS4 + ("FB",)) | r.gsis_id.isin({g for g, _ in PM.position_overrides()})) & (r.week < fw)]
         r["team"] = r.team.map(PM.tm)
         inj = pd.read_parquet(os.path.join(CACHE, f"injuries_{Y}.parquet"), columns=["game_type", "week", "gsis_id", "report_status"])
         inj = inj[(inj.game_type == "REG") & inj.gsis_id.notna()]

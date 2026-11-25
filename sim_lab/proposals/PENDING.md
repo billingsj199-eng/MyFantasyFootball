@@ -108,6 +108,10 @@
   act / proj: 0-.05 1.125 (n 11) | .05-.15 .957 (27) | .15-.30 .961 (26) | .30+ .814 (7). Proposal form on these rows: e .10 MSE
   -1.5%, MAE -0.3%; e .15 MSE -2.1%, MAE -0.5%; closer on 46% of rows. Supportive, not a test (one season, n 7 in the top bucket,
   Daniel Jones twice). Confidence unchanged (low); still needs the engine replay.
+- **Update 2026-11-24 (STATS run): 2026 read through W11 is WEAKER.** `_tmp/qbvac_2026_read_w11.log`: 94 QB rows (locks W5-8, 3+ games
+  since). act / proj: 0-.05 1.025 (n 14) | .05-.15 .939 (36) | .15-.30 1.061 (33) | .30+ .856 (11). Top bucket still low, but the
+  middle no longer slopes. Proposal form: e .10 MSE -0.5%, MAE +0.3% (worse), closer on 39%; e .15 MSE -0.7%, MAE +0.5%. The MSE gain
+  comes from a few big top-bucket misses (Mayfield W7, D. Jones W5/W6). Confidence: low, leaning weaker; engine replay still required.
 
 
 ## P-20261121-1 - QB-only dud component in the weekly sampler (shape only, mean unchanged)
@@ -245,7 +249,11 @@
 - Expiry: 2027-03-01.
 
 
-## P-20261121-7 - 2027 preseason per-game model: ADP as an input? (NEEDS JACK'S CALL; no engine change)
+## P-20261121-7 - 2027 preseason per-game model: ADP as an input - APPROVED 2026-11-21 ("Yes, use ADP."), PARKED FOR NOW
+- Jack, right after approving: "but lets see what it looks like without adp for now". The in-house-only model is the working version until he asks for the ADP-anchored build (blend sweep / timing / format / disagreement work = steps 2-6, waiting).
+- First in-house output delivered: preseason2027/output/2026_inhouse_check.md|csv and 2027_inhouse_early.md|csv (report A8).
+- (original item text follows)
+### P-20261121-7 - 2027 preseason per-game model: ADP as an input? (NEEDS JACK'S CALL; no engine change)
 - Context: the in-house per-game model v1 (preseason2027/pergame_model.py, report A7).
   - In-house: MAE 2.711 -> 2.627, rho .437 -> .472.
   - ADP curve: 2.491 / .548. In-house beats ADP in 1 of 11 seasons.
@@ -258,3 +266,150 @@
 - No live-engine change is involved. Expiry: 2027-06-01 (before the preseason build).
 - Data for approval: historical August depth charts 2019-24 (Wayback ESPN / Ourlads). Robots and terms must be checked before
   reading any page; nothing has been read.
+
+
+## P-20261121-8 - A9 fixes to the in-house preseason prototype (Jack "Yes, fix them") - DONE, no engine change
+- Report A9.
+- **Kept:**
+  - fix 1: last season's games share shrunk 40/60 toward the longer-run rate for established starters
+  - fix 3: data/position_overrides.csv (Hunter, Jordan Thomas, Pryor, Patterson)
+  - fix 4: games distribution isotonic on the model's own top 150 + draftable per-game spread; p10-p90 coverage 86.1% -> 80.2%
+- **No fix found:** fix 2 (RB age x workload; take-over probability as input). The take-over chance is shown as information only: 28.4% base, 55.9% for round 1-2 backups.
+- **Next:** QB ordering; RB volume consistency.
+
+
+## P-20261121-9 - A10 QB ordering (Jack "Fix QB order first") - DONE: no in-house fix found; no engine change
+- Report A10.
+- On a proper QB pool (463 QB-seasons) the in-house rank correlation is .627.
+- On QBs with ADP: in-house .406 vs ADP .486 (MAE 2.635 vs 2.506). QB1-6 finishing top 12: model .683 vs ADP .667.
+- Biggest miss: passing TD rate (oracle rho .608 -> .784), then attempts, then games played (season-total rho .62 -> .91 with actual games).
+- On history the model UNDER-rates rushing QBs (act/pred 1.10) and one-big-season QBs (1.11).
+- All candidates dropped on dev 2015-22 (team context, rushing age, jump flag, ridge weight, TD shrink caps, team-strength TD prior, level factor, QB games terms).
+- Watch item: the lighter TD-rate shrink helps the 2023-25 holdout but not dev. Re-test with 2026.
+- Lists v3:
+  - 2026 QB order unchanged.
+  - 2027 chart-injury fix: Hurts QB35 -> 19, Lamar 42 -> 30.
+  - Superflex view added.
+
+
+## P-20261121-10 - A11 QB job security (Jack "Try job security") - KEPT in the preseason prototype; no engine change
+- Report A11. Uses point-in-time contract fields only; coverage 460/463 QB-seasons.
+- Benched-while-healthy base rate: 23.1% of week-1 QB1s.
+- Logistic on cap share + high pick behind + expected wins: Brier .1225 vs .1733 base-rate on dev.
+- Fed into QB games:
+  - QB totals rho .646 -> .659 on dev
+  - superflex QB13-28 MAE 66.3 -> 64.0
+- Lists are now v4:
+  - 2026 moves: Dart 7 -> 13, Prescott 16 -> 11, Burrow 17 -> 15
+  - new P(lose job) column
+- Next: rookie start-date probability; calibration drift.
+
+## P-20261121-11 - A12 start-date odds for rookie/backup QBs (Jack "Yes, add them") - NOT KEPT as an input; lists stay v4; no engine change
+- Report A12 (preseason2027/qb_a12.py, qb_a12.log; examples qb_a12_examples.py / .log).
+- Base rates, week-1 non-starters 2013-25 getting 4+ starts (90% range): round-1 rookie 71% [54-83], round-2 rookie 43% [19-71],
+  later rookie 10% [7-15], veteran backup on 2%+ cap 31% [24-38], journeyman 14% [12-17], all 18.5% [16-21]. First start median wk 3-8.
+- Why the starter lost 4+ starts: healthy benching/cut/trade 76 teams, injury 56. Backups who take over score 1.13x their per-game projection.
+- Room model (starter keeps A11 games; leftover starts split across the room by P(take over)):
+  - rooms now add up (|gap| 3.9 -> 0.10 starts); backups' starts MAE dev 3.05 -> 1.98, holdout 2.88 -> 2.07 (calibration gain)
+  - but ordering gets worse on dev: all-QB totals rho .751 -> .742, superflex QB25-40 rho .434 -> .354; holdout QB13-28 .307 -> .116
+  - fails the bar (+.005 rho without worse error) -> not fed into totals. Timing-by-group for starters: no gain (2.81 -> 2.82), dropped.
+- Found: rookies who start week 1 get A11 P(bench) .33 vs .06 actual (rookie-deal cap share reads as "cheap"). Next fix to test.
+- Jack's call: show P(becomes starter) / expected starts as information columns only (they do not change totals)?
+
+## P-20261121-12 - A13 rookie-deal starters in A11 job security (Jack "Yes, test it") - KEPT in the preseason prototype (lists v5); no engine change
+- Report A13 (preseason2027/qb_a13.py, qb_a13.log; output/movers_a13.log).
+- Rookie-deal week-1 starters (143 of 398): A11 right on average (26.5% vs 26.4%) but wrong in two directions:
+  - rd 1 yrs 1-2: 26.7% predicted vs 15.6% actual (year 1: 33% vs 6%)
+  - year 4 and rd 3-7/UDFA: too low
+  - cheap veterans: 45% predicted vs 62% actual
+- Kept: one investment input = max(cap share/.15, draft score x fade over 5 yrs) in place of cap share.
+  - Brier dev .1225 -> .1138, holdout .1752 -> .1636; rookie-deal group .1611 -> .1407
+  - dev totals rho .659 -> .661; holdout QBs-with-ADP rho .233 -> .251 (ADP .247)
+- Costs: vets' games MAE +.04, totals MAE +.3/+.5; holdout SF QB13-28 rho .210 -> .183.
+- v5 moves (2026 check):
+  - Ward .30 -> .16, Caleb .15 -> .10
+  - Young .32 -> .35, Stroud .21 -> .24
+  - Geno .38 -> .53, Tua .37 -> .54, Kyler .27 -> .41
+- v4 is kept; revert = restore output_rankings.py.bak_v4_20261121 + sf_view_a10.py.bak_v4_20261121.
+- **CONFIRMED by Jack 2026-11-21.** Shown the gains and the costs above and asked "Keep the new job-security odds, or go back to the previous version?", he answered "Keep it". v5 (the investment input) is the working version of the in-house preseason prototype. Still open from A12/A13, not approved: the take-over odds as information-only columns; veterans still under-predicted on benching (18% vs 23%); year-1 rookie starters still too high (20% vs 6%, n 16). ADP remains approved-but-parked.
+
+## P-20261121-13 - A14 RB volume (Jack "Yes, RB volume") - KEPT (weak) in the preseason prototype, lists v6; no engine change
+- Report A14 (preseason2027/rb_a14_*.py + logs; output/rb_movers_a14.log).
+- Diagnosis:
+  - The RB miss is the player's SHARE, not the team total. Actual share is worth -.65 MAE on carries and -.29 on targets;
+    actual team total only -.03 / -.05.
+  - Goal-line carries are worth -.26.
+  - Projections already add up on average (1.00x team carries), but the shares are too flat (spot 1 .433 vs .468 actual).
+  - Team RB carries are barely sticky (r .33).
+- Kept, part 1: share inputs in the RB volume ridge plus a HALF-WAY rescale toward a walk-forward team total.
+  - Pool dev per-game 2.851/.630 -> 2.825/.643; ADP-150 dev 3.030/.533 -> 3.014/.550.
+  - The holdout does not confirm it: ADP-150 3.104/.619 -> 3.141/.611, and top-12 hits drop.
+- Kept, part 2: RB per-game ranges by backfield tier. Coverage moves to about 80% for every tier (it was 88-90% for lead
+  backs and committees, 74-75% for rookies).
+- Dropped:
+  - full add-up (the same failure as A12)
+  - team rescale alone
+  - share inputs alone
+  - goal-line TD rate
+- 2026 v6 moves:
+  - up: Hubbard 29 -> 19, Kyren 17 -> 9, Chase Brown 20 -> 12
+  - down: Love 9 -> 17, Etienne 18 -> 25
+- Revert: restore output_rankings.py.bak_v5_20261121 + sf_view_a10.py.bak_v5_20261121.
+- Jack's call: keep v6 despite the soft holdout, or stay on v5 for RBs.
+- DECISION (Jack 2026-11-21, "Yes, ranges only"): RB ranges by backfield tier KEPT; RB volume change DROPPED from the working
+  version. Re-test it after the full 2026 season. Lists are v7 = v5 averages + tier ranges.
+  - Switch `RB_VOLUME_V6 = False` in output_rankings.py; the code is kept.
+  - v6 is kept as output/*_v6.* and output/rb_movers_a14_v6_DROPPED.log.
+
+## P-20261121-14 - A15 provisional 2027 rookies from JM + 2027 refresh command (Jack "Yes, add rookies" / "update based on new information") - STOPPED at step 1; needs Jack's call
+- About 24-30% of JM is draft capital. For 2027 prospects that capital comes from data/draft_proj.js, a consensus mock from
+  the NFL Mock Draft Database (outside, market-type input). Past classes' JM uses their actual pick.
+- So there is no in-house pre-draft JM to use or backtest. Nothing was built; v7 is unchanged.
+- Options: A) allow the consensus mock (already inside JM) as an input; B) the site exports a no-draft-capital JM for past +
+  current classes (a site change); C) wait for the April draft (the post-draft prior already exists).
+- Refresh command held until the rookie path is decided. Inputs with no scheduled refresh: jm_scores.json (manual),
+  pbp_cache draft_picks / coaches / depth_charts parquet, 2027 win totals.
+- DECISION (Jack 2026-11-23, "Yes, use JM"): option A. The 2027 JM scores are used as they are, including their
+  draft-capital term from the consensus mock, for undrafted 2027 rookies ONLY.
+  - Veterans stay in-house with no ADP; ADP is still parked.
+  - Resumed A15: v8 list with PROVISIONAL rookies + refresh_2027.py.
+- A15 done:
+  - v8 2027 list with 137 PROVISIONAL JM rookies; veterans unchanged.
+  - refresh_2027.py built and shown (week 9 -> 10 change log; reruns exactly equal).
+  - Not yet built: post-draft replacement of the placeholders; deriving 2026 scores from pbp (schedules_games.csv has
+    scores through week 6 only).
+  - Jack decides whether refresh_2027.py gets scheduled.
+
+## P-20261124-1 - MFF VALUE re-tune on total return: half the sim weight + age/health edge - APPROVED 2026-11-24 ("Approve, build it"), BUILT ON A BRANCH, NOT LIVE
+
+- **What changes:** MFF VALUE (FAIR) order z = 0.5 M3 + 0.3 log sim rank + 0.5 log KTC rank  ->
+  **0.25 M3 + 0.15 log sim rank + 0.75 log KTC rank - 1.0 x EDGE**. EDGE = lasting-value rating's age / health gap
+  (rating total vs same-price par, share of price; `ktc_lasting_rating.py`). RB YAC tilt and QB team-total term unchanged (not re-tested).
+- **Files / knobs if approved:** app.js `_FAIR_W` + an edge term in `_trendGapFor` / `_mffValueBoard`; a per-player `edge` field
+  built weekly (rating script -> dynasty_sim_2026.js or a small new data file); `mff_value.py` port + tracker; rebuild job for the
+  KTC panel (monthly archive pull or the site's own daily KTC commits).
+- **Evidence** (`backtest_fair_retune_tr.py`, `_tmp/retune_candidates.py`, `_tmp/retune_final.py`; report
+  `reviews/2026-11-24_ktc_lasting_value_study.md` addendum 2): target = KTC value at end of hold + 12 x points over the starter
+  line, 5 preseason KTC lists 2021-25, score = mean of whole-pool and top-100 rank corr over the 1-3 yr holds.
+  - vs shipped, per list-year: 1QB +.016 (5 of 5), SF +.019 (5 of 5); with the edge trained forward only: 1QB +.013 (3 of 3),
+    SF +.014 (2 of 3; 2025 -.004). Rebuild and contender grading: same sign.
+  - BUY minus SELL payoff of the calls (top / bottom 10% gap vs KTC, 1 / 2 / 3 yr): 1QB shipped +9.7 / +16.7 / +16.0 pts ->
+    +5.0 / +28.1 / +24.3; SF shipped +1.3 / +9.0 / -1.2 -> +3.9 / +24.1 / +18.8.
+  - Grid winner on whole-board accuracy alone was KTC price + edge 0.5 with NO sim (1QB +.022, SF +.027, forward 3 of 3), but it
+    makes almost no calls (today 3 BUY / 1 SELL in 1QB) and its 1QB BUYs paid +0.9% at 2 yr vs +9.8% here. Not proposed.
+- **Size today:** 1QB calls 18 BUY / 15 SELL -> 21 / 18, 58 of 200 players move 10+ spots; SF 21 / 23 -> 25 / 26, 63 move 10+.
+- **Confidence:** medium. Five list-years, three with 2-3 yr results. Weights were chosen by eye from 12 candidates after seeing
+  the results (not a blind pick). 1-year call payoff in 1QB is lower than shipped.
+- **Expiry:** none (structural). Re-check after the 2026 season closes.
+- **Build (2026-11-24):** site worktree `MyFantasyFootball Files/.claude/worktrees/mff-value-lasting-edge`, branch
+  `feat/mff-value-lasting-edge`, commit 02ec519a on origin/main aa3ed794 (NOT pushed, NOT merged): app.js `_fairW` / `_fairEdge` /
+  loader in `_dynSimEnsure`, index.html `<meta name="mff-lasting-edge-v">`, new `data/mff_lasting_edge.js` (306 players, weights + k ride in it;
+  no file = old weights). sim_lab: `build_lasting_edge.py --site <root>`, `mff_value.py` (`load_lasting_edge`, `fair_table(..., lasting, fmt)`),
+  `mff_tracker.py` snapshot passes it (both identical to before until the file exists in the main checkout; backups `.bak_pre_lastingedge_20261124`).
+- **Verified:** local preview of the branch - site order vs Python port, 1QB 21 BUY / 18 SELL both sides, 43 of 200 one-spot neighbour swaps
+  (the port already differed from the site by 76 spots, up to 6, on the old weights); removing the file returns the old weights.
+- **Left for go-live (Jack's words needed):** merge + push (bump app.js ?v= at merge); hook `build_lasting_edge.py` + the meta bump into the
+  Tuesday chain (scheduled command change); `backup_to_branch.py`.
+- **BLOCKER FOUND:** KTC changed its page on 2026-11-24 - the player list moved to `/dynasty-rankings/player-pool`, which KTC's robots.txt
+  disallows. The 9am KTC pull, KTC history and vote capture all failed today; site KTC values are frozen at 2026-11-23. The edge's "today" list
+  is the 2026-11-08 archived list re-priced from those frozen values. Not fixed (needs Jack's decision on the source).

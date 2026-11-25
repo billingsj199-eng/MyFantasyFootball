@@ -82,6 +82,18 @@ def season(Y):
     return W, tg
 
 
+def position_overrides():
+    """{(gsis, season): fantasy position} from data/position_overrides.csv (A9 fix 3: players nflverse lists at the wrong
+    position, e.g. Travis Hunter = CB). One row per player with a season range, a reason and the date added."""
+    import csv
+    f = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "position_overrides.csv")
+    out = {}
+    if not os.path.exists(f): return out
+    for r in csv.DictReader(open(f, encoding="utf-8")):
+        for y in range(int(r["from_season"]), min(int(r["to_season"]), 2030) + 1): out[(r["gsis_id"], y)] = r["position"]
+    return out
+
+
 def main():
     t0 = time.time()
     pl = pd.read_csv(os.path.join(CACHE, "players.csv"), low_memory=False,
@@ -95,6 +107,10 @@ def main():
         print(f"  {Y}: {len(W)} player-games, {len(tg)} team-games ({time.time()-t0:.0f}s)", flush=True)
     W = pd.concat(PW, ignore_index=True)
     W = W.merge(pl.rename(columns={"gsis_id": "pid"}), on="pid", how="left").merge(dp.rename(columns={"gsis_id": "pid"}), on="pid", how="left")
+    POV = position_overrides()
+    if POV:
+        ov = [POV.get((p, y)) for p, y in zip(W.pid, W.season)]
+        W["position"] = [o if o else ps for o, ps in zip(ov, W.position)]
     W = W[W.position.isin(["QB", "RB", "WR", "TE", "FB"])].copy()
     W.loc[W.position == "FB", "position"] = "RB"
     W.to_parquet(os.path.join(OUT, "player_weeks.parquet"), index=False)

@@ -154,6 +154,18 @@ def week1_team():
     return out
 
 
+def position_overrides():
+    """{(gsis, season): fantasy position} from data/position_overrides.csv (A9 fix 3: players nflverse lists at the wrong
+    position, e.g. Travis Hunter = CB). One row per player with a season range, a reason and the date added."""
+    import csv
+    f = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "position_overrides.csv")
+    out = {}
+    if not os.path.exists(f): return out
+    for r in csv.DictReader(open(f, encoding="utf-8")):
+        for y in range(int(r["from_season"]), min(int(r["to_season"]), 2030) + 1): out[(r["gsis_id"], y)] = r["position"]
+    return out
+
+
 # ---------------------------------------------------------------- features
 def build():
     t0 = time.time()
@@ -163,7 +175,8 @@ def build():
     hist = {(r.season, r.pid): r for r in S.itertuples(index=False)}
     pl = pd.read_csv(os.path.join(CACHE, "players.csv"), low_memory=False,
                      usecols=["gsis_id", "display_name", "position", "birth_date", "rookie_season", "draft_pick", "draft_round", "draft_year"])
-    pl = pl[pl.gsis_id.notna() & pl.position.isin(POS4 + ("FB",))].drop_duplicates("gsis_id")
+    POV = position_overrides(); pov_ids = {g for g, _ in POV}
+    pl = pl[pl.gsis_id.notna() & (pl.position.isin(POS4 + ("FB",)) | pl.gsis_id.isin(pov_ids))].drop_duplicates("gsis_id")
     pl.loc[pl.position == "FB", "position"] = "RB"
     pl["key"] = pl.display_name.map(nrm)
     tv = {(r.season, r.team): r for r in T.itertuples(index=False)}
@@ -191,7 +204,7 @@ def build():
         actual = {r.pid: r for r in S[S.season == Y].itertuples(index=False)}
         for pid in cand:
             if pid not in info.index: continue
-            ii = info.loc[pid]; pos = ii.position
+            ii = info.loc[pid]; pos = POV.get((pid, Y), ii.position)
             if pos not in POS4: continue
             h = [hist.get((Y - k, pid)) for k in (1, 2, 3)]
             team = w1t.get((Y, pid)) or (h[0].team if h[0] is not None else None)
@@ -321,7 +334,7 @@ def walk_forward(D):
             out.loc[te, "games_pred"] = np.clip(fit_gbm(D.loc[trg, STATS_F + MKT_F].values.astype(float), gy, None, Xf_te), 0.05, 1.0)
             # ADP curve baselines (isotonic on log positional ADP rank)
             ta = tr & D.pos_adp.notna(); ea = te & D.pos_adp.notna()
-            if ta.sum() > 30:
+            if ta.sum() > 30 and ea.sum() > 0:   # guard: no ADP rows in the test year (2026/27 in-house runs)
                 iso = IsotonicRegression(increasing=False, out_of_bounds="clip").fit(np.log(D.pos_adp[ta]), D.act_ppg[ta], sample_weight=D.act_games[ta])
                 out.loc[ea, "adp_curve"] = iso.predict(np.log(D.pos_adp[ea]))
                 tt = (D.season < Y) & (D.pos == ps) & D.pos_adp.notna()

@@ -92,7 +92,8 @@ def snapshot():
             ros = MV.ros_y0(sim, SITE_DATA, fmt + '_ppr')
         except Exception as e:
             print('weekly-sim y0 unavailable:', e); ros = None
-        rows = MV.fair_table(MV.sim_rows_from_file(sim, fmt + '_ppr', ros), K, mkt, sim['meta'].get('rbRec'), qbtt)
+        rows = MV.fair_table(MV.sim_rows_from_file(sim, fmt + '_ppr', ros), K, mkt, sim['meta'].get('rbRec'), qbtt,
+                              MV.load_lasting_edge(SITE_DATA), fmt)   # P-20261124-1: None until the site has the edge file
         save(today, fmt, 'live', rows)
         print(f'{today} {fmt}: {len(rows)} players, BUY {sum(r["call"] == "BUY" for r in rows)}, SELL {sum(r["call"] == "SELL" for r in rows)}')
 

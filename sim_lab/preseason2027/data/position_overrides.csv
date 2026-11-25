@@ -1,0 +1,5 @@
+gsis_id,name,from_season,to_season,position,listed_as,reason,added
+00-0040718,Travis Hunter,2025,2099,WR,CB,"Two-way player; nflverse players.csv lists CB. 45 targets in 2025, listed WR on fantasy platforms (eligibility varies by platform).",2026-11-21
+00-0034420,Jordan Thomas,2018,2023,TE,LB,"Texans/Cardinals tight end (27 targets in 2018); nflverse lists LB (later converted). Fantasy TE.",2026-11-21
+00-0028825,Terrelle Pryor,2013,2015,QB,WR,"Season-specific: was a QB in 2013 (79 carries, passer); listed WR from 2016. players.csv carries one career position.",2026-11-21
+00-0030578,Cordarrelle Patterson,2013,2020,WR,RB,"Season-specific: fantasy WR 2013-2020 (target share .75+), RB from 2021. players.csv carries one career position. JUDGEMENT CALL - platforms dual-listed him 2019-2020.",2026-11-21

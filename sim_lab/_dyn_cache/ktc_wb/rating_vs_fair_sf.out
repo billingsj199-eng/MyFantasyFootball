@@ -1,0 +1,162 @@
+2021 list 2021-07-24: KTC top-250 players 247, with a sim value 239
+2022 list 2022-08-14: KTC top-250 players 250, with a sim value 241
+2023 list 2023-10-01: KTC top-250 players 250, with a sim value 240
+2024 list 2024-08-13: KTC top-250 players 250, with a sim value 246
+2025 list 2025-08-25: KTC top-250 players 249, with a sim value 246
+
+==============================================================================================================
+RATE 12 KTC per point over the starter line  (neutral team - MAIN)
+
+ hold 1 year
+  order                             all  top 100   top50%   rank corr by list year
+  market (KTC price)              0.792    0.681    92.0%   2021 0.799  2023 0.820  2024 0.775  2025 0.773
+  sim (Dynasty SIM)               0.664    0.481    85.3%   2021 0.687  2023 0.618  2024 0.655  2025 0.696
+  FAIR = shipped MFF VALUE        0.775    0.643    91.7%   2021 0.792  2023 0.794  2024 0.748  2025 0.767
+  RATING (LOYO)                   0.778    0.668    92.2%   2021 0.805  2023 0.803  2024 0.756  2025 0.751
+  RATING forward-trained          0.768    0.660    91.3%   2023 0.805  2024 0.756  2025 0.743
+  FAIR + 0.5 x edge               0.773    0.644    91.3%   2021 0.801  2023 0.794  2024 0.741  2025 0.759
+  FAIR + 1.0 x edge               0.765    0.643    91.2%   2021 0.799  2023 0.787  2024 0.731  2025 0.746
+  FAIR + 1.5 x edge               0.751    0.637    90.9%   2021 0.788  2023 0.776  2024 0.714  2025 0.729
+  FAIR + 2.0 x edge               0.738    0.632    90.9%   2021 0.778  2023 0.765  2024 0.696  2025 0.712
+  FAIR + 3.0 x edge               0.703    0.622    90.4%   2021 0.753  2023 0.729  2024 0.657  2025 0.675
+  FAIR + 4.0 x edge               0.665    0.610    89.3%   2021 0.724  2023 0.688  2024 0.620  2025 0.630
+
+ hold 2 years
+  order                             all  top 100   top50%   rank corr by list year
+  market (KTC price)              0.699    0.581    86.0%   2022 0.661  2023 0.728  2024 0.707
+  sim (Dynasty SIM)               0.575    0.462    80.5%   2022 0.611  2023 0.544  2024 0.571
+  FAIR = shipped MFF VALUE        0.691    0.567    86.3%   2022 0.688  2023 0.709  2024 0.677
+  RATING (LOYO)                   0.726    0.604    87.9%   2022 0.704  2023 0.745  2024 0.729
+  RATING forward-trained          0.727    0.542    85.5%   2023 0.736  2024 0.718
+  FAIR + 0.5 x edge               0.703    0.576    87.0%   2022 0.706  2023 0.718  2024 0.686
+  FAIR + 1.0 x edge               0.706    0.580    87.7%   2022 0.714  2023 0.719  2024 0.687
+  FAIR + 1.5 x edge               0.705    0.584    87.7%   2022 0.722  2023 0.714  2024 0.679
+  FAIR + 2.0 x edge               0.699    0.583    87.1%   2022 0.722  2023 0.707  2024 0.669
+  FAIR + 3.0 x edge               0.680    0.580    87.5%   2022 0.712  2023 0.686  2024 0.643
+  FAIR + 4.0 x edge               0.656    0.578    86.7%   2022 0.692  2023 0.660  2024 0.616
+
+ hold 3 years
+  order                             all  top 100   top50%   rank corr by list year
+  market (KTC price)              0.669    0.563    82.0%   2021 0.634  2022 0.655  2023 0.718
+  sim (Dynasty SIM)               0.554    0.430    76.8%   2021 0.537  2022 0.595  2023 0.529
+  FAIR = shipped MFF VALUE        0.671    0.535    81.5%   2021 0.633  2022 0.678  2023 0.703
+  RATING (LOYO)                   0.709    0.564    83.1%   2021 0.672  2022 0.697  2023 0.759
+  RATING forward-trained          0.735    0.540    83.7%   2023 0.735
+  FAIR + 0.5 x edge               0.689    0.542    81.5%   2021 0.653  2022 0.694  2023 0.721
+  FAIR + 1.0 x edge               0.698    0.543    81.5%   2021 0.664  2022 0.701  2023 0.728
+  FAIR + 1.5 x edge               0.701    0.544    81.5%   2021 0.666  2022 0.707  2023 0.729
+  FAIR + 2.0 x edge               0.700    0.540    80.4%   2021 0.668  2022 0.706  2023 0.725
+  FAIR + 3.0 x edge               0.691    0.534    81.6%   2021 0.666  2022 0.695  2023 0.713
+  FAIR + 4.0 x edge               0.675    0.526    81.6%   2021 0.657  2022 0.674  2023 0.693
+
+ blend strength picked leave-one-year-out (score = mean of the 1-yr and 2-yr rank corr):
+   2021 k=0.5 +0.009  2022 k=0.5 +0.018  2023 k=0.5 +0.005  2024 k=0.5 +0.001  2025 k=0.5 -0.009
+   blend vs shipped FAIR: +0.0049 per year, wins 4 of 5
+   RATING (LOYO) vs shipped FAIR: +0.0131 per year, wins 4 of 5
+   RATING forward-trained vs shipped FAIR: 2023 +0.019  2024 +0.024  2025 -0.024
+
+ who moved most between FAIR and RATING on the 2025 list (pool rank FAIR -> RATING, then what happened in 1 yr):
+   rating higher: Isaiah Likely TE 25 (139 -> 93; actual 108), Dalton Kincaid TE 26 (129 -> 101; actual 106), Kyle Pitts TE 25 (110 -> 83; actual 60), Jameson Williams WR 24 (69 -> 43; actual 63), Tucker Kraft TE 25 (103 -> 77; actual 52), Chase Brown RB 25 (67 -> 46; actual 31), Tyler Warren TE 23 (57 -> 37; actual 34), Alvin Kamara RB 30 (102 -> 82; actual 189), Jordan Mason RB 26 (159 -> 139; actual 131), Sam LaPorta TE 25 (58 -> 39; actual 68), Emeka Egbuka WR 23 (40 -> 23; actual 33), Rome Odunze WR 23 (49 -> 32; actual 61)
+   rating lower: Chris Godwin WR 29 (126 -> 174; actual 128), Jaxson Dart QB 22 (46 -> 80; actual 38), Sam Darnold QB 28 (78 -> 111; actual 78), Davante Adams WR 33 (104 -> 132; actual 79), Tua Tagovailoa QB 27 (74 -> 102; actual 158), Patrick Mahomes QB 30 (17 -> 45; actual 29), Jared Goff QB 31 (45 -> 71; actual 70), Brandon Aiyuk WR 27 (128 -> 152; actual 237), Jakobi Meyers WR 29 (111 -> 133; actual 126), Kyler Murray QB 28 (38 -> 59; actual 86), Bo Nix QB 25 (13 -> 33; actual 37), Cam Ward QB 23 (23 -> 42; actual 69)
+
+==============================================================================================================
+RATE 0 KTC per point over the starter line  (resale only / rebuild)
+
+ hold 1 year
+  order                             all  top 100   top50%   rank corr by list year
+  market (KTC price)              0.799    0.722    93.4%   2021 0.803  2023 0.823  2024 0.784  2025 0.785
+  sim (Dynasty SIM)               0.675    0.537    87.6%   2021 0.694  2023 0.624  2024 0.670  2025 0.712
+  FAIR = shipped MFF VALUE        0.789    0.707    93.5%   2021 0.802  2023 0.801  2024 0.767  2025 0.786
+  RATING (LOYO)                   0.785    0.731    94.6%   2021 0.817  2023 0.798  2024 0.758  2025 0.766
+  RATING forward-trained          0.777    0.731    93.4%   2023 0.809  2024 0.765  2025 0.758
+  FAIR + 0.5 x edge               0.788    0.712    93.3%   2021 0.811  2023 0.801  2024 0.761  2025 0.779
+  FAIR + 1.0 x edge               0.780    0.708    92.8%   2021 0.810  2023 0.794  2024 0.750  2025 0.768
+  FAIR + 1.5 x edge               0.768    0.709    92.8%   2021 0.802  2023 0.783  2024 0.734  2025 0.755
+  FAIR + 2.0 x edge               0.753    0.706    93.5%   2021 0.794  2023 0.767  2024 0.714  2025 0.739
+  FAIR + 3.0 x edge               0.720    0.695    92.8%   2021 0.773  2023 0.732  2024 0.676  2025 0.701
+  FAIR + 4.0 x edge               0.683    0.681    92.0%   2021 0.744  2023 0.691  2024 0.639  2025 0.662
+
+ hold 2 years
+  order                             all  top 100   top50%   rank corr by list year
+  market (KTC price)              0.685    0.620    86.4%   2022 0.648  2023 0.706  2024 0.700
+  sim (Dynasty SIM)               0.567    0.501    81.6%   2022 0.600  2023 0.529  2024 0.573
+  FAIR = shipped MFF VALUE        0.686    0.626    87.6%   2022 0.681  2023 0.697  2024 0.682
+  RATING (LOYO)                   0.720    0.658    89.0%   2022 0.699  2023 0.725  2024 0.735
+  RATING forward-trained          0.726    0.623    89.5%   2023 0.723  2024 0.728
+  FAIR + 0.5 x edge               0.701    0.636    87.9%   2022 0.699  2023 0.707  2024 0.696
+  FAIR + 1.0 x edge               0.706    0.643    88.4%   2022 0.708  2023 0.710  2024 0.700
+  FAIR + 1.5 x edge               0.706    0.647    88.2%   2022 0.715  2023 0.707  2024 0.697
+  FAIR + 2.0 x edge               0.701    0.649    89.2%   2022 0.718  2023 0.697  2024 0.688
+  FAIR + 3.0 x edge               0.686    0.648    89.4%   2022 0.713  2023 0.677  2024 0.669
+  FAIR + 4.0 x edge               0.665    0.645    88.5%   2022 0.696  2023 0.654  2024 0.645
+
+ hold 3 years
+  order                             all  top 100   top50%   rank corr by list year
+  market (KTC price)              0.635    0.574    81.6%   2021 0.599  2022 0.634  2023 0.673
+  sim (Dynasty SIM)               0.526    0.430    77.0%   2021 0.515  2022 0.571  2023 0.493
+  FAIR = shipped MFF VALUE        0.648    0.561    81.7%   2021 0.611  2022 0.663  2023 0.670
+  RATING (LOYO)                   0.697    0.620    84.7%   2021 0.667  2022 0.688  2023 0.736
+  RATING forward-trained          0.713    0.617    86.8%   2023 0.713
+  FAIR + 0.5 x edge               0.670    0.573    81.7%   2021 0.637  2022 0.680  2023 0.693
+  FAIR + 1.0 x edge               0.683    0.577    82.4%   2021 0.654  2022 0.688  2023 0.707
+  FAIR + 1.5 x edge               0.688    0.582    82.6%   2021 0.660  2022 0.692  2023 0.713
+  FAIR + 2.0 x edge               0.692    0.586    83.8%   2021 0.667  2022 0.694  2023 0.714
+  FAIR + 3.0 x edge               0.690    0.588    83.9%   2021 0.674  2022 0.688  2023 0.709
+  FAIR + 4.0 x edge               0.679    0.586    83.8%   2021 0.670  2022 0.671  2023 0.697
+
+ blend strength picked leave-one-year-out (score = mean of the 1-yr and 2-yr rank corr):
+   2021 k=0.5 +0.009  2022 k=0.5 +0.018  2023 k=0.5 +0.005  2024 k=0.5 +0.004  2025 k=1.0 -0.018
+   blend vs shipped FAIR: +0.0038 per year, wins 4 of 5
+   RATING (LOYO) vs shipped FAIR: +0.0099 per year, wins 4 of 5
+   RATING forward-trained vs shipped FAIR: 2023 +0.017  2024 +0.022  2025 -0.028
+
+==============================================================================================================
+RATE 24 KTC per point over the starter line  (contender)
+
+ hold 1 year
+  order                             all  top 100   top50%   rank corr by list year
+  market (KTC price)              0.780    0.637    90.1%   2021 0.786  2023 0.812  2024 0.762  2025 0.760
+  sim (Dynasty SIM)               0.651    0.431    82.8%   2021 0.674  2023 0.612  2024 0.638  2025 0.680
+  FAIR = shipped MFF VALUE        0.759    0.585    89.5%   2021 0.775  2023 0.783  2024 0.730  2025 0.749
+  RATING (LOYO)                   0.769    0.626    90.3%   2021 0.790  2023 0.801  2024 0.752  2025 0.736
+  RATING forward-trained          0.757    0.608    90.2%   2023 0.797  2024 0.744  2025 0.730
+  FAIR + 0.5 x edge               0.758    0.588    89.0%   2021 0.784  2023 0.787  2024 0.724  2025 0.740
+  FAIR + 1.0 x edge               0.750    0.589    88.9%   2021 0.781  2023 0.780  2024 0.715  2025 0.727
+  FAIR + 1.5 x edge               0.737    0.584    89.1%   2021 0.770  2023 0.770  2024 0.701  2025 0.707
+  FAIR + 2.0 x edge               0.721    0.580    88.9%   2021 0.756  2023 0.759  2024 0.684  2025 0.688
+  FAIR + 3.0 x edge               0.686    0.568    88.8%   2021 0.726  2023 0.724  2024 0.650  2025 0.647
+  FAIR + 4.0 x edge               0.644    0.554    86.4%   2021 0.691  2023 0.680  2024 0.609  2025 0.596
+
+ hold 2 years
+  order                             all  top 100   top50%   rank corr by list year
+  market (KTC price)              0.702    0.543    84.6%   2022 0.670  2023 0.728  2024 0.708
+  sim (Dynasty SIM)               0.575    0.425    78.6%   2022 0.617  2023 0.541  2024 0.567
+  FAIR = shipped MFF VALUE        0.689    0.515    84.3%   2022 0.692  2023 0.705  2024 0.670
+  RATING (LOYO)                   0.730    0.580    88.0%   2022 0.712  2023 0.750  2024 0.727
+  RATING forward-trained          0.724    0.507    84.0%   2023 0.733  2024 0.714
+  FAIR + 0.5 x edge               0.702    0.531    85.0%   2022 0.711  2023 0.716  2024 0.680
+  FAIR + 1.0 x edge               0.705    0.539    85.8%   2022 0.721  2023 0.717  2024 0.678
+  FAIR + 1.5 x edge               0.703    0.544    86.1%   2022 0.725  2023 0.712  2024 0.672
+  FAIR + 2.0 x edge               0.698    0.547    86.4%   2022 0.727  2023 0.706  2024 0.661
+  FAIR + 3.0 x edge               0.677    0.551    85.4%   2022 0.712  2023 0.686  2024 0.635
+  FAIR + 4.0 x edge               0.653    0.554    82.9%   2022 0.695  2023 0.659  2024 0.606
+
+ hold 3 years
+  order                             all  top 100   top50%   rank corr by list year
+  market (KTC price)              0.677    0.549    80.9%   2021 0.642  2022 0.662  2023 0.725
+  sim (Dynasty SIM)               0.558    0.422    75.5%   2021 0.538  2022 0.603  2023 0.533
+  FAIR = shipped MFF VALUE        0.673    0.513    80.1%   2021 0.633  2022 0.681  2023 0.706
+  RATING (LOYO)                   0.713    0.558    83.1%   2021 0.668  2022 0.705  2023 0.766
+  RATING forward-trained          0.735    0.521    80.9%   2023 0.735
+  FAIR + 0.5 x edge               0.691    0.524    79.8%   2021 0.650  2022 0.699  2023 0.724
+  FAIR + 1.0 x edge               0.701    0.529    79.7%   2021 0.659  2022 0.709  2023 0.732
+  FAIR + 1.5 x edge               0.702    0.531    79.8%   2021 0.660  2022 0.713  2023 0.732
+  FAIR + 2.0 x edge               0.699    0.527    79.9%   2021 0.656  2022 0.711  2023 0.728
+  FAIR + 3.0 x edge               0.686    0.522    80.3%   2021 0.647  2022 0.696  2023 0.714
+  FAIR + 4.0 x edge               0.667    0.515    78.8%   2021 0.631  2022 0.680  2023 0.689
+
+ blend strength picked leave-one-year-out (score = mean of the 1-yr and 2-yr rank corr):
+   2021 k=0.5 +0.009  2022 k=0.5 +0.019  2023 k=0.5 +0.007  2024 k=0.5 +0.002  2025 k=0.5 -0.009
+   blend vs shipped FAIR: +0.0055 per year, wins 4 of 5
+   RATING (LOYO) vs shipped FAIR: +0.0186 per year, wins 4 of 5
+   RATING forward-trained vs shipped FAIR: 2023 +0.021  2024 +0.029  2025 -0.019

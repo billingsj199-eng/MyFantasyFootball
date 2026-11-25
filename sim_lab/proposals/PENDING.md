@@ -379,3 +379,17 @@
   - Not yet built: post-draft replacement of the placeholders; deriving 2026 scores from pbp (schedules_games.csv has
     scores through week 6 only).
   - Jack decides whether refresh_2027.py gets scheduled.
+
+## P-20261124-5 - MFF RATING as a value source in the trade calculator and My Teams (redraft) - BUILT ON THE BRANCH, NOT LIVE (Jack 2026-11-24 "also have this in myteams and trade calc etc")
+
+- **What:** `_verBoardFor('mff', mode)` routes redraft to `window._mffRatingBoard(mode)` (rating order from `_vorTableROS(false, false)`: skill by `rkR`,
+  then K, then D/ST, the rest in consensus order; cached on a signature of export time + scoring + VOR lineup + D length + schedule week). The shared
+  'mff' tab shows on redraft labelled MFF RATING (`_mffTabLabel`) in the trade calculator / FIND TRADE and My Teams; guards relaxed with
+  `_mffRatingMode(mode)`; labels in the share card and the My Teams source line. Opt-in, premium-gated like MFF VALUE, no default changes.
+- **Where:** branch `feat/mff-redraft-rating` commit d87fbdc6 (one ahead of main f90cb538; app.js + cache-bust `2026-11-24-mffsrc`). Not pushed.
+- **Verified (local preview, temporary test premium flag removed after):** redraft tab = MFF RATING and selects; superflex hidden + source back to
+  consensus; dynasty = MFF VALUE; values Gibbs 250 / 250, Kittle 134 / 61, Flowers 41 / 109 (rating / consensus); board cached.
+- **Not verified:** My Teams with a synced league; a full trade through the lineup-after section on this source.
+- **Superflex excluded:** SIM VOR's superflex QB replacement = 25th QB by TOTAL read per game; today Sam Darnold 17.2 / g (5 games) = the same 17.2 as
+  QB13 Bo Nix, so superflex QBs are priced like 1QB on the live SIM VOR board. Pre-existing; needs Jack's call.
+- **Gotcha:** sw.js serves the old app.js for an unchanged ?v=; bump the cache-bust to test locally.

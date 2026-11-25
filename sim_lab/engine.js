@@ -3189,6 +3189,40 @@
         }
       });
     });
+    // PROMOTED CHART QB1 (2026-11-25, Jack: every QB starting week 12 must show up properly - Rudolph PIT 4.1 after Rodgers was
+    // benched, Richardson Sr. IND 5.7 after Jones was released). A room WITHOUT windows follows the chart only through the backup
+    // cap (string 2+); the new string-1 QB keeps a shadow prior built from his own relief cameos (0-1 pts a game -> hist + last-8
+    // near 0), and since 10-08 the current week IS the shadow. Same cure as the 10-07 window fix: chart QB1 whose 2026 games so
+    // far are mostly cameos (starts = 2+ half pts, fewer starts than cameos) gets a start window from his first game at/after the
+    // current week; inside it the cameos are not evidence (winEvid = starts only) and the shadow blend is skipped, so he is priced
+    // at his Clay / depth-slot starter line + his real starts. 2026 replay of this cell (frozen site rows, cameo-dominated chart
+    // QB1 starting): McCarthy W6/7/9, McCord W10/11, DeVito W10 projected 5.8 avg vs 9.95 actual. Starters with real 2026 starts
+    // (returning from injury, McCarthy, Milton) are untouched. Restored with the other windows on every call (_qbWinOrig = null).
+    // Kill: window.SIM_QB_PROMOTE = false. Backup engine.js.bak_pre_qbpromote_20261125.
+    if (wnd.SIM_QB_PROMOTE !== false) {
+      var JP = jsData().players || {};
+      Object.keys(D).forEach(function (ct) {
+        var tm = normTeam(ct);
+        if (rooms[tm] || !D[ct].QB || !D[ct].QB.length) return;
+        var c0 = norm(D[ct].QB[0]);
+        var q1 = list.filter(function (p) { return p.pos === 'QB' && !p.isDST && p.tm === tm && p.norm === c0; })[0];
+        if (!q1 || q1.qbWindow) return;
+        // his own line must already be a STARTER line (a depth-pool QB1 = the chart's QB1 slot prior, 14.0 half): a Clay-sheet backup
+        // (DeVito, McCord: Clay ~0.5/g) inside a window would be priced off that backup line with the cameos removed - worse, so he stays on the shadow
+        if (!(seasonPoints(q1, PRESETS.half) / (q1.clayGames || 17) >= 8)) return;
+        var rec = JP[q1.norm];
+        if (!rec || !rec.wf) return;
+        var ks = Object.keys(rec.wf).filter(function (k) { return +k < cw && isFinite(+rec.wf[k]); });
+        var st = ks.filter(function (k) { return +rec.wf[k] >= 2; }).length;
+        if (!ks.length || 2 * st >= ks.length) return;   // a real starter's evidence (or no 2026 games) - the shadow reads him fine
+        var gw = sched.gameWeeks[tm] || [], curG = 0, nG = gw.length;
+        for (var i = 0; i < gw.length; i++) if (gw[i] >= cw) { curG = i + 1; break; }
+        if (!curG) return;
+        q1._qbWinOrig = null;
+        q1.qbWindow = { s: curG, e: nG, games: q1.clayGames || 17, src: 'override', chart: true, promo: true };
+        changed.push(q1.name + ' promoted chart QB1 g' + curG + '-' + nG + ' (' + st + ' start' + (st === 1 ? '' : 's') + ' / ' + ks.length + ' games)');
+      });
+    }
     return changed;
   }
   function applyInSeasonInjuries(players, currentWeek, opts) {
@@ -3601,7 +3635,9 @@
             // Winner-take-all and UNCAPPED: the next man up inherits 85% of
             // the starter's per-game level on top of his own. A 1-pt Clay
             // backup (Rush) under the x2 cap below projected at nothing.
-            if (nextQb[g] === p) f = 1 + INJ_SHARE.QB * lost[g] / p._injBase;
+            // a PROMOTED chart QB1 (qbChartWindows) is already priced as the starter - the benched / released QB he replaced vacates
+            // nothing to him (inside a window the live join is additive, so this would double-pay: Rudolph 12.4 -> 21.2 with Rodgers out)
+            if (nextQb[g] === p && !(p.qbWindow && p.qbWindow.promo)) f = 1 + INJ_SHARE.QB * lost[g] / p._injBase;
           } else if (!usePool && healthyW[g] > 0) {
             // LEGACY (SIM_POOL=false): share x lost x (my depth weight /
             // group's weighted level) — the group absorbs exactly `share`.

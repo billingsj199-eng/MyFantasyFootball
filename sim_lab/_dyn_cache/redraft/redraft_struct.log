@@ -1,0 +1,104 @@
+structured redraft value | 12320 player-weeks 2019-25
+actual share of remaining weeks played: mean 0.81 | by status: healthy 0.81, questionable 0.79, doubtful 0.87, missed practice 0.81
+
+=== FORWARD IN TIME (tests 2022-25) ===
+  can each piece be predicted at all?
+    AVAILABILITY model vs share of remaining weeks played      rank corr 0.203
+    ROLE DRIFT model vs how his base projection changed        rank corr 0.711
+
+  all checkpoints   (48 checkpoints, 8106 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.548    0.650    0.545    0.514      73.3%      79.2%
+    base projection           0.550    0.652    0.550    0.508      72.2%      78.6%
+    this wk + base after      0.551    0.652    0.550    0.512      72.3%      78.9%
+    ESPN (benchmark)          0.546    0.626    0.553    0.496      70.8%      77.9%
+    base + ESPN (benchmark)    0.562    0.653    0.562    0.523      73.8%      79.5%
+    + availability            0.550    0.655    0.550    0.508      72.1%      78.4%
+    + option                  0.557    0.652    0.550    0.512      72.4%      78.3%
+    + role drift              0.466    0.622    0.516    0.425      69.5%      75.0%
+    this wk + option x avail    0.558    0.654    0.552    0.515      72.2%      78.8%
+    + option + avail          0.556    0.653    0.550    0.510      72.2%      78.4%
+
+  late season (before weeks 11-14)   (16 checkpoints, 2630 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.511    0.610    0.500    0.456      68.1%      76.5%
+    base projection           0.517    0.614    0.506    0.464      68.8%      75.0%
+    this wk + base after      0.517    0.614    0.507    0.467      68.8%      75.6%
+    ESPN (benchmark)          0.522    0.587    0.518    0.465      66.3%      75.6%
+    base + ESPN (benchmark)    0.533    0.614    0.524    0.486      69.7%      77.4%
+    + availability            0.517    0.617    0.506    0.464      68.7%      74.7%
+    + option                  0.522    0.614    0.506    0.467      69.1%      75.1%
+    + role drift              0.346    0.531    0.409    0.286      62.6%      65.4%
+    this wk + option x avail    0.522    0.618    0.508    0.467      68.6%      75.6%
+    + option + avail          0.521    0.619    0.505    0.465      69.0%      74.8%
+
+  bench zone only (projected below replacement)   (48 checkpoints, 4153 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.014    0.173   -0.119    0.014      68.3%      93.0%
+    base projection           0.034    0.186   -0.078    0.034      67.6%      91.3%
+    this wk + base after      0.032    0.188   -0.084    0.032      67.9%      91.8%
+    ESPN (benchmark)          0.053    0.188   -0.093    0.055      59.6%      90.8%
+    base + ESPN (benchmark)    0.052    0.190   -0.091    0.054      67.1%      92.8%
+    + availability            0.036    0.190   -0.074    0.036      66.7%      90.1%
+    + option                  0.077    0.186   -0.078    0.078      70.7%      93.4%
+    + role drift             -0.016    0.163   -0.108   -0.017      51.9%      73.4%
+    this wk + option x avail    0.074    0.193   -0.076    0.075      72.1%      93.4%
+    + option + avail          0.075    0.187   -0.078    0.076      70.9%      93.0%
+    QB only: base projection 0.418, + option + avail 0.418
+    TE only: base projection 0.420, + option + avail 0.420
+    + option + avail minus base projection, by season: 2022 +0.010   2023 +0.006   2024 +0.001   2025 +0.007
+    + availability minus base projection, by season: 2022 +0.001   2023 +0.001   2024 -0.001   2025 +0.002
+    + option minus base projection, by season: 2022 +0.013   2023 +0.008   2024 +0.002   2025 +0.004
+    + role drift minus base projection, by season: 2022 -0.077   2023 -0.109   2024 -0.107   2025 -0.041
+    base + ESPN minus base projection, by season: 2019 +0.005   2020 +0.008   2021 -0.003   2022 +0.008   2023 +0.008   2024 +0.005   2025 +0.015
+
+=== LEAVE ONE SEASON OUT ===
+  can each piece be predicted at all?
+    AVAILABILITY model vs share of remaining weeks played      rank corr 0.231
+    ROLE DRIFT model vs how his base projection changed        rank corr 0.746
+
+  all checkpoints   (82 checkpoints, 12320 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.606    0.678    0.599    0.579      76.1%      82.7%
+    base projection           0.608    0.679    0.602    0.578      75.2%      82.7%
+    this wk + base after      0.609    0.680    0.603    0.581      75.3%      82.8%
+    ESPN (benchmark)          0.599    0.641    0.600    0.560      74.4%      81.5%
+    base + ESPN (benchmark)    0.617    0.673    0.613    0.588      76.8%      83.0%
+    + availability            0.609    0.681    0.603    0.579      75.3%      82.8%
+    + option                  0.613    0.679    0.602    0.580      75.3%      82.5%
+    + role drift              0.534    0.659    0.579    0.507      73.3%      78.8%
+    this wk + option x avail    0.616    0.681    0.605    0.585      75.7%      82.8%
+    + option + avail          0.614    0.681    0.603    0.582      75.4%      82.7%
+
+  late season (before weeks 11-14)   (26 checkpoints, 3834 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.566    0.636    0.551    0.529      72.2%      80.2%
+    base projection           0.573    0.640    0.560    0.540      71.9%      79.4%
+    this wk + base after      0.574    0.640    0.561    0.543      71.7%      79.8%
+    ESPN (benchmark)          0.572    0.599    0.568    0.535      70.6%      79.5%
+    base + ESPN (benchmark)    0.586    0.637    0.578    0.556      72.8%      80.9%
+    + availability            0.574    0.642    0.561    0.541      72.1%      79.7%
+    + option                  0.578    0.640    0.560    0.542      72.1%      79.5%
+    + role drift              0.405    0.579    0.482    0.381      67.1%      70.0%
+    this wk + option x avail    0.580    0.642    0.562    0.545      72.1%      79.8%
+    + option + avail          0.579    0.642    0.560    0.543      72.2%      79.6%
+
+  bench zone only (projected below replacement)   (82 checkpoints, 5521 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.012    0.173   -0.097    0.011      69.2%      93.6%
+    base projection           0.029    0.186   -0.056    0.029      67.6%      92.1%
+    this wk + base after      0.027    0.188   -0.061    0.027      68.3%      92.5%
+    ESPN (benchmark)          0.055    0.188   -0.079    0.057      60.1%      90.9%
+    base + ESPN (benchmark)    0.052    0.190   -0.076    0.054      67.3%      93.1%
+    + availability            0.030    0.190   -0.052    0.030      67.7%      92.0%
+    + option                  0.073    0.186   -0.056    0.074      70.9%      94.1%
+    + role drift             -0.023    0.164   -0.083   -0.024      49.6%      74.5%
+    this wk + option x avail    0.073    0.192   -0.053    0.073      71.9%      94.4%
+    + option + avail          0.073    0.185   -0.056    0.074      70.9%      94.1%
+    QB only: base projection 0.484, + option + avail 0.486
+    TE only: base projection 0.489, + option + avail 0.490
+    + option + avail minus base projection, by season: 2019 +0.007   2020 -0.002   2021 +0.007   2022 +0.014   2023 +0.008   2024 +0.002   2025 +0.007
+    + availability minus base projection, by season: 2019 +0.001   2020 +0.000   2021 +0.002   2022 +0.001   2023 +0.002   2024 -0.000   2025 +0.002
+    + option minus base projection, by season: 2019 +0.005   2020 -0.003   2021 +0.004   2022 +0.013   2023 +0.009   2024 +0.002   2025 +0.004
+    + role drift minus base projection, by season: 2019 -0.085   2020 -0.047   2021 -0.065   2022 -0.083   2023 -0.099   2024 -0.100   2025 -0.041
+    base + ESPN minus base projection, by season: 2019 +0.005   2020 +0.008   2021 -0.003   2022 +0.008   2023 +0.008   2024 +0.005   2025 +0.015

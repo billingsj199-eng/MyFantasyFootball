@@ -212,3 +212,21 @@ proposed; a 22-pt game for the same QB is -0.6% today, -6.9% proposed; a 22-pt g
   calls 23 / 22 vs 23 / 23, off switch + stale guard work. Real build after: copy 1 day old -> no `r`, `fc.date` 2026-11-23.
 - **Timeline if nothing changes:** first rolled build on or after 2026-12-14. Off season the roll stops and the forecast hides 21 days later.
 - **Not done (go-live):** merge + push, app.js ?v= bump, hooking `build_lasting_edge.py` into the Tuesday chain, backup_to_branch.
+
+## P-20261124-4 - MFF RATING view on the SIM VOR board (0-99 redraft rating = MFF rankings order) - APPROVED 2026-11-24 ("Yes, build it"), BUILT ON A BRANCH, NOT LIVE
+
+- **What:** new exclusive pill `#vorRatingBtn` on the SIM VOR board (season boards). `_vorTable` entries gain `vr` (rating value), `rt` (0-99),
+  `rkR`, `tAr` / `tPr`; `_MFFR_SIG` (spread of a base projection k = 1..7 weeks ahead by position, half-PPR points), `_mffrCall` (normal call),
+  `_vorRatingOn()`; order (`_simsBoardEnsure` key `:ra`), tiers (`_simsTiersFor`), tail column + `RATING` header, board label `MFF RATING`.
+  ROS VOR / PLAYOFFS / UPSIDE untouched.
+- **Where:** site worktree `.claude/worktrees/mff-redraft-rating`, branch `feat/mff-redraft-rating`, commit 60dcd364 on origin/main 2a99f1f4
+  (app.js + one CSS selector in index.html). Not pushed / merged.
+- **Evidence** (`backtest_redraft_rating.py`, `backtest_redraft_struct.py`, `_tmp/redraft_site_formula.py`, `_tmp/redraft_sigma_scale.py`; 2019-25
+  harness rows, truth = realized startable value, forward tests 2022-25, 48 checkpoints): projection over replacement .548 (ESPN .546, season PPG
+  .499, ADP .477); 37-input GBM .527; availability model +.000; role-drift model -.08; option +.007 every season. Top-24 / top-50 value identical
+  to floored ROS VOR (72.3% / 78.9%); bench zone top-24 stash capture 74-78% (sigma x0.5 .. x3) vs 51.6% no option vs 59.5% for the live UPSIDE
+  formula (which is also below floored ROS VOR on full-board rank corr in 3 of 4 seasons - conflicts with the 10-09 option_vor backtest; flagged).
+- **Verified:** local preview - PPR / half / std all rate every player, top 24 = ROS VOR's top 24 in each, 56-89 zero-VOR players ordered,
+  rank corr .954 with `redraft_rating.py` (top 120, half), pill / header / tiers / label switch, no console errors.
+- **Open (Jack):** go live; whether the rating becomes a default order; whether UPSIDE is retired or re-tested; consensus blend (+.012, outside input).
+- **LIVE 2026-11-24** (Jack "Go live"): pushed as 60dcd364 + f90cb538 (app.js ?v=2026-11-24-mffrating); deploy succeeded; live app.js has `_mffrCall` / `_vorRatingOn` / `vorRatingBtn`. Phone layout checked first (375 px: pill fits, no sideways scroll; the 0-99 number is not shown in phone rows).

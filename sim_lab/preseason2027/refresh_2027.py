@@ -112,7 +112,7 @@ def stage(week, today):
     if today < dt.date(2027, 3, 11): missing.append("free agency and trades (veterans' teams are their 2026 teams)")
     if not drafted27: missing.append("the 2027 draft (late April): real draft capital + landing spots; veterans not adjusted for incoming rookies")
     if not have_wt27: missing.append("2027 win totals (team strength = league median)")
-    if not aug_chart: missing.append("2027 August depth charts (2027 look uses today's ESPN chart)")
+    if not aug_chart: missing.append("2027 August depth charts (2027 look: RB / WR / TE roles = 2026 usage per game; QB roles = today's ESPN chart + most 2026 starts)")
     missing.append("coaching / play-caller changes for 2027 (coaches.json has no 2027)")
     return lines, missing
 
@@ -157,7 +157,7 @@ def changelog(prev, cur):
             if r.get("jm_o") != r.get("jm_n"): why.append(f"JM {r.get('jm_o')} -> {r.get('jm_n')}")
             if r.get("class_status_o") != r.get("class_status_n"): why.append(f"class status {r.get('class_status_o')} -> {r.get('class_status_n')}")
         else:
-            if "dc_o" in r and str(r.get("dc_o")) != str(r.get("dc_n")): why.append(f"depth chart {r.get('dc_o')} -> {r.get('dc_n')}")
+            if "dc_o" in r and str(r.get("dc_o")) != str(r.get("dc_n")): why.append(f"role {r.get('dc_o')} -> {r.get('dc_n')} ({'chart + most starts' if r.pos == 'QB' else 'usage per game'})")
             if abs((r.get("ppg26_n") or 0) - (r.get("ppg26_o") or 0)) > 1e-9: why.append(f"new 2026 game data (2026 ppg {r.get('ppg26_o'):.1f} -> {r.get('ppg26_n'):.1f})")
         if not why: why.append("own projection unchanged: others moved around him" if abs(dtot) < 1e-6 else "shared model inputs (team games, contracts, history) moved")
         lines.append(f"- {r['name']} ({r.pos}): {r.pos}{int(r.pos_rank_o)} -> {r.pos}{int(r.pos_rank_n)}, overall {int(r.rank_o)} -> {int(r.rank_n)}, total {r.total_o:.0f} -> {r.total_n:.0f} | {'; '.join(why)}"); n += 1

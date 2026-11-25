@@ -16,12 +16,16 @@
 #      scores. It checks its inputs first, restores the outputs itself if a step fails, and
 #      writes a dated snapshot, a changelog and output\2027_refresh_status.md. The output files
 #      are also backed up here first and put back if the result does not check out.
-#   3. If players moved (veterans 10+ points, rookies 1+, or anyone new / gone): toast / alert
-#      Jack. The site's admin-only 2027 board reads the file from the private database, so the
-#      last step is still his: 2027 tab -> UPDATE SIM FILE -> output\2027_inhouse_early.csv ->
-#      SAVE SIM FILE.
+#   3. Put the list on the site (Jack 2026-11-24: "make it so I dont have to load a file and its
+#      just on the site"): upload_2027_list.py POSTs the CSV to the key-gated Cloud Function
+#      importSim2027, which writes the private doc the admin-only 2027 tab reads. No file step
+#      for Jack. If the upload fails the alert says so and gives the manual way (2027 tab ->
+#      UPDATE SIM FILE -> output\2027_inhouse_early.csv -> SAVE SIM FILE).
+#   4. If players moved (veterans 10+ points, rookies 1+, or anyone new / gone): toast / alert
+#      Jack with the biggest movers.
 #
-# It fetches nothing but the JM scores, re-tunes nothing, and does not touch git or upload.
+# It fetches nothing but the JM scores, re-tunes nothing, and does not touch git. The only
+# upload is the list itself, to the private admin-only database doc.
 #
 # -DryRun: runs the JM export into preseason2027\output\_list_dryrun\ and stops (the rebuild has
 #          no scratch mode; use preseason2027\_gate_teamcodes\run_list_scratch.py for that).
@@ -160,8 +164,22 @@ foreach ($k in @($before.Keys | Where-Object { -not $after.ContainsKey($_) })) {
     if (Is-Rookie $before[$k]) { $rks += $m } else { $vets += $m }
 }
 Write-Log ("rebuilt: $($after.Count) rows ($nVet veterans, $nRk rookies). " + $(if ($cl) { $cl.Trim() } else { '' }))
+
+# ---- put the list on the site (the function skips a file identical to the one it has) ------
+$Uploader = 'E:\MyFantasyFootball\sim_lab\upload_2027_list.py'
+$upOk = $false; $upMsg = 'upload_2027_list.py is missing'
+if (Test-Path $Uploader) {
+    $up = & $SimPy -I $Uploader 2>&1 | Out-String
+    $upOk = ($LASTEXITCODE -eq 0)
+    $upMsg = ($up.Trim() -split "`n" | Select-Object -Last 1)
+}
+Write-Log ('site upload: ' + $upMsg)
+$Manual = 'Do it by hand: 2027 tab -> UPDATE SIM FILE -> sim_lab\preseason2027\output\2027_inhouse_early.csv -> SAVE SIM FILE.'
+$siteNote = if ($upOk) { ' The 2027 tab on the site shows the new list.' } else { ' SITE UPLOAD FAILED (' + $upMsg + '). ' + $Manual }
+
 if (-not $vets.Count -and -not $rks.Count) {
     Write-Log "${wk}nobody moved (veterans 10+ points, rookies 1+)"
+    if (-not $upOk) { Send-Alert 'upload-failed' ('the list was rebuilt but did not reach the site (' + $upMsg + '). ' + $Manual) }
 } else {
     $byAbs = { -[math]::Abs($_.d) }
     foreach ($m in (@($vets) + @($rks) | Sort-Object $byAbs | Select-Object -First 30)) { Write-Log ('  {0}: {1:+0.0;-0.0} pts ({2})' -f $m.who, $m.d, $m.note) }
@@ -169,7 +187,7 @@ if (-not $vets.Count -and -not $rks.Count) {
     $parts = @()
     if ($vets.Count) { $parts += ("$($vets.Count) veterans moved 10+ points (" + (& $lead $vets) + ')') }
     if ($rks.Count)  { $parts += ("$($rks.Count) rookies moved (" + (& $lead $rks) + ')') }
-    Send-Alert 'updated' ($wk + ($parts -join '; ') + '. Open the 2027 tab -> UPDATE SIM FILE -> sim_lab\preseason2027\output\2027_inhouse_early.csv -> SAVE SIM FILE.')
+    Send-Alert 'updated' ($wk + ($parts -join '; ') + '.' + $siteNote)
 }
 
 $lines = Get-Content $Log

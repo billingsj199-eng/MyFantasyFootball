@@ -492,3 +492,142 @@ Typical top-150 player: -3% in 3 months, -9% in 6 months (the rookie class arriv
   (1QB 18 / 15 -> 21 / 18).
 - **Still open:** a KTC source for the offseason, and everything else that reads the KTC copy (KTC columns, trade
   calculator KTC source) stays frozen at Nov 23.
+
+---
+
+## Addendum 8: redraft rating = the MFF "rankings" order (Jack 11-24) - PROTOTYPE, nothing live
+
+Jack: "now build the redraft rating" / "this would be the mff 'rankings' order" / "because it isnt always as simple
+as proj ppg with risk, upside etc".
+
+Scripts: `backtest_redraft_rating.py`, `backtest_redraft_struct.py`, `redraft_rating.py`. Logs and tables in
+`_dyn_cache/redraft/`.
+
+### How it was tested
+
+- History: 12,320 player-weeks, 2019-2025, from the sim's historical stand-in (half-PPR).
+- At every checkpoint (before weeks 3 to 14), each candidate order was graded on what players were really worth
+  the rest of the season: points over replacement in the weeks you would have started him (his projection that
+  week was at or above replacement). Missed games count zero. Replacement is the best non-starter in a 12-team
+  league (QB13 / RB26 / WR36 / TE13).
+- Forward in time: trained on earlier seasons, tested on 2022-2025.
+
+### What ranks players best (same 48 checkpoints, higher is better)
+
+| Order | All | RB | WR | Top-24 value captured |
+|---|---|---|---|---|
+| Our projection over replacement | .548 | .650 | .545 | 73.3% |
+| Our base projection x weeks left | .550 | .652 | .550 | 72.2% |
+| Season points per game | .499 | .602 | .493 | 66.6% |
+| Preseason ADP (benchmark) | .477 | .535 | .547 | 71.2% |
+| ESPN's projection (benchmark) | .546 | .626 | .553 | 70.8% |
+| 37-input model: projection + risk + upside | .527 | .629 | .538 | 70.9% |
+| Projection + availability model | .550 | .655 | .550 | 72.1% |
+| Projection + role-trend model | .466 | .622 | .516 | 69.5% |
+| **Projection + option** | **.557** | .652 | .550 | 72.4% |
+| **This week exact + option after** | **.558** | .654 | .552 | 72.2% |
+| Our base + ESPN, equal ranks (benchmark) | .562 | .653 | .562 | 73.8% |
+
+### What that says about risk and upside
+
+- **Our projection already carries most of it.** It ties ESPN and beats season PPG and ADP at every stage of the season.
+- **Risk inputs do not improve the order.** Injury report, practice status, age, snap trend, games missed, dud rate and
+  volatility were tested together and as their own availability model. Players listed questionable went on to play 79%
+  of the remaining weeks; healthy players 81%. Who misses time later is close to unpredictable from these.
+- **Chasing role trends hurts.** A model of where the projection is heading predicts the projection well, but ranking
+  on it is much worse (-.08), because production regresses.
+- **Upside helps in one form: the option.** A projection can climb or fall, and you ride it when it climbs and bench it
+  when it falls. Worth +.007 on the whole board in every season tested (+.013, +.008, +.002, +.004), and it is what
+  separates bench stashes: among players projected below replacement the order goes from .034 to .077 and the top-24
+  stashes capture 70.7% of the best possible instead of 67.6%. QB and TE order does not change.
+- **A big model is worse than the projection.** Same lesson as the dynasty study.
+- **The outside consensus adds a little.** Our base and ESPN ranked together beat either alone (+.012, better in 6 of 7
+  seasons). That uses outside projections, so it is Jack's call (11-21: "keep it in-house").
+
+### The prototype rating
+
+- **Value** = this week: projection over replacement (zero if below) + each later fantasy week through 17: the
+  expected points over replacement given how far projections really move that many weeks ahead (by position).
+- **Rating 0-99** = 99 x square root of (value / best value on the board).
+- **Shown beside it, not part of the order:** NOW (this week over replacement), FLOOR (share of his games at or above
+  replacement), CEILING (share of games 8+ over replacement), UPSIDE (share of his value that is option), games missed.
+
+This week (valuing weeks 12-17, half-PPR): Gibbs 99, Smith-Njigba 91, Bijan 83, McCaffrey 81, Chase 81, St. Brown 78,
+Ken Walker 73, Lamb 72, Pollard 69, Bowers 68, Irving 67, Cook 65, Jonah Coleman 65, Burrow 65, Jefferson 64.
+Full table: `_dyn_cache/redraft/redraft_rating_now.csv` (407 players, with the consensus rank beside each).
+
+Against the FantasyPros rest-of-season consensus (benchmark): rank agreement .85 in the top 150. Because the rating
+is value over replacement, it ranks top quarterbacks and tight ends higher than the consensus (Kittle 46 -> 16,
+Daniels 79 -> 33, Kelce 85 -> 50) and deep wide receivers lower (Flowers 25 -> 63, Downs 47 -> 116).
+
+### Limits
+
+- The order is very close to what the SIM VOR board with its UPSIDE setting already shows; the new parts are the
+  option for every position and week, the single 0-99 number and the floor / ceiling columns.
+- Availability comes only from the sim's own weekly projections. Two cases to check by hand: Puka Nacua (consensus
+  244, here 41) and Josh Jacobs (111 vs 25), where the sim expects a return the consensus does not.
+- Half-PPR only so far. PPR and standard need the same build on the other export columns.
+- The history uses the sim's stand-in, not a replay of the live engine, and has only players who had a projection
+  that week.
+
+---
+
+## Addendum 9: redraft rating built on a review branch (Jack 11-24 "Yes, build it") - NOT live
+
+- **Branch:** `feat/mff-redraft-rating`, commit 60dcd364, in its own worktree. Not pushed, not merged. Queued as
+  P-20261124-4.
+- **What it is on the site:** a new **MFF RATING** setting on the SIM VOR board (season boards, not weekly). Turning
+  it on re-orders and re-tiers the board by the rating and shows the 0-99 number in the last column. ROS VOR,
+  PLAYOFFS and UPSIDE keep their own numbers and order; nothing existing changes.
+- **Why it sits on the SIM VOR board:** the rating is the same weeks, playoff weighting, league settings and scoring
+  as ROS VOR, with each later week priced as an option. Building it there means PPR, half and standard, and synced
+  leagues, all work without a second copy of that logic.
+- **Two more tests before building:**
+  - The option's strength barely matters. From half to triple the measured spread, top-24 and top-50 value are the
+    same and stash picking stays at 74-78% of the best possible (52% with no option).
+  - The site's current UPSIDE formula, run on the same history, picked stashes worse: 60% of the best possible, and
+    below plain ROS VOR on the whole board in 3 of 4 seasons. This disagrees with the October test that shipped
+    UPSIDE (a different history table), so it is flagged, not changed.
+- **Checked in a local browser:**
+  - Works in PPR, half and standard; every player gets a rating.
+  - The top 24 are the same players as ROS VOR in all three formats; 56 to 89 players that ROS VOR scores 0 now have
+    an order.
+  - Half-PPR top 10 on the site: Gibbs 99, Bijan 87, Smith-Njigba 86, McCaffrey 85, Walker 78, Chase 77, Pollard 74,
+    St. Brown 73, Irving 71, Cook 71. Agreement with the Python prototype .95 in the top 120 (the site adds the 1.5x
+    playoff-week weight and its own replacement rule).
+  - Pill, header ("RATING"), tiers and board label all switch; no console errors.
+- **Not built:** floor and ceiling columns (the card already shows the sim's own boom / bust odds), and the rating is
+  not the default order of any board.
+- **Not checked:** a synced league's settings with the rating on, and the phone layout.
+
+---
+
+## Addendum 10: MFF RATING live on the board; trade calculator and My Teams built on the branch (Jack 11-24)
+
+### Live (Jack "Go live")
+
+- The MFF RATING setting on the SIM VOR board is on main (f90cb538, app.js cache-bust `2026-11-24-mffrating`). The
+  Pages deploy succeeded and the live site serves the new code.
+- Phone layout checked before the push: the pill fits beside UPSIDE and RESET, no sideways scroll, the board re-orders.
+  On a phone the 0-99 number itself is not visible in the row (stat columns are hidden there); the order and tiers are.
+
+### Built on the branch, NOT live (Jack "also have this in myteams and trade calc etc")
+
+- **Branch:** `feat/mff-redraft-rating`, one commit ahead of main.
+- **What it does:** the MFF source tab, which is MFF VALUE on dynasty, now also shows on redraft, labelled
+  MFF RATING, in the trade calculator (and FIND TRADE, which shares the source) and in My Teams. Players are priced
+  by the rating order through the same path every other source uses. It is opt-in and behind the same lock as
+  MFF VALUE. No defaults change. Dynasty is unchanged.
+- **Checked in a local browser (with a test premium flag that was removed afterwards):**
+  - Redraft: the tab shows as MFF RATING and selects. Superflex: hidden, and the source falls back to Consensus.
+    Dynasty: shows as MFF VALUE as before.
+  - Example trade values, rating vs consensus: Gibbs 250 / 250, Kittle 134 / 61, Flowers 41 / 109, Jordan Mason 2 / 2.
+  - The board builds once and is reused (no slowdown on repeated value lookups).
+- **Not checked:** My Teams with a real synced league (the local preview has none), and a full trade run through
+  the lineup-after section with this source selected.
+- **Superflex left out on purpose.** The SIM VOR table's superflex quarterback replacement is the 25th QB by
+  total points, read per game. Today that is a QB with a missed week who scores 17.2 a game, the same as the 13th QB,
+  so superflex prices quarterbacks no higher than 1QB does. That affects the SIM VOR superflex board that is already
+  live; flagged for a decision, not changed.
+- **Testing note:** the site's service worker serves the old app.js until the cache-bust changes, so a local preview
+  must bump it to see new code.

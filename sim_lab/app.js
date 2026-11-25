@@ -6363,6 +6363,7 @@
       chips.push((im && im.src === 'out-unconfirmed' ? 'OUT flag unconfirmed (Sleeper still projects him' + (im.note ? '; ' + im.note : '') + ') ×' : im && /^q-(dnp|lp|fp)$/.test(im.src || '') ? ('Q + ' + im.src.slice(2).toUpperCase() + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%, x' + im.cond.toFixed(2) + ' if he plays)' : '') + ' ×') : im && /doubtful/.test(im.src || '') ? ('DOUBTFUL' + (im.play != null ? ' (plays ' + Math.round(100 * im.play) + '%)' : im.src === 'doubtful-unconfirmed' ? ' unconfirmed' : '') + ' ×') : 'docked ×') + ntF(iA, 2));
     }
     else if (iA > 1.02) chips.push('role boost ×' + ntF(iA, 2));
+    if (p.qbWindow && p.qbWindow.promo) chips.push('promoted chart QB1: starter from game ' + p.qbWindow.s + ' (relief cameos not used as his level; SIM_QB_PROMOTE)');   // 2026-11-25
     if (wp && wp.balloc != null && Math.abs(wp.balloc - 1) >= 0.01) chips.push('budget allocation x' + ntF(wp.balloc, 2) + ' (group volume share vs the roster this week; P-20261013-1 test switch)');
     if (wp && wp.vfade >= 0.05) chips.push('vacancy fade (weeks ahead) -' + ntF(wp.vfade, 1) + ': already ' + (wp.why && wp.why.vfadeSeen != null ? wp.why.vfadeSeen : '?') + ' game(s) played without the injured teammate');   // P-20261013-2
     if (wp && /\+nmu\+/.test(wp.ncSrc || '')) chips.push('next man up: target-share teammate out (lift)');

@@ -8,8 +8,9 @@ like without adp for now".
      game lines (sim_lab/data/preseason_lines_2026_frozen.js, 2026-08-26), 2026 rookies + draft capital). Actual 2026 so far =
      weeks 1-10 from play_by_play_2026 (later weeks excluded). Comparison ADP = Underdog best-ball ADP of 2026-09-03
      (repo data/ud_adp_history.json; best ball, half-PPR scoring).
-  B. Early 2027 look: features from 2026 weeks 1-10 (partial season, games scaled to a 17-game rate), the current ESPN
-     depth chart (sim_lab/data/sim_depth.js, 2026-11-21), no 2027 rookies, no 2027 win totals (team expected wins = unknown ->
+  B. Early 2027 look: features from 2026 weeks 1-10 (partial season, games scaled to a 17-game rate), roles = RB / WR / TE
+     by 2026 usage per game (3+ games; WRs two to a string - A21 hybrid, adopted 2026-11-24), QBs by the current ESPN depth
+     chart (sim_lab/data/sim_depth.js) + most 2026 starts, no 2027 rookies, no 2027 win totals (team expected wins = unknown ->
      the training median), age + 1.
 Model = the final in-house per-game model (A7: S6 = .75 x lean structural + .25 x ridge, no ADP) x the in-house games-played
 model (A2). Format: half-PPR (the prototype's native scoring), 12-team 1QB (QB/2RB/3WR/TE/FLEX) for the overall VOR order.
@@ -339,20 +340,38 @@ def main():
     ch26 = load_chart(os.path.join(WORK, "depth_charts_2026_preseason.js"), r"window\.DEPTH_2026")
     ch27 = load_chart(os.path.join(PM.SIM, "data", "sim_depth.js"), r"window\.SIM_DEPTH_2026")
     dc26, qb26 = chart_maps(ch26, idx, recent); dc27, qb27 = chart_maps(ch27, idx, recent)
-    # v3 (A10): the CURRENT chart lists injured starters behind their backups (Lamar, Hurts were 2nd on 2026-11-21), so for the
-    # 2027 look a player's rank = min(current chart rank, his 2026 usage rank on that team), and QB1 = the QB with the most
-    # 2026 starts (15+ attempts) for the team. Only the 2027 look uses this; the 2026 check keeps its preseason chart.
+    # 2027 ROLE RULE = HYBRID (A21 "USEPGQ2"; Jack 2026-11-24: "Yes, QBs unchanged"; evidence _board_tests/a21_depth_history.log,
+    # a21_stability_roles.log, a21_qb_hybrid.log, usepgq_compare.log; write-up output/preseason_2027_readiness.md sections I, I10).
+    #   RB / WR / TE: role = usage per game played this season on his latest team (RB carries, WR / TE targets; players with
+    #     3+ games), ranked within team and position and read as a depth STRING: WRs two to a string (WR1-2 = 1, WR3-4 = 2,
+    #     ...), RB / TE one. Today's ESPN chart is NOT used for them (it moved players day to day and was read as a rank: one
+    #     WR per team at depth 1). Under 3 games this season = no role (the model's "not listed" input).
+    #   QB: unchanged v3 (A10) rule - the CURRENT chart lists injured starters behind their backups (Lamar, Hurts were 2nd on
+    #     2026-11-21), so rank = min(current chart rank, his 2026 starts rank on that team), and QB1 = the QB with the most
+    #     2026 starts (15+ attempts) for the team. (Usage per game was NOT adopted for QBs: pass attempts per game put
+    #     fill-ins ahead of injured starters. The all-positions build is kept in output_rankings.py.usepg2_adopted_20261124_held.)
+    # The whole v3 block is kept in output_rankings.py.pre_usepg2_20261124. Only the 2027 look uses this; the 2026 check keeps
+    # its preseason chart.
     use = W26.groupby(["pid", "team"]).agg(att=("att", "sum"), car=("car", "sum"), tgt=("tgt", "sum"), starts=("att", lambda x: int((x >= 15).sum()))).reset_index()
     posof = {}
     for (n_, ps), gl in idx.items():
         for g_ in gl: posof.setdefault(g_, ps)
     use["pos"] = use.pid.map(posof); use["vol"] = np.where(use.pos == "QB", use.starts, np.where(use.pos == "RB", use.car, use.tgt))
     use["urank"] = use.groupby(["team", "pos"]).vol.rank(ascending=False, method="first")
+    qd_ = {g_: v_ for g_, v_ in dc27.items() if posof.get(g_) == "QB"}                      # QBs: chart index, then min with the starts rank
     for r_ in use.itertuples(index=False):
-        if r_.pid in dc27 and dc27[r_.pid][0] == r_.team and r_.vol > 0:
-            dc27[r_.pid] = (r_.team, int(min(dc27[r_.pid][1], r_.urank)))
+        if r_.pos == "QB" and r_.pid in qd_ and qd_[r_.pid][0] == r_.team and r_.vol > 0:
+            qd_[r_.pid] = (r_.team, int(min(qd_[r_.pid][1], r_.urank)))
     for t_, g_ in use[(use.pos == "QB")].sort_values("starts", ascending=False).drop_duplicates("team")[["team", "pid"]].values:
-        if use[(use.team == t_) & (use.pos == "QB")].starts.max() >= 3 and g_ in dc27 and dc27[g_][0] == t_: qb27[t_] = g_
+        if use[(use.team == t_) & (use.pos == "QB")].starts.max() >= 3 and g_ in qd_ and qd_[g_][0] == t_: qb27[t_] = g_
+    _lt = W26.sort_values("week").groupby("pid").team.last()                              # RB / WR / TE: usage per game on the latest team
+    _w = W26[W26.team == W26.pid.map(_lt)]
+    U_ = _w.groupby(["pid", "team"]).agg(games=("week", "nunique"), car=("car", "sum"), tgt=("tgt", "sum")).reset_index()
+    U_["pos"] = U_.pid.map(posof); U_ = U_[U_.pos.isin(["RB", "WR", "TE"])].copy()
+    U_["vol"] = np.where(U_.games >= 3, np.where(U_.pos == "RB", U_.car, U_.tgt) / U_.games, np.nan)
+    U_ = U_[U_.vol > 0].copy(); U_["urank"] = U_.groupby(["team", "pos"]).vol.rank(ascending=False, method="first")
+    dc27 = {r_.pid: (r_.team, int(np.ceil(r_.urank / 2)) if r_.pos == "WR" else int(r_.urank)) for r_ in U_.itertuples(index=False)}
+    dc27.update(qd_)
     first_team = W26.sort_values("week").groupby("pid").team.first().to_dict(); last_team = W26.sort_values("week").groupby("pid").team.last().to_dict()
     team26 = {g: t for g, (t, r) in dc26.items()}
     for g, t in first_team.items(): team26.setdefault(g, t)
@@ -432,7 +451,7 @@ def main():
                 "- free agency and trades\n"
                 "- the 2027 draft: no 2027 rookies are in the list\n"
                 "- coaching changes\n"
-                "- 2027 depth charts: it uses today's ESPN chart\n"
+                "- 2027 depth charts: RB / WR / TE roles are each player's 2026 usage per game (3+ games; WRs two to a string); QBs use today's ESPN chart and most 2026 starts\n"
                 "- the 2027 Vegas win totals: team strength is set to the league median\n"
                 "- offseason injuries and retirements\n\n"
                 "Age is age on Sept 1, 2027.\n\n")

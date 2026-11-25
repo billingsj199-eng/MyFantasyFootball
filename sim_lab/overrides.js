@@ -86,6 +86,8 @@ window.IN_SEASON_OUT_OVERRIDES = {
   'Jeremiyah Love': [9, 12, '2026-11-15', 14],   // 2026-11-15 add: high ankle (re-injured W8), IR 11/3, out 4-5 weeks (NFL Network / azfamily 11/3-4, med-high)
   'Brian Robinson Jr.': [9, 12, '2026-11-15'],   // 2026-11-15 add: hamstring, IR 11/7, at least 4 games (AJC / Underdog, med); no timeline past the minimum
   'Romeo Doubs': [7, 11, '2026-11-15', 13],   // 2026-11-15 add: right shoulder, IR 10/19; targeting post-bye return W12 vs LAC (FantasyNerds 10/20), Vrabel no timeline (Boston.com 10/20, low-med)
+  'Aaron Rodgers': [12, 12, '2026-11-25', 'firm'],   // 2026-11-25 add: benched, INACTIVE (coach's decision, not injury) Fri W12 vs DEN; Rudolph starts (NFL.com / ESPN 11-24, high). Later weeks: chart backup.
+  'Daniel Jones': [12, 12, '2026-11-25', 'firm'],   // 2026-11-25 add: released by IND 11-20 (free agent, no team for W12); Richardson Sr. starts (high). Re-check if he signs.
   'RJ Harvey': [9, 12, '2026-11-15', 13],   // 2026-11-15 add: knee (practice), short-term IR, 'not severe or long term', can't return before W13 vs MIA (Denver Post via TFF, low-med; season dating unclear)
 };
 

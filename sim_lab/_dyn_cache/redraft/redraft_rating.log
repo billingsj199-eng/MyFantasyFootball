@@ -1,0 +1,128 @@
+redraft rating backtest | 12320 player-weeks | seasons 2019-2025 | checkpoints weeks 3-14 | half-PPR
+replacement (points a week): QB 15.9, RB 7.2, WR 7.3, TE 6.1
+ESPN matched 98%, ADP 69%
+
+=== FORWARD IN TIME (train on earlier seasons; tests 2022-25) ===   rank corr with realized startable value; value captured by each order's top 24 / 50
+
+  all checkpoints   (48 checkpoints, 8106 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.548    0.650    0.545    0.514      73.3%      79.2%
+    base projection           0.550    0.652    0.550    0.508      72.2%      78.6%
+    season PPG                0.499    0.602    0.493    0.409      66.6%      72.1%
+    ADP (benchmark)           0.477    0.535    0.547    0.444      71.2%      77.7%
+    ESPN (benchmark)          0.546    0.626    0.553    0.496      70.8%      77.9%
+    RATING mean               0.558    0.650    0.551    0.506      71.0%      78.3%
+    RATING + risk             0.541    0.630    0.561    0.481      69.4%      77.4%
+    RATING full               0.527    0.629    0.538    0.476      70.9%      76.9%
+
+  early season (before weeks 3-6)   (16 checkpoints, 2812 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.578    0.645    0.593    0.551      77.0%      80.3%
+    base projection           0.576    0.644    0.593    0.533      74.0%      80.2%
+    season PPG                0.483    0.560    0.499    0.359      63.1%      69.5%
+    ADP (benchmark)           0.534    0.576    0.597    0.500      75.4%      79.6%
+    ESPN (benchmark)          0.563    0.621    0.585    0.513      72.4%      79.5%
+    RATING mean               0.591    0.642    0.595    0.538      74.0%      79.2%
+    RATING + risk             0.581    0.621    0.605    0.521      72.3%      79.8%
+    RATING full               0.576    0.643    0.591    0.527      75.2%      79.2%
+
+  mid season (before weeks 7-10)   (16 checkpoints, 2664 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.556    0.696    0.543    0.535      74.9%      80.8%
+    base projection           0.557    0.698    0.551    0.528      73.7%      80.6%
+    season PPG                0.515    0.635    0.508    0.440      68.7%      74.4%
+    ADP (benchmark)           0.484    0.565    0.554    0.453      72.4%      78.3%
+    ESPN (benchmark)          0.553    0.671    0.556    0.509      73.7%      78.6%
+    RATING mean               0.566    0.700    0.555    0.534      73.2%      80.6%
+    RATING + risk             0.558    0.684    0.572    0.519      70.7%      80.1%
+    RATING full               0.541    0.685    0.546    0.514      72.5%      79.2%
+
+  late season (before weeks 11-14)   (16 checkpoints, 2630 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.511    0.610    0.500    0.456      68.1%      76.5%
+    base projection           0.517    0.614    0.506    0.464      68.8%      75.0%
+    season PPG                0.499    0.612    0.472    0.430      68.0%      72.3%
+    ADP (benchmark)           0.415    0.463    0.492    0.380      65.8%      75.0%
+    ESPN (benchmark)          0.522    0.587    0.518    0.465      66.3%      75.6%
+    RATING mean               0.516    0.608    0.503    0.445      65.9%      75.2%
+    RATING + risk             0.485    0.584    0.506    0.405      65.3%      72.4%
+    RATING full               0.464    0.561    0.477    0.387      65.0%      72.3%
+    RATING full minus projection, by season: 2022 -0.028   2023 +0.024   2024 -0.047   2025 -0.036
+    RATING full minus RATING mean, by season: 2022 -0.036   2023 +0.004   2024 -0.047   2025 -0.045
+    RATING full minus ESPN, by season: 2022 -0.014   2023 +0.026   2024 -0.039   2025 -0.041
+
+  same orders graded on a "must start him every week he plays" truth   (48 checkpoints, 8106 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.688    0.707    0.714    0.506      72.5%      76.4%
+    base projection           0.689    0.708    0.719    0.502      71.4%      76.1%
+    season PPG                0.633    0.666    0.661    0.413      66.1%      70.1%
+    ADP (benchmark)           0.496    0.542    0.563    0.428      70.5%      75.9%
+    ESPN (benchmark)          0.683    0.692    0.723    0.492      70.1%      75.7%
+    RATING mean               0.655    0.697    0.706    0.498      70.2%      75.6%
+    RATING + risk             0.637    0.690    0.694    0.475      68.7%      74.7%
+    RATING full               0.630    0.689    0.683    0.473      70.1%      74.4%
+
+  what carries the full rating (2024-25 held out, rank corr 0.463; loss when the input is scrambled):
+    base projection x weeks left       mean    0.2337
+    target share                       upside  0.0197
+    projection over replacement        mean    0.0141
+    carry share                        upside  0.0141
+    projection                         mean    0.0090
+    red-zone carry share               upside  0.0083
+    dud-week rate                      risk    0.0058
+    share of weeks startable           risk    0.0058
+    games missed so far                risk    0.0018
+    carry share last 3                 upside  0.0017
+    points over expected (luck)        upside  0.0011
+    weeks left                         mean    0.0010
+    red-zone target share              upside  0.0008
+    TD luck                            upside  0.0008
+
+=== LEAVE ONE SEASON OUT (2019-25) ===   rank corr with realized startable value; value captured by each order's top 24 / 50
+
+  all checkpoints   (82 checkpoints, 12320 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.606    0.678    0.599    0.579      76.1%      82.7%
+    base projection           0.608    0.679    0.602    0.578      75.2%      82.7%
+    season PPG                0.563    0.635    0.557    0.497      70.3%      77.5%
+    ADP (benchmark)           0.534    0.587    0.538    0.514      73.8%      81.6%
+    ESPN (benchmark)          0.599    0.641    0.600    0.560      74.4%      81.5%
+    RATING mean               0.616    0.684    0.602    0.581      75.5%      82.4%
+    RATING + risk             0.604    0.665    0.596    0.566      74.3%      81.8%
+    RATING full               0.596    0.668    0.594    0.562      75.9%      81.7%
+
+  early season (before weeks 3-6)   (28 checkpoints, 4398 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.638    0.688    0.643    0.612      79.1%      84.1%
+    base projection           0.633    0.683    0.637    0.597      76.6%      84.2%
+    season PPG                0.547    0.599    0.556    0.446      67.9%      75.1%
+    ADP (benchmark)           0.582    0.631    0.570    0.559      77.4%      83.2%
+    ESPN (benchmark)          0.620    0.663    0.627    0.576      76.3%      82.5%
+    RATING mean               0.646    0.689    0.639    0.607      78.0%      83.9%
+    RATING + risk             0.639    0.673    0.636    0.596      77.1%      83.5%
+    RATING full               0.637    0.674    0.642    0.603      79.7%      83.5%
+
+  mid season (before weeks 7-10)   (28 checkpoints, 4088 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.610    0.707    0.599    0.593      76.7%      83.7%
+    base projection           0.616    0.713    0.607    0.594      76.8%      84.3%
+    season PPG                0.585    0.674    0.576    0.535      72.9%      79.9%
+    ADP (benchmark)           0.543    0.613    0.541    0.525      74.7%      82.5%
+    ESPN (benchmark)          0.602    0.656    0.604    0.566      76.1%      82.5%
+    RATING mean               0.624    0.715    0.608    0.602      76.5%      84.0%
+    RATING + risk             0.619    0.703    0.609    0.595      75.2%      83.7%
+    RATING full               0.606    0.708    0.601    0.586      77.0%      83.3%
+
+  late season (before weeks 11-14)   (26 checkpoints, 3834 player-weeks)
+    order                       all       RB       WR  top-100 top-24 val top-50 val
+    projection                0.566    0.636    0.551    0.529      72.2%      80.2%
+    base projection           0.573    0.640    0.560    0.540      71.9%      79.4%
+    season PPG                0.557    0.632    0.537    0.511      70.1%      77.5%
+    ADP (benchmark)           0.475    0.512    0.500    0.453      69.1%      78.9%
+    ESPN (benchmark)          0.572    0.599    0.568    0.535      70.6%      79.5%
+    RATING mean               0.575    0.644    0.557    0.531      71.8%      79.1%
+    RATING + risk             0.550    0.615    0.541    0.504      70.4%      77.8%
+    RATING full               0.542    0.618    0.534    0.493      70.7%      78.1%
+    RATING full minus projection, by season: 2019 +0.018   2020 -0.034   2021 +0.001   2022 +0.000   2023 +0.030   2024 -0.045   2025 -0.036
+    RATING full minus RATING mean, by season: 2019 +0.015   2020 -0.036   2021 -0.013   2022 -0.014   2023 +0.011   2024 -0.053   2025 -0.045
+    RATING full minus ESPN, by season: 2019 +0.027   2020 -0.019   2021 +0.019   2022 +0.015   2023 +0.033   2024 -0.037   2025 -0.041

@@ -2205,6 +2205,10 @@ window._syncPartners = _syncPartners;
 // the old fill loop skipped him and left the trailing slots holding stale
 // (duplicate) indices.
 function _syncOneDirection(srcMode, dstMode) {
+  // MFF VALUE is a computed board: each format's order IS its own value order. With SYNC on,
+  // entering Dynasty SF re-dealt the SF board into the 1QB position order (in place, so
+  // _mffvBoardEnsure never rebuilt it) — values out of order and tier banners scattered.
+  if (currentVersion === 'mffv') return;
   const srcBoard = versionBoards[currentVersion][srcMode];
   const dstBoard = versionBoards[currentVersion][dstMode];
   if (!srcBoard || !dstBoard || srcMode === dstMode) return;

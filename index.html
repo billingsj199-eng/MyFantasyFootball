@@ -96,7 +96,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-25-syncguard" as="script">
+<link rel="preload" href="app.js?v=2026-11-25-simsbanners" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -1320,11 +1320,14 @@ CLEAR ALL
     #pageRankings tbody tr.premium-blur{filter:blur(4px)}
     #pageRankings tbody tr.premium-blur td{filter:none!important;transition:none}
     #pageRankings tbody tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur{display:none!important}
-    /* MFF VALUE (Jack 2026-11-25: "Yes, fix it"): a tier banner that comes after the 8th
-       teaser row has only hidden rows under it — the computed tiers run the whole board, so
-       they stacked up empty at the bottom of the list (TIER D / E / F ... DEEP BENCH). A
-       banner stays only while a teaser row still shows below it. */
-    body.mffv-on #pageRankings tbody tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.tier-row{display:none!important}
+    /* MFF VALUE + SIM VOR (Jack 2026-11-25: "Yes, fix it", then "fix the SIM VOR empty
+       banners too"): a tier banner that comes after the 8th teaser row has only hidden rows
+       under it — the computed tiers run the whole board, so they stacked up empty at the
+       bottom of the list (TIER D / E / F ... DEEP BENCH). A banner stays only while a teaser
+       row still shows below it. The WEEKLY bye / out banner and the cut line are not tiers
+       (the bye rows under the banner can be free ones), so they are left alone. */
+    body.mffv-on #pageRankings tbody tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.tier-row:not(.bye-line-row):not(.cut-line-row),
+    body.sims-on #pageRankings tbody tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.tier-row:not(.bye-line-row):not(.cut-line-row){display:none!important}
     /* The premium wall row's single cell is td:first-child, so the card rules
        above gave it the 24px drag-handle slot and its SIGN IN / UPGRADE card
        spilled off the left edge of the phone. Let it span the card. */
@@ -6902,7 +6905,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-25-syncguard"></script>
+<script defer src="app.js?v=2026-11-25-simsbanners"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">

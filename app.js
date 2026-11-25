@@ -1332,6 +1332,8 @@ let tierCounter = 0;
 function syncMode() {
   // MFF VALUE team-mode bar (rankings): only on the MFF VALUE board in dynasty.
   if (document.body) document.body.classList.toggle('mffv-on', currentVersion === 'mffv' && (currentMode === 'dynasty' || currentMode === 'dynastysf'));
+  // SIM VOR board on screen (phones: the CSS drops tier banners with no teaser row left under them).
+  if (document.body) document.body.classList.toggle('sims-on', currentVersion === 'sims');
   if (currentVersion === 'sims') _simsBoardEnsure();   // computed board — keep it current
   if (currentVersion === 'mffv') _mffvBoardEnsure();
   if (_is27()) _s27BoardEnsure();   // both 2027 models: the sim order is Jack's reference column too

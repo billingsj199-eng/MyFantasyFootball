@@ -4932,6 +4932,25 @@ function _weeklyStatProjFor(name) {
   return (row && row.st && typeof row.st === 'object') ? row.st : null;
 }
 window._weeklyStatProjFor = _weeklyStatProjFor;
+// Whole WEEKLY_PROJ row for a site name: direct hit, then the suffix-stripped
+// index above (feed "Anthony Richardson Sr." = site "Anthony Richardson" —
+// a direct-only lookup read him as missing = ruled OUT, 2026-11-25).
+function _weeklyProjRowFor(name) {
+  const cw = window.WEEKLY_PROJ;
+  if (!cw || !cw.players || !name) return null;
+  let row = cw.players[name];
+  if (!row && typeof _campNewsNorm === 'function') {
+    let idx = window._weeklyProjNameIdx;
+    if (!idx || idx._src !== cw) {
+      idx = { _src: cw, map: {} };
+      Object.keys(cw.players).forEach(k => { idx.map[_campNewsNorm(k)] = cw.players[k]; });
+      window._weeklyProjNameIdx = idx;
+    }
+    row = idx.map[_campNewsNorm(name)];
+  }
+  return row || null;
+}
+window._weeklyProjRowFor = _weeklyProjRowFor;
 
 // === GAME WEATHER (data/weather_2026.js — scripts/pull_weather.py) ===
 // Row for the game a team plays in week wk: {away, home, kick, venue, city,
@@ -15463,7 +15482,7 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     }
     const WP = window.WEEKLY_PROJ;
     if (WP && WP.players && +WP.week === +wk) {
-      const row = WP.players[d.n];
+      const row = _weeklyProjRowFor(d.n);
       if (!row || !(row.h > 0 || row.p > 0)) return true;
     }
     if (typeof _simProjRow === 'function') {
@@ -22642,7 +22661,7 @@ function buildWeeklyCardView(d) {
     base:      { lbl: 'Season projection', tip: 'No weekly signal available — season number shown unadjusted.' },
   };
   const src = SRC[out.src] || SRC.base;
-  const cw = (window.WEEKLY_PROJ && window.WEEKLY_PROJ.week === wk && window.WEEKLY_PROJ.players) ? window.WEEKLY_PROJ.players[d.n] : null;
+  const cw = (window.WEEKLY_PROJ && window.WEEKLY_PROJ.week === wk && window.WEEKLY_PROJ.players) ? _weeklyProjRowFor(d.n) : null;
   const cwV = cw ? (rankingScoringFmt === 'ppr' ? cw.p : rankingScoringFmt === 'std' ? cw.s : cw.h) : null;
   html += '<div class="card-section"><div class="card-section-title">Weekly Projection '
     + '<span style="font-size:.6875rem;color:var(--text2);font-weight:400;letter-spacing:.5px">· ' + rankingScoringFmt.toUpperCase() + '</span></div>';

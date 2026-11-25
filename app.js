@@ -9274,7 +9274,7 @@ function _rankBlurPolicy() {
     ((v === 'sims' || v === 'mffv' || v === 'jacks' || isMine) && !isPremium) ||
     (isMine && !signedIn)
   );
-  return { cutoff, blur, isPremium, signedIn, isMine, isSims: v === 'sims' };
+  return { cutoff, blur, isPremium, signedIn, isMine, isSims: v === 'sims', isMffv: v === 'mffv' };
 }
 // The premium wall card (sign-in / upgrade) as a plain div — the table wraps
 // it in a <tr>, TIER CARDS drops it in after the last free tier.
@@ -9284,7 +9284,8 @@ function _premiumWallCardHtml(pol) {
   const upgradeBtn = '<button class="premium-wall-btn" style="padding:.65rem 2rem;font-size:.9rem" onclick="window._openPremiumUpgrade()">UNLOCK WITH PREMIUM</button>';
   const card = (icon, title, body, btn) =>
     '<div style="text-align:center;padding:2rem 1rem;background:var(--bg);white-space:normal"><div style="max-width:360px;margin:0 auto;padding:1.5rem;border-radius:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)"><div style="font-size:2rem;margin-bottom:.5rem">' + icon + '</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text1);margin-bottom:.5rem">' + title + '</div><div style="font-size:.78rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">' + body + '</div>' + btn + '</div></div>';
-  const what = pol.isSims ? 'the full SIM VOR board' : 'all of Jack\'s rankings';
+  // The card names the board it is on (MFF VALUE used to read "all of Jack's rankings").
+  const what = pol.isSims ? 'the full SIM VOR board' : pol.isMffv ? 'the full MFF VALUE board' : 'all of Jack\'s rankings';
   if (pol.isMine && !pol.signedIn) return card('&#128221;', 'SIGN IN TO CREATE YOUR RANKINGS', 'Sign in to build and customize your own player rankings, save them to the cloud, and sync across devices.', signInBtn);
   if (pol.isMine) return card('&#128274;', 'UPGRADE TO EDIT BEYOND TOP ' + n, 'Free accounts can rank the top ' + n + ' players in this filter. Upgrade to PRO to build full personalized rankings across every position.', upgradeBtn);
   if (!pol.signedIn) return card('&#128274;', 'UNLOCK FULL RANKINGS', 'The top ' + n + ' are free. Create a free account, then upgrade to PRO to see ' + what + '.', signInBtn);

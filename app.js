@@ -23884,6 +23884,9 @@ function _renderCardPinStrip(d, ctxMode) {
     + '<input type="text" class="card-pin-input" id="cardPinInput" placeholder="Search player…" autocomplete="off" aria-label="Add player to compare strip">'
     + '<div class="card-pin-suggest" id="cardPinSuggest" hidden></div></span>'
     + '<button class="card-pin-add" id="cardPinAdd" title="Compare: pin other players to this card and tap a name to switch between them">+ COMPARE</button>'
+    // Audit 2026-11-23 #8: the pinned players, side by side on the Compare page
+    // (its only other way in is the rankings checkboxes).
+    + (multi ? '<button class="card-pin-side" id="cardPinSide" title="Open the pinned players side by side on the Compare page">SIDE BY SIDE &rarr;</button>' : '')
     + (multi ? '<button class="card-pin-sort" id="cardPinSort" title="Sort the pinned players: rank → position → A-Z (click again to cycle). Drag a chip to fine-tune.">' + sortLabel + '</button>' : '')
     + (_cardPins.length ? '<button class="card-pin-reset" id="cardPinReset" title="Clear every pinned player from this card">RESET</button>' : '');
 
@@ -23894,6 +23897,17 @@ function _renderCardPinStrip(d, ctxMode) {
     const cmp = _CARD_PIN_SORTS[_cardPinSort].cmp;
     _cardPins = _cardPins.map(n => { const p = _cardPinLookup(n); return { n, p, r: _cardPinRank(p, ctxMode) }; }).sort(cmp).map(x => x.n);
     _renderCardPinStrip(d, ctxMode);
+  });
+  const sideBtn = strip.querySelector('#cardPinSide');
+  if (sideBtn) sideBtn.addEventListener('click', () => {
+    const from = ((document.querySelector('.page.active') || {}).id || '').replace(/^page/, '').toLowerCase();
+    let n = 0;
+    _cardPins.forEach(nm => { const p = _cardPinLookup(nm); if (p && D[p.idx] === p) { compareSet.add(p.idx); n++; } });
+    if (!n) return;
+    if (typeof window._mffTrack === 'function') window._mffTrack('compare_from_card', { page: from });
+    if (typeof updateCompareBtn === 'function') updateCompareBtn();
+    closeCard();
+    openCompare();
   });
   const resetBtn = strip.querySelector('#cardPinReset');
   if (resetBtn) resetBtn.addEventListener('click', () => {
@@ -26016,7 +26030,7 @@ function _cmpWireSplits(root) {
 function renderCompareGrid() {
   const checkPlayers = [...compareSet].map(idx => D[idx]);
   const allPlayers = [...checkPlayers, ...searchAdded.map(p => p._src)];
-  
+
   if (allPlayers.length === 0) {
     // Suggest a handful of high-value head-to-heads pulled from the live ranking
     // pool. We grab the top 2 by myRank in each major position (only players that
@@ -26059,7 +26073,14 @@ function renderCompareGrid() {
     if (_cmpSummaryElEmpty) _cmpSummaryElEmpty.innerHTML = '';
     compareGrid.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text2)">'
       + '<div style="font-size:2rem;margin-bottom:8px;opacity:.25">&#127944;</div>'
-      + '<p style="font-size:.85rem;margin:0">Search above to add any player — current or retired.<br>You can also check players in the rankings table.</p>'
+      + '<p style="font-size:.85rem;margin:0">Search above to add any player — current or retired.<br>Or pin players with + COMPARE on any player card and tap SIDE BY SIDE,<br>or check players in the rankings table.</p>'
+      // Audit 2026-11-23 #8: in season most Compare visits are a tap-and-leave from the
+      // MORE sheet; the weekly lineup call has its own tool, so point there.
+      + (document.documentElement.classList.contains('nav-draft-phase') ? '' :
+          '<div class="cmp-sst-jump" style="margin:16px auto 0;max-width:420px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);display:flex;align-items:center;gap:10px;justify-content:space-between;text-align:left">'
+          + '<span style="font-size:.78rem;color:var(--text);line-height:1.35">Deciding who to start this week? Start/Sit lines them up with projections, matchups and Vegas lines.</span>'
+          + '<button type="button" class="cmp-sst-btn" onclick="switchPage(\'startsit\')" style="flex:none;padding:7px 12px;border-radius:6px;border:1px solid var(--accent);background:none;color:var(--accent);font-family:\'Bebas Neue\',sans-serif;font-size:.95rem;letter-spacing:1px;cursor:pointer">START / SIT &rarr;</button>'
+          + '</div>')
       + _suggestHtml
       + '</div>';
     // Wire suggestion clicks: add both indices to compareSet, then re-render
@@ -27021,7 +27042,11 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
   // yet: `cta` on premium_view, `ctx` on the buy-button premium_cta. Both are GA4 dims already.
   const withPremSrc = (params, key) => { const s = typeof window._mffPremSrc === 'function' ? window._mffPremSrc() : ''; if (s) params[key] = s; return params; };
   const CLICK = [
-    ['.version-tab[data-version]', b => ['board_version', { version: b.dataset.version }]],
+    // Audit 2026-11-23 #7: MY RANKS taps carry who tapped (signedout / free / premium) in `ctx`,
+    // so the My Ranks drop-off (486 users, 13 savers) reads as gated vs unused.
+    ['.version-tab[data-version]', b => ['board_version', b.dataset.version === 'mine'
+      ? { version: 'mine', ctx: !window._authCurrentUser ? 'signedout' : ((typeof hasPremium === 'function' && hasPremium()) ? 'premium' : 'free') }
+      : { version: b.dataset.version }]],
     ['.view-mode-btn[data-viewmode]', b => ['view_mode', { view: b.dataset.viewmode, version: typeof currentVersion === 'string' ? currentVersion : '', premium: (typeof hasPremium === 'function' && hasPremium()) ? 1 : 0 }]],
     ['.mode-tab[data-mode]', b => window._modeAutoPick ? null : ['board_mode', { mode: b.dataset.mode }]],   // not the first-visit WEEKLY default
     ['.pos-btn[data-pos]', b => ['pos_filter', { pos: b.dataset.pos, page: page() }]],
@@ -27053,6 +27078,9 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
     ['#mtSleeperImportBtn, #mtEspnImportBtn, #mtYahooImportBtn', b => ['league_import', { platform: b.id.replace(/^mt|ImportBtn$/g, '').toLowerCase() }]],
     ['#tcvFullscreenBtn', () => ['tier_cards_fullscreen', {}]],
     ['#sstDropdown', () => ['startsit_add', {}]],
+    // Audit 2026-11-23 #8: the empty Compare page's ways out
+    ['.cmp-sst-btn', () => ['compare_empty_jump', { page: 'startsit' }]],
+    ['.cmp-suggest-btn', b => ['compare_suggest', { pos: ((b.querySelector('.pos-badge') || {}).textContent || '').trim() }]],
   ];
   document.addEventListener('click', e => {
     const t = e.target; if (!t || !t.closest) return;
@@ -43328,6 +43356,16 @@ window.fmtHeight = fmtHeight;
     // format itself from mirroring Jack's.)
     if (currentVersion === 'mine' && filter !== 'DEVY' && typeof window._mineMarkTouched === 'function') {
       window._mineMarkTouched(currentMode);
+    }
+    // Audit 2026-11-23 #7: first My Ranks edit per board per visit (pairs with ranks_save),
+    // so "opened MY RANKS but never edited" and "edited but never saved" can be told apart.
+    if (currentVersion === 'mine' && currentUser) {
+      const _rk = currentMode + (filter === 'DEVY' ? '-devy' : '');
+      const _seen = window._ranksEditSeen = window._ranksEditSeen || {};
+      if (!_seen[_rk] && typeof window._mffTrack === 'function') {
+        _seen[_rk] = 1;
+        window._mffTrack('ranks_edit_start', { mode: _rk, ctx: (typeof hasPremium === 'function' && hasPremium()) ? 'premium' : 'free' });
+      }
     }
     _origSaveLocal();
     markUnsaved();

@@ -296,6 +296,8 @@ button,input,select,textarea{font-family:inherit}
 .nav-divider{display:flex;align-items:center;gap:6px;width:86px;margin:6px 0 2px;color:var(--text2);opacity:.75}
 .nav-divider::before,.nav-divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .nav-divider span{font-family:'DM Sans',sans-serif;font-size:.6875rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;line-height:1}
+.nav-div-note{display:none;font-style:normal;font-family:'DM Sans',sans-serif;font-size:.6875rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:1;color:var(--text2);white-space:nowrap}
+html:not(.nav-draft-phase) .sidebar.more-open .nav-div-note{display:inline}
 /* Short windows (2026-10-28): the admin rail has 12 rows (Backtest + Research), which
    put the last item (Trivia) below the fold while the rail's scrollbar is hidden.
    Tighten the rail so every row fits at 768px tall. */
@@ -1072,7 +1074,7 @@ td.adp-reach{background:rgba(239,68,68,.10);color:var(--red);font-weight:600}
 .card-pin-chip.active .card-pin-grip{cursor:grab}
 .card-pin-x{border:none;background:none;color:inherit;opacity:.55;font-size:.85rem;line-height:1;padding:0 2px;cursor:pointer;border-radius:50%}
 .card-pin-x:hover{opacity:1;color:var(--red)}
-.card-pin-add,.card-pin-sort,.card-pin-reset{border:1px dashed var(--border);background:none;border-radius:14px;padding:3px 10px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.card-pin-add,.card-pin-sort,.card-pin-reset,.card-pin-side{border:1px dashed var(--border);background:none;border-radius:14px;padding:3px 10px;font-family:'DM Sans',sans-serif;font-weight:600;text-transform:uppercase;font-size:.6875rem;letter-spacing:.04em;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
 .card-pin-add:hover,.card-pin-sort:hover{background:var(--elev-1);color:var(--text)}
 .card-pin-reset:hover{background:var(--elev-1);color:var(--red);border-color:var(--red)}
 .card-pin-search{position:relative;display:inline-flex}
@@ -1203,6 +1205,17 @@ header{padding:1rem}h1{font-size:1.8rem}.controls{padding:.75rem 1rem;gap:.4rem}
   .sidebar.more-open .nav-btn[data-page="askjack"]{display:flex;order:0}
   .sidebar.more-open .nav-btn{order:1}
   .sidebar.more-open .nav-more{order:2}
+  /* Audit 2026-11-23 #10 (Sep-Jan only): Mock Draft / Draft Strategy got ~2 s taps in
+     season. The in-season tools lead the sheet; a full-width caption row sits above
+     the draft pair, which is dimmed. Feb-Aug (html.nav-draft-phase) the sheet stays as it was. */
+  html:not(.nav-draft-phase) .sidebar.more-open .nav-btn[data-nav-tier="2"]:not([data-navgrp="draft"]),
+  html:not(.nav-draft-phase) .sidebar.more-open .nav-btn[data-page="askjack"]{order:-1}
+  html:not(.nav-draft-phase) .sidebar.more-open .nav-divider[data-navgrp="draft"]{display:flex;order:0;grid-column:1/-1;width:auto;margin:4px 10px 0;opacity:1}
+  html:not(.nav-draft-phase) .sidebar.more-open .nav-divider[data-navgrp="draft"] > span{display:none}
+  html:not(.nav-draft-phase) .sidebar.more-open .nav-btn[data-navgrp="draft"]{opacity:.55}
+  /* The five bottom-bar tabs always start their own row (they used to fill the end of
+     the last tool row, e.g. DRAFT STRATEGY · RANKINGS · MY TEAMS on one line). */
+  .sidebar.more-open .nav-btn[data-page="rankings"]{grid-column-start:1}
 
   /* Main content adjusts for bottom bar */
   .main-content{flex:1;overflow:hidden;padding-bottom:56px;padding-bottom:calc(56px + env(safe-area-inset-bottom,0))}
@@ -3011,6 +3024,7 @@ tbody td{font-size:.8125rem}
 /* Compare strip + notes: one quiet utility band under the tabs. */
 .card-pin-strip{margin-bottom:6px}
 .card-pin-chip,.card-pin-add,.card-pin-sort,.card-pin-reset{border-color:var(--border-strong)}
+.card-pin-side{border-style:solid;border-color:var(--accent);color:var(--accent)}
 .card-notes{border:1px solid var(--border);background:transparent;margin:0 0 .9rem}
 .cn-title{color:var(--text2)}
 .card-notes.open{border-color:var(--border-strong);background:var(--elev-1)}

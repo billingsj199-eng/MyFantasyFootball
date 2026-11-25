@@ -11900,6 +11900,11 @@ function render() {
     tiers = _s27TiersFor(data);
     versionTiers.sim27[_tierMode()][_tierPK()] = tiers;
   }
+  // MFF VALUE board: tiers are natural breaks in the values (_mffvTiersFor).
+  if (currentVersion === 'mffv' && filter !== 'DEVY') {
+    tiers = _mffvTiersFor(data, viewMode === 'tierCard' ? null : _rankOf);
+    versionTiers.mffv[_tierMode()][_tierPK()] = tiers;
+  }
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
   const editable = canEdit();
@@ -18274,7 +18279,8 @@ function _vorPts(d, row, fi, st, tdRate, basePpg) {
 }
 // Natural breaks (Jenks / optimal 1-D k-means) on values sorted high to low:
 // the fewest tiers (3-10) that explain 98% of the spread. Returns tier start indices.
-function _vorJenks(v) {
+// `fit` / `kCap` (optional) = a different share of the spread / most tiers (MFF VALUE board).
+function _vorJenks(v, fit, kCap) {
   const n = v.length;
   if (n < 6) return [0];
   const S = [0], Q = [0];
@@ -18282,7 +18288,8 @@ function _vorJenks(v) {
   const ss = (a, b) => { const s = S[b] - S[a]; return (Q[b] - Q[a]) - s * s / (b - a); };
   const tss = ss(0, n);
   if (!(tss > 0)) return [0];
-  const kMax = Math.min(10, Math.floor(n / 2));
+  fit = fit || 0.98;
+  const kMax = Math.min(kCap || 10, Math.floor(n / 2));
   const Dp = [new Float64Array(n + 1).fill(Infinity)], P = [new Int32Array(n + 1)];
   Dp[0][0] = 0;
   for (let k = 1; k <= kMax; k++) {
@@ -18293,7 +18300,7 @@ function _vorJenks(v) {
         if (c < Dp[k][i]) { Dp[k][i] = c; P[k][i] = m; }
       }
     }
-    if (k >= 3 && 1 - Dp[k][n] / tss >= 0.98) return _vorCuts(P, k, n);
+    if (k >= 3 && 1 - Dp[k][n] / tss >= fit) return _vorCuts(P, k, n);
   }
   return _vorCuts(P, kMax, n);
 }
@@ -18661,6 +18668,79 @@ function _mffvBoardEnsure() {
   versionBoards.mffv[m] = order;
   src[m] = b;
   return true;
+}
+// MFF VALUE tier banners (Jack 2026-11-24: "for mff values make tiers in rankings"): computed
+// from the values, never hand-set. Natural breaks (the SIM VOR Jenks fit) on the LOG of the
+// value, so a break sits where the value drops by the biggest share (500 points matter more at
+// 4,000 than at 9,000), over the view's full list in board order: overall (rookie picks
+// included) on ALL / ROOKIES, per position on a position pill. The draftable range is what gets
+// clustered (top 150 overall, 36 QB / TE, 72 RB / WR); everyone past it is DEEP BENCH. A tier
+// below the top one is never a single player: he joins the neighbour he is closer to.
+// Membership is per player, so search / TEAMS / TOP N keep each player's real tier.
+const _MFFV_TIER_FIT = 0.99, _MFFV_TIER_MAX = 12;
+function _mffvTierMap() {
+  const m = currentMode, mv = window._mffValueOf && window._mffValueOf[m];
+  const src = window._mffvBoardSrc && window._mffvBoardSrc[m];
+  if (!mv || !src) return null;
+  const posView = ['QB', 'RB', 'WR', 'TE'].includes(filter);
+  const key = m + ':' + (posView ? filter : 'ALL');
+  const C = (window._mffvTierCache = window._mffvTierCache || {});
+  if (C[key] && C[key].src === src) return C[key].tierOf;
+  const list = [];
+  (versionBoards.mffv[m] || []).forEach(i => {
+    const p = D[i], v = mv.get(i);
+    if (!p || p._retired || v == null || (posView && p.s !== filter)) return;
+    list.push([i, v]);
+  });
+  const cap = posView ? ((filter === 'QB' || filter === 'TE') ? 36 : 72) : 150;
+  const top = list.slice(0, cap).filter(x => x[1] > 0);
+  const lg = top.map(x => Math.log(x[1]));
+  const cuts = top.length ? _vorJenks(lg, _MFFV_TIER_FIT, _MFFV_TIER_MAX) : [];
+  // No one-player tiers below the top one: fold each into the closer neighbour.
+  for (let j = 1; j < cuts.length; j++) {
+    const c = cuts[j], end = j + 1 < cuts.length ? cuts[j + 1] : top.length;
+    if (end - c !== 1) continue;
+    if (j + 1 < cuts.length && lg[c] - lg[c + 1] < lg[c - 1] - lg[c]) cuts.splice(j + 1, 1);   // joins the tier below
+    else cuts.splice(j, 1);                                                                    // joins the tier above
+    j--;
+  }
+  const tierOf = new Map();
+  const f = v => Math.round(v).toLocaleString('en-US');
+  cuts.forEach((c, j) => {
+    const end = j + 1 < cuts.length ? cuts[j + 1] : top.length;
+    const lab = TIER_LABELS[j] || ('T' + j);
+    const hi = top[c][1], lo = top[end - 1][1];
+    // One object per tier — _mffvTiersFor opens a banner where the object changes.
+    const obj = { label: lab, base: j === 0 ? 'ELITE' : 'TIER ' + lab, range: hi > lo ? f(hi) + ' to ' + f(lo) : f(hi), end };
+    for (let k = c; k < end; k++) tierOf.set(top[k][0], obj);
+  });
+  if (list.length > top.length) {
+    const deep = { label: TIER_LABELS[cuts.length] || ('T' + cuts.length), base: 'DEEP BENCH', range: '', end: list.length };
+    list.forEach(x => { if (!tierOf.has(x[0])) tierOf.set(x[0], deep); });
+  }
+  C[key] = { src, tierOf };
+  return tierOf;
+}
+// Tier banners for the rows on screen. `rankOf` = render()'s row-rank reader (a narrowed
+// position view keeps each player's real position rank); TIER CARDS count rows instead.
+function _mffvTiersFor(data, rankOf) {
+  const tierOf = _mffvTierMap();
+  if (!tierOf) return [];
+  const positional = _tierRankIsPositional();
+  const pol = _rankBlurPolicy();
+  const rows = data.slice().sort((a, b) => (a.myRank || 0) - (b.myRank || 0));
+  const out = [];
+  let prev = null;
+  rows.forEach((d, i) => {
+    const t = tierOf.get(d.idx);
+    if (!t || t === prev) return;
+    prev = t;
+    // Free viewers: a tier's value range shows only when the whole tier is inside the free
+    // window, so the banner never gives away a locked player's value.
+    const open = t.range && !(pol.blur && t.end > pol.cutoff);
+    out.push({ id: 'mv' + out.length, label: t.label, name: t.base + (open ? ' · ' + t.range : ''), afterRank: positional ? (rankOf ? rankOf(d, i) : i + 1) : d.myRank });
+  });
+  return out;
 }
 function _simsBoardEnsure() {
   const t = _vorTable();

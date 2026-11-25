@@ -12659,7 +12659,8 @@ function updateStats(data) {
     const _cb = (typeof COMBINE_DATA !== 'undefined') ? COMBINE_DATA[d.n] : null;
     return (_cb && _cb.yr === 2026) || !d.t || d.t === 'TBD';
   }).length;
-  const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL' : '🏈 REDRAFT';
+  const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL'
+    : currentMode === 'weekly' ? '🏈 WEEKLY' : currentMode === 'superflex' ? '🏈 SUPERFLEX' : '🏈 REDRAFT';   // weekly + superflex used to read REDRAFT (2026-11-24)
   const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? (_vorPlayoffsOn() ? '📋 SIM VOR · PLAYOFFS' : _vorWin() && _vorTable() && _vorTable().win ? '📋 SIM VOR · ' + _vorWinTag(_vorTable()) : '📋 SIM VOR') : currentVersion === 'mffv' ? '📋 MFF VALUE' : currentVersion === 'sim27' ? '📋 2027 SIMS' : currentVersion === 'jacks27' ? "📋 JACK'S 2027" : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>

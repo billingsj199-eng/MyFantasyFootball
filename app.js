@@ -3359,6 +3359,14 @@ function _dynSimEnsure(cb) {
     dc.onload = done; dc.onerror = done;
     document.head.appendChild(dc);
   }
+  if (!window.MFF_LASTING_EDGE) {
+    pend++;
+    const le = document.createElement('script');
+    const lm = document.querySelector('meta[name="mff-lasting-edge-v"]');
+    le.src = 'data/mff_lasting_edge.js?v=' + encodeURIComponent((lm && lm.content) || '0');
+    le.onload = done; le.onerror = done;
+    document.head.appendChild(le);
+  }
   const sc = document.createElement('script');
   sc.src = _dynSimSrc();
   sc.onload = done;
@@ -4260,7 +4268,26 @@ function _trendSparkHtml(series) {
 // the most-negative / most-positive fifth (the backtested buckets).
 // Fair value order weights on log ranks (sim_lab/backtest_fair_tune.py): expected next-
 // preseason market rank, Dynasty SIM rank, KTC rank today. WR-age term tested and rejected.
-const _FAIR_W = { m3: 0.5, sim: 0.3, mkt: 0.5 };
+// RE-TUNE ON TOTAL RETURN (Jack 2026-11-24, proposal P-20261124-1; sim_lab/backtest_fair_retune_tr.py):
+// graded on KTC value at the end of a 1-3 year hold + the points scored while held (full archived KTC
+// lists 2021-25), 0.25 M3 + 0.15 sim + 0.75 KTC - 1.0 x the age / health EDGE beat these weights in 5 of 5
+// seasons in 1QB and superflex. The weights and the per-player EDGE ride in data/mff_lasting_edge.js
+// (window.MFF_LASTING_EDGE, built by sim_lab/build_lasting_edge.py, loaded with the Dynasty SIM); the
+// tracker's Python port reads the same file. No file = the 10-09 weights below and no edge.
+const _FAIR_W0 = { m3: 0.5, sim: 0.3, mkt: 0.5 };
+function _fairW() { const L = window.MFF_LASTING_EDGE; return L && L.p && L.w && L.w.mkt > 0 ? L.w : _FAIR_W0; }
+const _FAIR_W = { get m3() { return _fairW().m3; }, get sim() { return _fairW().sim; }, get mkt() { return _fairW().mkt; } };
+// EDGE = (lasting-value rating total - the average total at the same KTC price) / price: + = holds value
+// longer than his price says (young TE / WR / QB), - = melts faster (older RB / WR, missed games).
+// Stored [1QB, SF] under _dynSimNorm(name) + '|' + pos. Lower FAIR score = better, so the term is -k x edge.
+function _fairEdge(r, mode) {
+  const L = window.MFF_LASTING_EDGE;
+  if (!r || !L || !L.p || !(L.k > 0)) return 0;
+  const e = L.p[_dynSimNorm(r.n) + '|' + r.pos];
+  const v = e ? +e[mode === 'dynastysf' ? 1 : 0] : 0;
+  return v ? -L.k * v : 0;
+}
+function _fairEdgeSig() { const L = window.MFF_LASTING_EDGE; return L && L.p ? 'le' + (L.updated || 1) : ''; }
 // RB RECEIVING TILT (Jack 2026-10-09; sim_lab/research_efficiency_value.py +
 // backtest_fair_eff_terms.py): RBs' prior-season PFF receiving YPRR (75+ carries)
 // beat FAIR out of sample — RB-only 3yr +.022, 4/4 folds, stable k -.24..-.31 per
@@ -4333,7 +4360,7 @@ function _fairQbTt(r) { return r && r.qz ? -_FAIR_QB_TT.k * r.qz : 0; }
 function _fairQbTtSig() { return (window.MFF_QB_TT_OFF ? 'off' : (window.BETTING_2026 && window.BETTING_2026.gameTotals ? 'tt' : 'nott')); }
 function _trendGapFor(d) {
   if (!_trendIsDyn() || !window.DYNASTY_SIM_2026 || !window.KTC_HISTORY) return null;
-  const ck = _dynSimSig() + '|' + currentMode + '|' + _fairQbTtSig() + '|' + (_mffRosOn() ? window.SIM_PROJ_2026.updated : '');
+  const ck = _dynSimSig() + '|' + currentMode + '|' + _fairQbTtSig() + '|' + (_mffRosOn() ? window.SIM_PROJ_2026.updated : '') + '|' + _fairEdgeSig();
   const c = (window._trendGapCache = window._trendGapCache || {});
   if (!c[ck]) {
     const pool = [];
@@ -4383,7 +4410,7 @@ function _trendGapFor(d) {
         const v1 = valAt(pr), vPeer = valAt(prPeer);
         r.mkt = { pr, val: v1, cur: r.kv, chg: v1 / r.kv - 1, peer: vPeer / r.kv - 1,
                   ovr: pr < n ? ovrs[Math.max(0, Math.round(pr) - 1)] : null };
-        r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp) + _fairRbRec(r) + _fairQbTt(r);
+        r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp) + _fairRbRec(r) + _fairQbTt(r) + _fairEdge(r, currentMode);
       });
       // FAIR VALUE NOW (Jack 2026-10-09: "value players in the moment with the idea they
       // have future value"): order the pool by 0.5 x the model's expected market rank +
@@ -4567,7 +4594,7 @@ window._mffValueBoard = function(mode) {
         + (P === 'RB' ? b[4] : 0) + (P === 'WR' ? b[5] : 0) + (P === 'TE' ? b[6] : 0)
         + a * (P === 'QB' ? b[7] : P === 'RB' ? b[8] : P === 'WR' ? b[9] : b[10]);
     }
-    r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp) + _fairRbRec(r) + _fairQbTt(r);
+    r._fz = _FAIR_W.m3 * z + _FAIR_W.sim * Math.log(r.sp) + _FAIR_W.mkt * Math.log(r.kp) + _fairRbRec(r) + _fairQbTt(r) + _fairEdge(r, mode);
   });
   pool.slice().sort((a, b) => a._fz - b._fz).forEach((r, j) => { r.mv = vals[j]; });
   // Sim value -> KTC scale: position among the pool's sim values, read off the KTC curve.

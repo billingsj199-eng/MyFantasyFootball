@@ -4362,3 +4362,17 @@ body.mff-chunk-loading::after{content:'';position:fixed;top:0;left:0;height:3px;
 .hl-loading[hidden]{display:none}
 @media(max-width:400px){.hl-photo{width:86px;height:86px}.hl-player{padding:10px 6px 8px}.hl-name{font-size:.84rem}.hl-pts-num{font-size:1.6rem}}
 @media(prefers-reduced-motion:reduce){.hl-player{transition:none}}
+
+/* 2026-11-24 (site audit 11-23 #4): "more" arrow on the Rankings position row. The edge
+   fade alone swallowed the K pill at 375px, so the row read as ending at ROOKIES. Built by
+   app.js (.x-more-btn appended to the row, .x-has-more on the row); shown only on the
+   collapsed phone / landscape-phone row while pills are still hidden to the right. */
+.x-more-btn{display:none}
+@media (max-width:600px), (min-width:601px) and (max-width:900px) and (max-height:520px){
+  body:not(.rnk-mob-ctl-open) #rnkFilterRows > .pos-filters.x-has-more{-webkit-mask-image:none;mask-image:none}
+  body:not(.rnk-mob-ctl-open) #rnkFilterRows > .pos-filters.x-has-more:not(.x-at-end) > .x-more-btn{
+    display:flex;align-items:center;justify-content:flex-end;position:sticky;right:0;z-index:1;flex:0 0 auto;align-self:stretch;
+    width:52px;margin-left:-57px;padding:0 6px 2px 0;border:0;border-radius:0;cursor:pointer;
+    background:linear-gradient(90deg,transparent,var(--bg) 55%);color:var(--accent);
+    font-family:'DM Sans',sans-serif;font-size:1.5rem;font-weight:700;line-height:1;-webkit-tap-highlight-color:transparent}
+}

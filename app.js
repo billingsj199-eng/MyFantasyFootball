@@ -6028,6 +6028,42 @@ function _updateViewOptsSummary() {
   window._xScrollFadeWire = wire;
 })();
 
+// === Rankings position row on phones: a "more" arrow instead of the bare fade (site audit 11-23 #4) ===
+// At 375px the row is ALL QB RB WR TE ROOKIES | K D/ST: K sat entirely inside the 40px
+// edge fade, so the row just looked like it ended at ROOKIES (pos_filter K 512 / DST 537
+// users found them anyway; streamers need both in weeks 12-17). The arrow sticks to the
+// row's right edge while pills are hidden past it, scrolls the row on tap, and goes away
+// at the end (.x-at-end from the helper above). Phone / landscape-phone collapsed row
+// only (styles/main.css .x-more-btn); the row's mask is dropped there, the arrow carries
+// its own fade. Zero layout width (negative margin), so scrollWidth is unchanged.
+(function () {
+  function add() {
+    const row = document.querySelector('#rnkFilterRows > .pos-filters.x-scroll-fade');
+    if (!row || row.querySelector('.x-more-btn')) return;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'x-more-btn';
+    b.setAttribute('aria-label', 'More position filters');
+    b.title = 'More positions';
+    b.textContent = '›';
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      row.scrollBy({ left: Math.max(120, Math.round(row.clientWidth * 0.6)), behavior: 'smooth' });
+      if (typeof window._mffTrack === 'function') window._mffTrack('pos_row_more', {});
+    });
+    row.appendChild(b);
+    row.classList.add('x-has-more');
+    // The helper above only re-checks .x-at-end on scroll / resize, but this row's pills
+    // come and go with the board (WEEKLY hides ALL + ROOKIES and then everything fits):
+    // re-check when a pill is shown or hidden, or the arrow (and before it the fade)
+    // stayed over D/ST on a row with nothing left to scroll to.
+    const upd = () => row.classList.toggle('x-at-end', row.scrollLeft + row.clientWidth >= row.scrollWidth - 2);
+    if (window.MutationObserver) new MutationObserver(upd).observe(row, { attributes: true, attributeFilter: ['style', 'class'], subtree: true });
+    upd();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', add); else add();
+})();
+
 // === My Teams quick add (2026-10-14) ===
 // One box on the My Teams empty state: a Sleeper / ESPN / Yahoo league ID, a league
 // URL, or a Sleeper username. Detects the site, fills the matching import card's
@@ -35969,12 +36005,16 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
   }
 
   function renderChips() {
-    if (!names.length) { chipsE.innerHTML = ''; return; }
+    // Clear lives at the end of the chip row (site audit 11-23 #4): beside the search
+    // controls it wrapped onto a line of its own on phones, and with nothing added there
+    // was nothing to clear. Setting innerHTML drops it from the row; it is put back below.
+    if (!names.length) { chipsE.innerHTML = ''; if (clearE && clearE.parentNode) clearE.parentNode.removeChild(clearE); return; }
     chipsE.innerHTML = names.map(n => {
       const d = lookup(n); const s = d ? d.s : '?';
       return '<div class="lg-chip" style="background:' + (PB[s] || 'transparent') + ';border:1px solid ' + (PC[s] || 'var(--border)') + '33"><span style="font-size:.6875rem;font-weight:700;color:' + (PC[s] || 'var(--text2)') + '">' + s + '</span><span style="font-weight:600;font-size:.78rem">' + esc(n) + '</span><button class="lg-chip-x" data-n="' + esc(n) + '">&times;</button></div>';
     }).join('');
     chipsE.querySelectorAll('.lg-chip-x').forEach(b => { b.onclick = () => remove(b.dataset.n); });
+    if (clearE) { clearE.style.marginLeft = '4px'; chipsE.appendChild(clearE); }
   }
 
   // Opponent logo id: schedule gives the abbr, TEAM_LOGO_IDS is keyed by full

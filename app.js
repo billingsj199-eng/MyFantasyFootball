@@ -15582,8 +15582,56 @@ window._JSMODEL_ADMIN_EMAILS = _JSMODEL_ADMIN_EMAILS;
     }
     // Weekly-tab visibility feeds the in-season strip's WEEKLY button.
     if (window._seasonStripRefresh) window._seasonStripRefresh();
+    _weeklyFirstVisitDefault();
   }
   window._weeklyAdminCheck = _weeklyAdminCheck;
+
+  // IN-SEASON DEFAULT BOARD = WEEKLY FOR FIRST VISITS (site audit 11-23 #1, Jack 11-24).
+  // During the season (weeks 1-18) a first-time visitor opens on the WEEKLY board
+  // instead of CONSENSUS · REDRAFT: weekly is the most-used board in-season
+  // (board_mode weekly 2,140 clicks vs redraft 456 per 28 days) and it sat one tap away.
+  // Who gets it:
+  //   · first visit on this device (mff_visits <= 1) with no board picked yet -> WEEKLY,
+  //     and 'weekly' is stored so the next visits open the same way;
+  //   · anyone whose last pick was WEEKLY (mff_board_mode) -> WEEKLY;
+  //   · everyone else (returning visitors, or last pick was another board) -> no change.
+  // Runs once per load, from _weeklyAdminCheck once the published week is known
+  // (Firestore; on phones the SDK only starts after the first paint, so that can
+  // take a while). A late answer never swaps the board under someone already using
+  // it: not once they have tapped / typed / scrolled inside the rankings page, and
+  // not after 30 s. Never in ?embed= mode, never after a manual pick.
+  // Goes through the WEEKLY tab's own click, so every gate there still runs.
+  const _weeklyDefaultT0 = Date.now();
+  let _weeklyRnkTouched = false;
+  (function () {
+    const pg = document.getElementById('pageRankings');
+    if (!pg) return;
+    ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(ev =>
+      pg.addEventListener(ev, e => { if (e.isTrusted !== false) _weeklyRnkTouched = true; }, { capture: true, passive: true }));
+  })();
+  function _weeklyFirstVisitDefault() {
+    if (window._weeklyDefaultTried) return;
+    if (window._weeklyPublishedWeek == null) return;   // not known yet / nothing published
+    window._weeklyDefaultTried = true;
+    try {
+      if (_weeklyRnkTouched || Date.now() - _weeklyDefaultT0 > 30000) return;
+      if (currentMode !== 'redraft' || window._modeUserPicked) return;
+      if (document.body.classList.contains('mff-embed')) return;
+      if (!window._weeklyScheduleWeek()) return;       // off-season
+      let saved = null, visits = 0;
+      try { saved = localStorage.getItem('mff_board_mode'); visits = +localStorage.getItem('mff_visits') || 0; } catch (_e) {}
+      if (saved ? saved !== 'weekly' : visits > 1) return;
+      const tab = document.getElementById('weeklyModeTab');
+      if (!tab || tab.style.display === 'none') return;
+      window._modeAutoPick = true;
+      try { tab.click(); } finally { window._modeAutoPick = false; }
+      if (currentMode !== 'weekly') return;
+      if (!saved) {
+        try { localStorage.setItem('mff_board_mode', 'weekly'); } catch (_e) {}
+        if (typeof window._mffTrack === 'function') window._mffTrack('board_default_weekly', {});
+      }
+    } catch (_e) { window._modeAutoPick = false; }
+  }
   _weeklyAdminCheck();
 
   // Load active week from Firestore (settings/active_week.week). Falls back to
@@ -16556,6 +16604,13 @@ document.querySelectorAll('.mode-tab[data-mode]').forEach(btn => {
     document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
+    // Remember the board the visitor picked (audit 11-23 #1): the in-season WEEKLY
+    // default (_weeklyFirstVisitDefault) only applies while nothing else was chosen.
+    // The default's own programmatic click (_modeAutoPick) is not a pick.
+    if (!window._modeAutoPick) {
+      window._modeUserPicked = true;
+      try { localStorage.setItem('mff_board_mode', currentMode); } catch (_e) {}
+    }
     // MFF VALUE is a dynasty board — leaving dynasty drops back to CONSENSUS.
     if (currentVersion === 'mffv' && currentMode !== 'dynasty' && currentMode !== 'dynastysf') {
       currentVersion = 'consensus';
@@ -20592,6 +20647,37 @@ const _SEASON_KICKS_2026 = [
   { wk: 18, kick: Date.UTC(2027, 0, 10, 18, 0),   label: 'Sun Jan 10 · 1:00pm ET' }
 ];
 
+// EARLY-LOCK HINT (site audit 11-23 #6, Jack 11-24). Weeks with more than one
+// kickoff before Sunday: every game before Sunday, in order (UTC ms + ET label),
+// from ESPN's scoreboard (checked 2026-11-24). Week 12 = Thanksgiving: Wednesday
+// night, three on Thursday (the first at 1:00pm ET, not 12:30) and one on Friday.
+// Add a week here and both hints pick it up; regenerate with the table above for 2027.
+const _SEASON_EARLY_SLATE_2026 = {
+  12: { name: 'Thanksgiving week', games: [
+    { t: Date.UTC(2026, 10, 26, 1, 0),   lbl: 'Wed 8:00pm ET', g: 'GB @ LAR' },
+    { t: Date.UTC(2026, 10, 26, 18, 0),  lbl: 'Thu 1:00pm ET', g: 'CHI @ DET' },
+    { t: Date.UTC(2026, 10, 26, 21, 30), lbl: 'Thu 4:30pm ET', g: 'PHI @ DAL' },
+    { t: Date.UTC(2026, 10, 27, 1, 20),  lbl: 'Thu 8:20pm ET', g: 'KC @ BUF' },
+    { t: Date.UTC(2026, 10, 27, 20, 0),  lbl: 'Fri 3:00pm ET', g: 'DEN @ PIT' }
+  ] }
+};
+// -> { strip, long } for week `wk` while one of its early games is still to come, else null.
+//   strip: short tail for the in-season strip ("4 more before Sunday, next lock Thu 1:00pm ET")
+//   long:  the Start/Sit line.
+function _earlyLockHint(wk, now) {
+  const s = _SEASON_EARLY_SLATE_2026[wk];
+  if (!s) return null;
+  const left = s.games.filter(g => g.t > now);
+  if (!left.length) return null;
+  const nx = left[0], n = left.length, all = n === s.games.length;
+  const gm = k => k + ' game' + (k === 1 ? '' : 's');
+  return {
+    strip: all ? gm(n) + ' before Sunday, set lineups early' : n + ' more before Sunday, next lock ' + nx.lbl,
+    long: s.name + ': ' + (all ? gm(n) : n + ' more ' + (n === 1 ? 'game' : 'games')) + ' before Sunday. '
+      + (all ? 'First' : 'Next') + ' lock ' + nx.lbl + ' (' + nx.g + '). Set those lineup spots before kickoff.'
+  };
+}
+
 function _seasonStrip() {
   const bar = document.getElementById('seasonStrip');
   if (!bar) return;
@@ -20612,6 +20698,10 @@ function _seasonStrip() {
     return d.getTime();
   };
   const cur = _SEASON_KICKS_2026.find(w => now < wkEnd(w.kick));
+  // Start/Sit's early-lock line rides on the same clock (it has no timer of its own).
+  const lockEl = document.getElementById('sstLockHint');
+  const early = cur ? _earlyLockHint(cur.wk, now) : null;
+  if (lockEl) { lockEl.textContent = early ? '⏰ ' + early.long : ''; lockEl.style.display = early ? '' : 'none'; }
   if (!cur || !wkEl || !msgEl || !cntEl || !btn) { bar.style.display = 'none'; return; }
   wkEl.textContent = '🏈 WEEK ' + cur.wk;
   if (now < cur.kick) {
@@ -20624,6 +20714,7 @@ function _seasonStrip() {
     msgEl.textContent = 'Games in progress';
     cntEl.style.display = 'none';
   }
+  if (early) msgEl.textContent += ' · ' + early.strip;
   const tab = document.getElementById('weeklyModeTab');
   btn.style.display = (tab && tab.style.display !== 'none') ? '' : 'none';
   bar.style.display = 'flex';
@@ -26609,7 +26700,7 @@ document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
   const CLICK = [
     ['.version-tab[data-version]', b => ['board_version', { version: b.dataset.version }]],
     ['.view-mode-btn[data-viewmode]', b => ['view_mode', { view: b.dataset.viewmode, version: typeof currentVersion === 'string' ? currentVersion : '', premium: (typeof hasPremium === 'function' && hasPremium()) ? 1 : 0 }]],
-    ['.mode-tab[data-mode]', b => ['board_mode', { mode: b.dataset.mode }]],
+    ['.mode-tab[data-mode]', b => window._modeAutoPick ? null : ['board_mode', { mode: b.dataset.mode }]],   // not the first-visit WEEKLY default
     ['.pos-btn[data-pos]', b => ['pos_filter', { pos: b.dataset.pos, page: page() }]],
     ['#navMoreBtn', () => ['nav_more_open', {}]],
     ['.nav-btn[data-nav-tier="2"][data-page]', b => ['nav_tool_tab', { page: b.dataset.page }]],
@@ -36374,9 +36465,12 @@ document.addEventListener('mousedown',(e)=>{if(!sDE.contains(e.target)&&e.target
   window._sstRender = function () { render(); renderEdges(); };
   // Re-render if the page is already open when the Firestore week listener
   // (_weeklyApplySettings) or a deferred data bundle lands.
+  // 2026-11-24: also with no players added. A first visit that lands straight on
+  // #startsit renders before the week is known, and the empty page then kept its
+  // "WEEK 1" header and "add the Week 1 players" line for good.
   window._sstRefresh = function() {
     const pg = document.getElementById('pageStartSit');
-    if (pg && pg.classList.contains('active') && names.length) render();
+    if (pg && pg.classList.contains('active')) render();
   };
   window.addEventListener('load', () => setTimeout(() => { window._sstRefresh(); const pg = document.getElementById('pageStartSit'); if (pg && pg.classList.contains('active')) renderEdges(); }, 800));
 })();

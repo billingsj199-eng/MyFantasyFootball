@@ -94,7 +94,7 @@
      slow connections the preload scanner doesn't discover them until most of the HTML has
      downloaded. Preloading from the head starts these downloads in parallel with the body.
      Keep hrefs (incl. ?v=) in sync with the script tags below or the preload is wasted. -->
-<link rel="preload" href="app.js?v=2026-11-24-board2027d" as="script">
+<link rel="preload" href="app.js?v=2026-11-24-weeklyfirst" as="script">
 <!-- (Desktop only via media=: phones start Firebase after first paint — see the loader chain.)
      Warm the firestore-compat download: its EXECUTION is gated on DOMContentLoaded by the
      loader chain below, but the bytes can arrive during parse. crossorigin matches the
@@ -2188,6 +2188,7 @@ img.hs-sq{object-view-box:inset(0 0 32% 0)}
 <div class="career-log-toggle" id="sstFmt" title="Scoring format for the projection"><button data-fmt="ppr" class="active">PPR</button><button data-fmt="half">Half</button><button data-fmt="std">Std</button></div>
 </div>
 <div class="sst-sub">Add the players you're deciding between. Every card shows our projection beside the sportsbook projection, plus matchup, spread, Vegas team total and this week's lines side by side — the top projection gets the START call and the best number in each row lights up green.</div>
+<div id="sstLockHint" role="note" style="display:none;margin:0 0 .6rem;padding:.5rem .7rem;background:var(--surface2);border-left:3px solid var(--accent);border-radius:4px;font-size:.78rem;line-height:1.4;color:var(--text)"></div>
 <div class="lg-controls" style="margin-bottom:.6rem">
 <div class="lg-search-wrap">
 <input type="text" class="lg-search" id="sstSearch" placeholder="Add a player..." autocomplete="off">
@@ -6892,7 +6893,7 @@ window.addEventListener('load', function() {
 });
 </script>
 <!-- KTC rankings moved to data/ktc_rankings.js -->
-<script defer src="app.js?v=2026-11-24-board2027d"></script>
+<script defer src="app.js?v=2026-11-24-weeklyfirst"></script>
 
 <!-- ===== First-Visit Onboarding Tour ===== -->
 <div id="mffTourOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px">
@@ -7025,7 +7026,13 @@ window.addEventListener('load', function() {
   // the return from Stripe (?premium_success / ?premium_cancel) that follows. It isn't
   // marked seen, so it opens on their next ordinary visit.
   const _buying = /^#\/?premium(?:[?&\/]|$)/i.test(location.hash || '') || /[?&]premium_(?:success|cancel)=1/.test(location.search || '');
-  if (!seen && !_buying) setTimeout(open, 700);
+  // Not over a deep link either (site audit 11-23 #2, Jack 11-24): a cold load on
+  // #startsit / #trade / #myteams / ... or a tagged link (utm_*) is someone who tapped
+  // through from a video or a search result for that tool, and the tour covered it.
+  // Like the #premium case it isn't marked seen, so it opens on the next plain visit.
+  const _hash = (location.hash || '').replace(/^#\/?/, '').toLowerCase();
+  const _deep = (!!_hash && _hash !== 'rankings') || /[?&]utm_[a-z_]+=/i.test(location.search || '');
+  if (!seen && !_buying && !_deep) setTimeout(open, 700);
 
   // Manual re-trigger
   window._openMffTour = open;

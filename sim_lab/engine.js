@@ -3159,6 +3159,7 @@
   function qbChartWindows(list, sched, cw) {
     var wnd = typeof window !== 'undefined' ? window : {};
     list.forEach(function (p) { if (p.pos === 'QB' && p._qbWinOrig !== undefined) p.qbWindow = p._qbWinOrig; });
+    list.forEach(function (p) { if (p._promoBase) { p.comps = p._promoBase.comps; p.ptsPPR = p._promoBase.ptsPPR; p.clayGames = p._promoBase.clayGames; delete p._promoBase; delete p.promoSlot; } });   // PROMOTED SHEET BACKUP base (below), restored every call
     var D = wnd.SIM_DEPTH_2026 && wnd.SIM_DEPTH_2026.teams;
     if (wnd.SIM_QB_CHART === false || !D || !sched || !sched.gameWeeks || !(cw >= 1)) return [];
     var rooms = {}, changed = [];
@@ -3207,9 +3208,14 @@
         var c0 = norm(D[ct].QB[0]);
         var q1 = list.filter(function (p) { return p.pos === 'QB' && !p.isDST && p.tm === tm && p.norm === c0; })[0];
         if (!q1 || q1.qbWindow) return;
-        // his own line must already be a STARTER line (a depth-pool QB1 = the chart's QB1 slot prior, 14.0 half): a Clay-sheet backup
-        // (DeVito, McCord: Clay ~0.5/g) inside a window would be priced off that backup line with the cameos removed - worse, so he stays on the shadow
-        if (!(seasonPoints(q1, PRESETS.half) / (q1.clayGames || 17) >= 8)) return;
+        // his own line must already be a STARTER line (a depth-pool QB1 = the chart's QB1 slot prior, 14.0 half). A Clay-sheet BACKUP
+        // (DeVito NE, McCord MIA: Clay ~0.5/g) inside a window would be priced off that backup line with the cameos removed (7.1 -> 3.6),
+        // so (2026-11-25 second step, Jack approved) he takes the depth-pool QB1 SLOT LINE as his base - the same line a chart QB1 missing
+        // from the sheet gets (Rudolph, Richardson Sr.) - then the same window. Original comps / ptsPPR / clayGames kept on p._promoBase,
+        // restored at the top of every call. Kill: window.SIM_QB_PROMOTE_SLOT = false (sheet backups then stay on the shadow).
+        // Backup engine.js.bak_pre_qbpromoteslot_20261125.
+        var starterLine = seasonPoints(q1, PRESETS.half) / (q1.clayGames || 17) >= 8;
+        if (!starterLine && (wnd.SIM_QB_PROMOTE_SLOT === false || q1.depthExtra)) return;
         var rec = JP[q1.norm];
         if (!rec || !rec.wf) return;
         var ks = Object.keys(rec.wf).filter(function (k) { return +k < cw && isFinite(+rec.wf[k]); });
@@ -3218,12 +3224,26 @@
         var gw = sched.gameWeeks[tm] || [], curG = 0, nG = gw.length;
         for (var i = 0; i < gw.length; i++) if (gw[i] >= cw) { curG = i + 1; break; }
         if (!curG) return;
+        if (!starterLine) {
+          var slot = qb1SlotLine();
+          if (!slot) return;
+          q1._promoBase = { comps: q1.comps, ptsPPR: q1.ptsPPR, clayGames: q1.clayGames };
+          q1.comps = Object.assign({}, q1.comps, { py: slot.py || 0, ptd: slot.ptd || 0, ry: slot.ry || 0, rtd: slot.rtd || 0, rec: 0, rcy: 0, rctd: 0 });
+          q1.ptsPPR = slot.pts || 0; q1.clayGames = slot.gm || 17; q1.promoSlot = true;
+        }
         q1._qbWinOrig = null;
         q1.qbWindow = { s: curG, e: nG, games: q1.clayGames || 17, src: 'override', chart: true, promo: true };
-        changed.push(q1.name + ' promoted chart QB1 g' + curG + '-' + nG + ' (' + st + ' start' + (st === 1 ? '' : 's') + ' / ' + ks.length + ' games)');
+        changed.push(q1.name + ' promoted chart QB1 g' + curG + '-' + nG + ' (' + st + ' start' + (st === 1 ? '' : 's') + ' / ' + ks.length + ' games' + (q1.promoSlot ? ', QB1 slot line' : '') + ')');
       });
     }
     return changed;
+  }
+  // the depth-pool QB1 slot line (build_depth_pool.py: 2026 stats per team game of every charted QB1, Clay format, 17 games). Read from any
+  // pool row on it; fallback = the 2026-11-25 value (238 PPR pts, 14.0 half/g) when no QB1 is missing from the sheet this week.
+  function qb1SlotLine() {
+    var dp = typeof window !== 'undefined' ? window.SIM_DEPTH_POOL : null;
+    if (dp) { var ks = Object.keys(dp); for (var i = 0; i < ks.length; i++) { var r = dp[ks[i]]; if (r && r.pos === 'QB' && /^depth QB1, slot prior/.test(r.src || '') && r.pts > 0) return r; } }
+    return { gm: 17, py: 3309, ptd: 22, ry: 198, rtd: 2.6, pts: 238 };
   }
   function applyInSeasonInjuries(players, currentWeek, opts) {
     _ncCache = {}; _qbfMu = {};   // v2.12: the shadow redistribution cache (and the QB floor mean, 10-09) follows the injury state

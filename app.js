@@ -12488,6 +12488,12 @@ function render() {
         const _poMiss = _ve && _ve.gp < _ve.sgp;
         const _poC = !_ve ? null : _poMiss ? '#f59e0b' : _vorColor(_ve.vp / Math.max(1, _ve.sgp || 0));
         const _poT = !_ve ? '—' : _ve.vp >= 10 ? '+' + Math.round(_ve.vp) : _ve.vp > 0 ? '+' + _ve.vp.toFixed(1) : '0';
+        if (_ve && _vorRatingOn() && _ve.rt != null) {
+          // MFF RATING view: the tail column carries the 0-99 rating (the board order); value and the option part in the tip.
+          const _rV = _ve.vr >= 10 ? '+' + Math.round(_ve.vr) : _ve.vr > 0 ? '+' + _ve.vr.toFixed(1) : '0';
+          const _rG = Math.round((_ve.vr - _ve.vt) * 10) / 10;
+          _statYdsTail = '<span style="cursor:help;font-weight:800;color:' + (_vorColor(_ve.vr / Math.max(1, _ve.sg || 1)) || 'inherit') + '" title="' + ('MFF RATING ' + _ve.rt + ' of 99 — rating value ' + _rV + ' (ROS VOR ' + (_ve.vt > 0 ? '+' : '') + _ve.vt + ', ' + (_rG >= 0 ? '+' : '') + _rG + ' for how far his projection can move before each week: you start him if it climbs and bench him if it falls). 99 = the most valuable player on this board. Projections unchanged.').replace(/"/g, '&quot;') + '">' + _ve.rt + '</span>';
+        } else
         if (_ve && _vorUpsideOn() && _ve.vu != null) {
           // UPSIDE view: the tail column carries UPSIDE VOR (the board order), with the gain over ROS VOR in the tip.
           const _uT = _ve.vu >= 10 ? '+' + Math.round(_ve.vu) : _ve.vu > 0 ? '+' + _ve.vu.toFixed(1) : '0';
@@ -12744,7 +12750,7 @@ function render() {
   if (_adpCmpMode && yrrH.childNodes[0].setAttribute) {
     yrrH.childNodes[0].innerHTML = '<img src="icons/adp_cbs.png" alt="CBS" style="width:16px;height:16px;border-radius:4px;vertical-align:middle"> ';
   } else {
-    yrrH.childNodes[0].textContent = _statMode === 'trend' ? 'TREND ' : _statMode === 'dyn' ? 'SIM RK ' : _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : _vorUpsideOn() ? 'UPSIDE ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) && filter === 'QB' ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
+    yrrH.childNodes[0].textContent = _statMode === 'trend' ? 'TREND ' : _statMode === 'dyn' ? 'SIM RK ' : _statMode === 'vor' ? (_vorPlayoffsOn() ? 'PO VOR ★ ' : _vorUpsideOn() ? 'UPSIDE ★ ' : _vorRatingOn() ? 'RATING ★ ' : 'PO VOR ') : _statMode === 'xfp' ? 'Luck ' : _adpCmpMode ? 'CBS ' : ((_wkLinesPpgMode || _wkProjPpgMode) && filter === 'QB' ? 'Rush ' : (_wkLinesPpgMode || _wkProjPpgMode) ? 'Rec ' : (_linesPpgMode || _projPpgMode) ? 'Yds ' : (_isWeekly ? 'Yds/G ' : 'Total Yds '));
   }
   // JM / Landing headers double as Yahoo / AVG in the ADP comparison view.
   // Originals are stashed on first use so leaving the view restores them.
@@ -12828,7 +12834,7 @@ function updateStats(data) {
   }).length;
   const modeLabel = currentMode === 'dynastysf' ? '👑 DYNASTY SF' : currentMode === 'dynasty' ? '👑 DYNASTY 1QB' : currentMode === 'bestball' ? '🏈 BEST BALL'
     : currentMode === 'weekly' ? '🏈 WEEKLY' : currentMode === 'superflex' ? '🏈 SUPERFLEX' : '🏈 REDRAFT';   // weekly + superflex used to read REDRAFT (2026-11-24)
-  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? (_vorPlayoffsOn() ? '📋 SIM VOR · PLAYOFFS' : _vorWin() && _vorTable() && _vorTable().win ? '📋 SIM VOR · ' + _vorWinTag(_vorTable()) : '📋 SIM VOR') : currentVersion === 'mffv' ? '📋 MFF VALUE' : currentVersion === 'sim27' ? '📋 2027 SIMS' : currentVersion === 'jacks27' ? "📋 JACK'S 2027" : '📋 MY RANKINGS';
+  const versionLabel = currentVersion === 'consensus' ? '📋 CONSENSUS' : currentVersion === 'jacks' ? "📋 JACK'S" : currentVersion === 'sims' ? (_vorPlayoffsOn() ? '📋 SIM VOR · PLAYOFFS' : _vorRatingOn() ? '📋 MFF RATING' : _vorWin() && _vorTable() && _vorTable().win ? '📋 SIM VOR · ' + _vorWinTag(_vorTable()) : '📋 SIM VOR') : currentVersion === 'mffv' ? '📋 MFF VALUE' : currentVersion === 'sim27' ? '📋 2027 SIMS' : currentVersion === 'jacks27' ? "📋 JACK'S 2027" : '📋 MY RANKINGS';
   document.getElementById('statsBar').innerHTML = `
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${versionLabel}</span>
     <span class="stat-chip" style="color:var(--accent);font-weight:600">${modeLabel}</span>
@@ -18344,6 +18350,27 @@ function _upsCall(f, R, mu, sg) {
   return f * Math.exp(mu + sg * sg / 2) * _upsNcdf(d1) - R * _upsNcdf(d2);
 }
 function _upsIsRookie(d) { return !(d.career || []).some(c => c && +c.yr < 2026); }
+// MFF RATING (Jack 2026-11-24: "build the redraft rating" / "this would be the mff 'rankings' order" / "it isnt always as
+// simple as proj ppg with risk, upside"). Tested on 2019-25 against realized startable value (sim_lab/backtest_redraft_rating.py,
+// backtest_redraft_struct.py): the projection over replacement already ties ESPN; injury-report / practice / age / volatility
+// inputs add nothing to the ORDER, chasing role trends hurts, a 37-input model is worse. What helps is the OPTION: a projection
+// can climb or fall, and you start him when it climbs and bench him when it falls. Each later week is priced as
+// E[max(0, projection - replacement)] with the measured spread of how far a base projection moves k weeks ahead, by position
+// (QB / RB / WR / TE; half-PPR points, 2019-25 - the strength barely matters: x0.5 to x3 pick stashes equally well). This week
+// (k = 0) is the plain gap. Top-24 / top-50 value is the same as ROS VOR; among players projected BELOW replacement the top-24
+// stashes capture ~75% of the best possible vs ~52% with no option (ROS VOR ties them all at 0) and ~60% for UPSIDE VOR.
+// RATING 0-99 = 99 x sqrt(value / best value on the board) (K and D/ST inside their own position).
+const _MFFR_SIG = {
+  QB: [1.43, 1.71, 1.96, 2.09, 2.20, 2.29, 2.37], RB: [1.41, 1.72, 1.93, 2.11, 2.24, 2.32, 2.44],
+  WR: [0.99, 1.24, 1.44, 1.56, 1.63, 1.69, 1.79], TE: [0.72, 0.92, 1.07, 1.20, 1.29, 1.35, 1.43]
+};
+function _mffrSigma(pos, k) { const t = _MFFR_SIG[pos]; return t && k > 0 ? t[Math.min(k, t.length) - 1] : 0; }
+function _mffrCall(f, R, sd) {
+  if (!(f > 0)) return 0;
+  if (!(sd > 1e-6)) return Math.max(0, f - R);
+  const z = (f - R) / sd;
+  return sd * 0.3989422804014327 * Math.exp(-z * z / 2) + (f - R) * _upsNcdf(z);
+}
 function _upsDrift(d, k) {
   const P = _UPS_DRIFT[d.s];
   if (!P || !(k > 0)) return null;
@@ -18464,6 +18491,8 @@ function _vorTable() {
   const _cmp = (a, b) => (b.vt - a.vt) || (b.vp - a.vp) || (b.vor - a.vor) || (b.tot - a.tot);
   const _cmpP = (a, b) => (b.vp - a.vp) || (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
   const _cmpU = (a, b) => (b.vu - a.vu) || (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
+  const _cmpR = (a, b) => (b.vr - a.vr) || (b.vt - a.vt) || (b.vor - a.vor) || (b.tot - a.tot);
+  const _rate = (v, mx) => Math.round(99 * Math.sqrt(Math.max(0, v) / Math.max(1e-9, mx)));
   Object.keys(pools).forEach(p => {
     const pool = pools[p];
     if (!pool.length) return;
@@ -18493,8 +18522,14 @@ function _vorTable() {
         const q = x.wq[j], f = q < 1 ? v / q : v, dr = _upsDrift(x.d, weeks[j] - weeks[0]);
         return s + (dr ? _upsCall(f, R, dr[0], dr[1]) : Math.max(0, f - R)) * q * wt(weeks[j]);
       }, 0));
+      // MFF RATING value: the same weeks and weights as ROS VOR, each later week as an option on his projection (_mffrCall)
+      const vr = wk ? vor : r1(x.wp.reduce((s, v, j) => {
+        if (!(v > 0)) return s;
+        const q = x.wq[j], f = q < 1 ? v / q : v;
+        return s + _mffrCall(f, R, _mffrSigma(p, weeks[j] - weeks[0])) * q * wt(weeks[j]);
+      }, 0));
       const sc = _sched(x.d);
-      const e = { v: r1(x.ppg), g: x.g, eg: r1(x.eg), sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, vp, vu, posRk: i + 1, rk: null, tA: null, tP: null, rkP: null, tAp: null, tPp: null };
+      const e = { v: r1(x.ppg), g: x.g, eg: r1(x.eg), sg: sc[0], gp: x.gp, sgp: sc[1], tot: x.tot, vor, vt, vp, vu, vr, rt: null, rkR: null, tAr: null, tPr: null, posRk: i + 1, rk: null, tA: null, tP: null, rkP: null, tAp: null, tPp: null };
       out.map.set(x.d, e);
       return e;
     });
@@ -18518,6 +18553,13 @@ function _vorTable() {
       _vorAssignTiers(sortedU, 'vu', 'tPu', 150);
       if (p === 'K' || p === 'DST') sortedU.forEach(e => { e.tAu = e.tPu; });
     }
+    // MFF RATING view: ranks and tiers on the rating value (season boards, any window).
+    if (!wk) {
+      const sortedR = es.slice().sort(_cmpR);
+      if (p === 'K' || p === 'DST') { const mx = sortedR.length ? sortedR[0].vr : 0; sortedR.forEach((e, i) => { e.rkR = i + 1; e.rt = _rate(e.vr, mx); }); }
+      _vorAssignTiers(sortedR, 'vr', 'tPr', 150);
+      if (p === 'K' || p === 'DST') sortedR.forEach(e => { e.tAr = e.tPr; });
+    }
   });
   all.sort(_cmp).forEach((e, i) => { e.rk = i + 1; });
   _vorAssignTiers(all, 'vt', 'tA', 150);   // top-150 draftable range
@@ -18530,6 +18572,12 @@ function _vorTable() {
     const allU = all.slice().sort(_cmpU);
     allU.forEach((e, i) => { e.rkU = i + 1; });
     _vorAssignTiers(allU, 'vu', 'tAu', 150);
+  }
+  if (!wk) {
+    const allR = all.slice().sort(_cmpR);
+    const mx = allR.length ? allR[0].vr : 0;
+    allR.forEach((e, i) => { e.rkR = i + 1; e.rt = _rate(e.vr, mx); });
+    _vorAssignTiers(allR, 'vr', 'tAr', 150);
   }
   window._vorCache = out;
   return out;
@@ -18557,6 +18605,12 @@ window._vorUpside = false;
 function _vorUpsideOn() {
   return !!window._vorUpside && currentVersion === 'sims' && currentMode !== 'weekly' && !_vorPlayoffsOn();
 }
+// MFF RATING view of the SIM VOR board: ranked and tiered by the rating value, the tail column shows the 0-99 rating.
+// Exclusive with PLAYOFFS and UPSIDE.
+window._vorRating = false;
+function _vorRatingOn() {
+  return !!window._vorRating && currentVersion === 'sims' && currentMode !== 'weekly' && !_vorPlayoffsOn() && !_vorUpsideOn();
+}
 // SIM VOR tier banners for the rows on screen: tier membership is per player
 // (overall tiers on ALL / ROOKIES / FLEX, position tiers on a position pill),
 // so filtered views — WAIVERS, TEAMS, TOP N — keep each player's real tier and
@@ -18570,8 +18624,8 @@ function _simsTiersFor(data) {
   let prev = null;
   rows.forEach((d, i) => {
     const e = _vorFor(d);
-    const po = _vorPlayoffsOn(), up = _vorUpsideOn();
-    const t = e && (posView ? (po ? e.tPp : up ? e.tPu : e.tP) : (po ? e.tAp : up ? e.tAu : e.tA));
+    const po = _vorPlayoffsOn(), up = _vorUpsideOn(), ra = _vorRatingOn();
+    const t = e && (posView ? (po ? e.tPp : up ? e.tPu : ra ? e.tPr : e.tP) : (po ? e.tAp : up ? e.tAu : ra ? e.tAr : e.tA));
     if (!t || t === prev) return;
     prev = t;
     out.push({ id: 's' + out.length, label: t.label, name: t.name, afterRank: positional ? i + 1 : d.myRank });
@@ -18611,11 +18665,11 @@ function _mffvBoardEnsure() {
 function _simsBoardEnsure() {
   const t = _vorTable();
   const src = (window._simsBoardSrc = window._simsBoardSrc || {});
-  const po = _vorPlayoffsOn(), up = _vorUpsideOn();
-  const srcKey = currentMode + (po ? ':po' : up ? ':up' : '');
+  const po = _vorPlayoffsOn(), up = _vorUpsideOn(), ra = _vorRatingOn();
+  const srcKey = currentMode + (po ? ':po' : up ? ':up' : ra ? ':ra' : '');
   if (!t || src[srcKey] === t) return false;
   const skill = [], ks = [], ds = [];
-  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, po ? e.rkP : (up && e.rkU != null) ? e.rkU : e.rk]); });
+  t.map.forEach((e, d) => { (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, po ? e.rkP : (up && e.rkU != null) ? e.rkU : (ra && e.rkR != null) ? e.rkR : e.rk]); });
   const order = [];
   [skill, ks, ds].forEach(a => a.sort((x, y) => x[1] - y[1]).forEach(x => order.push(x[0])));
   // Players without a sim row trail in consensus order (hidden on this board).
@@ -18737,6 +18791,7 @@ function _vorBarRender() {
     + (extras.length ? '<span class="vor-bar-x" title="League scoring priced into the VOR numbers on top of the PPR / Half / Standard toggle">' + extras.join(' · ') + '</span>' : '')
     + (currentMode !== 'weekly' ? '<button class="pos-btn vor-waiver-btn' + (_vorPlayoffsOn() ? ' on' : '') + '" id="vorPlayoffBtn" title="Re-rank the SIM VOR board by PO VOR — value over replacement in the fantasy-playoff weeks only (' + st.poStart + (st.poEnd > st.poStart ? '-' + st.poEnd : '') + ') — with tiers drawn on that number. For trading for the title run.">PLAYOFFS</button>' : '')
     + (currentMode !== 'weekly' ? '<button class="pos-btn vor-waiver-btn' + (_vorUpsideOn() ? ' on' : '') + '" id="vorUpsideBtn" title="Re-rank the SIM VOR board by UPSIDE VOR — the same weeks as VOR, but each week counts the chance his projection climbs before then (role or usage change) and you start him once it does. Rookie RBs climb the most; a steady low-ceiling player gains little. Projections are unchanged. Backtested 2019-25 on value you could actually start: better stash order in 6 of 7 seasons.">UPSIDE</button>' : '')
+    + (currentMode !== 'weekly' ? '<button class="pos-btn vor-waiver-btn' + (_vorRatingOn() ? ' on' : '') + '" id="vorRatingBtn" title="Re-rank the SIM VOR board by MFF RATING (0-99) — the same weeks as VOR, with every later week priced for how far projections really move by then: you start him if his projection climbs and bench him if it falls. Tested on 2019-25 against the value you could actually start: the top of the board matches ROS VOR, and it picks bench stashes far better (ROS VOR scores every player below replacement 0). Injury-report and trend signals were tested and left out because they made the order worse. Projections are unchanged.">MFF RATING</button>' : '')
     + (lg ? '<button class="pos-btn vor-waiver-btn' + (window._vorWaivers && currentVersion === 'sims' ? ' on' : '') + '" id="vorWaiverBtn" title="Show only players nobody in ' + esc(lg.name || 'this league') + ' has on a roster, best first — the top of the waiver wire by VOR. Stacks with the position pills. SIM VOR board only.">WAIVERS</button>' : '')
     + '<button class="vor-reset" id="vorResetBtn" title="Back to the standard 12-team lineup (1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, K, D/ST, 6 bench, playoffs weeks 15-17 at 1.5x, rest-of-season window) with no league">RESET</button>';
 }
@@ -18790,7 +18845,22 @@ function _vorChanged() {
         return;
       }
       window._vorPlayoffs = !window._vorPlayoffs;
-      if (window._vorPlayoffs) window._vorUpside = false;
+      if (window._vorPlayoffs) { window._vorUpside = false; window._vorRating = false; }
+      _vorBarRender();
+      if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
+      syncMode(); renumber();
+      render();
+      return;
+    }
+    if (e.target.closest('#vorRatingBtn')) {
+      if (currentVersion !== 'sims') {
+        window._vorRating = true; window._vorPlayoffs = false; window._vorUpside = false;
+        const tab = document.querySelector('.version-tab[data-version="sims"]');
+        if (tab) tab.click();
+        return;
+      }
+      window._vorRating = !window._vorRating;
+      if (window._vorRating) { window._vorPlayoffs = false; window._vorUpside = false; }
       _vorBarRender();
       if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
       syncMode(); renumber();
@@ -18799,13 +18869,13 @@ function _vorChanged() {
     }
     if (e.target.closest('#vorUpsideBtn')) {
       if (currentVersion !== 'sims') {
-        window._vorUpside = true; window._vorPlayoffs = false;
+        window._vorUpside = true; window._vorPlayoffs = false; window._vorRating = false;
         const tab = document.querySelector('.version-tab[data-version="sims"]');
         if (tab) tab.click();
         return;
       }
       window._vorUpside = !window._vorUpside;
-      if (window._vorUpside) window._vorPlayoffs = false;
+      if (window._vorUpside) { window._vorPlayoffs = false; window._vorRating = false; }
       _vorBarRender();
       if (typeof window._updateRnkStatHeaders === 'function') window._updateRnkStatHeaders();
       syncMode(); renumber();
@@ -18828,6 +18898,7 @@ function _vorChanged() {
       window._vorWaivers = false;
       window._vorPlayoffs = false;
       window._vorUpside = false;
+      window._vorRating = false;
       _vorChanged();
     }
   });

@@ -1105,11 +1105,7 @@ window._mineToolBoard = function(mode) {
 };
 window._verBoardFor = function(src, mode) {
   if (src === 'mine') return window._mineToolBoard(mode);
-  // 'mff' = MFF VALUE on dynasty boards, the MFF RATING order on redraft / superflex (window._mffRatingBoard).
-  if (src === 'mff') {
-    if (typeof window._mffRatingMode === 'function' && window._mffRatingMode(mode)) return window._mffRatingBoard(mode);
-    return typeof window._mffValueBoard === 'function' ? window._mffValueBoard(mode) : null;
-  }
+  if (src === 'mff') return typeof window._mffValueBoard === 'function' ? window._mffValueBoard(mode) : null;
   return versionBoards[src] && versionBoards[src][mode];
 };
 
@@ -18611,46 +18607,6 @@ function _vorUpsideOn() {
 }
 // MFF RATING view of the SIM VOR board: ranked and tiered by the rating value, the tail column shows the 0-99 rating.
 // Exclusive with PLAYOFFS and UPSIDE.
-// MFF RATING AS A VALUE SOURCE (Jack 2026-11-24: "also have this in myteams and trade calc etc"): on redraft the
-// 'mff' source - MFF VALUE on dynasty - is the rating order: skill players by rating, then K, then D/ST, anyone without a sim row
-// after that in consensus order. Rest of season, no window, the scoring toggle and VOR league settings - the same ROS table the
-// trade lineup sims read (_vorTableROS). Cached on a cheap signature so a value lookup never rebuilds the VOR table.
-// Redraft only for now: on superflex the VOR table's QB replacement can land on a high per-game QB with a missed week
-// (replacement is the Nth QB by TOTAL, read per game), which under-prices quarterbacks - flagged 2026-11-24, not fixed here.
-function _mffRatingMode(mode) { return mode === 'redraft'; }
-window._mffRatingMode = _mffRatingMode;
-window._mffRatingBoard = function(mode) {
-  if (!_mffRatingMode(mode)) return null;
-  const fb = (versionBoards.consensus && versionBoards.consensus[mode]) || null;
-  const SP = window.SIM_PROJ_2026;
-  if (!SP || !SP.weeks) return fb;
-  let st = ''; try { st = JSON.stringify(_vorLineup()); } catch (e) { st = ''; }
-  const sig = [SP.updated, rankingScoringFmt, mode, st, D.length, (typeof window._weeklyScheduleWeek === 'function' && window._weeklyScheduleWeek()) || 0,
-    Object.keys(window._irMap || {}).length].join('|');
-  const c = (window._mffRatingBoardCache = window._mffRatingBoardCache || {});
-  if (c[mode] && c[mode].sig === sig) return c[mode].b;
-  let t = null;
-  try { t = _vorTableROS(mode === 'superflex', false); } catch (e) { t = null; }
-  if (!t || !t.map || !t.map.size) return fb;
-  const skill = [], ks = [], ds = [];
-  t.map.forEach((e, d) => { if (d.idx == null) return; (d.s === 'K' ? ks : d.s === 'DST' ? ds : skill).push([d.idx, e.rkR != null ? e.rkR : e.rk]); });
-  const order = [];
-  [skill, ks, ds].forEach(a => a.sort((x, y) => x[1] - y[1]).forEach(x => order.push(x[0])));
-  const used = new Set(order);
-  (fb || []).forEach(i => { if (!used.has(i)) order.push(i); });
-  c[mode] = { sig, b: order };
-  return order;
-};
-// The shared 'mff' tab reads MFF RATING on redraft / superflex and MFF VALUE on dynasty.
-function _mffTabLabel(tab, rat) {
-  if (!tab) return;
-  if (tab.dataset.t0 == null) tab.dataset.t0 = tab.title || '';
-  const txt = rat ? 'MFF RATING' : 'MFF VALUE';
-  const n = tab.lastChild;
-  if (n && n.nodeType === 3) { if (n.textContent.trim() !== txt) n.textContent = txt; }
-  tab.title = rat ? 'MFF RATING — our rest-of-season rating order: sim value over a replacement starter, with every later week priced for how far projections really move by then. Tested on 2019-25 against the value you could actually start. Redraft.' : tab.dataset.t0;
-}
-window._mffTabLabel = _mffTabLabel;
 window._vorRating = false;
 function _vorRatingOn() {
   return !!window._vorRating && currentVersion === 'sims' && currentMode !== 'weekly' && !_vorPlayoffsOn() && !_vorUpsideOn();
@@ -40054,11 +40010,11 @@ window.fmtHeight = fmtHeight;
       const tab = document.querySelector('.trade-src-tab[data-tsrc="' + srcKey + '"]');
       if (tab) tab.style.display = show ? '' : 'none';
     });
-    // MFF VALUE is a dynasty value (dynasty / dynasty SF); on redraft / superflex the same tab is the MFF RATING order.
-    const dyn = tradeMode === 'dynasty' || tradeMode === 'dynastysf', rat = window._mffRatingMode(tradeMode);
+    // MFF VALUE is a dynasty value — dynasty / dynasty SF only.
+    const dyn = tradeMode === 'dynasty' || tradeMode === 'dynastysf';
     const mffTab = document.querySelector('.trade-src-tab[data-tsrc="mff"]');
-    if (mffTab) { mffTab.style.display = (dyn || rat) ? '' : 'none'; window._mffTabLabel(mffTab, rat); }
-    if ((!show && (tradeSource === 'espn' || tradeSource === 'cbs' || tradeSource === 'yahoo')) || (!dyn && !rat && tradeSource === 'mff')) {
+    if (mffTab) mffTab.style.display = dyn ? '' : 'none';
+    if ((!show && (tradeSource === 'espn' || tradeSource === 'cbs' || tradeSource === 'yahoo')) || (!dyn && tradeSource === 'mff')) {
       tradeSource = 'consensus';
       // [data-tsrc] keeps this off the My Teams tabs, which share the class
       document.querySelectorAll('.trade-src-tab[data-tsrc]').forEach(b => b.classList.toggle('active', b.dataset.tsrc === 'consensus'));
@@ -40101,7 +40057,7 @@ window.fmtHeight = fmtHeight;
       // My Teams tabs share the .trade-src-tab class but carry data-mtsrc
       // only — ignore them here so their clicks can't clobber tradeSource.
       if (!src) return;
-      if (src === 'mff' && tradeMode !== 'dynasty' && tradeMode !== 'dynastysf' && !window._mffRatingMode(tradeMode)) {
+      if (src === 'mff' && tradeMode !== 'dynasty' && tradeMode !== 'dynastysf') {
         if (typeof toast === 'function') toast('MFF VALUE is a dynasty value');
         return;
       }
@@ -40114,7 +40070,7 @@ window.fmtHeight = fmtHeight;
         lockMsg.style.cssText = 'text-align:center;padding:1.25rem;margin:1rem 0;border-radius:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18)';
         lockMsg.innerHTML = '<div style="font-size:1.3rem;margin-bottom:.4rem">&#128274;</div>' +
           '<div style="font-family:Bebas Neue,sans-serif;font-size:.95rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:.3rem">PREMIUM FEATURE</div>' +
-          '<div style="font-size:.75rem;color:var(--text2);margin-bottom:.75rem">' + (src === 'mff' ? (window._mffRatingMode(tradeMode) ? 'MFF RATING trade values are' : 'MFF VALUE trade values are') : 'Jack\'s trade values are') + ' a Pro feature. Upgrade to unlock.</div>' +
+          '<div style="font-size:.75rem;color:var(--text2);margin-bottom:.75rem">' + (src === 'mff' ? 'MFF VALUE trade values are' : 'Jack\'s trade values are') + ' a Pro feature. Upgrade to unlock.</div>' +
           '<button class="premium-wall-btn" onclick="document.querySelector(\'[data-page=account]\').click();setTimeout(()=>document.querySelector(\'[data-acct-tab=premium]\').click(),100)">GET PREMIUM</button>';
         const tradeLayout = document.querySelector('.trade-layout');
         if (tradeLayout) tradeLayout.parentElement.insertBefore(lockMsg, tradeLayout);
@@ -40142,7 +40098,7 @@ window.fmtHeight = fmtHeight;
       tradeSource = src;
       _tradeSrcPicked = true;   // an explicit pick beats the dynasty MFF VALUE default
       // MFF VALUE needs the Dynasty SIM file (lazy, ~770 KB): price once it lands.
-      if (src === 'mff' && !window.DYNASTY_SIM_2026 && !window._mffRatingMode(tradeMode)) _dynSimEnsure(() => { if (tradeSource === 'mff') renderAll(); });
+      if (src === 'mff' && !window.DYNASTY_SIM_2026) _dynSimEnsure(() => { if (tradeSource === 'mff') renderAll(); });
       renderAll();
     });
   });
@@ -40187,7 +40143,7 @@ window.fmtHeight = fmtHeight;
     x.fillText('TRADE CALCULATOR', W / 2, 72);
     x.fillStyle = C.dim; x.font = '600 15px ' + DF; try { x.letterSpacing = '1px'; } catch (_) {}
     const modeLbl = { redraft: 'REDRAFT', superflex: 'SUPERFLEX', dynasty: 'DYNASTY 1QB', dynastysf: 'DYNASTY SF' }[tradeMode] || String(tradeMode).toUpperCase();
-    const srcLbl = { consensus: 'CONSENSUS', jacks: "JACK'S RANKINGS", mine: 'MY RANKS', mff: window._mffRatingMode(tradeMode) ? 'MFF RATING' : 'MFF VALUE' }[tradeSource] || String(tradeSource).toUpperCase();
+    const srcLbl = { consensus: 'CONSENSUS', jacks: "JACK'S RANKINGS", mine: 'MY RANKS', mff: 'MFF VALUE' }[tradeSource] || String(tradeSource).toUpperCase();
     x.fillText(modeLbl + '  \u00b7  ' + srcLbl + ' VALUES', W / 2, 100);
     const col = (side, receiver, giver, left, color, total) => {
       const px = left, pw = 520, py = 130, ph = 330;
@@ -71704,8 +71660,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     const el = document.getElementById('mtValueSrcLabel');
     // Sentence-case label (2026-10-13); _MT_SRC_NAMES stays caps for the canvas exports
     const SC = { consensus: 'Consensus', jacks: "Jack's rankings", mine: 'My ranks', mff: 'MFF VALUE', underdog: 'Underdog ADP', espn: 'ESPN ADP', cbs: 'CBS ADP', sleeper: 'Sleeper ADP', yahoo: 'Yahoo ADP', ktc: 'KTC' };
-    const _ratLbl = _mtValueSrc === 'mff' && typeof _mtGetRankingMode === 'function' && window._mffRatingMode(_mtGetRankingMode());
-    if (el) el.textContent = _ratLbl ? 'MFF RATING' : (SC[_mtValueSrc] || _MT_SRC_NAMES[_mtValueSrc] || String(_mtValueSrc || '').toUpperCase());
+    if (el) el.textContent = SC[_mtValueSrc] || _MT_SRC_NAMES[_mtValueSrc] || String(_mtValueSrc || '').toUpperCase();
   }
   function _mtActiveLeagueKey() {
     if (_mtActiveSource === 'espn') return _mtActiveEspnId ? 'espn_' + _mtActiveEspnId : null;
@@ -81028,11 +80983,11 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const tab = document.querySelector('.mt-src-tab[data-mtsrc="' + srcKey + '"]');
       if (tab) tab.style.display = show ? '' : 'none';
     });
-    // MFF VALUE is a dynasty value (dynasty / dynasty SF leagues); redraft / superflex leagues get the MFF RATING order on the same tab.
-    const _mode = _mtGetRankingMode(), dyn = _mode === 'dynasty' || _mode === 'dynastysf', rat = window._mffRatingMode(_mode);
+    // MFF VALUE is a dynasty value — dynasty / dynasty SF leagues only.
+    const _mode = _mtGetRankingMode(), dyn = _mode === 'dynasty' || _mode === 'dynastysf';
     const mffTab = document.querySelector('.mt-src-tab[data-mtsrc="mff"]');
-    if (mffTab) { mffTab.style.display = (dyn || rat) ? '' : 'none'; window._mffTabLabel(mffTab, rat); }
-    if ((!show && (_mtValueSrc === 'espn' || _mtValueSrc === 'cbs' || _mtValueSrc === 'yahoo')) || (!dyn && !rat && _mtValueSrc === 'mff')) {
+    if (mffTab) mffTab.style.display = dyn ? '' : 'none';
+    if ((!show && (_mtValueSrc === 'espn' || _mtValueSrc === 'cbs' || _mtValueSrc === 'yahoo')) || (!dyn && _mtValueSrc === 'mff')) {
       _mtValueSrc = 'consensus';
       try { localStorage.setItem('mt_value_src', 'consensus'); } catch(e) {}
       document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.toggle('active', b.dataset.mtsrc === 'consensus'));
@@ -81100,8 +81055,8 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       }
       if (src === 'mff') {
         const m = _mtGetRankingMode();
-        if (m !== 'dynasty' && m !== 'dynastysf' && !window._mffRatingMode(m)) { if (typeof toast === 'function') toast('MFF VALUE is a dynasty value'); return; }
-        if (typeof hasPremium === 'function' && !hasPremium()) { if (typeof toast === 'function') toast((window._mffRatingMode(m) ? 'MFF RATING' : 'MFF VALUE') + ' requires Premium'); return; }
+        if (m !== 'dynasty' && m !== 'dynastysf') { if (typeof toast === 'function') toast('MFF VALUE is a dynasty value'); return; }
+        if (typeof hasPremium === 'function' && !hasPremium()) { if (typeof toast === 'function') toast('MFF VALUE requires Premium'); return; }
       }
       document.querySelectorAll('.mt-src-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');

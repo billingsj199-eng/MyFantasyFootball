@@ -1328,6 +1328,11 @@ CLEAR ALL
        (the bye rows under the banner can be free ones), so they are left alone. */
     body.mffv-on #pageRankings tbody tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.tier-row:not(.bye-line-row):not(.cut-line-row),
     body.sims-on #pageRankings tbody tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.tier-row:not(.bye-line-row):not(.cut-line-row){display:none!important}
+    /* WEEKLY bye / out banner, every board (Jack 2026-11-25: "hide the empty BYE banner on
+       weekly too"): once 8 teaser rows are above it, every locked bye row under it is hidden,
+       so the banner is empty unless a FREE bye row (not blurred) follows. Hide it then. Its
+       own rule on purpose: a browser without :has() drops just this one and keeps the banner. */
+    #pageRankings tbody tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.premium-blur ~ tr.bye-line-row:not(:has(~ tr.bye-row:not(.premium-blur))){display:none!important}
     /* The premium wall row's single cell is td:first-child, so the card rules
        above gave it the 24px drag-handle slot and its SIGN IN / UPGRADE card
        spilled off the left edge of the phone. Let it span the card. */

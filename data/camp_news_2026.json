@@ -1,6 +1,208 @@
 {
-"updated": "2026-11-24T23:12:56Z",
+"updated": "2026-11-25T23:17:43Z",
 "items": [
+{
+"player": "Josh Jacobs",
+"team": "GB",
+"pos": "RB",
+"date": "2026-11-25",
+"headline": "Officially Questionable (finger) for Thanksgiving Eve vs. Rams on Packers' final injury report",
+"take": "Tonight's game-time call for a weekly RB1 — have a contingency ready for the early kickoff.",
+"url": "https://www.nfl.com/injuries/league/2026/reg12",
+"tag": "injury",
+"avail": {
+"k": "gtd",
+"wk": 12
+},
+"src_type": "team"
+},
+{
+"player": "Jake Ferguson",
+"team": "DAL",
+"pos": "TE",
+"date": "2026-11-25",
+"headline": "Officially ruled Out for Thanksgiving vs. Eagles, still dealing with knee/ankle",
+"take": "Misses a second straight game; Cowboys' TE snaps stay up for grabs on the holiday slate.",
+"url": "https://www.nfl.com/injuries/league/2026/reg12",
+"tag": "injury",
+"avail": {
+"k": "out",
+"wk": 12
+},
+"src_type": "team"
+},
+{
+"player": "Terrance Ferguson",
+"team": "LAR",
+"pos": "TE",
+"date": "2026-11-25",
+"headline": "Ruled Out again for Thanksgiving Eve vs. Packers with lingering ankle/hamstring",
+"take": "Setback continues — still not back to retake Rams' starting TE snaps.",
+"url": "https://www.nfl.com/injuries/league/2026/reg12",
+"tag": "injury",
+"avail": {
+"k": "out",
+"wk": 12
+},
+"src_type": "team"
+},
+{
+"player": "Kenneth Walker III",
+"team": "KC",
+"pos": "RB",
+"date": "2026-11-25",
+"headline": "Officially ruled Out for Thanksgiving night vs. Bills, third straight missed game (groin)",
+"take": "Emmett Johnson again the clear lead back in Kansas City for the holiday game.",
+"url": "https://www.nfl.com/injuries/league/2026/reg12",
+"tag": "injury",
+"avail": {
+"k": "out",
+"wk": 12
+},
+"src_type": "team"
+},
+{
+"player": "Dalton Kincaid",
+"team": "BUF",
+"pos": "TE",
+"date": "2026-11-25",
+"headline": "Questionable (thumb/ankle) for Thanksgiving night vs. Chiefs, Bills' final Week 12 report",
+"take": "Trending back from injury — confirm he's active before trusting him in lineups.",
+"url": "https://www.nfl.com/injuries/league/2026/reg12",
+"tag": "injury",
+"avail": {
+"k": "gtd",
+"wk": 12
+},
+"src_type": "team"
+},
+{
+"player": "Roschon Johnson",
+"team": "CHI",
+"pos": "RB",
+"date": "2026-11-25",
+"headline": "Officially ruled Out for Thanksgiving vs. Lions with an ankle injury",
+"take": "Bears may now weigh IR; his RB2 role is off the board for the holiday slate.",
+"url": "https://www.nfl.com/injuries/league/2026/reg12",
+"tag": "injury",
+"avail": {
+"k": "out",
+"wk": 12
+},
+"src_type": "team"
+},
+{
+"player": "Jonathan Mingo",
+"team": "DAL",
+"pos": "WR",
+"date": "2026-11-25",
+"headline": "Ruled Out for Thanksgiving vs. Eagles with an ankle injury",
+"take": "Deep-league WR4 only — trims an already thin Cowboys receiver room further.",
+"url": "https://www.nfl.com/injuries/league/2026/reg12",
+"tag": "injury",
+"avail": {
+"k": "out",
+"wk": 12
+},
+"src_type": "team"
+},
+{
+"player": "Noah Gray",
+"team": "KC",
+"pos": "TE",
+"date": "2026-11-25",
+"headline": "Questionable (rib) for Thanksgiving night vs. Bills",
+"take": "Streaming TE option only if he's active — check pregame inactives.",
+"url": "https://www.nfl.com/injuries/league/2026/reg12",
+"tag": "injury",
+"avail": {
+"k": "gtd",
+"wk": 12
+},
+"src_type": "team"
+},
+{
+"player": "Aaron Rodgers",
+"team": "PIT",
+"pos": "QB",
+"date": "2026-11-25",
+"headline": "Not starting Friday at Broncos; Mason Rudolph confirmed as QB1, per Rapoport",
+"take": "Off the fantasy radar for Black Friday — reason for the switch wasn't stated in today's reporting, so don't assume injury severity.",
+"url": "https://www.nbcsports.com/nfl/mike-mccarthy/00000188-9cf0-da6b-abd8-fcfd30c702d9",
+"tag": "role",
+"avail": {
+"k": "out",
+"wk": 12
+},
+"src_type": "insider"
+},
+{
+"player": "Jordan Addison",
+"team": "MIN",
+"pos": "WR",
+"date": "2026-11-25",
+"headline": "Did not practice Wednesday (thumb) again ahead of Week 12 vs. Falcons",
+"take": "Still on his post-IR recovery clock; Tai Felton keeps the extra target share meanwhile.",
+"url": "https://www.nbcsports.com/nfl/jordan-addison/8755",
+"tag": "injury",
+"src_type": "report"
+},
+{
+"player": "Jayden Daniels",
+"team": "WAS",
+"pos": "QB",
+"date": "2026-11-25",
+"headline": "Full practice Wednesday on standing left elbow/hand issue, trending to play Week 12 vs. Cardinals",
+"take": "No new setback on the chronic elbow — still a high-end QB1 play in a favorable matchup.",
+"url": "https://www.nbcsports.com/jayden-daniels/00000188-9cf1-da6b-abd8-fcfd31fa0066",
+"tag": "injury",
+"avail": {
+"k": "play",
+"wk": 12
+},
+"src_type": "report"
+},
+{
+"player": "Rachaad White",
+"team": "WAS",
+"pos": "RB",
+"date": "2026-11-25",
+"headline": "Full practice Wednesday (heel), trending to play Week 12 vs. Cardinals as the No. 2 back",
+"take": "Health is no longer the question — touch-share behind Croskey-Merritt and Perine still is.",
+"url": "https://www.nbcsports.com/nfl/rachaad-white/7450",
+"tag": "injury",
+"avail": {
+"k": "play",
+"wk": 12
+},
+"src_type": "report"
+},
+{
+"player": "Michael Mayer",
+"team": "LV",
+"pos": "TE",
+"date": "2026-11-25",
+"headline": "Full practice Wednesday (back), trending to play Sunday vs. Browns",
+"take": "Clears his own injury and stands as the top TE2 insurance if Bowers (ankle) isn't full-go.",
+"url": "https://www.nbcsports.com/nfl/michael-mayer/8233",
+"tag": "injury",
+"avail": {
+"k": "play",
+"wk": 12
+},
+"src_type": "report"
+},
+{
+"player": "Brock Bowers",
+"team": "LV",
+"pos": "TE",
+"date": "2026-11-25",
+"headline": "Limited again Wednesday (ankle) ahead of Sunday vs. Browns; coach optimistic he plays",
+"take": "Trending toward playing, but confirm Friday's tag before locking him in as a must-start TE1.",
+"url": "https://www.nbcsports.com/brock-bowers/00000188-9cf1-da6b-abd8-fcfd8ec50342",
+"tag": "injury",
+"src_type": "report"
+},
 {
 "player": "Rachaad White",
 "team": "WAS",
@@ -136,7 +338,7 @@
 "pos": "RB",
 "date": "2026-11-22",
 "headline": "Leads Chiefs backfield again in 34-7 rout of Cardinals as Kenneth Walker III (groin) sits 2nd straight week",
-"take": "Entrenched as the early-down/receiving back while Walker's groin lingers into Thanksgiving week \u2014 must-add flex play even in a committee.",
+"take": "Entrenched as the early-down/receiving back while Walker's groin lingers into Thanksgiving week — must-add flex play even in a committee.",
 "url": "https://www.thescore.com/nfl/event/140728",
 "tag": "riser",
 "src_type": "report"
@@ -147,7 +349,7 @@
 "pos": "RB",
 "date": "2026-11-21",
 "headline": "Officially Questionable for Monday night vs. Bengals (heel); DNP Saturday after limited Friday",
-"take": "True game-time call for MNF \u2014 have Croskey-Merritt ready as the pivot if White sits.",
+"take": "True game-time call for MNF — have Croskey-Merritt ready as the pivot if White sits.",
 "url": "https://www.commanders.com/news/commanders-vs-bengals-week-11-injury-report",
 "tag": "injury",
 "avail": {
@@ -177,7 +379,7 @@
 "pos": "QB",
 "date": "2026-11-22",
 "headline": "Officially inactive vs. Chiefs with back spasms; Josh Johnson started in his place in 34-7 loss",
-"take": "Cardinals didn't even bring him to Kansas City \u2014 LaFleur gave no timeline for Week 12 vs. Commanders; confirm he's cleared before trusting him under center again.",
+"take": "Cardinals didn't even bring him to Kansas City — LaFleur gave no timeline for Week 12 vs. Commanders; confirm he's cleared before trusting him under center again.",
 "url": "https://www.azcardinals.com/news/carson-beck-officially-inactive-as-cardinals-take-on-chiefs",
 "tag": "injury",
 "avail": {
@@ -192,7 +394,7 @@
 "pos": "WR",
 "date": "2026-11-22",
 "headline": "Played through back injury, caught 5 passes for 37 yards and 2 TDs in 27-24 loss to Jets",
-"take": "Cleared the Week 11 GTD and still found the end zone twice \u2014 full fantasy green light into Week 12.",
+"take": "Cleared the Week 11 GTD and still found the end zone twice — full fantasy green light into Week 12.",
 "url": "https://www.foxsports.com/nfl/week-11-new-york-jets-vs-los-angeles-chargers-nov-22-2026-game-boxscore-11280",
 "tag": "injury",
 "avail": {
@@ -207,7 +409,7 @@
 "pos": "QB",
 "date": "2026-11-22",
 "headline": "Played through foot injury, went 20-of-33 for 187 yards and 2 TDs in 31-21 loss to Lions",
-"take": "Upgraded from doubtful to questionable and played the full game \u2014 treat as week-to-week but startable.",
+"take": "Upgraded from doubtful to questionable and played the full game — treat as week-to-week but startable.",
 "url": "https://www.foxsports.com/nfl/week-11-tampa-bay-buccaneers-vs-detroit-lions-nov-22-2026-game-boxscore-11091",
 "tag": "injury",
 "avail": {
@@ -222,7 +424,7 @@
 "pos": "WR",
 "date": "2026-11-22",
 "headline": "Played through Achilles tendinitis, caught 6 passes for 109 yards and a TD in 35-10 win over Vikings",
-"take": "Cleared the Week 11 GTD in a big way \u2014 full green light into Week 12.",
+"take": "Cleared the Week 11 GTD in a big way — full green light into Week 12.",
 "url": "https://www.foxsports.com/nfl/week-11-minnesota-vikings-vs-san-francisco-49ers-nov-22-2026-game-boxscore-11131",
 "tag": "injury",
 "avail": {
@@ -237,7 +439,7 @@
 "pos": "WR",
 "date": "2026-11-18",
 "headline": "O'Connell: Addison avoided short-term IR after successful thumb surgery, no longer on a confirmed IR clock",
-"take": "Resolves earlier conflicting reports of a ~4-week IR stint \u2014 he's not on IR, but still no firm return date; check practice reports before Week 12.",
+"take": "Resolves earlier conflicting reports of a ~4-week IR stint — he's not on IR, but still no firm return date; check practice reports before Week 12.",
 "url": "https://www.vikings.com/news/wide-receiver-jordan-addison-short-term-injured-reserve-2026",
 "tag": "injury",
 "src_type": "team"
@@ -278,7 +480,7 @@
 "pos": "WR",
 "date": "2026-11-20",
 "headline": "Officially Out for Week 11 vs. 49ers; conflicting reports on IR status after thumb surgery",
-"take": "Confirmed out Sunday regardless; ESPN's Seifert says surgery went well and he may avoid IR after all, contradicting the earlier ~4-week IR timeline \u2014 treat his longer-term timeline as unresolved.",
+"take": "Confirmed out Sunday regardless; ESPN's Seifert says surgery went well and he may avoid IR after all, contradicting the earlier ~4-week IR timeline — treat his longer-term timeline as unresolved.",
 "url": "https://www.cbssports.com/nfl/news/nfl-week-11-injury-report-kenneth-walker-iii-mike-evans-baker-mayfield/",
 "tag": "injury",
 "avail": {
@@ -293,7 +495,7 @@
 "pos": "TE",
 "date": "2026-11-20",
 "headline": "No injury designation for Sunday night at 49ers after full Friday practice (wrist)",
-"take": "Cleared to play \u2014 treat as a normal start in Mexico City.",
+"take": "Cleared to play — treat as a normal start in Mexico City.",
 "url": "https://www.cbssports.com/nfl/news/nfl-week-11-injury-report-kenneth-walker-iii-mike-evans-baker-mayfield/",
 "tag": "injury",
 "avail": {
@@ -353,7 +555,7 @@
 "pos": "QB",
 "date": "2026-11-20",
 "headline": "Officially Questionable for Sunday at Lions; Bowles says he 'had a good day' Friday (foot/thumb)",
-"take": "Trending toward playing despite the tag \u2014 Jalon Daniels is the contingency if Mayfield is scratched.",
+"take": "Trending toward playing despite the tag — Jalon Daniels is the contingency if Mayfield is scratched.",
 "url": "https://www.cbssports.com/nfl/news/nfl-week-11-injury-report-kenneth-walker-iii-mike-evans-baker-mayfield/",
 "tag": "injury",
 "avail": {
@@ -368,7 +570,7 @@
 "pos": "WR",
 "date": "2026-11-20",
 "headline": "Officially Questionable for Sunday night vs. Vikings; decision after Saturday walkthrough (Achilles tendinitis)",
-"take": "First concrete Week 11 status after weeks of vague 'close' updates \u2014 true game-time call, don't pencil in.",
+"take": "First concrete Week 11 status after weeks of vague 'close' updates — true game-time call, don't pencil in.",
 "url": "https://www.cbssports.com/nfl/news/nfl-week-11-injury-report-kenneth-walker-iii-mike-evans-baker-mayfield/",
 "tag": "injury",
 "avail": {
@@ -383,7 +585,7 @@
 "pos": "QB",
 "date": "2026-11-20",
 "headline": "Officially Questionable for Sunday vs. Chiefs with a back injury, missed Friday practice",
-"take": "40-year-old Josh Johnson would be Arizona's 4th different starting QB in 4 weeks if Beck sits \u2014 bench all Cardinals pass-catchers until this clears.",
+"take": "40-year-old Josh Johnson would be Arizona's 4th different starting QB in 4 weeks if Beck sits — bench all Cardinals pass-catchers until this clears.",
 "url": "https://www.cbssports.com/nfl/news/nfl-week-11-injury-report-kenneth-walker-iii-mike-evans-baker-mayfield/",
 "tag": "injury",
 "avail": {
@@ -398,7 +600,7 @@
 "pos": "WR",
 "date": "2026-11-19",
 "headline": "Scored a 24-yard TD vs. Colts Thursday but exited late with a hip injury",
-"take": "No severity or timeline yet \u2014 watch for a Friday/weekend update before trusting him next week.",
+"take": "No severity or timeline yet — watch for a Friday/weekend update before trusting him next week.",
 "url": "https://sports.yahoo.com/articles/recap-texans-offense-sets-tone-053113526.html",
 "tag": "injury",
 "src_type": "report"
@@ -409,7 +611,7 @@
 "pos": "QB",
 "date": "2026-11-19",
 "headline": "Threw 3 TD passes in Thursday's 26-3 win over Colts, third straight game with 3+ TDs",
-"take": "Riser \u2014 Stroud is playing his best stretch of the season heading into Week 12.",
+"take": "Riser — Stroud is playing his best stretch of the season heading into Week 12.",
 "url": "https://www.espn.com/nfl/recap/_/gameId/401873066",
 "tag": "riser",
 "src_type": "report"
@@ -431,7 +633,7 @@
 "pos": "TE",
 "date": "2026-11-19",
 "headline": "Scored his first career TD with a season-high role in Thursday's win over Colts",
-"take": "Deep streaming option only \u2014 PFF doesn't expect the usage to be a weekly pattern.",
+"take": "Deep streaming option only — PFF doesn't expect the usage to be a weekly pattern.",
 "url": "https://www.espn.com/nfl/recap/_/gameId/401873066",
 "tag": "other",
 "src_type": "report"
@@ -442,7 +644,7 @@
 "pos": "RB",
 "date": "2026-11-19",
 "headline": "Held to 21 yards on 11 carries in Thursday's blowout loss to Texans",
-"take": "Game-script faller, not injury related \u2014 Colts trailed big most of the night.",
+"take": "Game-script faller, not injury related — Colts trailed big most of the night.",
 "url": "https://www.espn.com/nfl/recap/_/gameId/401873066",
 "tag": "faller",
 "src_type": "report"
@@ -1673,17 +1875,6 @@
 "src_type": "report"
 },
 {
-"player": "Zach Charbonnet",
-"team": "SEA",
-"pos": "RB",
-"date": "2026-11-03",
-"headline": "Season debut vs. Bears: 9 touches (6 car, 3 rec) after Feb ACL surgery",
-"take": "Now Seattle's clear early-down back with Kenneth Walker in KC -- role should grow weekly; solid speculative flex add.",
-"url": "https://www.nbcsports.com/fantasy/football/player-news/2026-11-03/nine-touches-for-charbonnet-in-first-game-back",
-"tag": "role",
-"src_type": "report"
-},
-{
 "player": "Kendrick Bourne",
 "team": "ARI",
 "pos": "WR",
@@ -1734,7 +1925,7 @@
 "pos": "WR",
 "date": "2026-10-20",
 "headline": "Tore patellar tendon in MNF loss to 49ers, out for the season per Schefter",
-"take": "Correction: an earlier scan reported McLaurin played Monday night with no designation; he was actually carted off in the first quarter and is done for 2026 \u2014 treat Washington's WR room as missing its WR1 rest of season",
+"take": "Correction: an earlier scan reported McLaurin played Monday night with no designation; he was actually carted off in the first quarter and is done for 2026 — treat Washington's WR room as missing its WR1 rest of season",
 "url": "https://x.com/AdamSchefter/status/2112621538369245562",
 "tag": "injury",
 "avail": {
@@ -1748,7 +1939,7 @@
 "pos": "TE",
 "date": "2026-10-23",
 "headline": "Placed on IR with season-ending knee injury suffered vs. Patriots",
-"take": "Done for 2026 \u2014 Colston Loveland becomes the clear TE1 in Chicago's passing game, with rookie Sam Roush the No. 2.",
+"take": "Done for 2026 — Colston Loveland becomes the clear TE1 in Chicago's passing game, with rookie Sam Roush the No. 2.",
 "url": "https://chicago.suntimes.com/bears/2026/10/23/bears-lose-te-cole-kmet-for-the-season-with-knee-injury",
 "tag": "injury",
 "avail": {
@@ -1864,7 +2055,7 @@
 "pos": "QB",
 "date": "2026-09-25",
 "headline": "Officially out for rest of regular season; surgery for MCL/PCL/meniscus damage",
-"take": "Season is over \u2014 bench in all formats; Jameis Winston is the full-time starter",
+"take": "Season is over — bench in all formats; Jameis Winston is the full-time starter",
 "url": "https://www.giants.com/news/jaxson-dart-to-miss-rest-of-regular-season-jameis-winston-to-start-quarterback-injury-john-harbaugh",
 "tag": "injury",
 "avail": {

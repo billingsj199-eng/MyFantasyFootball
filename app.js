@@ -4293,7 +4293,33 @@ function _fairEdge(r, mode) {
   const v = e ? +e[mode === 'dynastysf' ? 1 : 0] : 0;
   return v ? -L.k * v : 0;
 }
-function _fairEdgeSig() { const L = window.MFF_LASTING_EDGE; return L && L.p ? 'le' + (L.updated || 1) : ''; }
+function _fairEdgeSig() { const L = window.MFF_LASTING_EDGE; return L && L.p ? 'le' + (L.updated || 1) + (_fairRollOn() ? 'r' : '') : ''; }
+// IN-HOUSE ROLL (Jack 2026-11-24 "Yes, wire it"; sim_lab/ktc_roll.py + backtest_ktc_rollforward.py): KTC moved
+// its player list behind a robots-disallowed path on 2026-11-24, so our KTC copy can sit frozen. While it
+// is frozen and games are being played, the weekly build rolls the frozen values forward from what
+// happened on the field (games, points vs his old rate, games missed, share changes) and writes each
+// player's ROLLED RANK: r[name|pos] = [1QB, SF], rc = {from: last real KTC day, asof, lag, share}.
+// Forward-tested on tracked lists: order match with real KTC .901 frozen -> .941 rolled at 6-10 weeks,
+// .887 -> .939 at 10-14; nothing gained before 3 weeks or off season, so the build writes no r then.
+// MFF VALUE's market input (KTC rank + the value at that rank) uses the rolled order when r is present
+// and rc.asof is at most _ROLL_MAX_AGE days old. KTC columns elsewhere keep showing the real KTC copy.
+// Not applied with a TE premium (the roll is built on the base 1QB / SF values).
+const _ROLL_MAX_AGE = 10;
+function _fairRollOn() {
+  const L = window.MFF_LASTING_EDGE;
+  if (!L || !L.r || !L.rc || !L.rc.asof || window.MFF_ROLL_OFF) return false;
+  return (Date.now() - new Date(L.rc.asof + 'T12:00:00').getTime()) / 864e5 <= _ROLL_MAX_AGE;
+}
+// pool rows {n, pos, k (KTC overall rank), kv (KTC value)} -> k = rolled rank, kv = the pool's KTC value at
+// that spot (the frozen value curve, re-ordered). Players without a rolled rank keep their KTC rank.
+function _fairRollApply(pool, mode, tep) {
+  if (tep || !_fairRollOn()) return false;
+  const P = window.MFF_LASTING_EDGE.r, o = mode === 'dynastysf' ? 1 : 0;
+  const vs = pool.map(r => r.kv).sort((a, b) => b - a);
+  pool.forEach(r => { const e = P[_dynSimNorm(r.n) + '|' + r.pos]; r._k0 = r.k; if (e && e[o] > 0) r.k = e[o]; });
+  pool.slice().sort((a, b) => a.k - b.k || a._k0 - b._k0).forEach((r, i) => { r.kv = vs[i]; });
+  return true;
+}
 // VALUE FORECAST (Jack 2026-11-24 "Yes, build it"; sim_lab/backtest_ktc_forecast.py + ktc_value_forecast.py):
 // expected change in a player's KTC value over the next 3 and 6 months, from the yearly cycle for his
 // position / age, his recent production and missed games, and KTC's own recent move. Forward-tested on the
@@ -4418,6 +4444,7 @@ function _trendGapFor(d) {
         r.s = -(b != null ? b : 0);   // one scale for the whole pool (no value -> bottom)
       });
     }
+    _fairRollApply(pool, currentMode, _dynTepEff());
     const sr = pool.slice().sort((a, b) => a.s - b.s); sr.forEach((r, i) => { r.sp = i + 1; });
     const kr = pool.slice().sort((a, b) => a.k - b.k); kr.forEach((r, i) => { r.kp = i + 1; });
     pool.forEach(r => { r.gap = Math.log(r.sp / r.kp); });
@@ -4613,6 +4640,7 @@ window._mffValueBoard = function(mode) {
     } else rest.push({ i, sv: x.sv, ratio: x.ratio });
   });
   if (pool.length < 50) return null;
+  _fairRollApply(pool, mode, tep);
   const sr = pool.slice().sort((a, b) => b.sv - a.sv); sr.forEach((r, j) => { r.sp = j + 1; });
   const kr = pool.slice().sort((a, b) => a.k - b.k); kr.forEach((r, j) => { r.kp = j + 1; });
   const vals = kr.map(r => r.kv), n = vals.length;

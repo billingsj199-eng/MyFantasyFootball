@@ -11629,6 +11629,48 @@ window._mffPremSrc = function () {
   } catch (_) {}
   return '';
 };
+// === Checkout funnel events (C-20261116-1, Jack 11-24 "build the checkout tracking") ===
+// checkout_start: sent the moment the site hands a buyer to Stripe (a Checkout
+// Session URL came back, the redirect is the next line). checkout_return: sent once
+// when Stripe sends them back on the success or cancel URL. Those URLs carry no
+// plan, so the start is kept for this tab and the return reads it back; a return
+// that lands in another tab or browser (or a hand-typed return URL) has nothing to
+// read and reports plan 'unknown' / cta 'unmatched'.
+// Params: `plan` (monthly|yearly|season|lineskip) and `result` (success|cancel) are
+// new GA4 dims; `cta` = what started the checkout; `ctx` = the #premium link src when
+// the visit came through it (the slot the buy-button premium_cta uses). Never `source`.
+// Leaving Stripe with the browser's Back button or closing the tab sends no return.
+const CHECKOUT_MARK_KEY = 'mff_checkout';
+const CHECKOUT_PLANS = ['monthly', 'yearly', 'season', 'lineskip'];
+const CHECKOUT_CTAS = ['premiumUpgradeBtn', 'signin-resume', 'aj-skip-btn'];
+window._mffCheckoutStart = function (plan, cta) {
+  try {
+    const p = { plan: CHECKOUT_PLANS.includes(plan) ? plan : 'unknown', cta: CHECKOUT_CTAS.includes(cta) ? cta : 'other' };
+    const s = typeof window._mffPremSrc === 'function' ? window._mffPremSrc() : '';
+    if (s) p.ctx = s;
+    try { sessionStorage.setItem(CHECKOUT_MARK_KEY, JSON.stringify({ plan: p.plan, cta: p.cta, ctx: s, at: Date.now() })); } catch (_) {}
+    if (typeof window._mffTrack === 'function') window._mffTrack('checkout_start', p);
+  } catch (_) {}
+};
+let _checkoutReturnSent = false;   // one return per page load, whichever handler sees it
+window._mffCheckoutReturn = function (result) {
+  if (_checkoutReturnSent) return;
+  _checkoutReturnSent = true;
+  try {
+    const p = { result: result === 'success' ? 'success' : 'cancel', plan: 'unknown', cta: 'unmatched' };
+    try {
+      // 24h = how long a Stripe Checkout Session stays payable.
+      const m = JSON.parse(sessionStorage.getItem(CHECKOUT_MARK_KEY) || 'null');
+      sessionStorage.removeItem(CHECKOUT_MARK_KEY);
+      if (m && Date.now() - (m.at || 0) < 24 * 60 * 60 * 1000) {
+        if (CHECKOUT_PLANS.includes(m.plan)) p.plan = m.plan;
+        if (CHECKOUT_CTAS.includes(m.cta) || m.cta === 'other') p.cta = m.cta;
+        if (PREMIUM_LINK_SRCS.includes(m.ctx) || PREMIUM_LINK_GENERIC.includes(m.ctx)) p.ctx = m.ctx;
+      }
+    } catch (_) {}
+    if (typeof window._mffTrack === 'function') window._mffTrack('checkout_return', p);
+  } catch (_) {}
+};
 // Run cb once the first auth state is known (the persisted session has resolved and
 // updateAccountUI has run), so the page opens in the right signed-in/out state and
 // the events carry it. Capped at 4s: a blocked or offline SDK opens signed out.
@@ -38165,6 +38207,8 @@ window.fmtHeight = fmtHeight;
         // Clean the URL so refreshing doesn't re-trigger
         const cleanUrl = window.location.pathname + (window.location.hash || '');
         window.history.replaceState({}, '', cleanUrl);
+        // C-20261116-1: one checkout_return per Stripe return (the params are gone now).
+        if (typeof window._mffCheckoutReturn === 'function') window._mffCheckoutReturn(canceled ? 'cancel' : 'success');
       }
       if (canceled) {
         // Backed out of Stripe: land them back on the plan picker, not the home page.
@@ -43415,7 +43459,10 @@ window.fmtHeight = fmtHeight;
               if (typeof toast === 'function') toast('Signed in — taking you to checkout…');
               setTimeout(() => {
                 const b = document.getElementById('premiumUpgradeBtn');
-                if (b && b.offsetParent && !b.disabled) b.click();
+                if (b && b.offsetParent && !b.disabled) {
+                  window._mffUpgradeResume = true;   // read synchronously by the click handler (checkout_start cta)
+                  try { b.click(); } finally { window._mffUpgradeResume = false; }
+                }
               }, 1200);
             }
           }
@@ -44130,6 +44177,8 @@ window.fmtHeight = fmtHeight;
     return 'monthly';
   }
   premiumUpgradeBtn.addEventListener('click', async () => {
+    // checkout_start `cta`: a hand click, or the auto-click that finishes a sign-in-gated upgrade.
+    const _ckCta = window._mffUpgradeResume ? 'signin-resume' : 'premiumUpgradeBtn';
     // Must be signed in to upgrade (we need a UID to attach to the Stripe customer)
     const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
     if (!user) {
@@ -44181,6 +44230,8 @@ window.fmtHeight = fmtHeight;
       const result = await createCheckout({ plan: plan });
       const url = result && result.data && result.data.url;
       if (!url) throw new Error('No checkout URL returned.');
+      // C-20261116-1: the session exists and the buyer is leaving for Stripe now.
+      if (typeof window._mffCheckoutStart === 'function') window._mffCheckoutStart(plan, _ckCta);
       // Redirect to Stripe-hosted checkout page
       window.location.href = url;
     } catch (err) {
@@ -74970,6 +75021,7 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
     call.then(r => {
       const url = r && r.data && r.data.url;
       if (!url) throw new Error('No checkout URL returned.');
+      if (typeof window._mffCheckoutStart === 'function') window._mffCheckoutStart('lineskip', 'aj-skip-btn');   // C-20261116-1
       window.location.href = url;
     }).catch(e => {
       console.warn('[AskJack] line skip checkout error:', e);
@@ -74987,7 +75039,10 @@ window._mtGetPlayoffSosWeekly = _mtGetPlayoffSosWeekly;
       const params = new URLSearchParams(location.search);
       if (params.get('skip_success') === '1') sessionId = params.get('session_id') || '';
       canceled = params.get('skip_cancel') === '1';
-      if (sessionId || canceled) history.replaceState({}, '', location.pathname + (location.hash || '#askjack'));
+      if (sessionId || canceled) {
+        history.replaceState({}, '', location.pathname + (location.hash || '#askjack'));
+        if (typeof window._mffCheckoutReturn === 'function') window._mffCheckoutReturn(canceled ? 'cancel' : 'success');   // C-20261116-1, once: the params are gone now
+      }
     } catch (_) {}
     if (sessionId) { try { sessionStorage.setItem('mff_pending_skip', JSON.stringify({ sessionId: sessionId, at: Date.now() })); } catch (_) {} }
     if (!sessionId && !canceled) {

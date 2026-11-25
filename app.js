@@ -2205,10 +2205,13 @@ window._syncPartners = _syncPartners;
 // the old fill loop skipped him and left the trailing slots holding stale
 // (duplicate) indices.
 function _syncOneDirection(srcMode, dstMode) {
-  // MFF VALUE is a computed board: each format's order IS its own value order. With SYNC on,
-  // entering Dynasty SF re-dealt the SF board into the 1QB position order (in place, so
-  // _mffvBoardEnsure never rebuilt it) — values out of order and tier banners scattered.
-  if (currentVersion === 'mffv') return;
+  // Computed boards (CONSENSUS, SIM VOR, MFF VALUE, 2027 SIM MODEL — the same list canEdit()
+  // refuses): each format's order IS its own numbers, nobody ranks them by hand, so there is
+  // nothing to share. With SYNC on, entering Superflex / Dynasty SF re-dealt the computed board
+  // into the 1QB position order (in place, so the *BoardEnsure checks never rebuilt it) and
+  // copied the 1QB position tiers over it — MFF VALUE came out with its values out of order
+  // and its tier banners scattered (Jack 2026-11-24: "fix sync on the other computed boards too").
+  if (currentVersion === 'consensus' || currentVersion === 'sims' || currentVersion === 'mffv' || currentVersion === 'sim27') return;
   const srcBoard = versionBoards[currentVersion][srcMode];
   const dstBoard = versionBoards[currentVersion][dstMode];
   if (!srcBoard || !dstBoard || srcMode === dstMode) return;

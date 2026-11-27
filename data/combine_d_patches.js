@@ -288,6 +288,7 @@ if (typeof COMBINE_DATA !== 'undefined') {
   // 2026-09-30: "Ryan Williams" (Alabama WR) now plays as Ryan Coleman-Williams (same ESPN id 5141711) - retired stub: cb=COMBINE_DATA['Ryan Williams']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Bryant Wesco Jr.']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Bo Jackson']; if(cb){cb.devy=true;cb.eligYr=2028;cb.yr=2028;cb.pos='RB';cb.school='Ohio St.';delete cb.pb;delete cb.dt;delete cb.draft;} // devy Bo Jackson (Ohio St. RB, 2028) overwrites the 1986 Auburn legend's stub - same precedent as Ryan Williams
+    cb=COMBINE_DATA['Jackson Harris']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;cb.pos='WR';cb.school='LSU';delete cb.ras;if(cb.draftProj==null)cb.draftProj=30;} // devy Jackson Harris (Stanford -> Hawai'i -> LSU WR, 2027) overwrites the 2019 Georgia TE stub (RAS 8.77) - same precedent as Bo Jackson
     cb=COMBINE_DATA['Kewan Lacy']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Justice Haynes']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
     cb=COMBINE_DATA['Hollywood Smothers']; if(cb){cb.devy=true;cb.eligYr=2027;cb.yr=2027;}
